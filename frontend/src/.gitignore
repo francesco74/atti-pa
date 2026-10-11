@@ -1,0 +1,12 @@
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+*.iml
+.idea/
+# cartelle generate da `flutter create` per le piattaforme desktop
+windows/
+linux/
+macos/
