@@ -6,9 +6,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from atti_api.auth.ldap import LdapAuthenticator
-from atti_api.routers import auth, checklists, norme, templates
+from atti_api.documenti import DocumentiClient
+from atti_api.routers import auth, bozze, checklists, controllo, norme, templates, verifiche
 from atti_common.config import Settings, get_settings
 from atti_common.db import crea_engine, crea_sessionmaker
+from atti_common.llm import LlmClient
 from atti_common.normattiva import NormattivaClient
 
 
@@ -29,7 +31,16 @@ def create_app(
             base_url=settings.normattiva_base_url, timeout=settings.normattiva_timeout
         )
         app.state.normattiva = client
+        app.state.llm = LlmClient(
+            settings.llm_base_url,
+            settings.llm_model,
+            api_key=settings.llm_api_key,
+            timeout=settings.llm_timeout,
+        )
+        app.state.documenti = DocumentiClient(settings.documenti_url)
         yield
+        await app.state.llm.close()
+        await app.state.documenti.close()
         if normattiva is None:
             await client.close()
         if engine is None:
@@ -65,7 +76,7 @@ def create_app(
             await conn.execute(text("SELECT 1"))
         return {"status": "ok"}
 
-    for modulo in (auth, norme, checklists, templates):
+    for modulo in (auth, norme, checklists, templates, bozze, verifiche, controllo):
         app.include_router(modulo.router)
     return app
 

@@ -17,7 +17,7 @@ from atti_api.main import create_app
 from atti_common.config import Settings
 from atti_common.db import crea_sessionmaker
 from atti_common.models import Base, TipologiaAtto
-from atti_common.testing import FakeNormattiva
+from atti_common.testing import FakeNormattiva, crea_odt
 
 URL_TEST = os.environ.get("TEST_DATABASE_URL")
 
@@ -50,6 +50,20 @@ UTENTI_AD = {
     ),
     "estraneo": ("segreta", UtenteAD("estraneo", "Senza gruppi", None, None, [])),
 }
+
+
+class FakeDocumenti:
+    def __init__(self):
+        self.chiamate = []
+
+    async def converti(self, contenuto, nome_file, formato):
+        self.chiamate.append((nome_file, formato))
+        if formato == "odt":
+            return crea_odt(["Testo convertito da Word: art. 107 del TUEL"])
+        return b"%PDF-1.7 finto"
+
+    async def close(self):
+        pass
 
 
 class FakeAuthenticator(LdapAuthenticator):
@@ -107,6 +121,8 @@ def app(settings, engine):
     application.state.engine = engine
     application.state.sessionmaker = crea_sessionmaker(engine)
     application.state.normattiva = FakeNormattiva()
+    application.state.llm = None
+    application.state.documenti = FakeDocumenti()
     return application
 
 

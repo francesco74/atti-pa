@@ -94,8 +94,10 @@ async def test_riferimento_non_vigente_alla_data(db, normattiva):
 @respx.mock
 async def test_checklist_con_llm(db, normattiva):
     risposte = [
-        '{"esito": "NON_CONFORME", "motivazione": "Manca il CIG", "evidenza": "CIG: {{cig}}", '
-        '"suggerimento": "Indicare il CIG"}',
+        (
+            '{"esito": "NON_CONFORME", "motivazione": "Manca il CIG", "evidenza": "CIG: {{cig}}", '
+            '"suggerimento": "Indicare il CIG"}'
+        ),
         "risposta non json",
         '```json\n{"esito": "CONFORME", "motivazione": "Importo entro soglia"}\n```',
     ]

@@ -28,6 +28,14 @@ def get_normattiva(request: Request):
     return request.app.state.normattiva
 
 
+def get_llm(request: Request):
+    return request.app.state.llm
+
+
+def get_documenti(request: Request):
+    return request.app.state.documenti
+
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 

@@ -143,3 +143,31 @@ class LlmClient:
                 return self._interpreta(contenuto)
             except (ValueError, ValidationError) as e2:
                 raise LlmError(f"Risposta del modello non valida: {e2}") from e2
+
+
+PROMPT_ESPANSIONE = """Sei un funzionario esperto nella redazione di determinazioni dirigenziali \
+di un ente locale italiano. Riscrivi gli appunti dell'utente in linguaggio amministrativo \
+formale, chiaro e conciso, adatto alla sezione indicata dell'atto.
+
+Regole:
+- Non aggiungere fatti, importi, date, nomi o riferimenti normativi assenti negli appunti.
+- Se un'informazione necessaria manca, inserisci un segnaposto nella forma [[DA_COMPLETARE: descrizione]].
+- Restituisci solo il testo della sezione, senza titoli né commenti."""
+
+
+async def espandi_appunti(client: LlmClient, sezione: str, appunti: str, oggetto: str) -> str:
+    """Trasforma appunti sintetici nel testo formale di una sezione dell'atto."""
+    messaggi = [
+        {"role": "system", "content": PROMPT_ESPANSIONE},
+        {
+            "role": "user",
+            "content": f"Oggetto dell'atto: {oggetto}\nSezione: {sezione}\n\nAppunti:\n{appunti}",
+        },
+    ]
+    payload = {"model": client.modello, "messages": messaggi, "temperature": 0.2}
+    try:
+        r = await client._http.post(client._url, json=payload)
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"].strip()
+    except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
+        raise LlmError(f"Chiamata al modello fallita: {e}") from e
