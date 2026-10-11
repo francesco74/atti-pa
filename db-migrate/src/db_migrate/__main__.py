@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 
 from atti_common.db import crea_engine
-
 from db_migrate.runner import applica, carica_migrazioni
 
 log = logging.getLogger("db_migrate")

@@ -7,9 +7,10 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Protocol
 
-from atti_common.normattiva import TestoArticolo
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
+
+from atti_common.normattiva import TestoArticolo
 
 
 @dataclass(frozen=True)

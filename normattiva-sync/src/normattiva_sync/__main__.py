@@ -12,7 +12,6 @@ from datetime import datetime
 from atti_common.config import get_settings
 from atti_common.db import crea_engine
 from atti_common.normattiva import NormattivaClient, NormattivaError
-
 from normattiva_sync.job import SyncJob
 from normattiva_sync.repository import MySqlRepository
 

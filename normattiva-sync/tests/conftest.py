@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+
 from atti_common.normattiva import TestoArticolo, parse_articolo
 
 

@@ -1,58 +1,64 @@
-from datetime import date
-from typing import Annotated
+from contextlib import asynccontextmanager
 
-from atti_common.normattiva import (
-    ATTRIBUZIONE,
-    AttoNonTrovato,
-    NormattivaClient,
-    NormattivaError,
-    RisultatoAmbiguo,
-    Urn,
-)
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 
-app = FastAPI(title="atti-pa", version="0.1.0")
+from atti_api.auth.ldap import LdapAuthenticator
+from atti_api.routers import auth
+from atti_common.config import Settings, get_settings
+from atti_common.db import crea_engine, crea_sessionmaker
 
 
-@app.get("/api/v1/health")
-async def health() -> dict:
-    return {"status": "ok"}
+def create_app(
+    settings: Settings | None = None,
+    engine: AsyncEngine | None = None,
+    authenticator: LdapAuthenticator | None = None,
+) -> FastAPI:
+    settings = settings or get_settings()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        motore = engine or crea_engine(settings.database_url)
+        app.state.engine = motore
+        app.state.sessionmaker = crea_sessionmaker(motore)
+        yield
+        if engine is None:
+            await motore.dispose()
+
+    app = FastAPI(
+        title="atti-pa",
+        version="0.1.0",
+        description="Redazione e controllo delle determinazioni dirigenziali",
+        lifespan=lifespan,
+    )
+    app.state.settings = settings
+    app.state.authenticator = authenticator or LdapAuthenticator(settings)
+
+    if settings.cors_origini:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origini,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    @app.get("/api/v1/health", tags=["sistema"])
+    async def health() -> dict:
+        """Liveness probe: il processo risponde."""
+        return {"status": "ok"}
+
+    @app.get("/api/v1/ready", tags=["sistema"])
+    async def ready() -> dict:
+        """Readiness probe: il database è raggiungibile."""
+        async with app.state.engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return {"status": "ok"}
+
+    app.include_router(auth.router)
+    return app
 
 
-@app.get("/api/v1/norme/articolo")
-async def leggi_articolo(
-    urn: Annotated[str, Query(examples=["urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"])],
-    vigenza: Annotated[date | None, Query(description="Data di vigenza (default: oggi)")] = None,
-) -> dict:
-    """Testo di un articolo da Normattiva, scomposto in commi e lettere."""
-    try:
-        u = Urn.parse(urn)
-    except ValueError as e:
-        raise HTTPException(422, str(e)) from e
-
-    async with NormattivaClient() as client:
-        try:
-            testo = await client.articolo(u, vigenza)
-        except AttoNonTrovato as e:
-            raise HTTPException(404, "Articolo non trovato su Normattiva") from e
-        except RisultatoAmbiguo as e:
-            raise HTTPException(
-                409,
-                {
-                    "messaggio": "La URN corrisponde a più testi",
-                    "candidati": [
-                        {"titolo": c.titolo_atto, "sottotitolo": c.sottotitolo} for c in e.candidati
-                    ],
-                },
-            ) from e
-        except NormattivaError as e:
-            raise HTTPException(502, str(e)) from e
-
-    return {
-        "urn": testo.urn,
-        "atto": testo.titolo_atto,
-        "vigenza_inizio": testo.vigenza_inizio,
-        "vigenza_fine": testo.vigenza_fine,
-        "articolo": testo.articolo.to_dict(),
-        "fonte": ATTRIBUZIONE,
-    }
+app = create_app()

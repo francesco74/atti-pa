@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import pytest
+
 from atti_common.normattiva import (
     AttoNonTrovato,
     NormattivaError,
@@ -8,7 +9,6 @@ from atti_common.normattiva import (
     TestoArticolo,
     parse_articolo,
 )
-
 from normattiva_sync.job import SyncJob, finestre
 from normattiva_sync.repository import ArticoloMonitorato, VersioneSalvata
 

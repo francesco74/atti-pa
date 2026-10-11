@@ -25,7 +25,6 @@ from atti_common.normattiva import (
     TestoArticolo,
     Urn,
 )
-
 from normattiva_sync.repository import ArticoloMonitorato, Repository
 
 log = logging.getLogger("normattiva_sync")
