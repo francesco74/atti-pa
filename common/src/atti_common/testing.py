@@ -92,6 +92,19 @@ class FakeNormattiva:
         chiave = f"{u.atto}~art{u.articolo}"
         self.richieste.append(f"{chiave}@{vigenza}")
         giorno = vigenza or date.today()
+        if len(u.data) == 4:
+            # URN con il solo anno: come Normattiva, risolve sull'atto con data completa
+            for k in self.articoli:
+                ku = Urn.parse(k)
+                if (ku.autorita, ku.denominazione, ku.data[:4], ku.numero, ku.articolo) == (
+                    u.autorita,
+                    u.denominazione,
+                    u.data,
+                    u.numero,
+                    u.articolo,
+                ):
+                    chiave, u = k, ku
+                    break
         for v in self.articoli.get(chiave, []):
             if (v.inizio is None or v.inizio <= giorno) and (v.fine is None or v.fine >= giorno):
                 return TestoArticolo(

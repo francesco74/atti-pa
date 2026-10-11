@@ -250,7 +250,7 @@ class Verifica(Base):
     worker: Mapped[str | None] = mapped_column(String(100))
     avviata_il: Mapped[datetime | None] = mapped_column(DateTime)
     completata_il: Mapped[datetime | None] = mapped_column(DateTime)
-    esito_riferimenti: Mapped[list[Any] | None] = mapped_column(JSON)
+    esito_riferimenti: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     esito_automatico: Mapped[list[Any] | None] = mapped_column(JSON)
     esito_finale: Mapped[list[Any] | None] = mapped_column(JSON)
     motivazione: Mapped[str | None] = mapped_column(Text)
