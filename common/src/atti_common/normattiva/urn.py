@@ -88,6 +88,22 @@ class Urn:
         )
 
     @classmethod
+    def da_metadati(cls, atto: dict) -> Urn | None:
+        """URN dell'atto da un elemento `listaAtti` delle API di ricerca.
+
+        Restituisce None per tipi di atto non gestiti (es. decreti ministeriali).
+        """
+        try:
+            giorno = date(
+                int(atto["annoProvvedimento"]),
+                int(atto["meseProvvedimento"]),
+                int(atto["giornoProvvedimento"]),
+            )
+            return cls.per_tipo(atto["denominazioneAtto"], giorno, atto["numeroProvvedimento"])
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @classmethod
     def parse(cls, valore: str) -> Urn:
         m = _URN_RE.match(valore.strip())
         if not m:

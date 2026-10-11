@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from app.normattiva import Urn
+from atti_common.normattiva import Urn
 
 
 def test_costruzione_da_abbreviazione():

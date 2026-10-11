@@ -13,9 +13,9 @@ from typing import Any, Self
 
 import httpx
 
-from app.config import get_settings
-from app.normattiva.parser import Articolo, parse_articolo
-from app.normattiva.urn import Urn
+from atti_common.config import get_settings
+from atti_common.normattiva.parser import Articolo, parse_articolo
+from atti_common.normattiva.urn import Urn
 
 _PREFISSO = "/bff-opendata/v1/api/v1"
 ATTRIBUZIONE = (

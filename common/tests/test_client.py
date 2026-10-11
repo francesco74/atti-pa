@@ -4,7 +4,7 @@ import httpx
 import pytest
 import respx
 
-from app.normattiva import AttoNonTrovato, NormattivaClient, RisultatoAmbiguo
+from atti_common.normattiva import AttoNonTrovato, NormattivaClient, RisultatoAmbiguo
 
 BASE = "https://test.normattiva/t/normattiva.api"
 URL_URN = BASE + "/bff-opendata/v1/api/v1/atto/dettaglio-atto-urn"

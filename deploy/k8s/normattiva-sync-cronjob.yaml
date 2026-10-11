@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: normattiva-sync
+  labels:
+    app.kubernetes.io/name: normattiva-sync
+    app.kubernetes.io/part-of: atti-pa
+spec:
+  schedule: "30 3 * * *"          # ogni notte alle 03:30
+  timeZone: "Europe/Rome"
+  concurrencyPolicy: Forbid       # mai due aggiornamenti in parallelo
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      ttlSecondsAfterFinished: 604800
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: normattiva-sync
+            app.kubernetes.io/part-of: atti-pa
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: normattiva-sync
+              image: atti-pa/normattiva-sync:0.1.0
+              envFrom:
+                - configMapRef:
+                    name: atti-pa-config
+                - secretRef:
+                    name: atti-pa-secret
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]

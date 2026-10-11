@@ -1,4 +1,4 @@
-from app.normattiva import parse_articolo
+from atti_common.normattiva import parse_articolo
 
 
 def test_numero_e_rubrica(articolo_html):

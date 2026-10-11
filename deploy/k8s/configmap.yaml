@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atti-pa-config
+  labels:
+    app.kubernetes.io/part-of: atti-pa
+data:
+  FUSO_ORARIO: "Europe/Rome"
+  NORMATTIVA_BASE_URL: "https://api.normattiva.it/t/normattiva.api"
+  NORMATTIVA_TIMEOUT: "30"
+  SYNC_GIORNI_INIZIALI: "7"
+  SYNC_FINESTRA_GIORNI: "7"
+  SYNC_PAUSA_SECONDI: "0.5"

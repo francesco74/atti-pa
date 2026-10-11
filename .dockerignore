@@ -1,0 +1,13 @@
+**/.git
+**/__pycache__
+**/*.pyc
+**/.venv
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+**/tests
+**/.env
+frontend/src/build
+frontend/src/.dart_tool
+deploy
+docs

@@ -1,9 +1,7 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query
-
-from app.normattiva import (
+from atti_common.normattiva import (
     ATTRIBUZIONE,
     AttoNonTrovato,
     NormattivaClient,
@@ -11,6 +9,7 @@ from app.normattiva import (
     RisultatoAmbiguo,
     Urn,
 )
+from fastapi import FastAPI, HTTPException, Query
 
 app = FastAPI(title="atti-pa", version="0.1.0")
 
