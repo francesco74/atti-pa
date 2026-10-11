@@ -24,6 +24,10 @@ def get_authenticator(request: Request) -> LdapAuthenticator:
     return request.app.state.authenticator
 
 
+def get_normattiva(request: Request):
+    return request.app.state.normattiva
+
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 

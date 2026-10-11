@@ -17,6 +17,7 @@ from atti_api.main import create_app
 from atti_common.config import Settings
 from atti_common.db import crea_sessionmaker
 from atti_common.models import Base, TipologiaAtto
+from atti_common.testing import FakeNormattiva
 
 URL_TEST = os.environ.get("TEST_DATABASE_URL")
 
@@ -105,6 +106,7 @@ def app(settings, engine):
     application = create_app(settings, engine=engine, authenticator=FakeAuthenticator(settings))
     application.state.engine = engine
     application.state.sessionmaker = crea_sessionmaker(engine)
+    application.state.normattiva = FakeNormattiva()
     return application
 
 

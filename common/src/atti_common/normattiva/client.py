@@ -184,3 +184,15 @@ class NormattivaClient:
                 "paginazione": {"paginaCorrente": pagina, "numeroElementiPerPagina": per_pagina},
             },
         )
+
+
+def testo_principale(errore: RisultatoAmbiguo) -> TestoArticolo | None:
+    """Tra più risultati per la stessa URN preferisce il testo principale.
+
+    Le ripubblicazioni in Gazzetta (testo corredato di note) vengono scartate; se resta più
+    di un candidato la scelta è lasciata all'utente.
+    """
+    principali = [
+        c for c in errore.candidati if "ripubblicazione" not in (c.sottotitolo or "").lower()
+    ]
+    return principali[0] if len(principali) == 1 else None

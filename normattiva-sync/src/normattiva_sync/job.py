@@ -22,8 +22,8 @@ from atti_common.normattiva import (
     NormattivaClient,
     NormattivaError,
     RisultatoAmbiguo,
-    TestoArticolo,
     Urn,
+    testo_principale,
 )
 from normattiva_sync.repository import ArticoloMonitorato, Repository
 
@@ -53,14 +53,6 @@ def finestre(da: datetime, a: datetime, giorni: int) -> list[tuple[datetime, dat
         risultato.append((inizio, fine))
         inizio = fine
     return risultato
-
-
-def scegli_testo(errore: RisultatoAmbiguo) -> TestoArticolo | None:
-    """Tra più risultati preferisce il testo principale rispetto alle ripubblicazioni."""
-    principali = [
-        c for c in errore.candidati if "ripubblicazione" not in (c.sottotitolo or "").lower()
-    ]
-    return principali[0] if len(principali) == 1 else None
 
 
 class SyncJob:
@@ -97,7 +89,7 @@ class SyncJob:
         try:
             testo = await self.client.articolo(urn, vigenza=self.oggi)
         except RisultatoAmbiguo as e:
-            testo = scegli_testo(e)
+            testo = testo_principale(e)
             if testo is None:
                 esito.errori.append(f"{urn}: {len(e.candidati)} testi, scelta manuale necessaria")
                 return

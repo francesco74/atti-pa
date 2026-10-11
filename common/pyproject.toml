@@ -14,7 +14,11 @@ dependencies = [
     "beautifulsoup4>=4.12",
     "sqlalchemy[asyncio]>=2.0",
     "aiomysql>=0.2",
+    # PyMySQL 1.2 rompe l'escape dei dati binari di aiomysql 0.3 (upload dei file)
+    "pymysql>=1.1,<1.2",
     "tzdata",
+    "lxml>=5",
+    "pypdf>=4",
 ]
 
 [project.optional-dependencies]
