@@ -7,6 +7,7 @@ se riesce, si leggono gli attributi anagrafici e i gruppi con la stessa connessi
 from __future__ import annotations
 
 import logging
+import os
 import re
 import ssl
 from dataclasses import dataclass, field
@@ -81,7 +82,9 @@ class LdapAuthenticator:
     def _server(self) -> Server:
         s = self.settings
         usa_ssl = s.ldap_url.lower().startswith("ldaps://")
-        tls = Tls(validate=ssl.CERT_REQUIRED, ca_certs_file=s.ldap_ca_cert) if usa_ssl else None
+        # CA dell'ente se montata (ConfigMap ldap-ca), altrimenti quelle di sistema
+        ca = s.ldap_ca_cert if s.ldap_ca_cert and os.path.isfile(s.ldap_ca_cert) else None
+        tls = Tls(validate=ssl.CERT_REQUIRED, ca_certs_file=ca) if usa_ssl else None
         return Server(
             s.ldap_url, use_ssl=usa_ssl, tls=tls, get_info=NONE, connect_timeout=s.ldap_timeout
         )

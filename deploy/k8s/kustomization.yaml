@@ -5,11 +5,33 @@ namespace: atti-pa
 resources:
   - namespace.yaml
   - configmap.yaml
+  - api.yaml
+  - verifica-worker.yaml
+  - documenti.yaml
+  - frontend.yaml
   - normattiva-sync-cronjob.yaml
+  - ingress.yaml
+  - networkpolicy.yaml
 
-# Il Secret atti-pa-secret va creato a parte (vedi secret.example.yaml)
+# Da creare a parte (vedi secret.example.yaml):
+#   Secret atti-pa-secret, ConfigMap ldap-ca, Secret TLS atti-pa-tls
 
 images:
+  - name: atti-pa/api
+    newName: registry.ente.local/atti-pa/api
+    newTag: "0.1.0"
+  - name: atti-pa/db-migrate
+    newName: registry.ente.local/atti-pa/db-migrate
+    newTag: "0.1.0"
+  - name: atti-pa/verifica-worker
+    newName: registry.ente.local/atti-pa/verifica-worker
+    newTag: "0.1.0"
+  - name: atti-pa/documenti
+    newName: registry.ente.local/atti-pa/documenti
+    newTag: "0.1.0"
+  - name: atti-pa/frontend
+    newName: registry.ente.local/atti-pa/frontend
+    newTag: "0.1.0"
   - name: atti-pa/normattiva-sync
     newName: registry.ente.local/atti-pa/normattiva-sync
     newTag: "0.1.0"

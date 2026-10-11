@@ -2,97 +2,104 @@
 
 ## 1. Obiettivo
 
-Due strumenti, una base comune:
+Due strumenti con una base comune:
 
-1. **Redazione (uso personale)** — schema guidato per la stesura delle determinazioni dirigenziali, con riferimenti normativi estratti da Normattiva e verificati alla data di adozione. Non è un sistema di gestione atti: niente workflow, protocollo o firma.
-2. **Controllo (gruppo controllo atti)** — verifica della qualità degli atti sorteggiati per il controllo successivo di regolarità amministrativa (art. 147-bis TUEL), con checklist e supporto LLM.
+1. **Redazione (uso personale)** — schema guidato per la stesura delle determinazioni, con
+   riferimenti normativi estratti da Normattiva e verificati alla data di adozione. Non è un
+   sistema di gestione atti: niente workflow, protocollo o firma.
+2. **Controllo (gruppo controllo atti)** — verifica della qualità degli atti sorteggiati per il
+   controllo successivo di regolarità amministrativa (art. 147-bis TUEL).
 
-La base comune è composta da:
+Base comune: **libreria normativa** versionata per vigenza e **checklist** versionate, usate
+sia in redazione sia in controllo.
 
-- **Libreria normativa**: norme e articoli scaricati da Normattiva, versionati per intervallo di vigenza.
-- **Checklist**: criteri di qualità per tipologia di atto, versionati, usati sia in redazione sia in controllo.
+## 2. Architettura
 
-## 2. Stack
+| Componente | Tipo Kubernetes | Tecnologia |
+|---|---|---|
+| api | Deployment (2 repliche) | FastAPI, SQLAlchemy async, ldap3, PyJWT |
+| verifica-worker | Deployment | Python asyncio, coda su MySQL con `SKIP LOCKED` |
+| documenti | Deployment, solo interno | FastAPI + LibreOffice headless |
+| normattiva-sync | CronJob (03:30) | Python, client API OpenData |
+| db-migrate | initContainer | Migrazioni SQL ordinate con checksum e lock |
+| frontend | Deployment | Flutter Web + nginx non privilegiato |
 
-| Livello | Tecnologia |
-|---|---|
-| Backend | Python 3.11+, FastAPI, SQLAlchemy 2, httpx |
-| Database | MySQL 8.0+ |
-| Documenti | py3o.template / odfpy, LibreOffice headless (ODT → PDF/A) |
-| LLM | On-premise (vLLM o Ollama) via LiteLLM, output JSON vincolato da schema |
-| Fonti | API OpenData Normattiva |
-| Frontend | Flutter (Web/Desktop) |
-| Auth | LDAP/AD (ldap3) + JWT — necessaria per il modulo Controllo |
+Tutti i file (template, atti caricati) sono salvati nel database: nessun volume condiviso
+tra i pod. Configurazione da ConfigMap/Secret (variabili d'ambiente, vedi `atti_common.config`).
 
 ## 3. Integrazione Normattiva
 
-Base URL esercizio: `https://api.normattiva.it/t/normattiva.api` (test: `https://pre.api.normattiva.it/t/normattiva.api`).
+Base URL: `https://api.normattiva.it/t/normattiva.api` (test: `pre.api.normattiva.it`).
 
 | Uso | Endpoint |
 |---|---|
-| Testo di un articolo a una data | `POST /bff-opendata/v1/api/v1/atto/dettaglio-atto-urn` con URN `...~artN!vig=YYYY-MM-DD` |
+| Testo di un articolo a una data | `POST /bff-opendata/v1/api/v1/atto/dettaglio-atto-urn`, URN `...~artN!vig=YYYY-MM-DD` |
 | Atti modificati in un intervallo | `POST /bff-opendata/v1/api/v1/ricerca/aggiornati` |
-| Ricerca atti | `POST /bff-opendata/v1/api/v1/ricerca/semplice` / `avanzata` |
-| Export massivo (ZIP AKN/JSON) | flusso asincrono `ricerca-asincrona/nuova-ricerca` → `conferma-ricerca` → `check-status` |
 
-Regole:
+- **Chiave**: URN NIR (es. `urn:nir:stato:decreto.legislativo:2023-03-31;36~art50`); le
+  citazioni con il solo anno (`D.Lgs. 36/2023`) sono risolte sulla libreria o su Normattiva.
+- **Granularità**: l'HTML AKN dell'articolo è scomposto in commi e lettere; le note di
+  aggiornamento sono escluse.
+- **Vigenza**: ogni versione è salvata con l'intervallo `articoloDataInizioVigenza`–
+  `articoloDataFineVigenza`. Gli atti si verificano alla **data di adozione**.
+- **Aggiornamento**: il CronJob legge gli atti modificati dall'ultima esecuzione riuscita e
+  riscarica solo gli articoli monitorati (in libreria o già scaricati). Un'esecuzione con
+  errori non fa avanzare l'intervallo.
+- **Risultati multipli** (ripubblicazioni in GU): si sceglie il testo principale, altrimenti
+  si segnala la necessità di verifica manuale.
 
-- **Chiave**: URN NIR (es. `urn:nir:stato:decreto.legislativo:2023-03-31;36~art50`).
-- **Granularità**: l'API restituisce l'articolo in HTML con classi AKN; il backend lo scompone in **commi e lettere** (`app/normattiva/parser.py`).
-- **Vigenza**: ogni versione di articolo è salvata con `articoloDataInizioVigenza` / `articoloDataFineVigenza`. Un atto si verifica rispetto alla norma **vigente alla data di adozione**, non a oggi.
-- **Aggiornamento**: un job giornaliero interroga `ricerca/aggiornati` e riscarica solo le norme presenti in libreria che risultano modificate; segnala i template che citano testi cambiati.
-- **Risultati multipli**: se la URN restituisce una lista (es. ripubblicazioni in GU), si sceglie il testo principale o si chiede all'utente.
-- **Rinvii**: i link `urn:nir` presenti nel testo vengono estratti per suggerire norme collegate.
-- **Attribuzione**: i dati sono IPZS in licenza CC BY 4.0; la fonte va citata.
+## 4. Verifica di un atto
 
-## 4. Uso dell'LLM
+Deterministica (immediata, anche nel "controllo rapido" del wizard):
 
-- Modello on-premise, servito da vLLM/Ollama; il backend lo chiama tramite LiteLLM.
-- L'LLM **non cita norme a memoria**: riceve nel prompt il testo vigente dei commi pertinenti.
-- I riferimenti normativi nell'atto sono estratti in modo **deterministico** (regex + normalizzazione in URN); l'LLM valuta pertinenza e qualità.
-- Checklist valutate **un elemento (o pochi) per chiamata**, con output JSON vincolato da schema: `{esito: CONFORME|NON_CONFORME|NON_APPLICABILE|DUBBIO, motivazione, evidenza}`.
-- Ogni esito automatico è una proposta: il controllore conferma o modifica con motivazione.
+- **riferimenti normativi**: estrazione delle citazioni (forme estese e abbreviate, più
+  articoli, TUEL), vigenza alla data, esistenza di comma e lettera, avviso se il testo è
+  cambiato nell'ultimo anno;
+- **segnaposto** non compilati (`{{campo}}` o `[[campo]]`);
+- **dati personali** da valutare per la pubblicazione (CF, IBAN, salute, condizione
+  economica, ecc.), con generazione del documento con omissis.
 
-## 5. Modulo Redazione
+Con LLM on-premise (asincrona, nel worker):
 
-1. Scelta tipologia (affidamento diretto, impegno, liquidazione, ...).
-2. Wizard per sezioni: premesse, "visto" normativi (dalla libreria), "considerato", dispositivo.
-3. Controllo in tempo reale: segnaposto non compilati, riferimenti non vigenti alla data prevista di adozione, autovalutazione con la checklist della tipologia.
-4. Generazione ODT dal template; esportazione PDF ed eventuale versione con omissis.
+- un elemento di checklist per chiamata, con il testo vigente delle norme indicate
+  nell'elemento; output JSON vincolato `{esito, motivazione, evidenza, suggerimento}`,
+  esito ∈ CONFORME | NON_CONFORME | NON_APPLICABILE | DUBBIO;
+- risposta non valida → un nuovo tentativo; errore del modello → l'elemento risulta ERRORE
+  ma le verifiche deterministiche restano disponibili.
 
-## 6. Modulo Controllo
+## 5. Ruoli e sicurezza
 
-1. **Sessione di controllo**: periodo, criteri e percentuale di sorteggio.
-2. **Caricamento atti** sorteggiati (PDF/ODT dal gestionale dell'ente), estrazione testo.
-3. **Assegnazione** a un controllore.
-4. **Analisi automatica**: riferimenti normativi (vigenza alla data di adozione), checklist con LLM, dati personali da oscurare.
-5. **Revisione umana** ed esito finale motivato.
-6. **Report** di sessione aggregato per settore e criterio.
-
-## 7. Ruoli
-
-| Ruolo | Permessi |
+| Ruolo (gruppo AD) | Permessi |
 |---|---|
-| `REDATTORE` | Proprie bozze, libreria normativa in lettura |
-| `CONTROLLORE` | Sessioni e atti assegnati, revisione esiti |
-| `ADMIN` | Template, checklist, sessioni, libreria normativa |
+| `REDATTORE` | Proprie bozze (isolamento per proprietario), libreria, riferimenti personali |
+| `CONTROLLORE` | Sessioni di controllo, atti, revisione, report |
+| `ADMIN` | Checklist, template, riferimenti condivisi, stato aggiornamenti; tutti i ruoli |
 
-I ruoli derivano dai **gruppi AD** al login (nessuna password salvata). In uso solo personale l'autenticazione può essere disattivata (`AUTH_ENABLED=false`).
+- Login: BIND LDAPS con `utente@dominio`; rifiuto di password vuote (bind anonimo) e di
+  username con caratteri non ammessi; filtri LDAP con escape.
+- Sessione: JWT HS256 in cookie httpOnly `SameSite=Strict` (web) o header Bearer (desktop).
+- `AUTH_ENABLED=false`: uso personale senza Active Directory, con un utente locale.
+- Audit di accessi, modifiche, documenti generati, revisioni.
+- Kubernetes: Pod Security `restricted`, utenti non root, filesystem in sola lettura,
+  NetworkPolicy (il servizio documenti accetta connessioni solo dall'API).
 
-## 8. Sicurezza
+## 6. API principali
 
-- LDAPS obbligatorio, escape dell'input, timeout.
-- JWT a breve scadenza; su Flutter Web cookie httpOnly invece di storage locale.
-- Audit log delle modifiche su bozze ed esiti di controllo.
+| Area | Endpoint |
+|---|---|
+| Autenticazione | `POST /api/v1/auth/login`, `POST /logout`, `GET /me` |
+| Libreria | `GET/POST /api/v1/norme`, `GET /api/v1/norme/articolo?urn=&data=`, `GET/POST/DELETE /api/v1/riferimenti`, `GET /api/v1/norme/aggiornamenti` |
+| Checklist | `GET/POST /api/v1/checklists`, `PUT/DELETE /api/v1/checklists/codice/{codice}` |
+| Template | `GET/POST /api/v1/templates`, `PUT /{id}/campi`, `GET /{id}/file` |
+| Redazione | `GET/POST/PUT/DELETE /api/v1/bozze`, `GET /{id}/controllo-rapido`, `GET /{id}/documento?formato=odt|pdf|pdfa&omissis=`, `POST /api/v1/bozze/espandi` |
+| Verifiche | `POST /api/v1/verifiche`, `GET /api/v1/verifiche/{id}`, `PUT /{id}/revisione` |
+| Controllo | `/api/v1/controllo/sessioni` (+ `/sorteggio`, `/atti`, `/report`, `/report.csv`, `/chiudi`), `/api/v1/controllo/atti/{id}` (+ `/testo`, `/file`, `/assegna`) |
 
-## 9. Roadmap
+Documentazione interattiva: `/docs` sull'API.
 
-1. ✅ Client Normattiva, URN, parser commi/lettere.
-2. Cache MySQL delle versioni normative + job di aggiornamento.
-3. Libreria riferimenti e API di consultazione.
-4. Checklist versionate (CRUD).
-5. Estrazione deterministica dei riferimenti da un testo di atto.
-6. Integrazione LLM on-premise per la valutazione delle checklist.
-7. Modulo Controllo: sessioni, caricamento atti, revisione, report.
-8. Modulo Redazione: template ODT, wizard, generazione documenti.
-9. Auth LDAP/JWT e frontend Flutter.
+## 7. Limiti noti e sviluppi
+
+- PDF scansionati: non gestiti (serve il PDF nativo o l'originale); un OCR on-premise è un
+  possibile sviluppo.
+- Gruppi AD annidati: si considerano solo i gruppi diretti (`memberOf`).
+- Il dimensionamento del worker dipende dalla capacità del server LLM.

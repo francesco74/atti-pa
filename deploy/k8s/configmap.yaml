@@ -6,8 +6,38 @@ metadata:
     app.kubernetes.io/part-of: atti-pa
 data:
   FUSO_ORARIO: "Europe/Rome"
+
+  # Normattiva
   NORMATTIVA_BASE_URL: "https://api.normattiva.it/t/normattiva.api"
   NORMATTIVA_TIMEOUT: "30"
+
+  # Active Directory
+  AUTH_ENABLED: "true"
+  LDAP_URL: "ldaps://dc.ente.local"
+  LDAP_DOMINIO: "ente.local"
+  LDAP_BASE_DN: "DC=ente,DC=local"
+  LDAP_CA_CERT: "/etc/atti-pa/ldap/ca.pem"
+  LDAP_GRUPPO_REDATTORI: "ATTI-PA-Redattori"
+  LDAP_GRUPPO_CONTROLLORI: "ATTI-PA-Controllori"
+  LDAP_GRUPPO_ADMIN: "ATTI-PA-Admin"
+  JWT_SCADENZA_MINUTI: "480"
+  COOKIE_SECURE: "true"
+
+  # LLM on-premise (API compatibile OpenAI)
+  LLM_BASE_URL: "http://vllm.llm.svc.cluster.local:8000/v1"
+  LLM_MODEL: "mistral-small"
+  LLM_TIMEOUT: "180"
+
+  # Servizi interni
+  DOCUMENTI_URL: "http://documenti:8000"
+  UPLOAD_MAX_MB: "20"
+
+  # Job di aggiornamento normative
   SYNC_GIORNI_INIZIALI: "7"
   SYNC_FINESTRA_GIORNI: "7"
   SYNC_PAUSA_SECONDI: "0.5"
+
+  # Worker di verifica
+  WORKER_INTERVALLO_SECONDI: "5"
+  WORKER_MAX_TENTATIVI: "3"
+  WORKER_TIMEOUT_MINUTI: "30"

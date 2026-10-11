@@ -1,43 +1,93 @@
 # atti-pa
 
-Strumenti di supporto alla redazione e al controllo delle **determinazioni dirigenziali** degli enti locali.
+Strumenti di supporto alla **redazione** e al **controllo** delle determinazioni dirigenziali
+degli enti locali, pensati per girare su Kubernetes all'interno della rete dell'ente.
 
-Il progetto è composto da due moduli distinti che condividono la stessa base normativa e le stesse checklist:
-
-| Modulo | Utenti | Scopo |
+| Modulo | Utenti | Cosa fa |
 |---|---|---|
-| **Redazione** | uso personale | Schema guidato per stendere l'atto con riferimenti normativi corretti e vigenti |
-| **Controllo** | gruppo controllo atti | Verifica della qualità degli atti sorteggiati (controllo successivo, art. 147-bis TUEL) |
+| **Redazione** | redattori (uso personale) | Wizard guidato su template ODT, riferimenti normativi presi da Normattiva e verificati alla data di adozione, controllo rapido, documento ODT/PDF/PDF-A anche con omissis |
+| **Controllo** | gruppo controllo atti | Sessioni di controllo successivo (art. 147-bis TUEL), sorteggio riproducibile, analisi automatica degli atti, revisione umana, report |
 
-Principi chiave:
+Principi:
 
-- **Normattiva è la fonte di verità** per i riferimenti normativi: il testo viene estratto dalle API OpenData e versionato per data di vigenza.
-- **LLM on-premise**: nessun dato esce dall'ente. Il modello lavora solo sul testo normativo che gli viene passato.
-- **L'IA propone, l'umano decide**: ogni esito automatico è modificabile e motivato dal controllore.
+- **Normattiva è la fonte di verità**: i testi normativi sono scaricati dalle API OpenData e
+  conservati per intervallo di vigenza; ogni atto è verificato rispetto alle norme vigenti
+  alla sua data di adozione.
+- **LLM on-premise**: nessun dato esce dall'ente. Il modello valuta un criterio di checklist
+  alla volta e riceve nel prompt il testo vigente delle norme: non cita norme a memoria.
+- **L'IA propone, la persona decide**: gli esiti automatici sono proposte che il controllore
+  conferma o modifica con motivazione.
+- **Accesso con Active Directory**: login pass-through via LDAPS, ruoli dai gruppi AD,
+  nessuna password salvata. Ogni redattore vede solo le proprie bozze.
 
-## Struttura
+## Componenti
+
+Ogni componente ha la propria cartella con il `Dockerfile` e il codice in `src/`.
+Le immagini si costruiscono dalla radice del repository
+(`docker build -f <componente>/Dockerfile .`).
+
+| Cartella | In Kubernetes | Ruolo |
+|---|---|---|
+| `api/` | Deployment + Service | API REST FastAPI: autenticazione, libreria, redazione, controllo |
+| `verifica-worker/` | Deployment | Elabora la coda delle verifiche (riferimenti, dati personali, checklist con LLM) |
+| `documenti/` | Deployment + Service interno | Conversioni con LibreOffice headless (ODT→PDF/PDF-A, DOCX→ODT) |
+| `normattiva-sync/` | **CronJob** notturno | Aggiorna i testi normativi modificati su Normattiva |
+| `db-migrate/` | initContainer dell'API | Applica le migrazioni dello schema MySQL |
+| `frontend/` | Deployment + Service | App Flutter Web servita da nginx |
+| `common/` | — (libreria) | Codice condiviso: modelli, client Normattiva, estrazione riferimenti, verifica, LLM |
+| `deploy/k8s/` | — | Manifest Kubernetes (kustomize) |
 
 ```
-backend/          API FastAPI (Python 3.11+)
-  app/normattiva/ Client API Normattiva, costruzione URN, parser commi/lettere
-  db/schema.sql   Schema MySQL 8
-  tests/
-docs/
-  SPECIFICA.md    Specifica tecnica
-frontend/         Client Flutter (da sviluppare)
+               Ingress (atti.ente.local)
+              /                        \
+        /  frontend                /api  api ──────── documenti (LibreOffice)
+                                         │  \
+                                         │   └─ Active Directory (LDAPS)
+                                         │
+     normattiva-sync (CronJob) ──── MySQL ──── verifica-worker ──── LLM on-premise
+              │                                   │
+              └──────────── Normattiva ───────────┘
 ```
 
-## Avvio rapido (backend)
+## Prova in locale
 
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-cp .env.example .env
-pytest
-uvicorn app.main:app --reload
+docker compose up --build
 ```
+
+Apre l'applicazione su http://localhost:8080 in modalità uso personale (senza Active
+Directory). Per l'LLM indicare un server compatibile OpenAI, ad esempio Ollama:
+`LLM_BASE_URL=http://host.docker.internal:11434/v1 LLM_MODEL=mistral-small docker compose up`.
+
+## Sviluppo
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e "./common[dev]" -e "./api[dev]" -e "./normattiva-sync[dev]" \
+  -e "./verifica-worker[dev]" -e "./db-migrate[dev]" -e "./documenti[dev]"
+
+# test (SQLite in memoria; con TEST_DATABASE_URL anche su MySQL migrato)
+for c in common api normattiva-sync verifica-worker db-migrate documenti; do (cd $c && pytest -q); done
+ruff check . && ruff format --check .
+```
+
+Il frontend è descritto in [frontend/README.md](frontend/README.md).
+La pipeline GitHub Actions esegue test (anche su MySQL 8), compila il frontend e costruisce
+tutte le immagini.
+
+## Installazione su Kubernetes
+
+1. Costruire e pubblicare le immagini nel registry dell'ente; aggiornare `images` in
+   `deploy/k8s/kustomization.yaml`.
+2. Creare il database MySQL 8 (`CREATE DATABASE atti_pa CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`).
+3. Creare i segreti (vedi `deploy/k8s/secret.example.yaml`): `atti-pa-secret`,
+   la ConfigMap `ldap-ca` con il certificato della CA di Active Directory e il Secret TLS `atti-pa-tls`.
+4. Adattare `deploy/k8s/configmap.yaml` (LDAP, gruppi AD, indirizzo dell'LLM, host dell'Ingress).
+5. `kubectl apply -k deploy/k8s`
+
+Le migrazioni del database girano automaticamente all'avvio dell'API.
 
 ## Fonte dei dati normativi
 
-Dati: Normattiva (https://www.normattiva.it), Istituto Poligrafico e Zecca dello Stato, licenza CC BY 4.0.
+Dati: Normattiva (https://www.normattiva.it), Istituto Poligrafico e Zecca dello Stato,
+licenza CC BY 4.0.

@@ -1,0 +1,74 @@
+# Ambiente locale di prova (uso personale, senza Active Directory).
+#   docker compose up --build
+# Applicazione: http://localhost:8080   Documentazione API: http://localhost:8000/docs
+#
+# L'LLM non è incluso: indicare in LLM_BASE_URL un server compatibile OpenAI
+# (es. Ollama sul computer: http://host.docker.internal:11434/v1).
+
+x-comune: &comune
+  environment: &ambiente
+    DATABASE_URL: mysql+aiomysql://atti_pa:password@mysql:3306/atti_pa
+    AUTH_ENABLED: "false"
+    COOKIE_SECURE: "false"
+    JWT_SECRET: sviluppo-locale-non-usare-in-produzione
+    DOCUMENTI_URL: http://documenti:8000
+    LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+    LLM_MODEL: ${LLM_MODEL:-mistral-small}
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: atti_pa
+      MYSQL_USER: atti_pa
+      MYSQL_PASSWORD: password
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 5s
+      retries: 30
+
+  db-migrate:
+    <<: *comune
+    build: { context: ., dockerfile: db-migrate/Dockerfile }
+    depends_on:
+      mysql: { condition: service_healthy }
+
+  api:
+    <<: *comune
+    build: { context: ., dockerfile: api/Dockerfile }
+    ports: ["8000:8000"]
+    depends_on:
+      db-migrate: { condition: service_completed_successfully }
+
+  verifica-worker:
+    <<: *comune
+    build: { context: ., dockerfile: verifica-worker/Dockerfile }
+    depends_on:
+      db-migrate: { condition: service_completed_successfully }
+
+  documenti:
+    build: { context: ., dockerfile: documenti/Dockerfile }
+
+  frontend:
+    build: { context: ., dockerfile: frontend/Dockerfile }
+    ports: ["8080:8080"]
+    volumes:
+      - ./frontend/nginx-locale.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [api]
+
+  # Esecuzione manuale: docker compose run --rm normattiva-sync
+  normattiva-sync:
+    <<: *comune
+    build: { context: ., dockerfile: normattiva-sync/Dockerfile }
+    profiles: [job]
+    depends_on:
+      db-migrate: { condition: service_completed_successfully }
+
+volumes:
+  mysql:

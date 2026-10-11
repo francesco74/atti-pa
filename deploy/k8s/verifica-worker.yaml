@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verifica-worker
+  labels:
+    app.kubernetes.io/name: verifica-worker
+    app.kubernetes.io/part-of: atti-pa
+spec:
+  # Più repliche elaborano la coda in parallelo (SELECT ... FOR UPDATE SKIP LOCKED).
+  # Dimensionare in base alla capacità del server LLM.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: verifica-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: verifica-worker
+        app.kubernetes.io/part-of: atti-pa
+    spec:
+      # tempo per completare la verifica in corso dopo SIGTERM
+      terminationGracePeriodSeconds: 600
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: worker
+          image: atti-pa/verifica-worker:0.1.0
+          envFrom:
+            - configMapRef:
+                name: atti-pa-config
+            - secretRef:
+                name: atti-pa-secret
+          livenessProbe:
+            # il worker aggiorna /tmp/heartbeat a ogni ciclo
+            exec:
+              command:
+                - sh
+                - -c
+                - test $(( $(date +%s) - $(stat -c %Y /tmp/heartbeat) )) -lt 900
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          resources:
+            requests: { cpu: 50m, memory: 192Mi }
+            limits: { memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
