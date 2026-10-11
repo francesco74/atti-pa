@@ -43,6 +43,8 @@ class RisultatoAmbiguo(NormattivaError):
 
 @dataclass
 class TestoArticolo:
+    __test__ = False  # evita che pytest la scambi per una classe di test
+
     urn: str
     titolo_atto: str
     sottotitolo: str | None
