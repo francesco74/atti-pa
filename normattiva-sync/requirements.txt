@@ -1,0 +1,3 @@
+# Dipendenze dell'immagine normattiva-sync: solo quelle della libreria comune.
+# Il codice viene da normattiva-sync/src e common/src (vedi normattiva-sync/Dockerfile).
+-r ../common/requirements.txt

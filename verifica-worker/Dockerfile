@@ -5,17 +5,23 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    LOG_LEVEL=INFO
 
-WORKDIR /build
-COPY common/pyproject.toml common/pyproject.toml
-COPY common/src common/src
-COPY verifica-worker/pyproject.toml verifica-worker/pyproject.toml
-COPY verifica-worker/src verifica-worker/src
-RUN pip install ./common ./verifica-worker && rm -rf /build
+# Dipendenze dal requirements.txt del componente (include quelle di common)
+WORKDIR /deps
+COPY common/requirements.txt common/requirements.txt
+COPY verifica-worker/requirements.txt verifica-worker/requirements.txt
+RUN pip install -r verifica-worker/requirements.txt && rm -rf /deps
+
+# Codice: la libreria comune come pacchetto "common", il componente direttamente in /app
+WORKDIR /app
+COPY common/ /app/common/
+COPY verifica-worker/src/ /app/
+ENV PYTHONPATH=/app
 
 RUN useradd --system --uid 10001 app
 USER 10001
-WORKDIR /app
 
-CMD ["python", "-m", "verifica_worker"]
+# src è piatto: si esegue src/__main__.py
+CMD ["python", "/app"]

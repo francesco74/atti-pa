@@ -123,10 +123,10 @@ class _TemplateState extends State<_Template> {
   Future<void> _caricaTemplate() async {
     final api = apiDi(context);
     final tipologie = List<Map<String, dynamic>>.from(await api.get('/api/v1/tipologie') as List);
-    final file = await FilePicker.platform
-        .pickFiles(type: FileType.custom, allowedExtensions: ['odt'], withData: true);
-    final scelto = file?.files.single;
-    if (scelto == null || scelto.bytes == null || !mounted) return;
+    final scelto = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: ['odt']);
+    if (scelto == null || !mounted) return;
+    final bytes = await scelto.readAsBytes();
+    if (!mounted) return;
     final nome = TextEditingController(text: scelto.name.replaceAll('.odt', ''));
     String? tipologia;
     final ok = await showDialog<bool>(
@@ -145,7 +145,7 @@ class _TemplateState extends State<_Template> {
               TextField(controller: nome, decoration: const InputDecoration(labelText: 'Nome')),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: tipologia,
+                initialValue: tipologia,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Tipologia di atto'),
                 items: [
@@ -169,7 +169,7 @@ class _TemplateState extends State<_Template> {
         '/api/v1/templates',
         campi: {'nome': nome.text.trim(), 'tipologia_atto': tipologia!},
         campoFile: 'file',
-        bytes: scelto.bytes!,
+        bytes: bytes,
         nomeFile: scelto.name,
       );
       _carica();
@@ -209,7 +209,7 @@ class _TemplateState extends State<_Template> {
                     SizedBox(
                       width: 140,
                       child: DropdownButtonFormField<String>(
-                        value: campi[i]['tipo'] as String,
+                        initialValue: campi[i]['tipo'] as String,
                         isDense: true,
                         decoration: const InputDecoration(labelText: 'Tipo', isDense: true),
                         items: const [

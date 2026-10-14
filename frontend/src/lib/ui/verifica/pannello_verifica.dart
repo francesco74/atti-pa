@@ -14,6 +14,8 @@ class PannelloRiferimenti extends StatelessWidget {
     final riferimenti = List<Map<String, dynamic>>.from(esito['riferimenti'] as List? ?? []);
     final segnaposto = List<String>.from(esito['segnaposto'] as List? ?? []);
     final dati = List<Map<String, dynamic>>.from(esito['dati_personali'] as List? ?? []);
+    // assente nelle verifiche precedenti al rilevamento con il modello
+    final statoDati = esito['dati_personali_stato'] as String? ?? 'VALUTATI';
     final mancanti = List<String>.from(esito['campi_obbligatori_mancanti'] as List? ?? []);
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -34,11 +36,20 @@ class PannelloRiferimenti extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     title: Text((r['citazione'] ?? r['testo']).toString()),
                     subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      if (r['fonte'] == 'MANUALE')
+                        Text(r['riconosciuto_da'] == 'LLM'
+                            ? 'Norma inserita manualmente · citazione riconosciuta dal modello'
+                            : 'Norma inserita manualmente'),
+                      if (r['nel_complesso'] == true)
+                        Text('Citata nel suo complesso'
+                            '${r['titolo_atto'] != null ? ': ${r['titolo_atto']}' : ''}'),
                       if (r['vigenza_inizio'] != null)
                         Text('Vigente dal ${formatData(r['vigenza_inizio'])}'
                             '${r['vigenza_fine'] != null ? ' al ${formatData(r['vigenza_fine'])}' : ''}'),
                       for (final a in List<String>.from(r['avvisi'] as List? ?? []))
                         Text('Attenzione: $a', style: const TextStyle(color: Colors.orange)),
+                      if (r['coerenza'] is Map)
+                        _Coerenza(Map<String, dynamic>.from(r['coerenza'] as Map)),
                     ]),
                     trailing: EsitoChip(r['esito'] as String?),
                   ),
@@ -53,9 +64,19 @@ class PannelloRiferimenti extends StatelessWidget {
               ]),
       ),
       Sezione(
-        titolo: 'Dati personali da valutare per la pubblicazione (${dati.length})',
-        child: dati.isEmpty
-            ? const Text('Nessun dato personale rilevato.')
+        titolo: 'Dati personali da valutare per la pubblicazione'
+            '${statoDati == 'VALUTATI' ? ' (${dati.length})' : ''}',
+        child: statoDati == 'NON_VALUTATI'
+            ? const Text('I dati personali sono rilevati dal modello linguistico nella verifica '
+                'completa dell\'atto.')
+            : statoDati == 'ERRORE'
+            ? Text(
+                '${esito['dati_personali_errore'] ?? 'Rilevamento non riuscito'}. '
+                'Ripetere la verifica.',
+                style: const TextStyle(color: Colors.orange),
+              )
+            : dati.isEmpty
+            ? const Text('Nessun dato personale rilevato dal modello.')
             : Column(children: [
                 for (final d in dati)
                   ListTile(
@@ -64,11 +85,45 @@ class PannelloRiferimenti extends StatelessWidget {
                     leading: Icon(Icons.privacy_tip,
                         color: d['priorita'] == 'ALTA' ? Colors.red : Colors.orange),
                     title: Text(d['testo'].toString()),
-                    subtitle: Text(d['categoria'].toString().replaceAll('_', ' ').toLowerCase()),
+                    subtitle: Text([
+                      d['categoria'].toString().replaceAll('_', ' ').toLowerCase(),
+                      if (d['motivo'] != null) d['motivo'],
+                    ].join(' · ')),
                   ),
               ]),
       ),
     ]);
+  }
+}
+
+/// Coerenza tra la norma citata e l'uso che ne fa l'atto, proposta dall'LLM.
+class _Coerenza extends StatelessWidget {
+  const _Coerenza(this.coerenza);
+
+  final Map<String, dynamic> coerenza;
+
+  @override
+  Widget build(BuildContext context) {
+    final stile = Theme.of(context).textTheme.bodySmall;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Tooltip(
+            message: 'Valutazione proposta dal modello linguistico: va confermata da una persona',
+            child: Icon(Icons.smart_toy_outlined, size: 16),
+          ),
+          const SizedBox(width: 4),
+          const Text("Coerenza con l'atto: "),
+          EsitoChip(coerenza['esito'] as String?),
+        ]),
+        if (coerenza['motivazione'] != null) Text(coerenza['motivazione'].toString(), style: stile),
+        if (coerenza['evidenza'] != null)
+          Text('«${coerenza['evidenza']}»', style: stile?.copyWith(fontStyle: FontStyle.italic)),
+        if (coerenza['suggerimento'] != null)
+          Text('Suggerimento: ${coerenza['suggerimento']}', style: stile),
+      ]),
+    );
   }
 }
 

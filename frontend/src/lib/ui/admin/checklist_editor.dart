@@ -149,7 +149,7 @@ class _ChecklistEditorPageState extends State<ChecklistEditorPage> {
             child: FutureBuilder<List<dynamic>>(
               future: _tipologie,
               builder: (context, snap) => DropdownButtonFormField<String>(
-                value: _tipologia,
+                initialValue: _tipologia,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Tipologia di atto'),
                 items: [

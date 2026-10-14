@@ -1,0 +1,19 @@
+# Dipendenze della libreria comune (common), con le versioni testate.
+# Incluse con "-r ../common/requirements.txt" dai componenti che la usano.
+pydantic==2.14.1
+pydantic-settings==2.15.0
+httpx==0.28.1
+beautifulsoup4==4.15.0
+sqlalchemy[asyncio]==2.1.4
+aiomysql==0.3.2
+# PyMySQL 1.2 rompe l'escape dei dati binari di aiomysql 0.3 (upload dei file)
+pymysql==1.1.3
+# MySQL 8 autentica con caching_sha2_password: a PyMySQL serve cryptography
+cryptography==50.0.2
+tzdata==2026.5
+lxml==6.1.3
+pypdf==6.20.0
+# SDK ufficiale per LLM_PROVIDER=anthropic (Claude)
+anthropic==1.13.0
+# Code RabbitMQ (common/coda.py)
+aio-pika==10.1.1

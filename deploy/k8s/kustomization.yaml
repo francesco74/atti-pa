@@ -7,27 +7,26 @@ resources:
   - configmap.yaml
   - api.yaml
   - verifica-worker.yaml
-  - documenti.yaml
+  - converter.yaml
+  - rabbitmq.yaml
+  - archivio.yaml
   - frontend.yaml
   - normattiva-sync-cronjob.yaml
   - ingress.yaml
   - networkpolicy.yaml
 
 # Da creare a parte (vedi secret.example.yaml):
-#   Secret atti-pa-secret, ConfigMap ldap-ca, Secret TLS atti-pa-tls
+#   Secret atti-pa-secret, Secret rabbitmq-secret, ConfigMap ldap-ca, Secret TLS atti-pa-tls
 
 images:
   - name: atti-pa/api
     newName: registry.ente.local/atti-pa/api
     newTag: "0.1.0"
-  - name: atti-pa/db-migrate
-    newName: registry.ente.local/atti-pa/db-migrate
-    newTag: "0.1.0"
   - name: atti-pa/verifica-worker
     newName: registry.ente.local/atti-pa/verifica-worker
     newTag: "0.1.0"
-  - name: atti-pa/documenti
-    newName: registry.ente.local/atti-pa/documenti
+  - name: atti-pa/converter
+    newName: registry.ente.local/atti-pa/converter
     newTag: "0.1.0"
   - name: atti-pa/frontend
     newName: registry.ente.local/atti-pa/frontend

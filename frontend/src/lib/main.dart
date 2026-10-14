@@ -8,7 +8,9 @@ import 'stato/auth_state.dart';
 import 'ui/home_shell.dart';
 import 'ui/login_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Config.carica();
   final api = ApiClient(Config.apiUrl);
   runApp(MultiProvider(
     providers: [

@@ -268,7 +268,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
-        value: _tipologia,
+        initialValue: _tipologia,
         isExpanded: true,
         decoration: const InputDecoration(labelText: 'Tipologia di atto'),
         items: [
@@ -292,7 +292,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String?>(
-        value: _templateId,
+        initialValue: _templateId,
         isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Template',
@@ -377,8 +377,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
         shrinkWrap: true,
         buildDefaultDragHandles: true,
         physics: const NeverScrollableScrollPhysics(),
-        onReorder: (da, a) => setState(() {
-          if (a > da) a -= 1;
+        onReorderItem: (da, a) => setState(() {
           _riferimenti.insert(a, _riferimenti.removeAt(da));
           _modificata = true;
         }),

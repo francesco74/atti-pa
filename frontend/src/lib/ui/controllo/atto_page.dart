@@ -5,15 +5,25 @@ import 'package:flutter/material.dart';
 import '../../util/download.dart';
 import '../comuni.dart';
 import '../verifica/pannello_verifica.dart';
-import 'sessione_page.dart' show statiAtto;
+import '../visualizzatore_pdf.dart';
+const statiAtto = {
+  'IN_CONVERSIONE': 'In conversione',
+  'ERRORE_CONVERSIONE': 'Conversione non riuscita',
+  'DA_ANALIZZARE': 'Da analizzare',
+  'IN_ANALISI': 'In analisi',
+  'ANALIZZATO': 'Da revisionare',
+  'IN_REVISIONE': 'In revisione',
+  'CHIUSO': 'Concluso',
+};
 
 const _esitiRevisione = ['CONFORME', 'NON_CONFORME', 'NON_APPLICABILE', 'DUBBIO'];
 
-/// Revisione di un atto: testo a sinistra, proposta automatica e decisione a destra.
+/// Audit di un atto: testo a sinistra, proposta automatica e decisione a destra.
 class AttoPage extends StatefulWidget {
-  const AttoPage({super.key, required this.attoId});
+  const AttoPage({super.key, required this.attoId, required this.titolo});
 
   final String attoId;
+  final String titolo;
 
   @override
   State<AttoPage> createState() => _AttoPageState();
@@ -23,7 +33,6 @@ class _AttoPageState extends State<AttoPage> {
   Map<String, dynamic>? _atto;
   String _testo = '';
   Map<String, dynamic>? _verifica;
-  List<Map<String, dynamic>> _controllori = [];
   final Map<String, String> _esitoScelto = {};
   final Map<String, TextEditingController> _note = {};
   final _motivazione = TextEditingController();
@@ -55,12 +64,10 @@ class _AttoPageState extends State<AttoPage> {
         api.get(_base),
         api.get('$_base/testo'),
         api.get('/api/v1/verifiche', query: {'atto_controllato_id': widget.attoId}),
-        api.get('/api/v1/controllo/controllori'),
       ]);
       _atto = risposte[0] as Map<String, dynamic>;
       _testo = (risposte[1] as Map<String, dynamic>)['testo'] as String;
       final verifiche = (risposte[2] as List).cast<Map<String, dynamic>>();
-      _controllori = (risposte[3] as List).cast<Map<String, dynamic>>();
       _impostaVerifica(verifiche.isEmpty ? null : verifiche.first);
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -97,8 +104,11 @@ class _AttoPageState extends State<AttoPage> {
         if (!mounted) return;
         if (v['stato'] == 'COMPLETATA' || v['stato'] == 'ERRORE') {
           _polling?.cancel();
-          final atto = await apiDi(context).get(_base);
-          _atto = atto as Map<String, dynamic>;
+          final api = apiDi(context);
+          final risposte = await Future.wait([api.get(_base), api.get('$_base/testo')]);
+          _atto = risposte[0] as Map<String, dynamic>;
+          // il testo in Markdown arriva dal converter dopo il caricamento
+          _testo = (risposte[1] as Map<String, dynamic>)['testo'] as String;
         }
         setState(() => _impostaVerifica(v));
       } catch (_) {
@@ -111,15 +121,6 @@ class _AttoPageState extends State<AttoPage> {
     try {
       final v = await apiDi(context).post('/api/v1/verifiche', {'atto_controllato_id': widget.attoId});
       setState(() => _impostaVerifica(v as Map<String, dynamic>));
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
-  }
-
-  Future<void> _assegna(String? userId) async {
-    try {
-      final a = await apiDi(context).put('$_base/assegna', {'user_id': userId});
-      setState(() => _atto = a as Map<String, dynamic>);
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
@@ -150,6 +151,7 @@ class _AttoPageState extends State<AttoPage> {
         'motivazione': _motivazione.text.trim(),
         'conclusa': conclusa,
       });
+      if (!mounted) return;
       final atto = await apiDi(context).get(_base);
       setState(() {
         _atto = atto as Map<String, dynamic>;
@@ -159,6 +161,27 @@ class _AttoPageState extends State<AttoPage> {
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
+  }
+
+  /// Il testo in Markdown estratto dal file: quello analizzato dalle verifiche e dall'LLM.
+  void _mostraTesto() {
+    showDialog<void>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Testo letto dal sistema'),
+        content: SizedBox(
+          width: 800,
+          child: SingleChildScrollView(
+            child: SelectableText(_testo.isEmpty
+                ? (_atto?['stato'] == 'IN_CONVERSIONE'
+                    ? 'Conversione del file in corso…'
+                    : 'Testo non disponibile.')
+                : _testo),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Chiudi'))],
+      ),
+    );
   }
 
   Widget _colonnaVerifica() {
@@ -201,7 +224,7 @@ class _AttoPageState extends State<AttoPage> {
                         SizedBox(
                           width: 200,
                           child: DropdownButtonFormField<String>(
-                            value: _esitoScelto[chiave],
+                            initialValue: _esitoScelto[chiave],
                             decoration: const InputDecoration(labelText: 'Esito del controllore', isDense: true),
                             items: [
                               for (final x in _esitiRevisione)
@@ -257,9 +280,17 @@ class _AttoPageState extends State<AttoPage> {
       );
     }
     final a = _atto!;
-    final testo = Sezione(
-      titolo: 'Testo dell\'atto',
-      azioni: [
+    final originale = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(children: [
+        Expanded(
+          child: Text('Atto originale · ${a['file_nome']}',
+              style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+        ),
+        TextButton.icon(
+          icon: const Icon(Icons.notes),
+          label: const Text('Testo letto dal sistema'),
+          onPressed: _mostraTesto,
+        ),
         IconButton(
           tooltip: 'Scarica il file originale',
           icon: const Icon(Icons.download),
@@ -271,43 +302,40 @@ class _AttoPageState extends State<AttoPage> {
             }
           },
         ),
-      ],
-      child: SelectableText(_testo),
-    );
+      ]),
+      const SizedBox(height: 8),
+      Expanded(
+        child: DecoratedBox(
+          decoration: BoxDecoration(border: Border.all(color: Theme.of(context).dividerColor)),
+          // PDF caricato così com'è; ODT, DOC e DOCX convertiti in PDF dal server
+          child: VisualizzatorePdf(url: apiDi(context).uri('$_base/anteprima')),
+        ),
+      ),
+    ]);
     return Scaffold(
       appBar: AppBar(
-        title: Text('${a['numero_registro'] ?? 's.n.'} · ${a['oggetto'] ?? a['file_nome']}'),
+        title: Text(widget.titolo),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: Chip(label: Text(statiAtto[a['stato']] ?? a['stato'].toString())),
+            child: Text('Adottato il ${formatData(a['data_adozione'])}'),
           ),
-          SizedBox(
-            width: 240,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: DropdownButtonFormField<String?>(
-                value: a['assegnato_a'] as String?,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Assegnato a', isDense: true),
-                items: [
-                  const DropdownMenuItem<String?>(value: null, child: Text('Nessuno')),
-                  for (final c in _controllori)
-                    DropdownMenuItem<String?>(
-                        value: c['id'] as String, child: Text((c['nome_completo'] ?? c['username']).toString())),
-                ],
-                onChanged: _assegna,
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Chip(label: Text(statiAtto[a['stato']] ?? a['stato'].toString())),
           ),
         ],
       ),
       body: LayoutBuilder(builder: (context, vincoli) {
         if (vincoli.maxWidth < 1000) {
-          return ListView(padding: const EdgeInsets.all(16), children: [_colonnaVerifica(), testo]);
+          return ListView(padding: const EdgeInsets.all(16), children: [
+            SizedBox(height: vincoli.maxHeight * 0.85, child: originale),
+            const SizedBox(height: 16),
+            _colonnaVerifica(),
+          ]);
         }
         return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: ListView(padding: const EdgeInsets.all(16), children: [testo])),
+          Expanded(child: Padding(padding: const EdgeInsets.all(16), child: originale)),
           const VerticalDivider(width: 1),
           Expanded(child: ListView(padding: const EdgeInsets.all(16), children: [_colonnaVerifica()])),
         ]);

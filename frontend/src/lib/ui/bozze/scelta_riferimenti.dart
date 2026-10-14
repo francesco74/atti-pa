@@ -191,7 +191,7 @@ class _RiferimentoManualeDialogState extends State<RiferimentoManualeDialog> {
         width: 480,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           DropdownButtonFormField<String>(
-            value: _tipo,
+            initialValue: _tipo,
             decoration: const InputDecoration(labelText: 'Tipo di atto'),
             items: [
               for (final e in tipiAtto.entries) DropdownMenuItem(value: e.key, child: Text(e.value)),

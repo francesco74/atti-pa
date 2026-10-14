@@ -32,9 +32,8 @@ class AuthState extends ChangeNotifier {
   StatoAuth stato = StatoAuth.verifica;
   Utente? utente;
 
-  /// All'avvio verifica se esiste già una sessione valida (cookie o token salvato).
+  /// All'avvio verifica se esiste già una sessione valida (cookie di sessione).
   Future<void> avvia() async {
-    await api.inizializza();
     try {
       utente = Utente.daJson(await api.utenteCorrente());
       stato = StatoAuth.autenticato;

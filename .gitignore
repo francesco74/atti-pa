@@ -4,14 +4,22 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+# artefatti di setuptools (pip install di un pacchetto locale)
+build/
+dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
+docs/
+deploy/
 
 # Config locale
 .env
+# archivio locale dei file degli atti (ARCHIVIO_DIR in sviluppo)
+/archivio/
+
 
 # Dati e file generati
 storage/

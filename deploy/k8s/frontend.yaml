@@ -27,6 +27,12 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          # config.json dell'app generato all'avvio da queste variabili
+          env:
+            - name: API_URL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: API_URL } }
+            - name: LOG_LEVEL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: LOG_LEVEL } }
           readinessProbe:
             httpGet: { path: /healthz, port: http }
           livenessProbe:

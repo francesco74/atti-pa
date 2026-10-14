@@ -6,7 +6,9 @@ build/
 pubspec.lock
 *.iml
 .idea/
-# cartelle generate da `flutter create` per le piattaforme desktop
+# l'app è solo web: piattaforme generate da `flutter create`
+android/
+ios/
 windows/
 linux/
 macos/

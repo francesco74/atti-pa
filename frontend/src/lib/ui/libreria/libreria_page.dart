@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../stato/auth_state.dart';
 import '../bozze/scelta_riferimenti.dart' show tipiAtto;
 import '../comuni.dart';
+import 'norme_manuali.dart';
 
 class LibreriaPage extends StatelessWidget {
   const LibreriaPage({super.key});
@@ -11,15 +12,17 @@ class LibreriaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(children: [
         TabBar(tabs: [
           Tab(icon: Icon(Icons.bookmarks_outlined), text: 'Riferimenti'),
-          Tab(icon: Icon(Icons.library_books_outlined), text: 'Norme'),
+          Tab(icon: Icon(Icons.library_books_outlined), text: 'Norme (Normattiva)'),
+          Tab(icon: Icon(Icons.account_balance_outlined), text: 'Regolamenti e altre norme'),
           Tab(icon: Icon(Icons.search), text: 'Consulta articolo'),
         ]),
         Expanded(
-          child: TabBarView(children: [_Riferimenti(), _Norme(), ConsultaArticolo()]),
+          child: TabBarView(
+              children: [_Riferimenti(), _Norme(), NormeManuali(), ConsultaArticolo()]),
         ),
       ]),
     );
@@ -127,7 +130,8 @@ class _NormeState extends State<_Norme> {
   }
 
   void _carica() => setState(() {
-        _lista = apiDi(context).get('/api/v1/norme').then((v) => v as List);
+        _lista = apiDi(context).get('/api/v1/norme').then(
+            (v) => (v as List).where((n) => n['fonte'] != 'MANUALE').toList());
       });
 
   Future<void> _aggiungi() async {
@@ -143,7 +147,7 @@ class _NormeState extends State<_Norme> {
             width: 420,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               DropdownButtonFormField<String>(
-                value: tipo,
+                initialValue: tipo,
                 decoration: const InputDecoration(labelText: 'Tipo'),
                 items: [
                   for (final e in tipiAtto.entries) DropdownMenuItem(value: e.key, child: Text(e.value)),
@@ -234,11 +238,23 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
   final _articolo = TextEditingController();
   DateTime _data = DateTime.now();
   Future<Map<String, dynamic>>? _risultato;
+  Future<List<dynamic>>? _inLibreria;
 
   @override
   void initState() {
     super.initState();
     _urn.text = widget.urnAtto ?? '';
+    if (widget.urnAtto != null) _caricaArticoli();
+  }
+
+  /// Articoli dell'atto già presenti in libreria, da scegliere con un clic.
+  void _caricaArticoli() {
+    final urn = _urn.text.trim();
+    if (urn.isEmpty) return;
+    setState(() {
+      _inLibreria = apiDi(context)
+          .get('/api/v1/norme/articoli', query: {'urn': urn}).then((v) => v as List);
+    });
   }
 
   @override
@@ -249,13 +265,29 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
   }
 
   void _cerca() {
-    if (_urn.text.trim().isEmpty || _articolo.text.trim().isEmpty) return;
+    if (_urn.text.trim().isEmpty) {
+      mostraMessaggio(context, 'Indica la URN dell\'atto');
+      return;
+    }
+    if (_articolo.text.trim().isEmpty) {
+      mostraMessaggio(context, 'Indica il numero dell\'articolo da consultare');
+      return;
+    }
     setState(() {
       _risultato = apiDi(context).get('/api/v1/norme/articolo', query: {
         'urn': '${_urn.text.trim()}~art${_articolo.text.trim()}',
         'data': isoData(_data),
-      }).then((v) => v as Map<String, dynamic>);
+      }).then((v) {
+        // un articolo scaricato ora da Normattiva entra nell'elenco di quelli in libreria
+        if (mounted) _caricaArticoli();
+        return v as Map<String, dynamic>;
+      });
     });
+  }
+
+  void _mostraArticolo(String articolo) {
+    _articolo.text = articolo;
+    _cerca();
   }
 
   Future<void> _salvaRiferimento(Map<String, dynamic> art, String? comma, String? lettera) async {
@@ -320,6 +352,7 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
               labelText: 'URN dell\'atto',
               hintText: 'urn:nir:stato:decreto.legislativo:2023-03-31;36',
             ),
+            onSubmitted: (_) => _caricaArticoli(),
           ),
         ),
         SizedBox(
@@ -340,6 +373,39 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
         ),
         FilledButton.icon(onPressed: _cerca, icon: const Icon(Icons.search), label: const Text('Mostra')),
       ]),
+      if (_inLibreria != null) ...[
+        const SizedBox(height: 12),
+        FutureBuilder<List<dynamic>>(
+          future: _inLibreria,
+          builder: (context, s) {
+            if (s.hasError) {
+              return Text('Elenco degli articoli in libreria non disponibile: ${s.error}',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error));
+            }
+            if (!s.hasData) return const LinearProgressIndicator();
+            final articoli = s.data!.cast<Map<String, dynamic>>();
+            if (articoli.isEmpty) {
+              return const Text('Nessun articolo di questo atto in libreria: indica il numero '
+                  'dell\'articolo e premi Mostra per scaricarlo da Normattiva.');
+            }
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Articoli in libreria (oppure indica un altro numero e premi Mostra):',
+                  style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: 6),
+              Wrap(spacing: 6, runSpacing: 6, children: [
+                for (final a in articoli)
+                  Tooltip(
+                    message: a['rubrica']?.toString() ?? '',
+                    child: ActionChip(
+                      label: Text('Art. ${a['articolo']}'),
+                      onPressed: () => _mostraArticolo(a['articolo'] as String),
+                    ),
+                  ),
+              ]),
+            ]);
+          },
+        ),
+      ],
       const SizedBox(height: 16),
       if (_risultato != null)
         Caricamento<Map<String, dynamic>>(

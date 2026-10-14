@@ -80,7 +80,7 @@ class _BozzePageState extends State<BozzePage> {
                   ? const Center(child: Text('Nessuna bozza. Crea la prima determina.'))
                   : ListView.separated(
                       itemCount: bozze.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) {
                         final b = bozze[i] as Map<String, dynamic>;
                         return ListTile(

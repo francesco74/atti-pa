@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'token_store.dart';
+import '../log.dart';
+import 'http_client.dart';
 
 class ApiException implements Exception {
   ApiException(this.status, this.messaggio);
@@ -17,22 +17,19 @@ class ApiException implements Exception {
 }
 
 /// Client REST dell'API atti-pa.
+///
+/// L'autenticazione usa il cookie di sessione httpOnly impostato dall'API: il token non
+/// è mai accessibile all'app. `withCredentials` serve in sviluppo, quando l'app e l'API
+/// sono su origini diverse; in produzione sono sullo stesso dominio.
 class ApiClient {
-  ApiClient(this.baseUrl, {http.Client? client, TokenStore? store})
-      : _http = client ?? http.Client(),
-        _store = store ?? TokenStore();
+  ApiClient(this.baseUrl, {http.Client? client})
+      : _http = client ?? creaClient();
 
   final String baseUrl;
   final http.Client _http;
-  final TokenStore _store;
-  String? _token;
 
   /// Chiamata quando l'API risponde 401 (sessione scaduta).
   VoidCallback? suNonAutenticato;
-
-  Future<void> inizializza() async {
-    _token = await _store.leggi();
-  }
 
   Uri uri(String percorso, [Map<String, String>? query]) {
     final q = query == null
@@ -44,10 +41,21 @@ class ApiClient {
   Map<String, String> _intestazioni({bool json = true}) => {
         if (json) 'Content-Type': 'application/json',
         'Accept': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
       };
 
+  void _registra(http.Response r) {
+    final richiesta = '${r.request?.method} ${r.request?.url.path} -> ${r.statusCode}';
+    if (r.statusCode >= 500) {
+      Log.warning('$richiesta: ${_messaggioErrore(r)}');
+    } else if (r.statusCode >= 400 && r.statusCode != 401) {
+      Log.info('$richiesta: ${_messaggioErrore(r)}');
+    } else {
+      Log.debug('$richiesta (${r.bodyBytes.length} byte)');
+    }
+  }
+
   dynamic _decodifica(http.Response r) {
+    _registra(r);
     if (r.statusCode == 401) {
       suNonAutenticato?.call();
     }
@@ -115,6 +123,7 @@ class ApiClient {
 
   Future<Uint8List> getBytes(String percorso, {Map<String, String>? query}) async {
     final r = await _http.get(uri(percorso, query), headers: _intestazioni(json: false));
+    _registra(r);
     if (r.statusCode >= 400) {
       if (r.statusCode == 401) suNonAutenticato?.call();
       throw ApiException(r.statusCode, _messaggioErrore(r));
@@ -129,11 +138,6 @@ class ApiClient {
       'username': username,
       'password': password,
     }) as Map<String, dynamic>;
-    final token = risposta['token'] as String;
-    if (!kIsWeb) {
-      _token = token;
-      await _store.salva(token);
-    }
     return risposta['utente'] as Map<String, dynamic>;
   }
 
@@ -146,7 +150,5 @@ class ApiClient {
     } catch (_) {
       // il logout locale avviene comunque
     }
-    _token = null;
-    await _store.cancella();
   }
 }

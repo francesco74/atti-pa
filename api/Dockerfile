@@ -5,18 +5,27 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    LOG_LEVEL=INFO
 
-WORKDIR /build
-COPY common/pyproject.toml common/pyproject.toml
-COPY common/src common/src
-COPY api/pyproject.toml api/pyproject.toml
-COPY api/src api/src
-RUN pip install ./common ./api && rm -rf /build
+# Dipendenze dal requirements.txt del componente (include quelle di common)
+WORKDIR /deps
+COPY common/requirements.txt common/requirements.txt
+COPY api/requirements.txt api/requirements.txt
+RUN pip install -r api/requirements.txt && rm -rf /deps
 
-RUN useradd --system --uid 10001 app
-USER 10001
+# Codice: la libreria comune come pacchetto "common", il componente direttamente in /app
 WORKDIR /app
-EXPOSE 8000
+COPY common/ /app/common/
+COPY api/src/ /app/
+ENV PYTHONPATH=/app
 
-CMD ["uvicorn", "atti_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+RUN useradd --system --uid 10001 app \
+    && mkdir -p /var/lib/atti-pa/archivio && chown 10001 /var/lib/atti-pa/archivio
+USER 10001
+EXPOSE 8000
+# archivio dei file originali (volume condiviso con il converter)
+VOLUME /var/lib/atti-pa/archivio
+
+# Server WSGI gunicorn con l'app Flask; opzioni da WEB_* (vedi src/gunicorn_conf.py)
+CMD ["gunicorn", "-c", "python:gunicorn_conf", "main:create_app()"]

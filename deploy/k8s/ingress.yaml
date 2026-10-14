@@ -1,3 +1,5 @@
+# Regole per il controller Ingress già presente nel cluster e condiviso con altri siti:
+# le annotazioni valgono solo per questo Ingress (host atti.ente.local), non per gli altri.
 # Frontend e API sullo stesso dominio: il cookie di sessione funziona senza CORS.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -6,10 +8,14 @@ metadata:
   labels:
     app.kubernetes.io/part-of: atti-pa
   annotations:
-    # ingress-nginx: dimensione massima dei file caricati e tempi per le conversioni
+    # ingress-nginx. Gli altri timeout sono calibrati su questi valori: LLM_TIMEOUT_REDAZIONE
+    # (60 s) e DOCUMENTI_TIMEOUT (150 s) restano sotto i 180 s, UPLOAD_MAX_MB (20) sotto 25 MB.
+    # Con un controller diverso vanno impostati gli equivalenti.
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "180"
 spec:
+  # classe del controller esistente (kubectl get ingressclass)
   ingressClassName: nginx
   tls:
     - hosts: [atti.ente.local]

@@ -4,23 +4,24 @@ publish_to: "none"
 version: 0.1.0+1
 
 environment:
-  sdk: ">=3.6.0 <4.0.0"  # Flutter 3.27 o successivo
+  sdk: ^3.10.0  # Flutter 3.38 o successivo (richiesto da file_picker 13)
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  http: ^1.2.0
-  provider: ^6.1.2
-  flutter_secure_storage: ^9.2.2
-  file_picker: ^8.1.2
-  url_launcher: ^6.3.0
+  http: ^1.5.0
+  provider: ^6.1.5
+  file_picker: ^13.1.0
+  url_launcher: ^6.3.2
+  # riquadro HTML (iframe) per mostrare il PDF dell'atto originale
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

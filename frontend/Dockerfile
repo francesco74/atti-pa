@@ -18,5 +18,9 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/build/web /usr/share/nginx/html
+# Genera config.json all'avvio da API_URL e LOG_LEVEL
+COPY --chmod=755 frontend/config-app.sh /docker-entrypoint.d/40-config-app.sh
+ENV API_URL="" \
+    LOG_LEVEL=INFO
 
 EXPOSE 8080

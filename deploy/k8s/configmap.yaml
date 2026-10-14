@@ -7,9 +7,14 @@ metadata:
 data:
   FUSO_ORARIO: "Europe/Rome"
 
+  # Log di tutti i componenti e della console del browser: DEBUG, INFO, WARNING, ERROR
+  LOG_LEVEL: "INFO"
+  LOG_SQL: "false"  # con LOG_LEVEL=DEBUG registra anche le query SQL
+
   # Normattiva
   NORMATTIVA_BASE_URL: "https://api.normattiva.it/t/normattiva.api"
   NORMATTIVA_TIMEOUT: "30"
+  NORMATTIVA_TENTATIVI: "3"
 
   # Active Directory
   AUTH_ENABLED: "true"
@@ -17,19 +22,55 @@ data:
   LDAP_DOMINIO: "ente.local"
   LDAP_BASE_DN: "DC=ente,DC=local"
   LDAP_CA_CERT: "/etc/atti-pa/ldap/ca.pem"
+  LDAP_TIMEOUT: "10"
+  # "false" solo per prove o certificati autofirmati in rete fidata (rischio man-in-the-middle)
+  LDAP_VERIFICA_CERTIFICATO: "true"
   LDAP_GRUPPO_REDATTORI: "ATTI-PA-Redattori"
   LDAP_GRUPPO_CONTROLLORI: "ATTI-PA-Controllori"
   LDAP_GRUPPO_ADMIN: "ATTI-PA-Admin"
   JWT_SCADENZA_MINUTI: "480"
   COOKIE_SECURE: "true"
+  CORS_ORIGINI: "[]"   # app e API sullo stesso host: CORS non serve
+  PROXY_HOPS: "1"   # un solo proxy davanti all'API: l'Ingress
 
-  # LLM on-premise (API compatibile OpenAI)
+  # LLM. Provider: ollama | openai_compatibile (vLLM, llama.cpp: on-premise)
+  #               openai | gemini | anthropic (servizi esterni: gli atti escono dall'ente)
+  # La chiave (LLM_API_KEY) va nel Secret. Indirizzo e modello vuoti = predefiniti del
+  # provider (openai: gpt-5-mini, gemini: gemini-2.5-flash, anthropic: claude-opus-5-5).
+  LLM_PROVIDER: "openai_compatibile"
+  LLM_OLLAMA_URL: "http://ollama.llm.svc.cluster.local:11434/v1"   # solo con LLM_PROVIDER=ollama
   LLM_BASE_URL: "http://vllm.llm.svc.cluster.local:8000/v1"
   LLM_MODEL: "mistral-small"
-  LLM_TIMEOUT: "180"
+  LLM_TIMEOUT: "180"             # verifiche nel worker
+  LLM_TIMEOUT_REDAZIONE: "60"    # riscrittura appunti, interattiva (< 180 s dell'Ingress)
+  LLM_TEMPERATURA: "0"
+  LLM_TEMPERATURA_REDAZIONE: "0.2"
+  LLM_EFFORT: "medium"           # solo anthropic: low | medium | high | xhigh | max
+  LLM_MAX_TOKEN: "16000"         # solo anthropic
+  LLM_FALLBACK: "true"           # solo anthropic: se Claude rifiuta, riprova su un altro modello
+  # Coerenza tra norme citate e contenuto dell'atto: una chiamata ogni LLM_COERENZA_GRUPPO
+  # riferimenti, con l'atto intero
+  LLM_COERENZA_RIFERIMENTI: "true"
+  LLM_COERENZA_GRUPPO: "8"
+  LLM_COERENZA_MAX_CARATTERI_NORMA: "8000"
+  # Citazioni di norme manuali (regolamenti interni...) scritte in forme diverse dalle
+  # denominazioni indicate: una chiamata all'LLM per verifica, solo se ci sono norme manuali
+  LLM_RICONOSCIMENTO_NORME_MANUALI: "true"
+  # Dati personali da oscurare (omissis): li rileva il modello, una chiamata per atto
+  LLM_DATI_PERSONALI: "true"
+  # Prompt personalizzati: cartella montata da una ConfigMap; i file presenti sostituiscono
+  # quelli di common/prompt/ con lo stesso nome
+  # LLM_PROMPT_DIR: "/etc/atti-pa/prompt"
+  LLM_MAX_CARATTERI_ATTO: "60000"
 
   # Servizi interni
-  DOCUMENTI_URL: "http://documenti:8000"
+  DOCUMENTI_URL: "http://converter:8000"
+  DOCUMENTI_TIMEOUT: "150"       # > CONVERSIONE_TIMEOUT (120), < 180 s dell'Ingress
+
+  # Code RabbitMQ (l'URL con le credenziali è nel Secret: RABBITMQ_URL)
+  RABBITMQ_PREFISSO: "atti-pa"
+  # Archivio dei file originali (volume archivio-atti, condiviso tra API e converter)
+  ARCHIVIO_DIR: "/var/lib/atti-pa/archivio"
   UPLOAD_MAX_MB: "20"
 
   # Job di aggiornamento normative
@@ -40,4 +81,10 @@ data:
   # Worker di verifica
   WORKER_INTERVALLO_SECONDI: "5"
   WORKER_MAX_TENTATIVI: "3"
-  WORKER_TIMEOUT_MINUTI: "30"
+  WORKER_TIMEOUT_MINUTI: "60"    # oltre la verifica più lunga prevista
+  WORKER_HEARTBEAT: "/tmp/heartbeat"  # deve coincidere con la liveness probe
+  WORKER_REINVIO_MINUTI: "10"         # lavori fermi reinviati sulle code dopo questo tempo
+
+  # App web: indirizzo dell'API (vuoto = stessa origine, Ingress con /api).
+  # Con un'origine diversa va aggiunta a connect-src nella CSP di frontend/nginx.conf.
+  API_URL: ""

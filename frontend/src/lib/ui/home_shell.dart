@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
 import 'bozze/bozze_page.dart';
-import 'controllo/sessioni_page.dart';
+import 'controllo/controlli_page.dart';
 import 'libreria/libreria_page.dart';
 
 class _Voce {
@@ -27,12 +27,20 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _indice = 0;
 
+  /// Cambia a ogni selezione del menu: la pagina viene ricreata e ricarica i dati.
+  int _generazione = 0;
+
+  void _seleziona(int i) => setState(() {
+        _indice = i;
+        _generazione++;
+      });
+
   List<_Voce> get _voci => [
         if (widget.utente.isRedattore)
           const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
         const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
         if (widget.utente.isControllore)
-          const _Voce('Controllo atti', Icons.fact_check, SessioniPage()),
+          const _Voce('Controllo atti', Icons.fact_check, ControlliPage()),
         if (widget.utente.isAdmin)
           const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
       ];
@@ -60,14 +68,15 @@ class _HomeShellState extends State<HomeShell> {
       },
     );
 
-    final contenuto = IndexedStack(index: indice, children: [for (final v in voci) v.pagina]);
+    // Solo la pagina selezionata, con una chiave nuova a ogni selezione: niente dati vecchi
+    final contenuto = KeyedSubtree(key: ValueKey(_generazione), child: voci[indice].pagina);
 
     if (largo) {
       return Scaffold(
         body: Row(children: [
           NavigationRail(
             selectedIndex: indice,
-            onDestinationSelected: (i) => setState(() => _indice = i),
+            onDestinationSelected: _seleziona,
             labelType: NavigationRailLabelType.all,
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -96,7 +105,7 @@ class _HomeShellState extends State<HomeShell> {
           ? null
           : NavigationBar(
               selectedIndex: indice,
-              onDestinationSelected: (i) => setState(() => _indice = i),
+              onDestinationSelected: _seleziona,
               destinations: [
                 for (final v in voci) NavigationDestination(icon: Icon(v.icona), label: v.etichetta),
               ],
