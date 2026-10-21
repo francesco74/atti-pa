@@ -156,8 +156,9 @@ forniamo arrivano come **pacchetto** (`deploy/pacchetto.yaml` con le cartelle `m
 - **esportazione**: tutto ciò che è attivo nell'ente si scarica come pacchetto zip (backup,
   passaggio a un altro ente, lavoro fuori dall'app) e si reimporta allo stesso modo.
 
-**Editor nell'app** (voce *Modelli e checklist*). Modelli, specificità e checklist si
-modificano senza scrivere YAML:
+**Editor nell'app** (voce *Modelli e checklist*; manuale d'uso completo in
+[manuale/editor_modelli_e_checklist.md](manuale/editor_modelli_e_checklist.md)). Modelli,
+specificità e checklist si modificano senza scrivere YAML:
 
 - **modelli e specificità**: a sinistra la struttura (domande, fasi, sezioni, capoversi, dati,
   valori calcolati, risposte consigliate, scenari di prova), al centro l'elemento scelto, a
