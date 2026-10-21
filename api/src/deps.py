@@ -158,6 +158,7 @@ def autenticato(*ruoli: str):
 solo_admin = autenticato(Ruolo.ADMIN)
 redattore = autenticato(Ruolo.REDATTORE)
 controllore = autenticato(Ruolo.CONTROLLORE)
+gestore_modelli = autenticato(Ruolo.GESTORE_MODELLI)
 
 
 def audit(

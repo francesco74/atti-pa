@@ -10,12 +10,13 @@ from http import HTTPStatus
 
 from flask import Blueprint
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from deps import audit, autenticato, db, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, corpo, nessun_contenuto, out, parametri
-from common.configurazione import ChecklistIn, ChecklistNuovaIn, elementi_checklist
+from common.configurazione import ChecklistIn, ChecklistNuovaIn, controlla_checklist
+from common.pacchetti import MANTIENI_BASE, salva_checklist
 from common.models import Checklist, TipologiaAtto
 
 bp = Blueprint("checklists", __name__, url_prefix="/api/v1/checklists")
@@ -40,6 +41,9 @@ class ChecklistOut(Schema):
     modulo: str | None
     descrizione: str | None
     attiva: bool
+    pacchetto: str | None  # pacchetto standard da cui deriva
+    impronta: str | None
+    impronta_base: str | None
     elementi: list[ElementoOut]
 
 
@@ -83,65 +87,37 @@ async def crea():
     await _verifica_tipologia(sessione, dati.tipologia_atto)
     if await sessione.scalar(select(Checklist.id).where(Checklist.codice == dati.codice).limit(1)):
         raise ErroreApi(HTTPStatus.CONFLICT, "Codice checklist già esistente")
-    cl = Checklist(
-        codice=dati.codice,
-        versione=1,
-        titolo=dati.titolo,
-        tipologia_atto=dati.tipologia_atto,
-        modello=dati.modello,
-        modulo=dati.modulo,
-        descrizione=dati.descrizione,
-        attiva=True,
-        elementi=elementi_checklist(dati.elementi),
-    )
-    sessione.add(cl)
-    await sessione.flush()
-    audit(sessione, utente(), "checklist", cl.id, "CREATA", {"codice": cl.codice, "versione": 1})
-    await sessione.commit()
-    await sessione.refresh(cl)
+    cl = await _salva(sessione, dati)
     return out(ChecklistOut, cl), HTTPStatus.CREATED
 
 
 @bp.put("/codice/<codice>")
 @solo_admin
 async def nuova_versione(codice: str):
-    """Crea una nuova versione della checklist e disattiva le precedenti."""
+    """Crea una nuova versione della checklist e disattiva le precedenti. Se la checklist
+    deriva da un pacchetto standard, resta il riferimento allo standard: un aggiornamento
+    successivo la riconosce come modificata dall'ente."""
     dati = corpo(ChecklistIn)
     sessione = db()
     await _verifica_tipologia(sessione, dati.tipologia_atto)
-    ultima = await sessione.scalar(
-        select(func.max(Checklist.versione)).where(Checklist.codice == codice)
+    esistente = await sessione.scalar(
+        select(Checklist.id).where(Checklist.codice == codice).limit(1)
     )
-    if ultima is None:
+    if esistente is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND)
-    for vecchia in (
-        await sessione.scalars(select(Checklist).where(Checklist.codice == codice))
-    ).all():
-        vecchia.attiva = False
-    cl = Checklist(
-        codice=codice,
-        versione=ultima + 1,
-        titolo=dati.titolo,
-        tipologia_atto=dati.tipologia_atto,
-        modello=dati.modello,
-        modulo=dati.modulo,
-        descrizione=dati.descrizione,
-        attiva=True,
-        elementi=elementi_checklist(dati.elementi),
-    )
-    sessione.add(cl)
-    await sessione.flush()
-    audit(
-        sessione,
-        utente(),
-        "checklist",
-        cl.id,
-        "NUOVA_VERSIONE",
-        {"codice": codice, "versione": cl.versione},
-    )
+    cl = await _salva(sessione, ChecklistNuovaIn(codice=codice, **dati.model_dump()))
+    return out(ChecklistOut, cl)
+
+
+async def _salva(sessione, dati: ChecklistNuovaIn) -> Checklist:
+    try:
+        controlla_checklist(dati)
+        cl = await salva_checklist(sessione, dati, MANTIENI_BASE, utente().id)
+    except ValueError as e:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
     await sessione.commit()
     await sessione.refresh(cl)
-    return out(ChecklistOut, cl)
+    return cl
 
 
 @bp.delete("/codice/<codice>")

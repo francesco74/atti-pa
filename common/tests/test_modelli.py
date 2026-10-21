@@ -12,7 +12,7 @@ import json
 import unittest
 from pathlib import Path
 
-from common.configurazione import leggi_checklist, leggi_moduli
+from common.configurazione import leggi_checklist
 from common.modelli import (
     Condizione,
     DatiBozza,
@@ -25,8 +25,9 @@ from common.modelli import (
 )
 
 RADICE = Path(__file__).resolve().parents[2]
-MODELLI = RADICE / "deploy" / "modelli"
-CHECKLIST = RADICE / "deploy" / "checklist"
+PACCHETTO = RADICE / "deploy"
+MODELLI = PACCHETTO / "modelli"
+CHECKLIST = PACCHETTO / "checklist"
 
 BASE = {
     "codice": "PROVA",
@@ -165,10 +166,12 @@ class FileDelRepository(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.moduli, errori = leggi_moduli(MODELLI / "regole")
-        assert not errori, errori
+        cls.moduli = [
+            leggi_modulo(f.read_text(encoding="utf-8"))
+            for f in sorted((MODELLI / "regole").glob("*.yaml"))
+        ]
         cls.modelli = [
-            leggi_modello(f.read_text(encoding="utf-8"), [m.modulo for m in cls.moduli])
+            leggi_modello(f.read_text(encoding="utf-8"), cls.moduli)
             for f in sorted(MODELLI.glob("*.yaml"))
         ]
         cls.schede = [
@@ -183,7 +186,7 @@ class FileDelRepository(unittest.TestCase):
     def test_ogni_specificita_ha_la_sua_scheda(self):
         di_modulo = {s.modulo for s in self.schede if s.modulo}
         for mo in self.moduli:
-            self.assertIn(mo.modulo.codice, di_modulo, f"manca la checklist di {mo.modulo.codice}")
+            self.assertIn(mo.codice, di_modulo, f"manca la checklist di {mo.codice}")
 
     def test_ogni_tipologia_ha_la_scheda_generica(self):
         generiche = {s.tipologia_atto for s in self.schede if not s.modello and not s.modulo}
@@ -192,7 +195,7 @@ class FileDelRepository(unittest.TestCase):
 
     def test_le_schede_rimandano_a_cose_esistenti(self):
         modelli = {m.d.codice for m in self.modelli}
-        moduli = {mo.modulo.codice for mo in self.moduli}
+        moduli = {mo.codice for mo in self.moduli}
         for s in self.schede:
             if s.modello:
                 self.assertIn(s.modello, modelli, s.codice)
@@ -202,7 +205,7 @@ class FileDelRepository(unittest.TestCase):
     def test_ogni_modulo_si_applica_a_un_modello(self):
         composti = {r.codice for m in self.modelli for r in m.d.regole}
         for mo in self.moduli:
-            self.assertIn(mo.modulo.codice, composti, f"{mo.nome}: nessun modello lo usa")
+            self.assertIn(mo.codice, composti, f"{mo.codice}: nessun modello lo usa")
 
     def test_bozze_vuote_si_compongono(self):
         """Ogni modello, con tutte le specificità scelte, produce un testo senza errori."""
@@ -213,36 +216,6 @@ class FileDelRepository(unittest.TestCase):
             v = _valuta(m, risposte)
             self.assertTrue(v.testo().strip(), m.d.codice)
             v.riepilogo()
-
-
-class CaricamentoSuDatabase(unittest.TestCase):
-    """Caricamento all'avvio su SQLite: nuove versioni, impronte, avvisi di coerenza."""
-
-    def test_caricamento_e_coerenza(self):
-        try:
-            from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-        except ImportError:  # pragma: no cover
-            self.skipTest("SQLAlchemy non disponibile")
-        from common.configurazione import carica_configurazione
-        from common.models import Base, TipologiaAtto
-
-        async def prova():
-            motore = create_async_engine("sqlite+aiosqlite://")
-            async with motore.begin() as c:
-                await c.run_sync(Base.metadata.create_all)
-            async with AsyncSession(motore) as s:
-                s.add(TipologiaAtto(codice="DETERMINA", descrizione="Determinazione dirigenziale"))
-                await s.commit()
-            primo = await carica_configurazione(motore, MODELLI, CHECKLIST)
-            secondo = await carica_configurazione(motore, MODELLI, CHECKLIST)
-            await motore.dispose()
-            return primo, secondo
-
-        primo, secondo = asyncio.run(prova())
-        self.assertEqual(primo.errori, [])
-        self.assertEqual(primo.avvisi, [])
-        self.assertTrue(primo.caricati)
-        self.assertEqual(secondo.caricati, [])
 
 
 if __name__ == "__main__":

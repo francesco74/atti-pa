@@ -24,12 +24,12 @@ from auth.ldap import LdapAuthenticator
 from ciclo import CicloAsync
 from deps import Risorse, chiudi_db
 from documenti import DocumentiClient
-from routers import verifiche
+from routers import editor, pacchetti, verifiche
 from web import AttiFlask, ErroreApi
 from common.config import Settings, get_settings
 from common.db import crea_engine, crea_sessionmaker
 from common.coda import Coda
-from common.configurazione import carica_configurazione
+from common.pacchetti import importa_pacchetto_iniziale
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
 from common.normattiva import NormattivaClient
@@ -88,18 +88,20 @@ def create_app(
         coda=Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso),
     )
 
-    if settings.carica_configurazione_all_avvio:
-        # modelli di atto e checklist dai file: solo quelli cambiati, un processo alla volta
+    if settings.importa_pacchetto_iniziale:
+        # il database comanda: il pacchetto standard si importa solo se il database è vuoto
         try:
             resoconto = app.ciclo.esegui(
-                carica_configurazione(
-                    motore, Path(settings.modelli_dir), Path(settings.checklist_dir)
-                )
+                importa_pacchetto_iniziale(motore, Path(settings.pacchetto_dir))
             )
-            log.info("Modelli di atto e checklist dai file: %s", resoconto)
+            if resoconto is None:
+                log.info("Modelli e checklist: comanda il database (pacchetto non importato)")
+            else:
+                log.info("Pacchetto iniziale importato: %s", resoconto)
+                for avviso in resoconto.avvisi:
+                    log.warning("Modelli e checklist non coerenti: %s", avviso)
         except Exception:
-            # l'API parte comunque: restano attive le versioni già nel database
-            log.exception("Caricamento di modelli e checklist dai file non riuscito")
+            log.exception("Importazione del pacchetto iniziale non riuscita")
 
     async def chiudi_risorse() -> None:
         stato = app.state
@@ -180,7 +182,10 @@ def create_app(
             await conn.execute(text("SELECT 1"))
         return {"status": "ok"}
 
-    for modulo in (auth, norme, norme_manuali, checklists, modelli, bozze, verifiche, controllo):
+    for modulo in (
+        auth, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze, verifiche,
+        controllo,
+    ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 
     log.info(

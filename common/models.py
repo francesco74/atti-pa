@@ -37,8 +37,9 @@ class Base(DeclarativeBase):
 class Ruolo:
     REDATTORE = "REDATTORE"
     CONTROLLORE = "CONTROLLORE"
-    ADMIN = "ADMIN"
-    TUTTI = (REDATTORE, CONTROLLORE, ADMIN)
+    GESTORE_MODELLI = "GESTORE_MODELLI"  # modifica modelli, specificità e checklist in bozza
+    ADMIN = "ADMIN"  # pubblica le modifiche ai modelli
+    TUTTI = (REDATTORE, CONTROLLORE, GESTORE_MODELLI, ADMIN)
 
 
 class StatoVerifica:
@@ -193,10 +194,12 @@ class Checklist(Base):
     modulo: Mapped[str | None] = mapped_column(String(100))
     descrizione: Mapped[str | None] = mapped_column(Text)
     attiva: Mapped[bool] = mapped_column(Boolean, default=True)
-    # caricata da file (deploy/checklist): impronta SHA-256 e nome del file; vuoti se
-    # la versione è stata creata o modificata dall'app
-    hash_sorgente: Mapped[str | None] = mapped_column(String(64))
-    file_sorgente: Mapped[str | None] = mapped_column(String(255))
+    # provenienza (common/pacchetti.py): impronta del contenuto e, se deriva da un pacchetto
+    # standard, il pacchetto e la versione standard di riferimento per gli aggiornamenti
+    impronta: Mapped[str | None] = mapped_column(String(64))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
+    impronta_base: Mapped[str | None] = mapped_column(String(64))
+    base_sorgente: Mapped[str | None] = mapped_column(TestoLungo, deferred=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     elementi: Mapped[list[ChecklistElemento]] = relationship(
@@ -216,10 +219,13 @@ class ChecklistElemento(Base):
     regola: Mapped[str] = mapped_column(Text)
     riferimenti_json: Mapped[list[Any] | None] = mapped_column(JSON)
     obbligatorio: Mapped[bool] = mapped_column(Boolean, default=True)
+    # capoversi del modello o della specificità che soddisfano il controllo (id)
+    capoversi_json: Mapped[list[Any] | None] = mapped_column(JSON)
 
 
 class ModelloAtto(Base):
-    """Modello di atto a 4 fasi (deploy/modelli/*.yaml), con versioni come le checklist."""
+    """Modello di atto a 4 fasi, con versioni come le checklist. Il database comanda: i
+    modelli standard arrivano con i pacchetti (common/pacchetti.py) e l'ente li modifica."""
 
     __tablename__ = "modelli_atto"
 
@@ -230,14 +236,94 @@ class ModelloAtto(Base):
     provvedimento: Mapped[str] = mapped_column(String(100))
     tipologia_atto: Mapped[str] = mapped_column(ForeignKey("tipologie_atto.codice"))
     descrizione: Mapped[str | None] = mapped_column(Text)
-    # definizione già controllata (common/modelli.py) e sorgente YAML originale
+    # definizione composta con le specificità attive e già controllata (common/modelli.py),
+    # sorgente YAML del modello senza specificità, specificità usate {codice: impronta}
     definizione_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     sorgente: Mapped[str] = mapped_column(TestoLungo, deferred=True)
-    # caricato da file (deploy/modelli): impronta SHA-256 e nome del file
-    hash_sorgente: Mapped[str | None] = mapped_column(String(64))
-    file_sorgente: Mapped[str | None] = mapped_column(String(255))
+    moduli_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # provenienza: come per le checklist
+    impronta: Mapped[str | None] = mapped_column(String(64))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
+    impronta_base: Mapped[str | None] = mapped_column(String(64))
+    base_sorgente: Mapped[str | None] = mapped_column(TestoLungo, deferred=True)
     attivo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ModuloDiRegole(Base):
+    """Specificità (modulo di regole) che si compone nei modelli: versionata come i modelli."""
+
+    __tablename__ = "moduli_regole"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    codice: Mapped[str] = mapped_column(String(100))
+    versione: Mapped[int] = mapped_column(Integer, default=1)
+    etichetta: Mapped[str] = mapped_column(String(255))
+    definizione_json: Mapped[dict[str, Any]] = mapped_column(JSON)
+    sorgente: Mapped[str] = mapped_column(TestoLungo, deferred=True)
+    impronta: Mapped[str | None] = mapped_column(String(64))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
+    impronta_base: Mapped[str | None] = mapped_column(String(64))
+    base_sorgente: Mapped[str | None] = mapped_column(TestoLungo, deferred=True)
+    attivo: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class BozzaConfigurazione(Base):
+    """Modifica in corso di un modello, di una specificità o di una checklist: invisibile a
+    chi scrive gli atti finché non viene pubblicata (nuova versione)."""
+
+    __tablename__ = "bozze_configurazione"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    tipo: Mapped[str] = mapped_column(String(20))  # modello, modulo, checklist
+    codice: Mapped[str] = mapped_column(String(100))
+    definizione_json: Mapped[dict[str, Any]] = mapped_column(JSON)
+    versione_partenza: Mapped[int | None] = mapped_column(Integer)  # None: oggetto nuovo
+    autore_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PropostaModello(Base):
+    """Modifica a un capoverso proposta da chi scrive un atto, per il gestore dei modelli."""
+
+    __tablename__ = "proposte_modello"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    modello: Mapped[str] = mapped_column(String(100))  # codice del modello
+    versione: Mapped[int] = mapped_column(Integer)
+    capoverso: Mapped[str] = mapped_column(String(100))
+    testo_attuale: Mapped[str] = mapped_column(Text)
+    testo_proposto: Mapped[str] = mapped_column(Text)
+    motivazione: Mapped[str | None] = mapped_column(Text)
+    stato: Mapped[str] = mapped_column(String(20), default="APERTA")  # ACCOLTA, RESPINTA
+    autore_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    gestita_da: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    nota_gestione: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    gestita_il: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class PacchettoImportato(Base):
+    """Pacchetto di modelli, specificità e checklist caricato dall'amministratore: prima
+    analizzato (cosa cambia rispetto all'ente), poi importato con le decisioni prese."""
+
+    __tablename__ = "pacchetti"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    nome: Mapped[str] = mapped_column(String(150))
+    versione: Mapped[str] = mapped_column(String(50))
+    descrizione: Mapped[str | None] = mapped_column(Text)
+    stato: Mapped[str] = mapped_column(String(20))  # ANALIZZATO, IMPORTATO, ANNULLATO
+    contenuto: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
+    analisi_json: Mapped[list[Any] | None] = mapped_column(JSON)
+    resoconto_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    caricato_da: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    importato_il: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class ImpostazioniEnte(Base):

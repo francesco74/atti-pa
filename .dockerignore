@@ -12,7 +12,8 @@
 frontend/src/build
 frontend/src/.dart_tool
 deploy
-# modelli di atto e checklist: caricati dall'API all'avvio
+# pacchetto standard di modelli e checklist: importato al primo avvio con il database vuoto
+!deploy/pacchetto.yaml
 !deploy/modelli/*.yaml
 !deploy/modelli/regole/*.yaml
 !deploy/checklist/*.json

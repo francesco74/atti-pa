@@ -27,6 +27,7 @@ data:
   LDAP_VERIFICA_CERTIFICATO: "true"
   LDAP_GRUPPO_REDATTORI: "ATTI-PA-Redattori"
   LDAP_GRUPPO_CONTROLLORI: "ATTI-PA-Controllori"
+  LDAP_GRUPPO_GESTORI_MODELLI: "ATTI-PA-Gestori-Modelli"
   LDAP_GRUPPO_ADMIN: "ATTI-PA-Admin"
   JWT_SCADENZA_MINUTI: "480"
   COOKIE_SECURE: "true"
@@ -58,12 +59,11 @@ data:
   LLM_RICONOSCIMENTO_NORME_MANUALI: "true"
   # Dati personali da oscurare (omissis): li rileva il modello, una chiamata per atto
   LLM_DATI_PERSONALI: "true"
-  # Modelli di atto e checklist: l'API carica all'avvio quelli cambiati. Le cartelle sono
-  # nell'immagine (/app/deploy/modelli, /app/deploy/checklist); per cambiarle senza
-  # ricostruire l'immagine si possono montare da una ConfigMap e indicare qui
-  CARICA_CONFIGURAZIONE_ALL_AVVIO: "true"
-  # MODELLI_DIR: "/etc/atti-pa/modelli"
-  # CHECKLIST_DIR: "/etc/atti-pa/checklist"
+  # Modelli di atto, specificità e checklist: comanda il database. Al primo avvio, con il
+  # database vuoto, l'API importa il pacchetto standard incluso nell'immagine (/app/deploy);
+  # gli aggiornamenti si importano da Amministrazione → Pacchetti
+  IMPORTA_PACCHETTO_INIZIALE: "true"
+  # PACCHETTO_DIR: "/app/deploy"
   # Prompt personalizzati: cartella montata da una ConfigMap; i file presenti sostituiscono
   # quelli di common/prompt/ con lo stesso nome
   # LLM_PROMPT_DIR: "/etc/atti-pa/prompt"

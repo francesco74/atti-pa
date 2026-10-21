@@ -3,7 +3,15 @@ import 'package:flutter/material.dart';
 
 import '../../util/download.dart';
 import '../comuni.dart';
-import 'checklist_editor.dart';
+import 'pacchetti.dart';
+
+/// Da dove viene un modello o una checklist: dal pacchetto standard (eventualmente
+/// modificato dall'ente) oppure creato dall'ente.
+String provenienza(Map<String, dynamic> o) => o['pacchetto'] == null
+    ? 'creato dall\'ente'
+    : o['impronta'] == o['impronta_base']
+        ? 'standard (${o['pacchetto']})'
+        : 'standard modificato dall\'ente';
 
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
@@ -14,93 +22,20 @@ class AdminPage extends StatelessWidget {
       length: 3,
       child: Column(children: [
         TabBar(tabs: [
-          Tab(icon: Icon(Icons.checklist), text: 'Checklist'),
-          Tab(icon: Icon(Icons.article_outlined), text: 'Modelli e dati dell\'ente'),
+          Tab(icon: Icon(Icons.apartment), text: 'Dati dell\'ente'),
+          Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'),
           Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'),
         ]),
-        Expanded(child: TabBarView(children: [_Checklist(), _ModelliEnte(), _Aggiornamenti()])),
+        Expanded(child: TabBarView(children: [_ModelliEnte(), PacchettiPage(), _Aggiornamenti()])),
       ]),
-    );
-  }
-}
-
-// --- Checklist -----------------------------------------------------------------------
-
-class _Checklist extends StatefulWidget {
-  const _Checklist();
-
-  @override
-  State<_Checklist> createState() => _ChecklistState();
-}
-
-class _ChecklistState extends State<_Checklist> {
-  late Future<List<dynamic>> _lista;
-
-  @override
-  void initState() {
-    super.initState();
-    _carica();
-  }
-
-  void _carica() => setState(() {
-        _lista = apiDi(context).get('/api/v1/checklists').then((v) => v as List);
-      });
-
-  Future<void> _apri([Map<String, dynamic>? esistente]) async {
-    final salvata = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => ChecklistEditorPage(esistente: esistente)),
-    );
-    if (salvata == true) _carica();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _apri(),
-        icon: const Icon(Icons.add),
-        label: const Text('Nuova checklist'),
-      ),
-      body: Caricamento<List<dynamic>>(
-        future: _lista,
-        riprova: _carica,
-        builder: (context, lista) => ListView(padding: const EdgeInsets.all(16), children: [
-          if (lista.isEmpty) const Text('Nessuna checklist attiva.'),
-          for (final c in lista.cast<Map<String, dynamic>>())
-            Card(
-              child: ListTile(
-                title: Text('${c['titolo']} (v${c['versione']})'),
-                subtitle: Text('${c['codice']} · ${c['tipologia_atto']} · ${livelloChecklist(c)} · '
-                    '${(c['elementi'] as List).length} criteri'),
-                trailing: IconButton(
-                  tooltip: 'Disattiva',
-                  icon: const Icon(Icons.archive_outlined),
-                  onPressed: () async {
-                    if (!await conferma(context, 'Disattivare la checklist?',
-                        'Le verifiche già eseguite restano consultabili.')) {
-                      return;
-                    }
-                    if (!context.mounted) return;
-                    try {
-                      await apiDi(context).delete('/api/v1/checklists/codice/${c['codice']}');
-                      _carica();
-                    } catch (e) {
-                      if (context.mounted) mostraErrore(context, e);
-                    }
-                  },
-                ),
-                onTap: () => _apri(c),
-              ),
-            ),
-        ]),
-      ),
     );
   }
 }
 
 // --- Modelli di atto e dati dell'ente ------------------------------------------------
 
-/// Dati dell'ente usati da tutti i modelli, carta intestata ed elenco dei modelli caricati.
+/// Dati dell'ente usati da tutti i modelli e carta intestata. Modelli, specificità e
+/// checklist si gestiscono in "Modelli e checklist".
 class _ModelliEnte extends StatefulWidget {
   const _ModelliEnte();
 
@@ -110,7 +45,6 @@ class _ModelliEnte extends StatefulWidget {
 
 class _ModelliEnteState extends State<_ModelliEnte> {
   late Future<Map<String, dynamic>> _ente;
-  late Future<List<dynamic>> _modelli;
   final Map<String, TextEditingController> _valori = {};
   bool _salvataggio = false;
 
@@ -140,7 +74,6 @@ class _ModelliEnteState extends State<_ModelliEnte> {
         }
         return dati;
       });
-      _modelli = api.get('/api/v1/modelli/tutti').then((v) => v as List);
     });
   }
 
@@ -265,35 +198,6 @@ class _ModelliEnteState extends State<_ModelliEnte> {
             ),
           ]);
         },
-      ),
-      Sezione(
-        titolo: 'Modelli di atto caricati',
-        child: Caricamento<List<dynamic>>(
-          future: _modelli,
-          riprova: _carica,
-          builder: (context, lista) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('I modelli si caricano dal server con lo script '
-                'deploy/modelli/carica_modello.py: ogni caricamento crea una nuova versione e le '
-                'bozze già iniziate restano legate alla versione con cui sono nate.'),
-            const SizedBox(height: 8),
-            if (lista.isEmpty) const Text('Nessun modello caricato.'),
-            for (final m in lista.cast<Map<String, dynamic>>())
-              ListTile(
-                leading: Icon(m['attivo'] == true ? Icons.check_circle : Icons.history,
-                    color: m['attivo'] == true ? Colors.green : Colors.grey),
-                title: Text('${m['titolo']} (v${m['versione']})'),
-                subtitle: Text('${m['provvedimento']} · ${m['tipologia_atto']} · '
-                    'caricato ${formatData(m['created_at'])}'
-                    '${m['attivo'] == true ? '' : ' · non attivo'}'),
-                trailing: IconButton(
-                  tooltip: 'Scarica il file del modello',
-                  icon: const Icon(Icons.download),
-                  onPressed: () => salvaFile(apiDi(context), '/api/v1/modelli/${m['id']}/sorgente',
-                      '${m['codice']}_v${m['versione']}.yaml'),
-                ),
-              ),
-          ]),
-        ),
       ),
     ]);
   }

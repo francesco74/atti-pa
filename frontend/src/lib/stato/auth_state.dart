@@ -21,6 +21,7 @@ class Utente {
   bool get isAdmin => ruoli.contains('ADMIN');
   bool get isRedattore => isAdmin || ruoli.contains('REDATTORE');
   bool get isControllore => isAdmin || ruoli.contains('CONTROLLORE');
+  bool get isGestoreModelli => isAdmin || ruoli.contains('GESTORE_MODELLI');
 }
 
 enum StatoAuth { verifica, anonimo, autenticato }

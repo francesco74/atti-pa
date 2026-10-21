@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
 import 'comuni.dart';
+import 'configurazione/configurazione_page.dart';
 import 'bozze/bozze_page.dart';
 import 'controllo/controlli_page.dart';
 import 'libreria/libreria_page.dart';
@@ -42,6 +43,8 @@ class _HomeShellState extends State<HomeShell> {
         const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
         if (widget.utente.isControllore)
           const _Voce('Controllo atti', Icons.fact_check, ControlliPage()),
+        if (widget.utente.isGestoreModelli)
+          const _Voce('Modelli e checklist', Icons.architecture, ConfigurazionePage()),
         if (widget.utente.isAdmin)
           const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
       ];

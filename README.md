@@ -89,8 +89,9 @@ l'amministratore in **Amministrazione → Modelli e dati dell'ente**, dove si ca
 `{{dispositivo}}` e `{{chiusura}}`, uno per fase (senza, si usa un'impaginazione semplice).
 
 **Moduli di regole.** Le specificità tecniche o normative stanno in moduli separati
-(`deploy/modelli/regole/*.yaml`), uno per casistica. Ogni modulo è una delle **caratteristiche dell'affidamento** che l'utente spunta tra le
-domande iniziali e, solo quando è scelto:
+(nel pacchetto: `modelli/regole/*.yaml`), uno per casistica. Ogni modulo è una delle
+**caratteristiche dell'affidamento** che l'utente spunta tra le domande iniziali e, solo
+quando è scelto:
 
 - aggiunge le sue domande e i suoi campi (per il cloud: modello di servizio, classificazione
   dei dati, servizio qualificato nel Catalogo ACN, CPV);
@@ -120,7 +121,7 @@ controllo (`deploy/checklist/*.json`):
 La verifica di una bozza applica la scheda generica, quella del modello e quelle delle
 specificità scelte; il controllo di un atto caricato fa lo stesso con la tipologia, il
 modello a cui l'atto corrisponde e le specificità indicate dal controllore. Gli esiti sono
-raggruppati per scheda. All'avvio l'API segnala nel log le incoerenze: un modello o una
+raggruppati per scheda. All'importazione di un pacchetto l'app segnala le incoerenze: un modello o una
 specificità senza checklist, una tipologia senza scheda generica, una checklist che rimanda
 a un modello o a una specificità inesistenti. Gli stessi controlli sono nei test
 (`python -m unittest discover -s common/tests -t .`), insieme a quelli del motore.
@@ -128,19 +129,71 @@ a un modello o a una specificità inesistenti. Gli stessi controlli sono nei tes
 Il modello e i moduli che gli si applicano sono composti in un'unica versione: cambiare un
 modulo crea una nuova versione dei modelli che lo usano.
 
-**Caricamento.** All'avvio l'API legge i modelli (`deploy/modelli/*.yaml`) e le checklist
-(`deploy/checklist/*.json`) e crea una nuova versione solo dei file cambiati, riconosciuti
-dall'impronta del contenuto. **I file comandano**: una checklist modificata dall'app resta
-attiva finché il suo file non cambia, poi la versione del file la sostituisce (con un avviso
-nel log). Le bozze e le verifiche già fatte restano legate alla versione usata. Il
-caricamento avviene sotto un lock del database, quindi con più processi o più pod lo esegue
-uno solo; un file non valido viene segnalato nel log e saltato, senza bloccare l'avvio. Si
-disattiva con `CARICA_CONFIGURAZIONE_ALL_AVVIO=false`; le cartelle si cambiano con
-`MODELLI_DIR` e `CHECKLIST_DIR`. Per controllare un file prima di pubblicarlo:
+**Il database comanda.** Modelli di atto, specificità e checklist si modificano nell'app:
+l'ente ne è padrone e resta autonomo anche senza sottoscrizione. I contenuti standard che
+forniamo arrivano come **pacchetto** (`deploy/pacchetto.yaml` con le cartelle `modelli/` e
+`checklist/`, oppure uno zip con la stessa struttura):
+
+- **primo avvio**: con il database vuoto l'API importa il pacchetto incluso
+  nell'installazione (`IMPORTA_PACCHETTO_INIZIALE`, cartella `PACCHETTO_DIR`); poi nessun
+  file sovrascrive più nulla;
+- **aggiornamenti**: in Amministrazione → Pacchetti si carica il nuovo pacchetto. L'app
+  confronta, oggetto per oggetto, lo standard da cui deriva la versione dell'ente, la
+  versione dell'ente e il nuovo standard, e propone cosa fare:
+
+| Stato | Significato | Proposta |
+|---|---|---|
+| Nuovo | non presente nell'ente | aggiungere |
+| Aggiornabile | l'ente non l'ha modificato, lo standard sì | aggiornare |
+| Conflitto | modificato sia dall'ente sia nello standard | mantenere la versione dell'ente (oppure sostituirla) |
+| Invariato / allineato | niente da fare | — |
+| Disattivato | l'ente l'aveva disattivato | lasciarlo disattivato (oppure riattivarlo) |
+| Rimosso | tolto dallo standard | mantenerlo (oppure disattivarlo) |
+
+  Ogni aggiornamento crea una nuova versione; le bozze e le verifiche restano legate a
+  quella usata. Le specificità si compongono nei modelli: quando ne cambia una, i modelli
+  che la usano ricevono una nuova versione;
+- **esportazione**: tutto ciò che è attivo nell'ente si scarica come pacchetto zip (backup,
+  passaggio a un altro ente, lavoro fuori dall'app) e si reimporta allo stesso modo.
+
+**Editor nell'app** (voce *Modelli e checklist*). Modelli, specificità e checklist si
+modificano senza scrivere YAML:
+
+- **modelli e specificità**: a sinistra la struttura (domande, fasi, sezioni, capoversi, dati,
+  valori calcolati, risposte consigliate, scenari di prova), al centro l'elemento scelto, a
+  destra l'anteprima dell'atto con risposte di prova. I dati si inseriscono nel testo con
+  *Inserisci un dato* o digitando `@`; *Quando compare* si imposta con menu a tendina
+  (domanda, condizione, valore); per una specificità si scelgono i modelli a cui si applica
+  e il punto in cui inserire i testi, e l'anteprima evidenzia i capoversi aggiunti;
+- **checklist**: ogni controllo ha campi separati (cosa verificare, è conforme / non
+  conforme / dubbio / non si applica se, note), le norme dalla libreria e i capoversi del
+  modello che lo soddisfano (*Collegato a*);
+- **controllo continuo**: errori (bloccano la pubblicazione: dati o domande inesistenti,
+  condizioni non valide) e avvisi (dati non usati, capoversi senza controlli, collegamenti
+  rotti tra checklist e capoversi);
+- **bozza e pubblicazione**: le modifiche si salvano in una bozza invisibile agli atti; la
+  pubblica un amministratore e diventa la nuova versione. Si confronta con la versione
+  pubblicata o con lo standard, si ripristina lo standard capoverso per capoverso, si
+  consultano le versioni precedenti; *Sorgente* mostra il YAML (JSON per le checklist) per
+  le modifiche avanzate;
+- **proposte**: chi scrive un atto e ha riscritto un capoverso può proporlo come testo del
+  modello (*Proponi come testo del modello*); chi gestisce i modelli la trova sul capoverso
+  e la applica alla bozza o la respinge.
+
+| Ruolo | Gruppo AD (default) | Cosa può fare |
+|---|---|---|
+| Gestore dei modelli | `ATTI-PA-Gestori-Modelli` (`LDAP_GRUPPO_GESTORI_MODELLI`) | modifica modelli, specificità e checklist in bozza, gestisce le proposte |
+| Amministratore | gruppo amministratori | tutto, compresa la pubblicazione e i pacchetti |
+| Redattore | gruppo redattori | propone modifiche ai capoversi |
+
+Da riga di comando:
 
 ```bash
-python deploy/modelli/carica_modello.py deploy/modelli/determina_affidamento_diretto.yaml --prova
-python deploy/checklist/carica_checklist.py deploy/checklist/scheda_contratti_pubblici_dd.json --prova
+python deploy/pacchetto.py prova                 # controlla il pacchetto in deploy/
+python deploy/pacchetto.py crea                  # crea lo zip da distribuire
+python deploy/pacchetto.py analizza FILE.zip     # cosa cambierebbe nel database
+python deploy/pacchetto.py importa FILE.zip      # importa con le azioni proposte
+python deploy/pacchetto.py esporta FILE.zip      # esporta la configurazione dell'ente
 ```
 
 ## Prova in locale

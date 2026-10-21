@@ -1,6 +1,7 @@
 """Modelli di atto e dati dell'ente.
 
-I modelli si caricano con deploy/modelli/carica_modello.py; qui si consultano. I "Dati
+I modelli arrivano con i pacchetti (routers/pacchetti.py) e si modificano nell'app; qui si
+consultano. I "Dati
 dell'ente" sono i campi con fonte "ente" dei modelli attivi (delibere di programmazione,
 luogo, sezione del TAR...): li compila l'amministratore e valgono per tutti gli atti.
 La carta intestata è l'ODT con i segnaposto {{intestazione}}, {{preambolo}},
@@ -38,6 +39,9 @@ class ModelloOut(Schema):
     tipologia_atto: str
     descrizione: str | None
     attivo: bool
+    pacchetto: str | None  # pacchetto standard da cui deriva
+    impronta: str | None
+    impronta_base: str | None
     created_at: datetime | None
 
 

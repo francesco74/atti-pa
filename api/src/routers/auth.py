@@ -46,10 +46,11 @@ async def login():
     ruoli = ruoli_da_gruppi(utente_ad.gruppi, settings)
     if not ruoli:
         log.warning(
-            "Accesso negato a %s: nessuno dei gruppi AD configurati (%s, %s, %s)",
+            "Accesso negato a %s: nessuno dei gruppi AD configurati (%s, %s, %s, %s)",
             utente_ad.username,
             settings.ldap_gruppo_redattori,
             settings.ldap_gruppo_controllori,
+            settings.ldap_gruppo_gestori_modelli,
             settings.ldap_gruppo_admin,
         )
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Utente non abilitato all'uso dell'applicazione")

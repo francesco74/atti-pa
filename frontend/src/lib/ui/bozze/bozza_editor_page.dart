@@ -605,6 +605,70 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
     await _salva();
   }
 
+  /// Propone a chi gestisce i modelli di adottare il testo riscritto come testo del modello.
+  /// Il testo è proposto con i dati come segnaposto ({{campo}}), modificabile prima dell'invio.
+  Future<void> _proponiAlModello(Map<String, dynamic> c) async {
+    final modello = _bozza!['modello'] as Map<String, dynamic>;
+    final segmenti = List<Map<String, dynamic>>.from(c['segmenti'] as List? ?? const []);
+    final attuale = segmenti.isEmpty
+        ? c['testo'] as String
+        : segmenti.map((s) => s['segnaposto'] ?? s['testo']).join();
+    final testo = TextEditingController(text: attuale);
+    final motivo = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text('Proponi una modifica al modello'),
+        content: SizedBox(
+          width: 640,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('Modello: ${modello['titolo']} (v${modello['versione']}) · capoverso ${c['id']}',
+                style: Theme.of(d).textTheme.bodySmall),
+            const SizedBox(height: 8),
+            TextField(
+              controller: testo,
+              minLines: 3,
+              maxLines: 10,
+              decoration: const InputDecoration(
+                labelText: 'Testo proposto',
+                helperText: 'I dati compaiono come {{nome}}: restano collegati alle caselle',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: motivo,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Perché (facoltativo)', border: OutlineInputBorder()),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Annulla')),
+          FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Invia la proposta')),
+        ],
+      ),
+    );
+    final proposto = testo.text.trim();
+    final motivazione = motivo.text.trim();
+    testo.dispose();
+    motivo.dispose();
+    if (ok != true || proposto.isEmpty || !mounted) return;
+    try {
+      await apiDi(context).post('/api/v1/proposte', {
+        'modello': modello['codice'],
+        'versione': modello['versione'],
+        'capoverso': c['id'],
+        'testo_attuale': attuale,
+        'testo_proposto': proposto,
+        'motivazione': motivazione.isEmpty ? null : motivazione,
+      });
+      if (mounted) mostraMessaggio(context, 'Proposta inviata a chi gestisce i modelli');
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
   void _mostraAiuto(String titolo, Map<String, dynamic> dati) {
     final norme = List<String>.from(dati['norme'] as List? ?? []);
     showDialog<void>(
@@ -1628,16 +1692,20 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           testo,
-          Align(
-            alignment: Alignment.centerLeft,
-            child: InkWell(
-              onTap: () => _ripristinaCapoverso(id),
-              child: Text('Testo riscritto · Ripristina testo standard',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      decoration: TextDecoration.underline)),
-            ),
-          ),
+          Wrap(spacing: 12, children: [
+            Text('Testo riscritto', style: Theme.of(context).textTheme.bodySmall),
+            for (final (etichetta, azione) in [
+              ('Ripristina testo standard', () => _ripristinaCapoverso(id)),
+              ('Proponi come testo del modello', () => _proponiAlModello(c)),
+            ])
+              InkWell(
+                onTap: azione,
+                child: Text(etichetta,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        decoration: TextDecoration.underline)),
+              ),
+          ]),
         ]),
       );
     }

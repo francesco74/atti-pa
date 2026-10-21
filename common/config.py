@@ -90,9 +90,9 @@ class Settings(BaseSettings):
     # Modelli di atto e checklist: all'avvio dell'API si caricano dai file quelli cambiati
     # (common/configurazione.py). Le cartelle predefinite sono quelle del repository, copiate
     # anche nell'immagine dell'API; in Kubernetes si possono montare da una ConfigMap.
-    carica_configurazione_all_avvio: bool = True
-    modelli_dir: str = str(Path(__file__).resolve().parents[1] / "deploy" / "modelli")
-    checklist_dir: str = str(Path(__file__).resolve().parents[1] / "deploy" / "checklist")
+    # pacchetto standard importato al primo avvio, con il database vuoto (common/pacchetti.py)
+    importa_pacchetto_iniziale: bool = True
+    pacchetto_dir: str = str(Path(__file__).resolve().parents[1] / "deploy")
     # Cartella con prompt personalizzati: i file presenti sostituiscono quelli di
     # common/prompt/ con lo stesso nome (vuota = solo quelli predefiniti)
     llm_prompt_dir: str | None = None
@@ -113,6 +113,7 @@ class Settings(BaseSettings):
     # Gruppi AD (CN o DN completo) che concedono i ruoli applicativi
     ldap_gruppo_redattori: str = "ATTI-PA-Redattori"
     ldap_gruppo_controllori: str = "ATTI-PA-Controllori"
+    ldap_gruppo_gestori_modelli: str = "ATTI-PA-Gestori-Modelli"
     ldap_gruppo_admin: str = "ATTI-PA-Admin"
 
     # Nessun segreto predefinito: con AUTH_ENABLED=true l'API non parte senza JWT_SECRET

@@ -300,6 +300,13 @@ class Specificita(_Base):
     etichetta: str
 
 
+class Scenario(_Base):
+    """Risposte di prova per l'anteprima nell'editor dei modelli."""
+
+    nome: str
+    risposte: dict[str, Any] = {}
+
+
 class Modello(_Base):
     codice: str
     versione: int = 1
@@ -315,6 +322,7 @@ class Modello(_Base):
     fasi: list[Fase] = Field(min_length=1)
     suggerimenti: list[Suggerimento] = []
     regole: list[Specificita] = []  # moduli di regole composti nel modello
+    scenari: list[Scenario] = []  # per l'anteprima nell'editor
 
 
 class Inserto(_Base):

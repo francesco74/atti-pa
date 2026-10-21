@@ -18,7 +18,8 @@ RUN pip install -r api/requirements.txt && rm -rf /deps
 WORKDIR /app
 COPY common/ /app/common/
 COPY api/src/ /app/
-# modelli di atto e checklist, caricati all'avvio se cambiati (MODELLI_DIR, CHECKLIST_DIR)
+# pacchetto standard di modelli e checklist, importato al primo avvio con il database vuoto
+COPY deploy/pacchetto.yaml /app/deploy/
 COPY deploy/modelli/*.yaml /app/deploy/modelli/
 COPY deploy/modelli/regole/*.yaml /app/deploy/modelli/regole/
 COPY deploy/checklist/*.json /app/deploy/checklist/

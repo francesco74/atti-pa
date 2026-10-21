@@ -70,6 +70,7 @@ def ruoli_da_gruppi(gruppi: list[str], settings: Settings) -> list[str]:
     mappa = {
         Ruolo.REDATTORE: settings.ldap_gruppo_redattori,
         Ruolo.CONTROLLORE: settings.ldap_gruppo_controllori,
+        Ruolo.GESTORE_MODELLI: settings.ldap_gruppo_gestori_modelli,
         Ruolo.ADMIN: settings.ldap_gruppo_admin,
     }
     return [ruolo for ruolo, gruppo in mappa.items() if appartiene(gruppo)]
