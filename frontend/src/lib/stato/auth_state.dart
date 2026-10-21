@@ -8,12 +8,14 @@ class Utente {
         username = j['username'] as String,
         nomeCompleto = (j['nome_completo'] as String?) ?? j['username'] as String,
         ufficio = j['ufficio'] as String?,
+        decretoIncarico = j['decreto_incarico'] as String?,
         ruoli = List<String>.from(j['ruoli'] as List);
 
   final String id;
   final String username;
   final String nomeCompleto;
   final String? ufficio;
+  final String? decretoIncarico;
   final List<String> ruoli;
 
   bool get isAdmin => ruoli.contains('ADMIN');
@@ -46,6 +48,16 @@ class AuthState extends ChangeNotifier {
   Future<void> login(String username, String password) async {
     utente = Utente.daJson(await api.login(username, password));
     stato = StatoAuth.autenticato;
+    notifyListeners();
+  }
+
+  /// Profilo modificato dall'utente (settore usato per precompilare gli atti).
+  Future<void> aggiornaProfilo({String? ufficio, String? decretoIncarico}) async {
+    final r = await api.put('/api/v1/auth/profilo', {
+      'ufficio': ufficio,
+      'decreto_incarico': decretoIncarico,
+    }) as Map<String, dynamic>;
+    utente = Utente.daJson(r);
     notifyListeners();
   }
 

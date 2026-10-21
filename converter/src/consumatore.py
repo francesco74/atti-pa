@@ -55,11 +55,32 @@ def leggi_file(archivio_dir: str, percorso: str) -> bytes:
         raise ConversioneNonRiuscita("File non presente nell'archivio") from e
 
 
+async def _connetti_in_attesa(url: str) -> aio_pika.abc.AbstractRobustConnection:
+    """All'avvio aspetta RabbitMQ invece di fallire: tentativi a intervalli crescenti
+    (1, 2, 4... fino a 30 secondi). Dopo la prima connessione la riconnessione è automatica.
+
+    Il converter non usa la libreria comune: stessa logica di common/coda.py.
+    """
+    attesa, tentativo = 1, 1
+    while True:
+        try:
+            return await aio_pika.connect_robust(url)
+        except (OSError, aio_pika.exceptions.AMQPError) as e:
+            log.warning(
+                "RabbitMQ non raggiungibile (tentativo %d: %s): nuovo tentativo tra %d s",
+                tentativo,
+                e or type(e).__name__,
+                attesa,
+            )
+        await asyncio.sleep(attesa)
+        attesa, tentativo = min(attesa * 2, 30), tentativo + 1
+
+
 async def main() -> None:
     settings = Settings()
     configura_logging(settings.log_level)
     convertitore = Convertitore(settings)
-    connessione = await aio_pika.connect_robust(settings.rabbitmq_url)
+    connessione = await _connetti_in_attesa(settings.rabbitmq_url)
     canale = await connessione.channel(publisher_confirms=True)
     # una conversione alla volta per processo: LibreOffice occupa molta memoria
     await canale.set_qos(prefetch_count=1)

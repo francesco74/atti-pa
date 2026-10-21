@@ -2,44 +2,16 @@
 
 from __future__ import annotations
 
-import io
-import zipfile
 from dataclasses import dataclass, field
 from datetime import date
-from xml.sax.saxutils import escape
 
 from common.normattiva import AttoNonTrovato, TestoArticolo, Urn, parse_articolo
-
-_MANIFEST = """<?xml version="1.0" encoding="UTF-8"?>
-<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
- <manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
- <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
-</manifest:manifest>"""
-
-_CONTENT = """<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
- xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
- xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" office:version="1.2">
- <office:body><office:text>{corpo}</office:text></office:body>
-</office:document-content>"""
+from common.odt import nuovo_odt
 
 
 def crea_odt(paragrafi: list[str], xml_grezzo: bool = False) -> bytes:
     """ODT minimale valido: un paragrafo per elemento (testo semplice o XML se xml_grezzo)."""
-    corpo = "".join(
-        f'<text:p text:style-name="Standard">{p if xml_grezzo else escape(p)}</text:p>'
-        for p in paragrafi
-    )
-    out = io.BytesIO()
-    with zipfile.ZipFile(out, "w") as zf:
-        zf.writestr(
-            zipfile.ZipInfo("mimetype"),
-            "application/vnd.oasis.opendocument.text",
-            compress_type=zipfile.ZIP_STORED,
-        )
-        zf.writestr("META-INF/manifest.xml", _MANIFEST)
-        zf.writestr("content.xml", _CONTENT.format(corpo=corpo))
-    return out.getvalue()
+    return nuovo_odt(paragrafi, xml_grezzo)
 
 
 def html_articolo(numero: str, commi: dict[str, str | tuple[str, dict[str, str]]]) -> str:

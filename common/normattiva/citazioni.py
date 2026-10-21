@@ -17,8 +17,11 @@ DENOMINAZIONI: dict[tuple[str, str], tuple[str, str]] = {
     ("stato", "legge.costituzionale"): ("legge costituzionale", "L. cost."),
     ("stato", "decreto.legislativo"): ("decreto legislativo", "D.Lgs."),
     ("stato", "decreto.legge"): ("decreto-legge", "D.L."),
-    ("presidente.repubblica", "decreto"): ("decreto del Presidente della Repubblica", "D.P.R."),
-    ("presidente.consiglio.ministri", "decreto"): (
+    ("stato", "decreto.del.presidente.della.repubblica"): (
+        "decreto del Presidente della Repubblica",
+        "D.P.R.",
+    ),
+    ("stato", "decreto.del.presidente.del.consiglio.dei.ministri"): (
         "decreto del Presidente del Consiglio dei ministri",
         "D.P.C.M.",
     ),

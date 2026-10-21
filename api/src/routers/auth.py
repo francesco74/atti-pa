@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, jsonify, make_response
 from ldap3.core.exceptions import LDAPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from auth.ldap import ruoli_da_gruppi
@@ -65,7 +65,8 @@ async def login():
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Utente disattivato")
     user.nome_completo = utente_ad.nome_completo
     user.email = utente_ad.email
-    user.ufficio = utente_ad.ufficio
+    if utente_ad.ufficio:  # senza Reparto in Active Directory resta quello indicato nel profilo
+        user.ufficio = utente_ad.ufficio
     user.ruoli = ruoli
     user.ultimo_accesso = datetime.now()
     await sessione.flush()
@@ -102,3 +103,26 @@ def logout():
 @autenticato()
 async def me():
     return out(UtenteOut, utente())
+
+
+class ProfiloIn(BaseModel):
+    ufficio: str | None = Field(default=None, max_length=255)
+    decreto_incarico: str | None = Field(default=None, max_length=255)
+
+
+@bp.put("/profilo")
+@autenticato()
+async def profilo():
+    """Settore (se Active Directory non lo dà) e decreto di incarico dell'utente, usati per
+    precompilare gli atti."""
+    dati = corpo(ProfiloIn)
+    sessione = db()
+    user = await sessione.merge(utente())
+    user.ufficio = (dati.ufficio or "").strip() or None
+    user.decreto_incarico = (dati.decreto_incarico or "").strip() or None
+    audit(
+        sessione, user, "utente", user.id, "PROFILO",
+        {"ufficio": user.ufficio, "decreto_incarico": user.decreto_incarico},
+    )  # fmt: skip
+    await sessione.commit()
+    return out(UtenteOut, user)

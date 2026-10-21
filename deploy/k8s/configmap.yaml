@@ -58,6 +58,12 @@ data:
   LLM_RICONOSCIMENTO_NORME_MANUALI: "true"
   # Dati personali da oscurare (omissis): li rileva il modello, una chiamata per atto
   LLM_DATI_PERSONALI: "true"
+  # Modelli di atto e checklist: l'API carica all'avvio quelli cambiati. Le cartelle sono
+  # nell'immagine (/app/deploy/modelli, /app/deploy/checklist); per cambiarle senza
+  # ricostruire l'immagine si possono montare da una ConfigMap e indicare qui
+  CARICA_CONFIGURAZIONE_ALL_AVVIO: "true"
+  # MODELLI_DIR: "/etc/atti-pa/modelli"
+  # CHECKLIST_DIR: "/etc/atti-pa/checklist"
   # Prompt personalizzati: cartella montata da una ConfigMap; i file presenti sostituiscono
   # quelli di common/prompt/ con lo stesso nome
   # LLM_PROMPT_DIR: "/etc/atti-pa/prompt"

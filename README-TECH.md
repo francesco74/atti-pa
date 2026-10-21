@@ -48,10 +48,10 @@ lib/
   api/          client REST (autenticazione con cookie di sessione)
   stato/        stato di autenticazione
   ui/
-    bozze/      modulo Redazione: elenco e wizard
+    bozze/      modulo Redazione: elenco, scelta del modello, percorso in 4 fasi
     libreria/   riferimenti, norme, consultazione articoli per data
     controllo/  controlli: atto, audit automatico, revisione
-    admin/      checklist, template, aggiornamenti Normattiva
+    admin/      checklist, modelli e dati dell'ente, aggiornamenti Normattiva
     verifica/   pannelli con gli esiti delle verifiche
   util/         download dei documenti
 ```

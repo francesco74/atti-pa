@@ -142,6 +142,35 @@ def commi_da_righe(righe: list[str]) -> list[Comma]:
     return commi
 
 
+_TITOLO_ALLEGATO = re.compile(r"^Art\.?\s*(?P<numero>\d+(?:\s*-?\s*[a-z]+)?)\.?$", re.IGNORECASE)
+
+
+def _articolo_allegato(el: Tag) -> tuple[str | None, str | None, list[Comma]]:
+    """Articolo di un allegato (es. codice civile, codice del processo amministrativo).
+
+    Normattiva lo restituisce come righe separate da <br>, senza le classi degli articoli:
+    "Art. 1325." / "(Indicazione dei requisiti)." / testo, con o senza commi numerati.
+    """
+    for br in el.find_all("br"):
+        br.replace_with("\n")
+    righe = [r for r in (_pulisci(r) for r in el.get_text(" ").split("\n")) if r]
+    numero = rubrica = None
+    if righe and (m := _TITOLO_ALLEGATO.match(righe[0])):
+        numero = re.sub(r"(\d+)\s*-?\s*([a-z]+)", r"\1-\2", m["numero"].lower())  # "6 bis" -> "6-bis"
+        righe = righe[1:]
+    if righe and righe[0].startswith("("):
+        rubrica = righe[0].strip("(). ") or None
+        righe = righe[1:]
+    if any(INIZIO_COMMA.match(r) for r in righe):
+        primo = next(i for i, r in enumerate(righe) if INIZIO_COMMA.match(r))
+        commi = commi_da_righe(righe[primo:])
+        if primo and commi:  # testo prima del comma 1
+            commi[0].testo = f"{' '.join(righe[:primo])} {commi[0].testo}"
+    else:
+        commi = [Comma(numero="1", testo=" ".join(righe))] if righe else []
+    return numero, rubrica, commi
+
+
 def parse_articolo(html: str) -> Articolo:
     soup = BeautifulSoup(html, "html.parser")
 
@@ -169,6 +198,11 @@ def parse_articolo(html: str) -> Articolo:
 
     commi = [_estrai_comma(div) for div in soup.find_all(class_="art-comma-div-akn")]
     commi = [c for c in commi if c.numero or c.testo]  # contenitori vuoti dell'HTML
+
+    # articolo di un allegato (es. codice civile): numero, rubrica e testo in righe
+    allegato = soup.find(class_="attachment-just-text")
+    if not commi and numero is None and allegato is not None:
+        numero, rubrica, commi = _articolo_allegato(allegato)
 
     # testo "piatto" (es. d.lgs. 36/2023): commi e lettere sono righe separate da <br>
     if not commi:

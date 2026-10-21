@@ -6,9 +6,8 @@ from http import HTTPStatus
 from flask import Blueprint
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
-from sqlalchemy.orm import undefer
 
-from composizione import aggiorna_testo, data_riferimento
+from composizione import aggiorna_bozza, data_riferimento, valuta
 from common import coda
 from deps import audit, autenticato, controllore, db, impostazioni, notifica, utente
 from schemas import Schema
@@ -19,7 +18,6 @@ from common.models import (
     Checklist,
     Ruolo,
     StatoVerifica,
-    Template,
     User,
     Verifica,
 )
@@ -30,7 +28,6 @@ bp = Blueprint("verifiche", __name__, url_prefix="/api/v1/verifiche")
 class VerificaIn(BaseModel):
     bozza_id: str | None = None
     atto_controllato_id: str | None = None
-    checklist_id: str | None = None  # default: checklist attiva della tipologia
 
     @model_validator(mode="after")
     def _uno_solo(self):
@@ -43,7 +40,7 @@ class VerificaOut(Schema):
     id: str
     bozza_id: str | None
     atto_controllato_id: str | None
-    checklist_id: str | None
+    checklist_ids: list[str] | None
     data_riferimento: date
     stato: str
     errore: str | None
@@ -63,15 +60,26 @@ class FiltroVerifiche(BaseModel):
     atto_controllato_id: str | None = None
 
 
-async def checklist_per_tipologia(sessione, tipologia: str | None) -> str | None:
+async def schede_applicabili(
+    sessione, tipologia: str | None, modello: str | None = None, moduli: list[str] | None = None
+) -> list[str]:
+    """Checklist attive da applicare a un atto, nell'ordine: la generica della tipologia,
+    quella del modello di atto, quelle delle specificità scelte."""
     if not tipologia:
-        return None
-    return await sessione.scalar(
-        select(Checklist.id)
-        .where(Checklist.tipologia_atto == tipologia, Checklist.attiva.is_(True))
-        .order_by(Checklist.versione.desc())
-        .limit(1)
-    )
+        return []
+    schede = (
+        await sessione.scalars(
+            select(Checklist)
+            .where(Checklist.tipologia_atto == tipologia, Checklist.attiva.is_(True))
+            .order_by(Checklist.codice)
+        )
+    ).all()
+    generiche = [c.id for c in schede if not c.modello and not c.modulo]
+    del_modello = [c.id for c in schede if modello and c.modello == modello]
+    delle_specificita = [
+        c.id for codice in moduli or [] for c in schede if c.modulo == codice
+    ]
+    return generiche + del_modello + delle_specificita
 
 
 async def _autorizza(sessione, verifica: Verifica, user: User) -> None:
@@ -84,13 +92,11 @@ async def _autorizza(sessione, verifica: Verifica, user: User) -> None:
 
 
 async def accoda(
-    sessione, user: User, giorno: date, checklist_id: str | None, **destinazione
+    sessione, user: User, giorno: date, checklist_ids: list[str], **destinazione
 ) -> Verifica:
-    if checklist_id and await sessione.get(Checklist, checklist_id) is None:
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Checklist inesistente")
     verifica = Verifica(
         data_riferimento=giorno,
-        checklist_id=checklist_id,
+        checklist_ids=checklist_ids or None,
         stato=StatoVerifica.IN_CODA,
         richiesta_da=user.id,
         **destinazione,
@@ -112,18 +118,15 @@ async def richiedi():
         bozza = await sessione.get(Bozza, dati.bozza_id)
         if bozza is None or bozza.owner_id != user.id:
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Bozza non trovata")
-        if bozza.template_id:
-            template = await sessione.scalar(
-                select(Template)
-                .where(Template.id == bozza.template_id)
-                .options(undefer(Template.file_contenuto))
-            )
-            aggiorna_testo(bozza, template)
-        checklist_id = dati.checklist_id or await checklist_per_tipologia(
-            sessione, bozza.tipologia_atto
+        # il testo verificato è quello composto dal modello con i dati attuali; si applicano
+        # la scheda della tipologia, quella del modello e quelle delle specificità scelte
+        valutazione = await valuta(sessione, bozza, user)
+        aggiorna_bozza(bozza, valutazione)
+        schede = await schede_applicabili(
+            sessione, bozza.tipologia_atto, bozza.modello.codice, valutazione.moduli_attivi()
         )
         verifica = await accoda(
-            sessione, user, data_riferimento(bozza, oggi), checklist_id, bozza_id=bozza.id
+            sessione, user, data_riferimento(bozza, oggi), schede, bozza_id=bozza.id
         )
     else:
         if not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
@@ -131,11 +134,11 @@ async def richiedi():
         atto = await sessione.get(AttoControllato, dati.atto_controllato_id)
         if atto is None:
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Atto non trovato")
-        checklist_id = dati.checklist_id or await checklist_per_tipologia(
-            sessione, atto.tipologia_atto
+        schede = await schede_applicabili(
+            sessione, atto.tipologia_atto, atto.modello, atto.moduli_json
         )
         verifica = await accoda(
-            sessione, user, atto.data_adozione, checklist_id, atto_controllato_id=atto.id
+            sessione, user, atto.data_adozione, schede, atto_controllato_id=atto.id
         )
         # senza testo (conversione fallita o non ancora fatta) si riparte dalla conversione
         da_convertire = atto.stato in ("IN_CONVERSIONE", "ERRORE_CONVERSIONE")

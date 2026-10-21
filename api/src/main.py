@@ -9,9 +9,10 @@ from __future__ import annotations
 import atexit
 import logging
 import time
+from pathlib import Path
 from http import HTTPStatus
 
-from routers import auth, bozze, checklists, controllo, norme, norme_manuali, templates
+from routers import auth, bozze, checklists, controllo, modelli, norme, norme_manuali
 from flask import g, request
 from flask_cors import CORS
 from sqlalchemy import text
@@ -28,6 +29,7 @@ from web import AttiFlask, ErroreApi
 from common.config import Settings, get_settings
 from common.db import crea_engine, crea_sessionmaker
 from common.coda import Coda
+from common.configurazione import carica_configurazione
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
 from common.normattiva import NormattivaClient
@@ -85,6 +87,19 @@ def create_app(
         # connessione a RabbitMQ al primo invio: l'API parte anche se il broker non risponde
         coda=Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso),
     )
+
+    if settings.carica_configurazione_all_avvio:
+        # modelli di atto e checklist dai file: solo quelli cambiati, un processo alla volta
+        try:
+            resoconto = app.ciclo.esegui(
+                carica_configurazione(
+                    motore, Path(settings.modelli_dir), Path(settings.checklist_dir)
+                )
+            )
+            log.info("Modelli di atto e checklist dai file: %s", resoconto)
+        except Exception:
+            # l'API parte comunque: restano attive le versioni già nel database
+            log.exception("Caricamento di modelli e checklist dai file non riuscito")
 
     async def chiudi_risorse() -> None:
         stato = app.state
@@ -165,7 +180,7 @@ def create_app(
             await conn.execute(text("SELECT 1"))
         return {"status": "ok"}
 
-    for modulo in (auth, norme, norme_manuali, checklists, templates, bozze, verifiche, controllo):
+    for modulo in (auth, norme, norme_manuali, checklists, modelli, bozze, verifiche, controllo):
         app.register_blueprint(modulo.bp)
 
     log.info(

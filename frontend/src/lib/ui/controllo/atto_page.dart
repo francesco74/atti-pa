@@ -213,9 +213,9 @@ class _AttoPageState extends State<AttoPage> {
             Tooltip(message: 'Proposta del modello ${v['modello_llm']}', child: const Icon(Icons.smart_toy_outlined)),
         ],
         child: proposta.isEmpty
-            ? const Text('Nessuna checklist per questa tipologia di atto.')
-            : Column(children: [
-                for (final e in proposta)
+            ? const Text('Nessuna checklist applicata a questo atto.')
+            : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                ...perScheda(context, proposta, (e) =>
                   SchedaEsito(
                     esito: e,
                     extra: Builder(builder: (context) {
@@ -243,7 +243,7 @@ class _AttoPageState extends State<AttoPage> {
                         ),
                       ]);
                     }),
-                  ),
+                  )),
               ]),
       ),
       Sezione(

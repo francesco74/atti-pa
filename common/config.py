@@ -86,6 +86,13 @@ class Settings(BaseSettings):
     # Dati personali da valutare per la pubblicazione (omissis): li cerca il modello, una
     # chiamata per atto (più di una per gli atti oltre LLM_MAX_CARATTERI_ATTO)
     llm_dati_personali: bool = True
+
+    # Modelli di atto e checklist: all'avvio dell'API si caricano dai file quelli cambiati
+    # (common/configurazione.py). Le cartelle predefinite sono quelle del repository, copiate
+    # anche nell'immagine dell'API; in Kubernetes si possono montare da una ConfigMap.
+    carica_configurazione_all_avvio: bool = True
+    modelli_dir: str = str(Path(__file__).resolve().parents[1] / "deploy" / "modelli")
+    checklist_dir: str = str(Path(__file__).resolve().parents[1] / "deploy" / "checklist")
     # Cartella con prompt personalizzati: i file presenti sostituiscono quelli di
     # common/prompt/ con lo stesso nome (vuota = solo quelli predefiniti)
     llm_prompt_dir: str | None = None

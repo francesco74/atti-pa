@@ -56,6 +56,9 @@ class User(Base):
     nome_completo: Mapped[str | None] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255))
     ufficio: Mapped[str | None] = mapped_column(String(255))
+    # decreto di conferimento dell'incarico (es. "del Sindaco n. 12 del 3 gennaio 2026"):
+    # precompila la competenza negli atti
+    decreto_incarico: Mapped[str | None] = mapped_column(String(255))
     ruoli: Mapped[list[Any]] = mapped_column(JSON, default=list)
     attivo: Mapped[bool] = mapped_column(Boolean, default=True)
     ultimo_accesso: Mapped[datetime | None] = mapped_column(DateTime)
@@ -184,8 +187,16 @@ class Checklist(Base):
     versione: Mapped[int] = mapped_column(Integer, default=1)
     titolo: Mapped[str] = mapped_column(String(255))
     tipologia_atto: Mapped[str] = mapped_column(ForeignKey("tipologie_atto.codice"))
+    # livello della scheda: generica della tipologia (entrambi vuoti), di un modello di atto
+    # o di una specificità (modulo di regole); sono codici, validi per tutte le versioni
+    modello: Mapped[str | None] = mapped_column(String(100))
+    modulo: Mapped[str | None] = mapped_column(String(100))
     descrizione: Mapped[str | None] = mapped_column(Text)
     attiva: Mapped[bool] = mapped_column(Boolean, default=True)
+    # caricata da file (deploy/checklist): impronta SHA-256 e nome del file; vuoti se
+    # la versione è stata creata o modificata dall'app
+    hash_sorgente: Mapped[str | None] = mapped_column(String(64))
+    file_sorgente: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     elementi: Mapped[list[ChecklistElemento]] = relationship(
@@ -207,18 +218,40 @@ class ChecklistElemento(Base):
     obbligatorio: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
-class Template(Base):
-    __tablename__ = "templates"
+class ModelloAtto(Base):
+    """Modello di atto a 4 fasi (deploy/modelli/*.yaml), con versioni come le checklist."""
+
+    __tablename__ = "modelli_atto"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
-    nome: Mapped[str] = mapped_column(String(255))
-    tipologia_atto: Mapped[str] = mapped_column(ForeignKey("tipologie_atto.codice"))
+    codice: Mapped[str] = mapped_column(String(100))
     versione: Mapped[int] = mapped_column(Integer, default=1)
+    titolo: Mapped[str] = mapped_column(String(255))
+    provvedimento: Mapped[str] = mapped_column(String(100))
+    tipologia_atto: Mapped[str] = mapped_column(ForeignKey("tipologie_atto.codice"))
+    descrizione: Mapped[str | None] = mapped_column(Text)
+    # definizione già controllata (common/modelli.py) e sorgente YAML originale
+    definizione_json: Mapped[dict[str, Any]] = mapped_column(JSON)
+    sorgente: Mapped[str] = mapped_column(TestoLungo, deferred=True)
+    # caricato da file (deploy/modelli): impronta SHA-256 e nome del file
+    hash_sorgente: Mapped[str | None] = mapped_column(String(64))
+    file_sorgente: Mapped[str | None] = mapped_column(String(255))
     attivo: Mapped[bool] = mapped_column(Boolean, default=True)
-    file_nome: Mapped[str] = mapped_column(String(255))
-    file_contenuto: Mapped[bytes] = mapped_column(FileBinario, deferred=True)
-    campi_json: Mapped[list[Any]] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ImpostazioniEnte(Base):
+    """Dati dell'ente usati da tutti i modelli (una sola riga, id = 1) e carta intestata."""
+
+    __tablename__ = "impostazioni_ente"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    dati_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    carta_intestata_nome: Mapped[str | None] = mapped_column(String(255))
+    carta_intestata: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
 
 
 class Bozza(Base):
@@ -226,17 +259,27 @@ class Bozza(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
-    template_id: Mapped[str | None] = mapped_column(ForeignKey("templates.id", ondelete="SET NULL"))
-    oggetto: Mapped[str] = mapped_column(Text)
+    modello_id: Mapped[str] = mapped_column(ForeignKey("modelli_atto.id"))
+    # ricavati dal testo composto, per l'elenco e la ricerca
+    oggetto: Mapped[str] = mapped_column(Text, default="")
     tipologia_atto: Mapped[str] = mapped_column(ForeignKey("tipologie_atto.codice"))
     data_adozione_prevista: Mapped[date | None] = mapped_column(Date)
-    dati_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # compilazione: risposte alle domande, valori dei campi, capoversi facoltativi tolti o
+    # aggiunti e testi riscritti ({"esclusi": [...], "inclusi": [...], "testi": {...}})
+    risposte_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    valori_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    personalizzazioni_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     riferimenti_json: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    # avanzamento per l'elenco: fasi senza dati mancanti; None finché le domande iniziali
+    # non hanno risposta
+    fasi_complete: Mapped[int | None] = mapped_column(Integer)
     contenuto_testo: Mapped[str | None] = mapped_column(TestoLungo)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+    modello: Mapped[ModelloAtto] = relationship(lazy="joined")
 
 
 class SessioneControllo(Base):
@@ -260,6 +303,9 @@ class AttoControllato(Base):
     data_adozione: Mapped[date] = mapped_column(Date)
     settore: Mapped[str | None] = mapped_column(String(255))
     tipologia_atto: Mapped[str | None] = mapped_column(ForeignKey("tipologie_atto.codice"))
+    # modello a cui l'atto corrisponde e specificità: scelgono le schede di controllo
+    modello: Mapped[str | None] = mapped_column(String(100))
+    moduli_json: Mapped[list[Any] | None] = mapped_column(JSON)
     oggetto: Mapped[str | None] = mapped_column(Text)
     file_nome: Mapped[str] = mapped_column(String(255))
     file_mime: Mapped[str] = mapped_column(String(100))
@@ -283,7 +329,8 @@ class Verifica(Base):
     atto_controllato_id: Mapped[str | None] = mapped_column(
         ForeignKey("atti_controllati.id", ondelete="CASCADE")
     )
-    checklist_id: Mapped[str | None] = mapped_column(ForeignKey("checklists.id"))
+    # schede di controllo applicate: generica della tipologia, del modello, delle specificità
+    checklist_ids: Mapped[list[Any] | None] = mapped_column(JSON)
     data_riferimento: Mapped[date] = mapped_column(Date)
     stato: Mapped[str] = mapped_column(String(20), default=StatoVerifica.IN_CODA)
     tentativi: Mapped[int] = mapped_column(Integer, default=0)

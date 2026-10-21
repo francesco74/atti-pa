@@ -5,7 +5,7 @@ degli enti locali, pensati per girare su Kubernetes all'interno della rete dell'
 
 | Modulo        | Utenti                    | Cosa fa                                                                                                                                                                   |
 | ------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Redazione** | redattori (uso personale) | Wizard guidato su template ODT, riferimenti normativi presi da Normattiva e verificati alla data di adozione, controllo rapido, documento ODT/PDF/PDF-A anche con omissis |
+| **Redazione** | redattori (uso personale) | Percorso guidato in 4 fasi (intestazione, preambolo e motivazione, dispositivo, chiusura) secondo un modello di atto, riferimenti normativi presi da Normattiva e verificati alla data di adozione, controllo rapido, documento ODT/PDF/PDF-A anche con omissis |
 | **Controllo** | gruppo controllo atti | Controllo successivo (art. 147-bis TUEL) di singoli atti: per ogni controllo l'atto, la data di adozione e l'audit (verifica dei riferimenti e della loro coerenza, checklist, revisione del controllore). Il sorteggio del campione avviene fuori dal programma |
 
 Principi:
@@ -65,6 +65,83 @@ con PyMuPDF4LLM, senza intestazioni e piè di pagina ripetuti) e pubblica il ris
 `convertiti`; il worker salva il testo ed esegue la verifica. "Rianalizza" e le verifiche
 delle bozze passano dalla coda `verifica`. Lo stato resta nel database: se un messaggio
 non parte o si perde, il worker reinvia il lavoro dopo `WORKER_REINVIO_MINUTI`.
+
+## Modelli di atto
+
+La redazione segue un **modello** per ogni tipo di atto (`deploy/modelli/*.yaml`): la
+determina di affidamento diretto di servizi e forniture (costruita sugli schemi ANCI), quella
+di affidamento diretto di lavori, il conferimento di un incarico di patrocinio legale e la
+concessione di un contributo.
+Un modello contiene:
+
+- le **domande iniziali** (importo, strumento di acquisto, PNRR...), che decidono quali
+  capoversi entrano nell'atto;
+- le **4 fasi** dell'atto, divise in sezioni e capoversi con il testo standard, i dati da
+  compilare (`{{campo}}`), le condizioni che li attivano, l'aiuto con la base normativa;
+- i **campi**, con tipo e controlli (CIG, CUP, codice fiscale e partita IVA, importi, date).
+
+L'utente sceglie il modello con "Nuova bozza", risponde alle domande e compila una fase per
+volta: può togliere o aggiungere i capoversi facoltativi e riscrivere quelli modificabili. Si
+passa alla fase successiva solo con i dati obbligatori compilati. I dati che si ripetono in
+ogni atto (delibere di DUP, bilancio e PEG, luogo, sezione del TAR...) li inserisce una volta
+l'amministratore in **Amministrazione → Modelli e dati dell'ente**, dove si carica anche la
+**carta intestata**: un ODT con i segnaposto `{{intestazione}}`, `{{preambolo}}`,
+`{{dispositivo}}` e `{{chiusura}}`, uno per fase (senza, si usa un'impaginazione semplice).
+
+**Moduli di regole.** Le specificità tecniche o normative stanno in moduli separati
+(`deploy/modelli/regole/*.yaml`), uno per casistica. Ogni modulo è una delle **caratteristiche dell'affidamento** che l'utente spunta tra le
+domande iniziali e, solo quando è scelto:
+
+- aggiunge le sue domande e i suoi campi (per il cloud: modello di servizio, classificazione
+  dei dati, servizio qualificato nel Catalogo ACN, CPV);
+- inietta capoversi nei **punti di innesto** del modello, distribuiti nelle 4 fasi: oggetto,
+  visti, "dato atto che", clausole essenziali dell'art. 192 TUEL, garanzia, dispositivo;
+- **suggerisce** risposte con la loro ragione (per il cloud: richiedere la garanzia
+  definitiva), che l'utente applica con un clic.
+
+**Checklist su tre livelli.** A ogni elemento della redazione corrisponde la sua scheda di
+controllo (`deploy/checklist/*.json`):
+
+| Livello | Redazione | Checklist |
+|---|---|---|
+| Tipologia di atto (Determinazione dirigenziale) | — | `scheda_determine.json`, generica, per ogni determina |
+| Modello: affidamento diretto di servizi e forniture | `determina_affidamento_diretto.yaml` | `scheda_affidamento_diretto_sf.json` |
+| Modello: affidamento diretto di lavori | `determina_affidamento_lavori.yaml` | `scheda_affidamento_lavori.json` |
+| Modello: incarico di patrocinio legale | `determina_patrocinio_legale.yaml` | `scheda_patrocinio_legale.json` |
+| Modello: concessione di un contributo | `determina_concessione_contributo.yaml` | `scheda_concessione_contributo.json` |
+| Specificità: servizi / forniture cloud ICT | `regole/ict_cloud.yaml` | `scheda_ict_cloud.json` |
+| Specificità: merceologia soggetta a CAM (servizi, forniture e lavori) | `regole/cam.yaml` | `scheda_cam.json` |
+| Specificità: alta intensità di manodopera | `regole/manodopera.yaml` | `scheda_manodopera.json` |
+| Specificità: utenze (energia, gas, carburanti, telefonia) | `regole/utenze.yaml` | `scheda_utenze.json` |
+| Specificità: servizi di ingegneria e architettura | `regole/servizi_tecnici_sia.yaml` | `scheda_sia.json` |
+| Specificità: servizi sociali e alla persona | `regole/servizi_sociali.yaml` | `scheda_servizi_sociali.json` |
+| Specificità: immobile vincolato (lavori) | `regole/immobile_vincolato.yaml` | `scheda_immobile_vincolato.json` |
+
+La verifica di una bozza applica la scheda generica, quella del modello e quelle delle
+specificità scelte; il controllo di un atto caricato fa lo stesso con la tipologia, il
+modello a cui l'atto corrisponde e le specificità indicate dal controllore. Gli esiti sono
+raggruppati per scheda. All'avvio l'API segnala nel log le incoerenze: un modello o una
+specificità senza checklist, una tipologia senza scheda generica, una checklist che rimanda
+a un modello o a una specificità inesistenti. Gli stessi controlli sono nei test
+(`python -m unittest discover -s common/tests -t .`), insieme a quelli del motore.
+
+Il modello e i moduli che gli si applicano sono composti in un'unica versione: cambiare un
+modulo crea una nuova versione dei modelli che lo usano.
+
+**Caricamento.** All'avvio l'API legge i modelli (`deploy/modelli/*.yaml`) e le checklist
+(`deploy/checklist/*.json`) e crea una nuova versione solo dei file cambiati, riconosciuti
+dall'impronta del contenuto. **I file comandano**: una checklist modificata dall'app resta
+attiva finché il suo file non cambia, poi la versione del file la sostituisce (con un avviso
+nel log). Le bozze e le verifiche già fatte restano legate alla versione usata. Il
+caricamento avviene sotto un lock del database, quindi con più processi o più pod lo esegue
+uno solo; un file non valido viene segnalato nel log e saltato, senza bloccare l'avvio. Si
+disattiva con `CARICA_CONFIGURAZIONE_ALL_AVVIO=false`; le cartelle si cambiano con
+`MODELLI_DIR` e `CHECKLIST_DIR`. Per controllare un file prima di pubblicarlo:
+
+```bash
+python deploy/modelli/carica_modello.py deploy/modelli/determina_affidamento_diretto.yaml --prova
+python deploy/checklist/carica_checklist.py deploy/checklist/scheda_contratti_pubblici_dd.json --prova
+```
 
 ## Prova in locale
 

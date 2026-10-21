@@ -1,48 +1,24 @@
-"""Checklist di qualità per tipologia di atto, versionate.
+"""Checklist di qualità, versionate, su tre livelli: generica della tipologia di atto, del
+modello di atto (`modello`), della specificità (`modulo`, modulo di regole). La verifica di
+un atto le applica tutte (routers.verifiche.schede_applicabili).
 
 Modificare una checklist crea una nuova versione: le verifiche già eseguite restano
 legate alla versione usata.
 """
 
-import re
 from http import HTTPStatus
 
 from flask import Blueprint
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 from sqlalchemy import func, select
 
 from deps import audit, autenticato, db, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, corpo, nessun_contenuto, out, parametri
-from common.models import Checklist, ChecklistElemento, TipologiaAtto
+from common.configurazione import ChecklistIn, ChecklistNuovaIn, elementi_checklist
+from common.models import Checklist, TipologiaAtto
 
 bp = Blueprint("checklists", __name__, url_prefix="/api/v1/checklists")
-
-
-class ElementoIn(BaseModel):
-    titolo: str = Field(min_length=1, max_length=255)
-    regola: str = Field(min_length=1)
-    riferimenti: list[str] = []  # URN di articoli da passare all'LLM come contesto
-    obbligatorio: bool = True
-
-
-class ChecklistIn(BaseModel):
-    titolo: str = Field(min_length=1, max_length=255)
-    tipologia_atto: str
-    descrizione: str | None = None
-    elementi: list[ElementoIn] = Field(min_length=1)
-
-
-class ChecklistNuovaIn(ChecklistIn):
-    codice: str = Field(min_length=2, max_length=100)
-
-    @field_validator("codice")
-    @classmethod
-    def _codice(cls, v: str) -> str:
-        v = v.strip().upper()
-        if not re.fullmatch(r"[A-Z0-9_-]+", v):
-            raise ValueError("Il codice può contenere solo lettere, numeri, '_' e '-'")
-        return v
 
 
 class ElementoOut(Schema):
@@ -60,6 +36,8 @@ class ChecklistOut(Schema):
     versione: int
     titolo: str
     tipologia_atto: str
+    modello: str | None
+    modulo: str | None
     descrizione: str | None
     attiva: bool
     elementi: list[ElementoOut]
@@ -68,19 +46,6 @@ class ChecklistOut(Schema):
 class FiltroChecklist(BaseModel):
     tipologia: str | None = None
     tutte: bool = False
-
-
-def _elementi(dati: list[ElementoIn]) -> list[ChecklistElemento]:
-    return [
-        ChecklistElemento(
-            ordine=i,
-            titolo=e.titolo,
-            regola=e.regola,
-            riferimenti_json=e.riferimenti or None,
-            obbligatorio=e.obbligatorio,
-        )
-        for i, e in enumerate(dati)
-    ]
 
 
 async def _verifica_tipologia(sessione, codice: str) -> None:
@@ -123,9 +88,11 @@ async def crea():
         versione=1,
         titolo=dati.titolo,
         tipologia_atto=dati.tipologia_atto,
+        modello=dati.modello,
+        modulo=dati.modulo,
         descrizione=dati.descrizione,
         attiva=True,
-        elementi=_elementi(dati.elementi),
+        elementi=elementi_checklist(dati.elementi),
     )
     sessione.add(cl)
     await sessione.flush()
@@ -156,9 +123,11 @@ async def nuova_versione(codice: str):
         versione=ultima + 1,
         titolo=dati.titolo,
         tipologia_atto=dati.tipologia_atto,
+        modello=dati.modello,
+        modulo=dati.modulo,
         descrizione=dati.descrizione,
         attiva=True,
-        elementi=_elementi(dati.elementi),
+        elementi=elementi_checklist(dati.elementi),
     )
     sessione.add(cl)
     await sessione.flush()

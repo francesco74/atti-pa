@@ -146,10 +146,35 @@ class PannelloChecklist extends StatelessWidget {
           ),
       ],
       child: esiti.isEmpty
-          ? const Text('Nessuna checklist applicata a questa tipologia di atto.')
-          : Column(children: [for (final e in esiti) SchedaEsito(esito: e)]),
+          ? const Text('Nessuna checklist applicata a questo atto.')
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: perScheda(context, esiti, (e) => SchedaEsito(esito: e)),
+            ),
     );
   }
+}
+
+/// Esiti raggruppati per scheda di provenienza (generica della tipologia, del modello, delle
+/// specificità), con il titolo della scheda prima dei suoi elementi.
+List<Widget> perScheda(
+  BuildContext context,
+  List<Map<String, dynamic>> esiti,
+  Widget Function(Map<String, dynamic>) elemento,
+) {
+  final widget = <Widget>[];
+  Object? scheda;
+  for (final e in esiti) {
+    if (e['scheda_titolo'] != null && e['scheda'] != scheda) {
+      scheda = e['scheda'];
+      widget.add(Padding(
+        padding: EdgeInsets.only(top: widget.isEmpty ? 0 : 12, bottom: 8),
+        child: Text(e['scheda_titolo'].toString(), style: Theme.of(context).textTheme.titleSmall),
+      ));
+    }
+    widget.add(elemento(e));
+  }
+  return widget;
 }
 
 class SchedaEsito extends StatelessWidget {

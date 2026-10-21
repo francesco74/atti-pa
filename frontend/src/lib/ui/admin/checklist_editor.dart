@@ -41,13 +41,24 @@ class ChecklistEditorPage extends StatefulWidget {
   State<ChecklistEditorPage> createState() => _ChecklistEditorPageState();
 }
 
+/// Livello di una checklist: generica della tipologia, di un modello di atto o di una
+/// specificità (modulo di regole). La verifica di un atto le applica tutte.
+String livelloChecklist(Map<String, dynamic> c) => c['modello'] != null
+    ? 'modello ${c['modello']}'
+    : c['modulo'] != null
+        ? 'specificità ${c['modulo']}'
+        : 'generica della tipologia';
+
 class _ChecklistEditorPageState extends State<ChecklistEditorPage> {
   final _codice = TextEditingController();
   final _titolo = TextEditingController();
   final _descrizione = TextEditingController();
   String? _tipologia;
+  String? _modello; // checklist di un modello di atto
+  String? _modulo; // checklist di una specificità
   final List<_Elemento> _elementi = [];
   late Future<List<dynamic>> _tipologie;
+  late Future<List<dynamic>> _modelli;
   bool _inCorso = false;
 
   bool get _nuova => widget.esistente == null;
@@ -56,12 +67,15 @@ class _ChecklistEditorPageState extends State<ChecklistEditorPage> {
   void initState() {
     super.initState();
     _tipologie = apiDi(context).get('/api/v1/tipologie').then((v) => v as List);
+    _modelli = apiDi(context).get('/api/v1/modelli').then((v) => v as List);
     final e = widget.esistente;
     if (e != null) {
       _codice.text = e['codice'] as String;
       _titolo.text = e['titolo'] as String;
       _descrizione.text = (e['descrizione'] ?? '') as String;
       _tipologia = e['tipologia_atto'] as String;
+      _modello = e['modello'] as String?;
+      _modulo = e['modulo'] as String?;
       for (final el in (e['elementi'] as List).cast<Map<String, dynamic>>()) {
         _elementi.add(_Elemento(
           titolo: el['titolo'] as String,
@@ -95,6 +109,8 @@ class _ChecklistEditorPageState extends State<ChecklistEditorPage> {
     final corpo = {
       'titolo': _titolo.text.trim(),
       'tipologia_atto': _tipologia,
+      'modello': _modello,
+      'modulo': _modulo,
       'descrizione': _descrizione.text.trim().isEmpty ? null : _descrizione.text.trim(),
       'elementi': elementi,
     };
@@ -158,6 +174,42 @@ class _ChecklistEditorPageState extends State<ChecklistEditorPage> {
                 ],
                 onChanged: (v) => setState(() => _tipologia = v),
               ),
+            ),
+          ),
+          SizedBox(
+            width: 420,
+            child: FutureBuilder<List<dynamic>>(
+              future: _modelli,
+              builder: (context, snap) {
+                final modelli = (snap.data ?? const []).cast<Map<String, dynamic>>();
+                // valore: "" generica, "modello:CODICE", "modulo:CODICE"
+                final voci = <String, String>{
+                  '': 'Generica: ogni atto della tipologia',
+                  for (final m in modelli) 'modello:${m['codice']}': 'Modello: ${m['titolo']}',
+                  for (final m in modelli)
+                    for (final s in (m['specificita'] as List? ?? const []).cast<Map<String, dynamic>>())
+                      'modulo:${s['codice']}': 'Specificità: ${s['etichetta']}',
+                };
+                final attuale = _modello != null
+                    ? 'modello:$_modello'
+                    : _modulo != null
+                        ? 'modulo:$_modulo'
+                        : '';
+                if (!voci.containsKey(attuale)) voci[attuale] = livelloChecklist({'modello': _modello, 'modulo': _modulo});
+                return DropdownButtonFormField<String>(
+                  key: ValueKey(voci.length),
+                  initialValue: attuale,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                      labelText: 'Si applica a',
+                      helperText: 'La verifica applica la generica, quella del modello e quelle delle specificità'),
+                  items: [for (final v in voci.entries) DropdownMenuItem(value: v.key, child: Text(v.value))],
+                  onChanged: (v) => setState(() {
+                    _modello = v != null && v.startsWith('modello:') ? v.substring(8) : null;
+                    _modulo = v != null && v.startsWith('modulo:') ? v.substring(7) : null;
+                  }),
+                );
+              },
             ),
           ),
         ]),

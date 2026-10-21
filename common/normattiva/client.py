@@ -10,7 +10,7 @@ import asyncio
 import logging
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from typing import Any, Self
 
@@ -23,6 +23,11 @@ from common.normattiva.urn import Urn
 log = logging.getLogger("common.normattiva")
 
 # suffissi degli articoli inseriti, nell'ordine dei "sottoarticoli" di Normattiva (bis = 2)
+# flagTipoArticolo di /atto/dettaglio-atto: 0 articolo del testo, 2 articolo di un allegato
+# (ricavato provando le API: la specifica OpenAPI non descrive i valori)
+_ARTICOLO_TESTO = "0"
+_ARTICOLO_ALLEGATO = "2"
+
 _SOTTOARTICOLI = [
     "bis",
     "ter",
@@ -149,6 +154,7 @@ class NormattivaClient:
         self._base = (base_url or settings.normattiva_base_url).rstrip("/") + _PREFISSO
         self._tentativi = tentativi or settings.normattiva_tentativi
         self._testi_principali: dict[str, tuple[str, str]] = {}  # URN atto -> (codice, data GU)
+        self._date_atti: dict[str, str] = {}  # URN con il solo anno -> data completa
         self._http = http or httpx.AsyncClient(
             timeout=timeout or settings.normattiva_timeout,
             headers={"Accept": "application/json", "Content-Type": "application/json"},
@@ -206,10 +212,13 @@ class NormattivaClient:
     async def articolo(self, urn: Urn | str, vigenza: date | None = None) -> TestoArticolo:
         """Testo di un articolo, vigente alla data indicata (default: oggi)."""
         u = Urn.parse(urn) if isinstance(urn, str) else urn
-        if vigenza:
-            u = u.alla_data(vigenza)
         if not u.articolo:
             raise ValueError("Specificare l'articolo nella URN (es. ~art50)")
+        if len(u.data) == 4:
+            # citazione con il solo anno (es. "D.P.R. 62/2013"): Normattiva vuole la data
+            u = await self.con_data_completa(u)
+        if vigenza:
+            u = u.alla_data(vigenza)
 
         try:
             risposta = await self._post("/atto/dettaglio-atto-urn", {"urn": str(u)})
@@ -225,6 +234,39 @@ class NormattivaClient:
             raise AttoNonTrovato(str(u))
         candidati = [_testo_da_risposta(str(u), d) for d in lista]
         raise RisultatoAmbiguo(str(u), candidati)
+
+    async def con_data_completa(self, u: Urn) -> Urn:
+        """La URN con la data completa del provvedimento, se nella citazione c'è solo l'anno.
+
+        Normattiva rifiuta le URN con il solo anno; la ricerca avanzata sull'intero anno per
+        numero trova l'atto, di cui si tiene quello dello stesso tipo (un D.P.R. e una legge
+        possono avere lo stesso numero nello stesso anno).
+        """
+        if len(u.data) != 4:
+            return u
+        chiave = u.atto
+        if chiave not in self._date_atti:
+            risposta = await self._post(
+                "/ricerca/avanzata",
+                {
+                    "dataInizioEmanazione": f"{u.data}-01-01",
+                    "dataFineEmanazione": f"{u.data}-12-31",
+                    "numeroProvvedimento": u.numero,
+                    "orderType": "vecchio",
+                    "paginazione": {"paginaCorrente": 1, "numeroElementiPerPagina": 20},
+                },
+            )
+            trovati = [
+                t
+                for a in (risposta or {}).get("listaAtti") or []
+                if (t := Urn.da_metadati(a)) is not None
+                and (t.autorita, t.denominazione, t.numero) == (u.autorita, u.denominazione, u.numero)
+            ]
+            if not trovati:
+                raise AttoNonTrovato(chiave)
+            self._date_atti[chiave] = trovati[0].data
+            log.debug("%s: data del provvedimento %s", chiave, trovati[0].data)
+        return replace(u, data=self._date_atti[chiave])
 
     async def _testo_principale(self, u: Urn) -> tuple[str, str]:
         """Codice redazionale e data di Gazzetta del testo principale dell'atto.
@@ -259,21 +301,32 @@ class NormattivaClient:
         if not m or (m[2] and m[2] not in _SOTTOARTICOLI):
             raise AttoNonTrovato(str(u))
         codice, data_gu = await self._testo_principale(u)
-        log.debug("%s non trovato per URN: cerco nel testo principale %s", u, codice)
-        risposta = await self._post(
-            "/atto/dettaglio-atto",
-            {
-                "dataGU": data_gu,
-                "codiceRedazionale": codice,
-                "idArticolo": int(m[1]),
-                "sottoArticolo": _SOTTOARTICOLI.index(m[2]) + 2 if m[2] else 1,
-                "dataVigenza": vigenza.isoformat(),
-            },
-        )
-        atto = ((risposta or {}).get("data") or {}).get("atto")
-        if not atto or not atto.get("articoloHtml"):
-            raise AttoNonTrovato(str(u))
-        return _testo_da_risposta(str(u), atto)
+        # articolo del testo dell'atto o degli allegati (es. il codice del processo
+        # amministrativo è l'allegato 1 del D.Lgs. 104/2010): con l'allegato nella URN si
+        # cerca prima lì
+        tipi = [_ARTICOLO_TESTO, _ARTICOLO_ALLEGATO]
+        if u.allegato:
+            tipi.reverse()
+        for tipo in tipi:
+            log.debug("%s: cerco nel testo principale %s (tipo articolo %s)", u, codice, tipo)
+            try:
+                risposta = await self._post(
+                    "/atto/dettaglio-atto",
+                    {
+                        "dataGU": data_gu,
+                        "codiceRedazionale": codice,
+                        "idArticolo": int(m[1]),
+                        "sottoArticolo": _SOTTOARTICOLI.index(m[2]) + 2 if m[2] else 1,
+                        "flagTipoArticolo": tipo,
+                        "dataVigenza": vigenza.isoformat(),
+                    },
+                )
+            except AttoNonTrovato:
+                continue
+            atto = ((risposta or {}).get("data") or {}).get("atto")
+            if atto and atto.get("articoloHtml"):
+                return _testo_da_risposta(str(u), atto)
+        raise AttoNonTrovato(str(u))
 
     async def atti_aggiornati(self, da: datetime, a: datetime) -> list[dict]:
         """Atti modificati nell'intervallo (usato dal job di aggiornamento cache)."""

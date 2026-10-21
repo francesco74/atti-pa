@@ -22,7 +22,7 @@ import logging
 from deps import archivia_caricato, audit, controllore, impostazioni, notifica, risorse, utente
 from documenti import DocumentiError
 from deps import db as sessione_db
-from routers.verifiche import accoda, checklist_per_tipologia
+from routers.verifiche import accoda, schede_applicabili
 from schemas import Schema
 from web import ErroreApi, allegato, file_caricato, modulo, nessun_contenuto
 from common import archivio, coda
@@ -39,6 +39,8 @@ class AttoOut(Schema):
     numero_registro: str | None
     data_adozione: date
     tipologia_atto: str | None
+    modello: str | None
+    moduli_json: list[str] | None
     oggetto: str | None
     file_nome: str
     file_sha256: str | None
@@ -57,9 +59,16 @@ class ControlloOut(BaseModel):
 class ControlloIn(BaseModel):
     titolo: str = Field(min_length=3, max_length=255)
     data_adozione: date  # le norme sono verificate al testo vigente in questa data
-    tipologia_atto: str | None = None  # sceglie la checklist
+    # scelgono le schede di controllo: generica della tipologia, del modello a cui l'atto
+    # corrisponde, delle specificità (codici separati da virgole nel form)
+    tipologia_atto: str | None = None
+    modello: str | None = None
+    moduli: str | None = None
     numero_registro: str | None = None
     oggetto: str | None = None
+
+    def codici_moduli(self) -> list[str]:
+        return [m.strip() for m in (self.moduli or "").split(",") if m.strip()]
 
 
 async def _atto_del_controllo(db, controllo_id: str) -> AttoControllato | None:
@@ -113,6 +122,8 @@ async def crea_controllo():
             numero_registro=dati.numero_registro,
             data_adozione=dati.data_adozione,
             tipologia_atto=dati.tipologia_atto,
+            modello=dati.modello or None,
+            moduli_json=dati.codici_moduli() or None,
             oggetto=dati.oggetto,
             file_nome=nome,
             file_mime=mime,
@@ -127,10 +138,10 @@ async def crea_controllo():
             db, user, "controllo", controllo.id, "CREATO",
             {"atto": atto.id, "file": nome, "sha256": archiviato.sha256},
         )  # fmt: skip
-        checklist_id = await checklist_per_tipologia(db, dati.tipologia_atto)
-        verifica = await accoda(
-            db, user, dati.data_adozione, checklist_id, atto_controllato_id=atto.id
+        schede = await schede_applicabili(
+            db, dati.tipologia_atto, atto.modello, atto.moduli_json
         )
+        verifica = await accoda(db, user, dati.data_adozione, schede, atto_controllato_id=atto.id)
         await db.commit()
     except Exception:
         archivio.elimina(settings.archivio_dir, archiviato.percorso)  # niente file orfani

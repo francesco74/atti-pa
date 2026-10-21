@@ -21,6 +21,7 @@ quindi tollerare messaggi duplicati.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import Awaitable, Callable
@@ -38,6 +39,26 @@ CODE = (CONVERSIONE, CONVERTITI, VERIFICA)
 
 Gestore = Callable[[dict[str, Any]], Awaitable[None]]
 
+ATTESA_MASSIMA = 30  # secondi tra due tentativi di connessione all'avvio
+
+
+async def connetti_in_attesa(url: str) -> aio_pika.abc.AbstractRobustConnection:
+    """Connessione a RabbitMQ che aspetta il broker: tentativi a intervalli crescenti
+    (1, 2, 4... fino a 30 secondi). Si interrompe solo con l'arresto del processo."""
+    attesa, tentativo = 1, 1
+    while True:
+        try:
+            return await aio_pika.connect_robust(url)
+        except (OSError, aio_pika.exceptions.AMQPError) as e:
+            log.warning(
+                "RabbitMQ non raggiungibile (tentativo %d: %s): nuovo tentativo tra %d s",
+                tentativo,
+                e or type(e).__name__,
+                attesa,
+            )
+        await asyncio.sleep(attesa)
+        attesa, tentativo = min(attesa * 2, ATTESA_MASSIMA), tentativo + 1
+
 
 class Coda:
     def __init__(self, url: str, prefisso: str = "atti-pa"):
@@ -50,11 +71,18 @@ class Coda:
     def nome(self, coda: str) -> str:
         return f"{self.prefisso}.{coda}"
 
-    async def connetti(self) -> None:
-        """Connessione con riconnessione automatica; dichiara le code (idempotente)."""
+    async def connetti(self, attendi: bool = False) -> None:
+        """Connessione con riconnessione automatica; dichiara le code (idempotente).
+
+        `attendi`: all'avvio di un consumatore, se RabbitMQ non risponde riprova finché non
+        è disponibile invece di fallire. La riconnessione dopo una caduta è automatica.
+        """
         if self._canale is not None and not self._canale.is_closed:
             return
-        self._connessione = await aio_pika.connect_robust(self.url)
+        if attendi:
+            self._connessione = await connetti_in_attesa(self.url)
+        else:
+            self._connessione = await aio_pika.connect_robust(self.url)
         self._canale = await self._connessione.channel(publisher_confirms=True)
         # un messaggio alla volta per consumatore: una verifica può durare minuti
         await self._canale.set_qos(prefetch_count=1)

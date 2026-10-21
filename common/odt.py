@@ -27,7 +27,20 @@ NS = {
 _TEXT = f"{{{NS['text']}}}"
 
 SEGNAPOSTO = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
-NON_COMPILATO = re.compile(r"\[\[([a-zA-Z_][a-zA-Z0-9_]*)\]\]")
+NON_COMPILATO = re.compile(r"\[\[([a-zA-Z_][\w.]*)\]\]")  # anche "impegni.importo"
+
+_MANIFEST = """<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+ <manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
+ <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+</manifest:manifest>"""
+
+_CONTENT = """<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" office:version="1.2">
+ <office:body><office:text>{corpo}</office:text></office:body>
+</office:document-content>"""
 
 
 class OdtNonValido(ValueError):
@@ -68,6 +81,26 @@ def _testo_paragrafo(p: etree._Element) -> str:
 
 def _paragrafi(radice: etree._Element) -> list[etree._Element]:
     return radice.findall(".//text:p", NS) + radice.findall(".//text:h", NS)
+
+
+def nuovo_odt(paragrafi: list[str], xml_grezzo: bool = False) -> bytes:
+    """ODT minimale valido: un paragrafo per elemento (testo semplice o XML se xml_grezzo)."""
+    from xml.sax.saxutils import escape
+
+    corpo = "".join(
+        f'<text:p text:style-name="Standard">{p if xml_grezzo else escape(p)}</text:p>'
+        for p in paragrafi
+    )
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as zf:
+        zf.writestr(
+            zipfile.ZipInfo("mimetype"),
+            "application/vnd.oasis.opendocument.text",
+            compress_type=zipfile.ZIP_STORED,
+        )
+        zf.writestr("META-INF/manifest.xml", _MANIFEST)
+        zf.writestr("content.xml", _CONTENT.format(corpo=corpo))
+    return out.getvalue()
 
 
 def estrai_testo(odt: bytes) -> str:

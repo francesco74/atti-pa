@@ -1,27 +1,32 @@
-"""Modulo Redazione: bozze personali di determinazione (ogni utente vede solo le proprie)."""
+"""Modulo Redazione: bozze personali di atti, compilate secondo un modello a 4 fasi.
 
-from datetime import date, datetime
+Ogni utente vede solo le proprie bozze. La bozza conserva le risposte alle domande, i
+valori dei campi e le personalizzazioni (capoversi facoltativi tolti o aggiunti, testi
+riscritti); il testo dell'atto è composto dal modello a ogni salvataggio.
+"""
+
+from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Literal
+from typing import Any, Literal
 
 from flask import Blueprint
 from pydantic import BaseModel, Field
-from sqlalchemy import select
-from sqlalchemy.orm import undefer
+from sqlalchemy import DateTime, func, select
 
 from composizione import (
-    aggiorna_testo,
+    aggiorna_bozza,
+    carta_intestata,
     data_riferimento,
     documento_odt,
     documento_odt_con_omissis,
+    valuta,
 )
 from deps import audit, db, impostazioni, redattore, risorse, utente
 from documenti import DocumentiError
-from schemas import Schema
-from web import ErroreApi, allegato, corpo, nessun_contenuto, out, parametri
+from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common.dati_personali import DatiPersonaliNonDisponibili, StatoDatiPersonali
 from common.llm import LlmError, espandi_appunti
-from common.models import Bozza, Template, TipologiaAtto
+from common.models import AuditLog, Bozza, ModelloAtto
 from common.normattiva import Urn
 from common.normattiva.citazioni import citazione_riferimento
 from common.odt import segnaposto_non_compilati
@@ -38,32 +43,41 @@ class RiferimentoBozza(BaseModel):
     citazione: str | None = None
 
 
-class BozzaIn(BaseModel):
-    oggetto: str = Field(min_length=3)
-    tipologia_atto: str
-    template_id: str | None = None
-    data_adozione_prevista: date | None = None
-    dati: dict[str, str | None] = {}
-    riferimenti: list[RiferimentoBozza] = []
+class Personalizzazioni(BaseModel):
+    esclusi: list[str] = []
+    inclusi: list[str] = []
+    testi: dict[str, str] = {}
 
 
-class BozzaSintesi(Schema):
-    id: str
-    oggetto: str
-    tipologia_atto: str
-    template_id: str | None
-    data_adozione_prevista: date | None
-    updated_at: datetime | None
+class BozzaNuova(BaseModel):
+    modello_id: str
 
 
-class BozzaOut(BozzaSintesi):
-    dati_json: dict
-    riferimenti_json: list[dict]
-    contenuto_testo: str | None
+class BozzaModifica(BaseModel):
+    """Le chiavi presenti sostituiscono per intero quelle salvate."""
+
+    risposte: dict[str, Any] | None = None
+    valori: dict[str, Any] | None = None
+    personalizzazioni: Personalizzazioni | None = None
+    riferimenti: list[RiferimentoBozza] | None = None
 
 
 class FiltroBozze(BaseModel):
     q: str | None = None
+
+
+def _sintesi(b: Bozza) -> dict:
+    return {
+        "id": b.id,
+        "oggetto": b.oggetto,
+        "modello": b.modello.titolo,
+        "provvedimento": b.modello.provvedimento,
+        "tipologia_atto": b.tipologia_atto,
+        "fasi_complete": b.fasi_complete,
+        "fasi_totali": len(b.modello.definizione_json.get("fasi", [])),
+        "data_adozione_prevista": b.data_adozione_prevista and b.data_adozione_prevista.isoformat(),
+        "updated_at": b.updated_at and b.updated_at.isoformat(),
+    }
 
 
 async def _bozza_propria(sessione, bozza_id: str) -> Bozza:
@@ -74,19 +88,25 @@ async def _bozza_propria(sessione, bozza_id: str) -> Bozza:
     return bozza
 
 
-async def _template(sessione, template_id: str | None, tipologia: str) -> Template | None:
-    if not template_id:
-        return None
-    t = await sessione.scalar(
-        select(Template).where(Template.id == template_id).options(undefer(Template.file_contenuto))
-    )
-    if t is None:
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Template inesistente")
-    if t.tipologia_atto != tipologia:
-        raise ErroreApi(
-            HTTPStatus.UNPROCESSABLE_ENTITY, "Il template è di un'altra tipologia di atto"
-        )
-    return t
+async def _dettaglio(sessione, bozza: Bozza) -> dict:
+    valutazione = await valuta(sessione, bozza, utente())
+    m = bozza.modello
+    return {
+        **_sintesi(bozza),
+        "modello": {
+            "id": m.id,
+            "codice": m.codice,
+            "versione": m.versione,
+            "titolo": m.titolo,
+            "provvedimento": m.provvedimento,
+            "formula_dispositivo": valutazione.m.d.formula_dispositivo,
+        },
+        "risposte": bozza.risposte_json or {},
+        "valori": bozza.valori_json or {},
+        "personalizzazioni": bozza.personalizzazioni_json or {},
+        "riferimenti": bozza.riferimenti_json or [],
+        "stato": valutazione.riepilogo(),
+    }
 
 
 def _riferimenti(dati: list[RiferimentoBozza]) -> list[dict]:
@@ -109,19 +129,6 @@ def _riferimenti(dati: list[RiferimentoBozza]) -> list[dict]:
     return risultato
 
 
-async def _applica(sessione, bozza: Bozza, dati: BozzaIn) -> None:
-    if await sessione.get(TipologiaAtto, dati.tipologia_atto) is None:
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Tipologia di atto inesistente")
-    template = await _template(sessione, dati.template_id, dati.tipologia_atto)
-    bozza.oggetto = dati.oggetto
-    bozza.tipologia_atto = dati.tipologia_atto
-    bozza.template_id = dati.template_id
-    bozza.data_adozione_prevista = dati.data_adozione_prevista
-    bozza.dati_json = dati.dati
-    bozza.riferimenti_json = _riferimenti(dati.riferimenti)
-    aggiorna_testo(bozza, template)
-
-
 @bp.get("")
 @redattore
 async def elenco():
@@ -129,41 +136,79 @@ async def elenco():
     query = select(Bozza).where(Bozza.owner_id == utente().id).order_by(Bozza.updated_at.desc())
     if q:
         query = query.where(Bozza.oggetto.like(f"%{q}%"))
-    return out(BozzaSintesi, (await db().scalars(query)).all())
+    return [_sintesi(b) for b in (await db().scalars(query)).unique().all()]
 
 
 @bp.post("")
 @redattore
 async def crea():
-    dati = corpo(BozzaIn)
+    dati = corpo(BozzaNuova)
     sessione = db()
-    bozza = Bozza(owner_id=utente().id)
-    await _applica(sessione, bozza, dati)
+    modello = await sessione.get(ModelloAtto, dati.modello_id)
+    if modello is None or not modello.attivo:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Modello di atto inesistente o non attivo")
+    bozza = Bozza(
+        owner_id=utente().id,
+        modello_id=modello.id,
+        modello=modello,
+        tipologia_atto=modello.tipologia_atto,
+        risposte_json={},
+        valori_json={},
+        personalizzazioni_json={},
+        riferimenti_json=[],
+    )
+    aggiorna_bozza(bozza, await valuta(sessione, bozza, utente()))
     sessione.add(bozza)
     await sessione.flush()
-    audit(sessione, utente(), "bozza", bozza.id, "CREATA")
+    audit(sessione, utente(), "bozza", bozza.id, "CREATA", {"modello": modello.codice})
     await sessione.commit()
-    await sessione.refresh(bozza)
-    return out(BozzaOut, bozza), HTTPStatus.CREATED
+    await sessione.refresh(bozza)  # date scritte dal database
+    return await _dettaglio(sessione, bozza), HTTPStatus.CREATED
 
 
 @bp.get("/<bozza_id>")
 @redattore
 async def dettaglio(bozza_id: str):
-    return out(BozzaOut, await _bozza_propria(db(), bozza_id))
+    sessione = db()
+    return await _dettaglio(sessione, await _bozza_propria(sessione, bozza_id))
 
 
 @bp.put("/<bozza_id>")
 @redattore
 async def aggiorna(bozza_id: str):
-    dati = corpo(BozzaIn)
+    dati = corpo(BozzaModifica)
     sessione = db()
     bozza = await _bozza_propria(sessione, bozza_id)
-    await _applica(sessione, bozza, dati)
-    audit(sessione, utente(), "bozza", bozza.id, "MODIFICATA")
+    if dati.risposte is not None:
+        bozza.risposte_json = dati.risposte
+    if dati.valori is not None:
+        bozza.valori_json = dati.valori
+    if dati.personalizzazioni is not None:
+        bozza.personalizzazioni_json = dati.personalizzazioni.model_dump()
+        # un capoverso riscritto ma tornato uguale al testo standard non è più personalizzato
+        valutazione = await valuta(sessione, bozza, utente())
+        bozza.personalizzazioni_json = {
+            **bozza.personalizzazioni_json,
+            "testi": valutazione.testi_effettivi(),
+        }
+    if dati.riferimenti is not None:
+        bozza.riferimenti_json = _riferimenti(dati.riferimenti)
+    aggiorna_bozza(bozza, await valuta(sessione, bozza, utente()))
+    # il salvataggio è automatico mentre si scrive: nel registro al massimo una modifica
+    # ogni 5 minuti per bozza
+    ultima = await sessione.scalar(
+        select(func.max(AuditLog.created_at)).where(
+            AuditLog.entita == "bozza",
+            AuditLog.entita_id == bozza.id,
+            AuditLog.azione == "MODIFICATA",
+        )
+    )
+    adesso = await sessione.scalar(select(func.now(type_=DateTime)))
+    if ultima is None or adesso is None or (adesso - ultima) > timedelta(minutes=5):
+        audit(sessione, utente(), "bozza", bozza.id, "MODIFICATA")
     await sessione.commit()
     await sessione.refresh(bozza)
-    return out(BozzaOut, bozza)
+    return await _dettaglio(sessione, bozza)
 
 
 @bp.delete("/<bozza_id>")
@@ -180,24 +225,24 @@ async def elimina(bozza_id: str):
 @bp.get("/<bozza_id>/controllo-rapido")
 @redattore
 async def controllo_rapido(bozza_id: str):
-    """Controlli deterministici immediati per il wizard (senza LLM)."""
+    """Controlli immediati, senza LLM: campi obbligatori, segnaposto, riferimenti normativi."""
     sessione = db()
     bozza = await _bozza_propria(sessione, bozza_id)
-    testo = bozza.contenuto_testo or ""
+    valutazione = await valuta(sessione, bozza, utente())
+    testo = valutazione.testo()
     giorno = data_riferimento(bozza, datetime.now(impostazioni().tz).date())
-
-    mancanti = []
-    if bozza.template_id:
-        template = await sessione.get(Template, bozza.template_id)
-        if template:
-            mancanti = [
-                c["etichetta"]
-                for c in template.campi_json
-                if c.get("obbligatorio") and not (bozza.dati_json or {}).get(c["nome"])
-            ]
+    riepilogo = valutazione.riepilogo()
+    mancanti = [
+        f"Fase {f['numero']} - {c['etichetta']}"
+        for f in riepilogo["fasi"]
+        for c in f["campi"]
+        if c["mancante"]
+    ]
+    mancanti += [f"Domande iniziali - {q['testo']}" for q in riepilogo["domande"] if q["mancante"]]
     return {
         "data_riferimento": giorno,
         "campi_obbligatori_mancanti": mancanti,
+        "blocchi": riepilogo["blocchi"],
         "segnaposto": segnaposto_non_compilati(testo),
         "riferimenti": await verifica_riferimenti(sessione, risorse().normattiva, testo, giorno),
         # i dati personali li rileva il modello: nella verifica completa, non qui
@@ -221,24 +266,19 @@ class DocumentoQuery(BaseModel):
 @bp.get("/<bozza_id>/documento")
 @redattore
 async def documento(bozza_id: str):
-    """Documento generato dal template; `omissis=true` oscura i dati personali rilevati."""
+    """Documento sulla carta intestata dell'ente; `omissis=true` oscura i dati personali."""
     q = parametri(DocumentoQuery)
     sessione = db()
     bozza = await _bozza_propria(sessione, bozza_id)
-    template = await _template(sessione, bozza.template_id, bozza.tipologia_atto)
-    if template is None:
-        raise ErroreApi(
-            HTTPStatus.UNPROCESSABLE_ENTITY, "Scegliere un template per generare il documento"
-        )
+    valutazione = await valuta(sessione, bozza, utente())
+    carta = await carta_intestata(sessione)
     try:
         odt = (
             await documento_odt_con_omissis(
-                bozza,
-                template,
-                risorse().llm if impostazioni().llm_dati_personali else None,
+                carta, valutazione, risorse().llm if impostazioni().llm_dati_personali else None
             )
             if q.omissis
-            else documento_odt(bozza, template)
+            else documento_odt(carta, valutazione)
         )
     except DatiPersonaliNonDisponibili as e:
         # mai un documento "con omissis" con i dati in chiaro
@@ -254,7 +294,7 @@ async def documento(bozza_id: str):
         except DocumentiError as e:
             raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
     estensione = "odt" if q.formato == "odt" else "pdf"
-    nome = f"determina{'-omissis' if q.omissis else ''}.{estensione}"
+    nome = f"atto{'-omissis' if q.omissis else ''}.{estensione}"
     audit(
         sessione,
         utente(),
@@ -276,7 +316,7 @@ class EspandiIn(BaseModel):
 @bp.post("/espandi")
 @redattore
 async def espandi():
-    """Riscrive appunti sintetici in linguaggio amministrativo (LLM on-premise)."""
+    """Riscrive appunti sintetici in linguaggio amministrativo (LLM)."""
     dati = corpo(EspandiIn)
     llm = risorse().llm
     if llm is None:

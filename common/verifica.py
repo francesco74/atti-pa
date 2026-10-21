@@ -375,10 +375,12 @@ async def valuta_checklist(
     db: AsyncSession,
     normattiva: NormattivaClient,
     llm: LlmClient,
-    checklist: Checklist,
+    schede: list[Checklist],
     testo: str,
     giorno: date,
 ) -> list[dict]:
+    """Elementi delle schede applicate (generica della tipologia, del modello, delle
+    specificità); ogni esito porta la scheda da cui viene."""
     esiti = []
     if len(testo) > llm.max_caratteri_atto:
         log.warning(
@@ -386,7 +388,8 @@ async def valuta_checklist(
             llm.max_caratteri_atto,
             len(testo),
         )
-    for elemento in checklist.elementi:
+    elementi = [(scheda, e) for scheda in schede for e in scheda.elementi]
+    for scheda, elemento in elementi:
         norme = await _norme_elemento(db, normattiva, elemento.riferimenti_json or [], giorno)
         log.debug(
             "Elemento %r: %d norme nel prompt (%s)",
@@ -404,6 +407,8 @@ async def valuta_checklist(
         )
         voce = {
             "elemento_id": elemento.id,
+            "scheda": scheda.codice,
+            "scheda_titolo": scheda.titolo,
             "titolo": elemento.titolo,
             "obbligatorio": elemento.obbligatorio,
             "norme_usate": [c for c, _ in norme],
@@ -430,7 +435,7 @@ async def analizza(
     llm: LlmClient | None,
     testo: str,
     giorno: date,
-    checklist: Checklist | None = None,
+    schede: list[Checklist] | None = None,
     settings: Settings | None = None,
 ) -> RisultatoAnalisi:
     """Analisi completa: riferimenti e loro coerenza, segnaposto, dati personali, checklist."""
@@ -469,7 +474,7 @@ async def analizza(
             max_caratteri_norma=settings.llm_coerenza_max_caratteri_norma,
         )
         risultato.modello_llm = llm.modello
-    if checklist is not None and llm is not None:
-        risultato.checklist = await valuta_checklist(db, normattiva, llm, checklist, testo, giorno)
+    if schede and llm is not None:
+        risultato.checklist = await valuta_checklist(db, normattiva, llm, schede, testo, giorno)
         risultato.modello_llm = llm.modello
     return risultato

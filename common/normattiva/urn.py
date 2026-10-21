@@ -20,10 +20,12 @@ TIPI_ATTO: dict[str, tuple[str, str]] = {
     "decreto legislativo": ("stato", "decreto.legislativo"),
     "decreto-legge": ("stato", "decreto.legge"),
     "decreto legge": ("stato", "decreto.legge"),
-    "decreto del presidente della repubblica": ("presidente.repubblica", "decreto"),
+    # le API di Normattiva rifiutano la forma NIR "presidente.repubblica:decreto" (HTTP 400)
+    # e accettano solo quella con emettitore "stato"
+    "decreto del presidente della repubblica": ("stato", "decreto.del.presidente.della.repubblica"),
     "decreto del presidente del consiglio dei ministri": (
-        "presidente.consiglio.ministri",
-        "decreto",
+        "stato",
+        "decreto.del.presidente.del.consiglio.dei.ministri",
     ),
     "regio decreto": ("stato", "regio.decreto"),
     "costituzione": ("stato", "costituzione"),
@@ -78,6 +80,14 @@ def articolo_urn(articolo: str) -> str:
     """Forma usata da Normattiva nelle URN: "147-bis" -> "147bis"."""
     return re.sub(r"[\s-]", "", articolo)
 
+
+# Forma NIR standard -> forma accettata da Normattiva (URN scritte a mano o salvate prima)
+_FORME_EQUIVALENTI = {
+    ("presidente.repubblica", "decreto"): TIPI_ATTO["decreto del presidente della repubblica"],
+    ("presidente.consiglio.ministri", "decreto"): TIPI_ATTO[
+        "decreto del presidente del consiglio dei ministri"
+    ],
+}
 
 _URN_RE = re.compile(
     r"^urn:nir:(?P<autorita>[a-z.]+):(?P<denominazione>[a-z.]+):"
@@ -154,9 +164,12 @@ class Urn:
         if not m:
             raise ValueError(f"URN non valida: {valore!r}")
         versione = m["versione"] or ""
+        autorita, denominazione = _FORME_EQUIVALENTI.get(
+            (m["autorita"], m["denominazione"]), (m["autorita"], m["denominazione"])
+        )
         return cls(
-            autorita=m["autorita"],
-            denominazione=m["denominazione"],
+            autorita=autorita,
+            denominazione=denominazione,
             data=m["data"],
             numero=m["numero"],
             articolo=articolo_canonico(m["articolo"]) if m["articolo"] else None,

@@ -198,26 +198,26 @@ class Worker:
                 if not testo.strip():
                     raise ValueError("L'atto non contiene testo analizzabile")
                 log.debug(
-                    "Verifica %s: %s, checklist %s, data di riferimento %s",
+                    "Verifica %s: %s, schede %s, data di riferimento %s",
                     verifica_id,
                     f"bozza {verifica.bozza_id}"
                     if verifica.bozza_id
                     else f"atto {verifica.atto_controllato_id}",
-                    verifica.checklist_id or "nessuna",
+                    ", ".join(verifica.checklist_ids or []) or "nessuna",
                     verifica.data_riferimento,
                 )
-                checklist = (
-                    await db.get(Checklist, verifica.checklist_id)
-                    if verifica.checklist_id
-                    else None
-                )
+                schede = [
+                    c
+                    for c in [await db.get(Checklist, i) for i in verifica.checklist_ids or []]
+                    if c is not None
+                ]
                 risultato = await analizza(
                     db,
                     self.normattiva,
                     self.llm,
                     testo,
                     verifica.data_riferimento,
-                    checklist,
+                    schede,
                     self.settings,
                 )
                 verifica.esito_riferimenti = risultato.esito_riferimenti()
@@ -350,7 +350,8 @@ class Worker:
     # --- ciclo principale -------------------------------------------------------------------
 
     async def esegui(self) -> None:
-        await self.coda.connetti()
+        # all'avvio aspetta RabbitMQ invece di fallire (es. avvio contemporaneo dei servizi)
+        await self.coda.connetti(attendi=True)
         await self.coda.consuma(coda.CONVERTITI, self.gestisci_convertito)
         await self.coda.consuma(coda.VERIFICA, self.gestisci_verifica)
         log.info(
