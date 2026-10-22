@@ -1,0 +1,50 @@
+{
+  "codice": "SCHEDA_MANODOPERA",
+  "titolo": "Scheda di controllo della specificità Alta intensità di manodopera",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "MANODOPERA",
+  "descrizione": "Scheda della specificità: si applica ai servizi ad alta intensità di manodopera, nei quali il costo della manodopera è pari o superiore al 50 per cento dell'importo complessivo dei corrispettivi (art. 2, comma 1, lett. e), allegato I.1 D.Lgs. 36/2023). Corrisponde al modulo di regole pacchetto/modelli/regole/manodopera.yaml.",
+  "elementi": [
+    {
+      "titolo": "1. Costo della manodopera stimato",
+      "regola": "Verifica che l'atto indichi il costo della manodopera stimato dalla stazione appaltante sulla base delle tabelle del costo medio del lavoro del Ministero del lavoro (art. 41, comma 13, D.Lgs. 36/2023) e la sua incidenza sull'importo del contratto.\nÈ CONFORME se sono indicati l'importo del costo della manodopera e la sua incidenza.\nÈ DUBBIO se è indicato l'importo ma non come è stato stimato o quanto incide.\nÈ NON_CONFORME se l'atto riguarda servizi ad alta intensità di manodopera e il costo non è indicato.\nÈ NON_APPLICABILE se il servizio non è ad alta intensità di manodopera.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Scorporo dal ribasso",
+      "regola": "Verifica che l'atto dia conto che i costi della manodopera e della sicurezza sono scorporati dall'importo assoggettato a ribasso (art. 41, comma 14, D.Lgs. 36/2023), ferma la possibilità per l'operatore di dimostrare che il ribasso deriva da una più efficiente organizzazione aziendale.\nÈ CONFORME se lo scorporo è indicato.\nÈ DUBBIO se l'atto indica il costo della manodopera ma non lo scorporo.\nÈ NON_APPLICABILE se il servizio non è ad alta intensità di manodopera.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Clausola sociale e impegni dell'operatore",
+      "regola": "Verifica che l'atto dia conto delle clausole sociali e degli impegni dell'operatore economico (artt. 57, comma 1, e 102 D.Lgs. 36/2023): stabilità occupazionale del personale impiegato, applicazione dei contratti collettivi, pari opportunità generazionali, di genere e di inclusione lavorativa.\nÈ CONFORME se l'atto richiama la clausola sociale (in particolare la stabilità occupazionale quando c'è personale del precedente affidatario) e gli impegni assunti dall'operatore con le modalità di adempimento.\nÈ DUBBIO se sono richiamati solo in modo generico.\nÈ NON_CONFORME se si tratta di servizi ad alta intensità di manodopera e l'atto non ne fa alcun cenno.\nÈ NON_APPLICABILE se il servizio non è ad alta intensità di manodopera.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art57",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art102"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Contratto collettivo applicato",
+      "regola": "Verifica che l'atto indichi il contratto collettivo applicabile al personale impiegato e dia atto della coincidenza con quello applicato dall'operatore o dell'equivalenza delle tutele (art. 11 D.Lgs. 36/2023).\nÈ CONFORME se il contratto collettivo è indicato e la coincidenza o l'equivalenza è attestata.\nÈ NON_CONFORME se il contratto collettivo non è indicato.\nÈ NON_APPLICABILE se il servizio non è ad alta intensità di manodopera.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art11"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5. Divieto di affidare a terzi la prevalente esecuzione",
+      "regola": "Verifica che l'atto richiami il divieto di affidare a terzi la prevalente esecuzione dei contratti ad alta intensità di manodopera (art. 119, comma 1, D.Lgs. 36/2023) o comunque regoli il subappalto in modo compatibile.\nÈ CONFORME se il divieto è richiamato.\nÈ DUBBIO se l'atto non dice nulla sul subappalto.\nÈ NON_CONFORME se l'atto consente l'affidamento a terzi della prevalente esecuzione.\nÈ NON_APPLICABILE se il servizio non è ad alta intensità di manodopera.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art119"
+      ],
+      "obbligatorio": false
+    }
+  ]
+}

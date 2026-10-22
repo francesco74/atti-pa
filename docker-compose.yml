@@ -42,7 +42,7 @@ services:
       - mysql:/var/lib/mysql
       # Schema del database: l'immagine MySQL esegue questi file solo alla prima
       # inizializzazione (volume vuoto). Per ricrearlo: docker compose down -v
-      - ./deploy/sql:/docker-entrypoint-initdb.d:ro
+      - ./deploy/k8s/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
       interval: 5s

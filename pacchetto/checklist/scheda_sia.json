@@ -1,0 +1,39 @@
+{
+  "codice": "SCHEDA_SIA",
+  "titolo": "Scheda di controllo della specificità Servizi tecnici di ingegneria e architettura",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "SIA",
+  "descrizione": "Scheda della specificità: si applica agli affidamenti diretti di servizi di ingegneria e architettura (progettazione, direzione dei lavori, coordinamento della sicurezza, collaudo, supporto al RUP). Corrisponde al modulo di regole pacchetto/modelli/regole/servizi_tecnici_sia.yaml.",
+  "elementi": [
+    {
+      "titolo": "1. Corrispettivo determinato secondo l'allegato I.13",
+      "regola": "Se l'atto affida servizi di ingegneria e architettura, verifica che il corrispettivo sia determinato secondo l'allegato I.13 del D.Lgs. 36/2023 (art. 41, comma 15), comprensivo di compensi, spese e oneri accessori, e che il relativo importo sia indicato.\nÈ CONFORME se l'atto indica il corrispettivo calcolato secondo l'allegato I.13 (o, per le prestazioni non coperte, secondo il D.M. 17 giugno 2016).\nÈ NON_CONFORME se il corrispettivo non è giustificato in alcun modo.\nÈ DUBBIO se è indicato un importo senza riferimento ai parametri.\nÈ NON_APPLICABILE se l'atto non riguarda servizi di ingegneria e architettura.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Riduzione del corrispettivo ed equo compenso",
+      "regola": "Verifica che il corrispettivo pattuito non sia ridotto oltre il 20 per cento rispetto a quello determinato secondo l'allegato I.13, limite previsto per gli affidamenti diretti (art. 41, comma 15-quater, D.Lgs. 36/2023), e che l'atto tenga conto della disciplina sull'equo compenso (L. 49/2023).\nÈ CONFORME se la riduzione è indicata e non supera il 20 per cento.\nÈ NON_CONFORME se la riduzione supera il 20 per cento.\nÈ DUBBIO se non è possibile ricavare la riduzione dal testo.\nÈ NON_APPLICABILE se l'atto non riguarda servizi di ingegneria e architettura.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Iscrizione all'ordine e polizza professionale",
+      "regola": "Verifica che l'atto dia conto dell'iscrizione del professionista all'ordine professionale e del possesso della polizza di assicurazione per la responsabilità civile professionale (art. 5 D.P.R. 137/2012).\nÈ CONFORME se entrambi sono indicati.\nÈ DUBBIO se è indicato solo uno dei due.\nÈ NON_CONFORME se non è indicato nessuno dei due.\nÈ NON_APPLICABILE se l'atto non riguarda servizi professionali tecnici.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Esperienze pregresse idonee",
+      "regola": "Verifica che la scelta del professionista sia motivata con documentate esperienze pregresse idonee all'esecuzione della prestazione (art. 50, comma 1, lett. b), D.Lgs. 36/2023), ad esempio incarichi analoghi o curriculum.\nÈ CONFORME se le esperienze sono indicate.\nÈ NON_CONFORME se la scelta non è motivata.\nÈ NON_APPLICABILE se l'atto non è un affidamento diretto di servizi tecnici.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"
+      ],
+      "obbligatorio": true
+    }
+  ]
+}

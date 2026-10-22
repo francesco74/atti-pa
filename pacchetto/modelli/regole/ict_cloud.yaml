@@ -1,0 +1,233 @@
+# Modulo di regole: servizi e forniture ICT, con i servizi cloud qualificati ACN.
+#
+# Quando la caratteristica "Servizi / Forniture Cloud ICT" è scelta, il modulo distribuisce
+# i suoi contenuti nelle fasi dell'atto:
+#   1. Oggetto            modalità del servizio cloud e CPV
+#   2. Visti              CAD e Regolamento ACN per le infrastrutture digitali e i servizi cloud
+#      Dato atto          attestazione della qualificazione nel Catalogo ACN; art. 68 CAD
+#      Art. 192 TUEL      conformità al Regolamento ACN tra le clausole essenziali
+#      Garanzia           la garanzia definitiva tutela continuità e migrazione dei dati
+#   3. Dispositivo        mantenimento della qualificazione a pena di risoluzione
+# e suggerisce di richiedere la garanzia definitiva. I controlli corrispondenti sono nella
+# checklist della specificità: pacchetto/checklist/scheda_ict_cloud.json.
+#
+# L'art. 33-septies D.L. 179/2012 (testo vigente verificato su Normattiva il 21 ottobre
+# 2026) non prevede la nullità dei contratti: le violazioni sono accertate dall'AgID e
+# sanzionate ai sensi dell'art. 18-bis del CAD (comma 4-quinquies). Per questo il
+# dispositivo prevede la risoluzione del contratto se la qualificazione viene meno.
+#
+# Formato: vedi common/modelli.py (ModuloRegole). Tutto ciò che il modulo porta vale solo
+# con il fattore scelto ("ict_cloud"); le condizioni "se" si aggiungono a questo.
+# I capoversi con "fonte: aggiunto" non sono negli schemi ANCI.
+
+codice: ICT_CLOUD
+fattore: ict_cloud
+etichetta: Servizi / Forniture Cloud ICT
+descrizione: "Attiva: qualifica ACN dei servizi cloud, Codice dell'amministrazione digitale, Regolamento cloud"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF]
+
+domande:
+  - id: cloud
+    testo: I servizi sono erogati in cloud (SaaS, PaaS o IaaS)?
+    tipo: si_no
+    aiuto: >-
+      I servizi cloud acquistati dalla pubblica amministrazione devono essere qualificati
+      nel Catalogo delle infrastrutture digitali e dei servizi cloud dell'Agenzia per la
+      Cybersicurezza Nazionale (Regolamento adottato ai sensi dell'art. 33-septies del D.L.
+      179/2012, in vigore dal 1° agosto 2024).
+
+  - id: modello_cloud
+    testo: Con quale modello di servizio?
+    tipo: scelta
+    se: cloud
+    opzioni:
+      saas: Software as a Service (SaaS) - applicazioni erogate dal fornitore
+      paas: Platform as a Service (PaaS) - piattaforme su cui l'ente realizza applicazioni
+      iaas: Infrastructure as a Service (IaaS) - infrastruttura di calcolo e archiviazione
+
+  - id: classificazione_dati
+    testo: Come sono classificati i dati e i servizi interessati?
+    tipo: scelta
+    se: cloud
+    opzioni:
+      ordinari: Ordinari
+      critici: Critici
+      strategici: Strategici
+    aiuto: >-
+      La classificazione dei dati e dei servizi, svolta dall'ente secondo il Regolamento
+      ACN, determina il livello minimo di qualificazione che il servizio cloud deve avere.
+
+  - id: software
+    testo: Si acquisiscono programmi informatici (licenze o sviluppo di software)?
+    tipo: si_no
+    aiuto: >-
+      Prima di acquisire programmi informatici l'ente svolge una valutazione comparativa
+      tecnica ed economica tra riuso, software libero e soluzioni proprietarie (art. 68
+      del Codice dell'amministrazione digitale).
+
+derivati:
+  modello_cloud_testo:
+    - {se: modello_cloud == "saas", valore: "Software as a Service (SaaS)"}
+    - {se: modello_cloud == "paas", valore: "Platform as a Service (PaaS)"}
+    - {se: modello_cloud == "iaas", valore: "Infrastructure as a Service (IaaS)"}
+  classificazione_testo:
+    - {se: classificazione_dati == "ordinari", valore: ordinari}
+    - {se: classificazione_dati == "critici", valore: critici}
+    - {se: classificazione_dati == "strategici", valore: strategici}
+
+campi:
+  cpv:
+    etichetta: Codice CPV
+    tipo: testo
+    aiuto: >-
+      Vocabolario comune per gli appalti pubblici: individua la categoria della prestazione
+      ed è il presupposto per inquadrare la disciplina speciale (es. 72000000-5 Servizi
+      informatici).
+  servizio_catalogo_acn:
+    etichetta: Servizio qualificato nel Catalogo ACN (denominazione e identificativo)
+    tipo: testo
+    aiuto: Come riportato nella scheda del servizio nel Catalogo ACN, da acquisire agli atti.
+  livello_qualificazione_acn:
+    etichetta: Livello di qualificazione del servizio
+    tipo: testo
+    aiuto: Come riportato nella scheda del Catalogo ACN; deve essere adeguato alla classificazione dei dati.
+  valutazione_comparativa_software:
+    etichetta: Esito della valutazione comparativa (art. 68 CAD)
+    tipo: testo_lungo
+    aiuto: >-
+      Perché la soluzione scelta è preferibile al riuso di software di altre
+      amministrazioni e al software libero, considerando costi, interoperabilità,
+      sicurezza e assistenza.
+
+inserti:
+  # 1. Identificazione e oggetto
+  - innesto: oggetto
+    capoversi:
+      - id: oggetto_cloud
+        se: cloud
+        fonte: aggiunto
+        testo: "Servizio erogato in modalità {{modello_cloud_testo}} - CPV {{cpv}}."
+        aiuto: >-
+          La natura del servizio e la categoria CPV nell'oggetto inquadrano la disciplina
+          speciale dei servizi cloud.
+      - id: oggetto_cpv_ict
+        se: not cloud
+        fonte: aggiunto
+        testo: "CPV {{cpv}}."
+
+  # 2. Preambolo: quadro normativo
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_cad
+        fonte: ANCI-1
+        testo: il D.Lgs. 7 marzo 2005, n. 82 e s.m.i., "Codice dell'Amministrazione digitale";
+      - id: visto_cloud
+        se: cloud
+        fonte: ANCI-1
+        norme: ["urn:nir:stato:decreto.legge:2012-10-18;179~art33-septies"]
+        testo: >-
+          il Regolamento per le infrastrutture digitali e per i servizi cloud per la
+          pubblica amministrazione, adottato dall'Agenzia per la Cybersicurezza Nazionale con
+          decreto direttoriale n. 21007/24 del 27 giugno 2024, d'intesa con il Dipartimento
+          per la trasformazione digitale, e applicabile dal 1° agosto 2024, ai sensi dell'articolo 33-septies, comma 4, del decreto-legge 18
+          ottobre 2012, n. 179, convertito, con modificazioni, dalla legge 17 dicembre 2012,
+          n. 221;
+
+  # 2. Preambolo: istruttoria ("Dato atto che")
+  - innesto: dato_atto
+    capoversi:
+      - id: cloud_acn
+        se: cloud
+        fonte: ANCI-1
+        aiuto: >-
+          Attestazione del RUP o del dirigente: il servizio deve risultare qualificato nel
+          Catalogo ACN alla data dell'affidamento, con un livello adeguato alla
+          classificazione dei dati e dei servizi.
+        testo: >-
+          Dato atto che il RUP ha verificato e attesta che i servizi oggetto del presente
+          affidamento, erogati in modalità {{modello_cloud_testo}}, risultano regolarmente
+          qualificati nel Catalogo delle infrastrutture digitali e dei servizi cloud
+          dell'Agenzia per la Cybersicurezza Nazionale ({{servizio_catalogo_acn}}, livello di
+          qualificazione {{livello_qualificazione_acn}}), con un livello adeguato alla
+          classificazione dei dati e dei servizi interessati come {{classificazione_testo}},
+          in conformità al Regolamento sopra richiamato;
+      - id: software_art68
+        se: software
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2005-03-07;82~art68"]
+        testo: >-
+          Dato atto che, ai sensi dell'art. 68 del D.Lgs. 82/2005, è stata effettuata la
+          valutazione comparativa di tipo tecnico ed economico tra le soluzioni disponibili
+          sul mercato, con il seguente esito: {{valutazione_comparativa_software}};
+
+  # 2. Preambolo: contenuti minimi del contratto (art. 192 TUEL)
+  - innesto: elementi_essenziali_192
+    prima_di: ritenuto_affidare
+    capoversi:
+      - id: clausole_cloud
+        se: cloud
+        fonte: aggiunto
+        testo: >-
+          Ritenuto altresì di inserire tra le clausole essenziali del contratto la conformità
+          dei servizi al Regolamento per le infrastrutture digitali e per i servizi cloud
+          dell'Agenzia per la Cybersicurezza Nazionale e alle relative disposizioni
+          attuative, nonché l'obbligo dell'affidatario di mantenere la qualificazione dei
+          servizi per l'intera durata del contratto;
+
+  # 2. Preambolo: garanzia definitiva
+  - innesto: garanzia
+    capoversi:
+      - id: garanzia_cloud
+        se: cloud and garanzia
+        fonte: aggiunto
+        testo: >-
+          Dato atto che, trattandosi di servizi cloud che trattano dati {{classificazione_testo}}
+          dell'ente, la garanzia definitiva è richiesta anche a tutela della continuità
+          operativa del servizio e della corretta esecuzione delle attività di migrazione e di
+          restituzione dei dati;
+
+  # 3. Dispositivo
+  - innesto: dispositivo
+    capoversi:
+      - id: d_cloud_qualificazione
+        se: cloud
+        fonte: aggiunto
+        aiuto: >-
+          Clausola di efficacia e mantenimento: la perdita o la sospensione della
+          qualificazione ACN in corso di contratto ne comporta la risoluzione.
+        testo: >-
+          di dare atto che i servizi cloud affidati risultano qualificati nel Catalogo delle
+          infrastrutture digitali e dei servizi cloud dell'Agenzia per la Cybersicurezza
+          Nazionale e di stabilire che l'operatore economico {{operatore_economico}} è tenuto
+          a garantire e mantenere valida tale qualificazione per l'intera durata del
+          contratto e a comunicare tempestivamente ogni sua sospensione o revoca, a pena di
+          risoluzione di diritto del contratto ai sensi dell'art. 1456 del codice civile;
+      - id: d_cloud_dati
+        se: cloud
+        facoltativo: true
+        fonte: aggiunto
+        aiuto: "Reversibilità del servizio: restituzione dei dati e collaborazione alla migrazione."
+        testo: >-
+          di stabilire che al termine del contratto, per qualsiasi causa, l'operatore
+          economico restituisce all'ente i dati trattati in formato aperto e interoperabile e
+          collabora alla loro migrazione verso il nuovo fornitore, senza oneri aggiuntivi;
+
+suggerimenti:
+  - domanda: dati_personali
+    valore: true
+    se: cloud
+    messaggio: >-
+      Un servizio cloud ospita i dati dell'ente presso il fornitore: di norma l'operatore
+      tratta dati personali per conto dell'ente e va nominato responsabile del trattamento
+      (art. 28 del Regolamento (UE) 2016/679).
+  - domanda: garanzia
+    valore: true
+    se: cloud
+    messaggio: >-
+      Nei contratti di servizi cloud, specie con dati critici o strategici dell'ente, la
+      garanzia definitiva (5%, artt. 53 e 117 D.Lgs. 36/2023) tutela da interruzioni del
+      servizio e da inadempimenti nella migrazione e nella continuità operativa: è
+      consigliato richiederla. Nell'affidamento diretto la garanzia provvisoria non si
+      chiede (art. 53, comma 1).
+

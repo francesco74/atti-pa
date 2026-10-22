@@ -59,11 +59,6 @@ data:
   LLM_RICONOSCIMENTO_NORME_MANUALI: "true"
   # Dati personali da oscurare (omissis): li rileva il modello, una chiamata per atto
   LLM_DATI_PERSONALI: "true"
-  # Modelli di atto, specificità e checklist: comanda il database. Al primo avvio, con il
-  # database vuoto, l'API importa il pacchetto standard incluso nell'immagine (/app/deploy);
-  # gli aggiornamenti si importano da Amministrazione → Pacchetti
-  IMPORTA_PACCHETTO_INIZIALE: "true"
-  # PACCHETTO_DIR: "/app/deploy"
   # Prompt personalizzati: cartella montata da una ConfigMap; i file presenti sostituiscono
   # quelli di common/prompt/ con lo stesso nome
   # LLM_PROMPT_DIR: "/etc/atti-pa/prompt"

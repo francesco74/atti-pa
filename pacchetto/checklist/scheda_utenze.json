@@ -1,0 +1,33 @@
+{
+  "codice": "SCHEDA_UTENZE",
+  "titolo": "Scheda di controllo della specificità Utenze (energia, gas, carburanti, telefonia)",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "UTENZE",
+  "descrizione": "Scheda della specificità: si applica agli acquisti di energia elettrica, gas, carburanti, combustibili per riscaldamento, telefonia fissa e mobile (art. 1, commi 7 e 8, D.L. 95/2012). Corrisponde al modulo di regole pacchetto/modelli/regole/utenze.yaml. Testo vigente dell'art. 1, comma 7, verificato su Normattiva il 21 ottobre 2026.",
+  "elementi": [
+    {
+      "titolo": "1. Modalità di approvvigionamento consentita",
+      "regola": "Se l'atto riguarda energia elettrica, gas, carburanti, combustibili per riscaldamento, telefonia fissa o mobile, verifica che l'approvvigionamento avvenga con una delle modalità dell'art. 1, comma 7, del D.L. 95/2012: convenzioni o accordi quadro di Consip o della centrale di committenza regionale; procedure autonome sul mercato elettronico o sui sistemi telematici messi a disposizione da tali soggetti; oppure, al di fuori di queste, con corrispettivi inferiori a quelli delle convenzioni.\nÈ CONFORME se l'atto indica una di queste modalità e la richiama.\nÈ NON_CONFORME se l'acquisto avviene fuori da tali modalità senza alcuna giustificazione: in tal caso il contratto è nullo (art. 1, comma 8).\nÈ DUBBIO se la modalità non è chiara.\nÈ NON_APPLICABILE se l'atto non riguarda queste categorie merceologiche.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legge:2012-07-06;95~art1"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Corrispettivi inferiori a quelli delle convenzioni",
+      "regola": "Se l'acquisto avviene al di fuori delle convenzioni e dei sistemi telematici di Consip o della centrale regionale, verifica che avvenga tramite altra centrale di committenza o procedura a evidenza pubblica e che l'atto dimostri, con un confronto puntuale, corrispettivi inferiori ai migliori corrispettivi delle convenzioni almeno del 5 per cento per la telefonia fissa e mobile e del 2 per cento per carburanti, energia elettrica, gas e combustibili per riscaldamento (art. 1, comma 7, D.L. 95/2012).\nÈ CONFORME se l'atto indica la convenzione di riferimento e un risparmio almeno pari alla percentuale prevista.\nÈ NON_CONFORME se l'acquisto è fuori convenzione e manca il confronto o il risparmio è inferiore alla percentuale prevista.\nÈ DUBBIO se il confronto è generico.\nÈ NON_APPLICABILE se l'acquisto avviene tramite convenzione o sistemi telematici di Consip o della centrale regionale, o non riguarda queste categorie.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legge:2012-07-06;95~art1"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Condizione risolutiva e trasmissione all'ANAC",
+      "regola": "Se l'acquisto avviene al di fuori delle convenzioni, verifica che il contratto sia sottoposto a condizione risolutiva con possibilità per il contraente di adeguarsi ai migliori corrispettivi se diventano disponibili convenzioni Consip o regionali più vantaggiose di oltre il 10 per cento, e che sia disposta la trasmissione del contratto all'Autorità nazionale anticorruzione (art. 1, comma 7, D.L. 95/2012).\nÈ CONFORME se sono previste sia la condizione risolutiva sia la trasmissione all'ANAC.\nÈ DUBBIO se è prevista solo una delle due.\nÈ NON_CONFORME se l'acquisto è fuori convenzione e mancano entrambe.\nÈ NON_APPLICABILE negli altri casi.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legge:2012-07-06;95~art1"
+      ],
+      "obbligatorio": true
+    }
+  ]
+}

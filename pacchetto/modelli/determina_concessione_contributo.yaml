@@ -1,0 +1,353 @@
+# Modello: determina di concessione di un contributo o di altro vantaggio economico.
+#
+# - Art. 12 L. 241/1990: la concessione di sovvenzioni, contributi, sussidi e vantaggi
+#   economici è subordinata alla predeterminazione e pubblicazione dei criteri e delle
+#   modalità (di norma un regolamento), e l'atto dà conto del loro rispetto.
+# - Artt. 26 e 27 D.Lgs. 33/2013: la pubblicazione degli atti di concessione di importo
+#   superiore a 1.000 euro nell'anno allo stesso beneficiario è condizione legale di
+#   efficacia; non si pubblicano i dati identificativi delle persone fisiche da cui si
+#   possano ricavare informazioni sulla salute o sul disagio economico-sociale.
+# - Se il beneficiario svolge attività economica, il contributo può essere un aiuto di
+#   Stato: regime "de minimis" (Reg. (UE) 2023/2831) e registrazione nel Registro
+#   nazionale degli aiuti di Stato (art. 52 L. 234/2012).
+# - Pagamenti: verifica delle inadempienze presso l'agente della riscossione oltre 5.000
+#   euro (art. 48-bis D.P.R. 602/1973); ritenuta del 4 per cento sui contributi alle
+#   imprese, salvo quelli per l'acquisto di beni strumentali (art. 28, comma 2, D.P.R.
+#   600/1973).
+# Non è un contratto pubblico: niente CIG, art. 192 TUEL o Codice dei contratti.
+#
+# CHECKLIST CORRISPONDENTI (pacchetto/checklist)
+#   scheda_determine.json                generica, per ogni determinazione
+#   scheda_concessione_contributo.json   di questo modello
+
+codice: DD_CONCESSIONE_CONTRIBUTO
+versione: 1
+titolo: Determina di concessione di un contributo
+descrizione: >-
+  Contributi, sovvenzioni e vantaggi economici a enti, associazioni, imprese o persone
+  (art. 12 L. 241/1990), secondo il regolamento dell'ente o un avviso pubblico.
+tipologia_atto: DETERMINA
+provvedimento: Determinazione dirigenziale
+organo: Dirigente
+formula_dispositivo: DETERMINA
+
+domande:
+  - id: importo
+    testo: Importo del contributo
+    tipo: importo
+
+  - id: beneficiario
+    testo: Chi è il beneficiario?
+    tipo: scelta
+    opzioni:
+      associazione: Associazione, ente del Terzo settore o altro ente senza scopo di lucro
+      ente_pubblico: Altro ente pubblico
+      impresa: Impresa
+      persona: Persona fisica
+
+  - id: procedura_contributo
+    testo: Come si concede il contributo?
+    tipo: scelta
+    opzioni:
+      avviso: Con avviso pubblico e graduatoria
+      domanda: Su domanda, secondo i criteri del regolamento dell'ente
+
+  - id: attivita_economica
+    testo: Il beneficiario svolge, con il contributo, un'attività economica offerta sul mercato?
+    tipo: si_no
+    se: beneficiario in ["associazione", "impresa"]
+    aiuto: >-
+      In tal caso il contributo può costituire un aiuto di Stato: si applica di norma il
+      regime "de minimis" e l'aiuto va registrato nel Registro nazionale degli aiuti di Stato
+      prima della concessione.
+
+  - id: dati_sensibili
+    testo: Dal contributo si possono ricavare informazioni sulla salute o sul disagio economico-sociale del beneficiario?
+    tipo: si_no
+    se: beneficiario == "persona"
+    aiuto: >-
+      In tal caso i dati identificativi del beneficiario non si pubblicano (art. 26, comma 4,
+      D.Lgs. 33/2013) e nell'atto si indica un codice o si rinvia a un allegato non pubblicato.
+
+  - id: erogazione
+    testo: Come si eroga il contributo?
+    tipo: scelta
+    opzioni:
+      rendiconto: A saldo, dopo la rendicontazione dell'iniziativa
+      anticipo: Con un anticipo e il saldo dopo la rendicontazione
+      unica: In un'unica soluzione
+
+derivati:
+  pubblicazione_efficacia: importo > 1000
+  verifica_48bis: importo > 5000
+  ritenuta_impresa: beneficiario == "impresa"
+  aiuto_stato: attivita_economica
+
+campi:
+  ente: {etichetta: Ente, tipo: testo, fonte: ente}
+  settore: {etichetta: Settore, tipo: testo, fonte: profilo}
+  numero_atto: {etichetta: Numero della determina, tipo: testo, fonte: sistema, obbligatorio: false}
+  data_atto: {etichetta: Data della determina, tipo: data, fonte: sistema, obbligatorio: false}
+  decreto_incarico:
+    etichetta: Decreto di conferimento dell'incarico dirigenziale (numero e data)
+    tipo: testo
+    fonte: profilo
+  regolamento_contributi:
+    etichetta: Regolamento dell'ente per la concessione di contributi (estremi)
+    tipo: testo
+    fonte: ente
+    aiuto: Delibera di approvazione del regolamento che predetermina criteri e modalità (art. 12 L. 241/1990).
+  avviso_contributi: {etichetta: Avviso pubblico e graduatoria (estremi), tipo: testo}
+  beneficiario_nome:
+    etichetta: Beneficiario
+    tipo: testo
+    aiuto: Per le persone fisiche con dati sensibili, un codice identificativo al posto del nome.
+  beneficiario_cf: {etichetta: Codice fiscale o partita IVA del beneficiario, tipo: codice_fiscale_piva, obbligatorio: false}
+  iniziativa:
+    etichetta: Iniziativa o finalità sostenuta
+    tipo: testo_lungo
+  domanda_contributo: {etichetta: Domanda di contributo (protocollo e data), tipo: testo}
+  esito_istruttoria:
+    etichetta: Esito dell'istruttoria
+    tipo: testo_lungo
+    aiuto: Requisiti del beneficiario, punteggio o criteri applicati, importo determinato.
+  termine_rendicontazione: {etichetta: Termine e modalità della rendicontazione, tipo: testo}
+  importo_anticipo: {etichetta: "Importo dell'anticipo (euro)", tipo: importo}
+  codice_cor: {etichetta: Codice COR del Registro nazionale degli aiuti di Stato, tipo: testo}
+  dup_delibera: {etichetta: "Delibera di approvazione del DUP (numero e data)", tipo: testo, fonte: ente}
+  dup_triennio: {etichetta: Triennio del DUP, tipo: testo, fonte: ente}
+  bilancio_delibera: {etichetta: "Delibera di approvazione del bilancio di previsione (numero e data)", tipo: testo, fonte: ente}
+  bilancio_triennio: {etichetta: Triennio del bilancio, tipo: testo, fonte: ente}
+  impegni:
+    etichetta: Impegni di spesa
+    tipo: elenco
+    minimo: 1
+    sottocampi:
+      importo: {etichetta: "Importo (euro)", tipo: importo}
+      capitolo: {etichetta: Capitolo, tipo: testo}
+      descrizione: {etichetta: Descrizione del capitolo, tipo: testo}
+      missione: {etichetta: Missione, tipo: testo}
+      programma: {etichetta: Programma, tipo: testo}
+      bilancio: {etichetta: Bilancio (esercizio), tipo: testo}
+  rup: {etichetta: Responsabile del procedimento, tipo: testo, fonte: profilo}
+  fascicolo: {etichetta: Fascicolo informatico del procedimento, tipo: testo, obbligatorio: false}
+  url_trasparenza: {etichetta: Indirizzo di Amministrazione trasparente, tipo: testo, fonte: ente}
+  sezione_tar: {etichetta: Sezione del TAR competente, tipo: testo, fonte: ente}
+  luogo: {etichetta: Luogo, tipo: testo, fonte: ente}
+  data_adozione: {etichetta: Data di adozione, tipo: data}
+  firmatario: {etichetta: Dirigente firmatario, tipo: testo, fonte: profilo}
+
+fasi:
+  - numero: 1
+    titolo: Intestazione e identificazione dell'atto
+    sezioni:
+      - titolo: Intestazione
+        capoversi:
+          - id: intestazione
+            modificabile: false
+            testo: |-
+              {{ente}}
+              Settore {{settore}}
+              Determinazione dirigenziale n. {{numero_atto}} del {{data_atto}}
+      - titolo: Oggetto
+        oggetto: true
+        capoversi:
+          - id: oggetto
+            testo: >-
+              Concessione a {{beneficiario_nome}} di un contributo di euro {{importo}} per
+              {{iniziativa}}, ai sensi dell'art. 12 della L. 241/1990. Impegno di spesa.
+      - titolo: Organo
+        capoversi:
+          - id: organo
+            modificabile: false
+            testo: IL DIRIGENTE DEL SETTORE {{settore}}
+
+  - numero: 2
+    titolo: Preambolo e motivazione
+    sezioni:
+      - titolo: Competenza
+        capoversi:
+          - id: competenza
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art107"]
+            testo: >-
+              Visto il decreto {{decreto_incarico}}, con il quale è stato conferito al
+              sottoscritto l'incarico di direzione del Settore {{settore}}, con le funzioni di
+              cui all'art. 107 del D.Lgs. 267/2000;
+
+      - titolo: Atti di programmazione
+        formula: Premesso che
+        capoversi:
+          - id: dup
+            testo: con Delibera di Consiglio n. {{dup_delibera}}, è stato approvato il Documento Unico di Programmazione {{dup_triennio}};
+          - id: bilancio
+            testo: con Delibera di Consiglio n. {{bilancio_delibera}}, è stato approvato il Bilancio di Previsione {{bilancio_triennio}};
+
+      - titolo: Quadro normativo
+        formula: Visti
+        riferimenti_libreria: true
+        capoversi:
+          - id: visto_art12
+            norme: ["urn:nir:stato:legge:1990-08-07;241~art12"]
+            testo: >-
+              l'art. 12 della L. 7 agosto 1990, n. 241, che subordina la concessione di
+              sovvenzioni, contributi, sussidi e vantaggi economici alla predeterminazione e
+              pubblicazione dei criteri e delle modalità;
+          - id: visto_regolamento
+            testo: il Regolamento dell'ente per la concessione di contributi, approvato con {{regolamento_contributi}};
+          - id: visto_trasparenza
+            norme: ["urn:nir:stato:decreto.legislativo:2013-03-14;33~art26"]
+            testo: gli artt. 26 e 27 del D.Lgs. 14 marzo 2013, n. 33, sugli obblighi di pubblicazione degli atti di concessione;
+          - id: visto_de_minimis
+            se: aiuto_stato
+            testo: >-
+              il Regolamento (UE) 2023/2831 della Commissione, relativo agli aiuti "de minimis",
+              e l'art. 52 della L. 24 dicembre 2012, n. 234, sul Registro nazionale degli aiuti
+              di Stato;
+          - id: visto_tuel
+            testo: il D.Lgs. 18 agosto 2000, n. 267 (Testo Unico degli Enti Locali);
+
+      - titolo: Istruttoria
+        capoversi:
+          - id: istruttoria_avviso
+            se: procedura_contributo == "avviso"
+            testo: >-
+              Dato atto che, a seguito dell'avviso pubblico {{avviso_contributi}}, il
+              beneficiario {{beneficiario_nome}} è risultato assegnatario del contributo per
+              {{iniziativa}}: {{esito_istruttoria}};
+          - id: istruttoria_domanda
+            se: procedura_contributo == "domanda"
+            testo: >-
+              Vista la domanda di contributo presentata da {{beneficiario_nome}}
+              ({{domanda_contributo}}) per {{iniziativa}}, e dato atto che l'istruttoria ha
+              verificato il possesso dei requisiti e l'applicazione dei criteri del
+              Regolamento: {{esito_istruttoria}};
+          - id: interesse_pubblico
+            testo: >-
+              Considerato che l'iniziativa persegue finalità di interesse pubblico coerenti con
+              le funzioni dell'ente e con gli obiettivi della programmazione;
+          - id: aiuto_stato
+            se: aiuto_stato
+            testo: >-
+              Dato atto che il contributo è concesso nel rispetto del regime "de minimis" di cui
+              al Regolamento (UE) 2023/2831, previa verifica dei massimali tramite il Registro
+              nazionale degli aiuti di Stato, nel quale l'aiuto è registrato con il codice COR
+              {{codice_cor}};
+          - id: dati_sensibili
+            se: dati_sensibili
+            testo: >-
+              Dato atto che, ai sensi dell'art. 26, comma 4, del D.Lgs. 33/2013, il beneficiario
+              è indicato con un codice identificativo e i suoi dati sono riportati in un
+              allegato non soggetto a pubblicazione;
+          - id: conflitto_interessi
+            testo: >-
+              Dato atto che non sussistono situazioni di conflitto di interessi, anche
+              potenziale, in capo al sottoscritto e al responsabile del procedimento, ai sensi
+              dell'art. 6-bis della L. 241/1990;
+
+  - numero: 3
+    titolo: Dispositivo
+    formula: DETERMINA
+    premessa: >-
+      per quanto esposto in narrativa che forma parte integrante e sostanziale del presente
+      provvedimento:
+    numerazione: automatica
+    sezioni:
+      - titolo: Decisione
+        capoversi:
+          - id: d_concessione
+            testo: >-
+              di concedere a {{beneficiario_nome}} (C.F./P.IVA {{beneficiario_cf}}) un contributo
+              di euro {{importo}} per {{iniziativa}}, ai sensi dell'art. 12 della L. 241/1990 e del
+              Regolamento dell'ente;
+      - titolo: Impegno di spesa
+        capoversi:
+          - id: d_impegno
+            ripeti_per: impegni
+            testo: >-
+              di impegnare la somma di euro {{impegni.importo}} sul cap. {{impegni.capitolo}};
+              descrizione {{impegni.descrizione}}; missione {{impegni.missione}}; programma
+              {{impegni.programma}}; bilancio {{impegni.bilancio}};
+          - id: d_183
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"]
+            testo: >-
+              di dare atto che il presente atto diviene esecutivo con l'apposizione del visto di
+              regolarità contabile attestante la copertura finanziaria ai sensi dell'art. 183,
+              comma 7, del D.Lgs. 267/2000;
+          - id: d_regolarita
+            testo: di attestare la regolarità e la correttezza del presente atto ai sensi dell'art. 147-bis del D.Lgs. 267/2000;
+      - titolo: Erogazione
+        capoversi:
+          - id: d_erogazione_rendiconto
+            se: erogazione == "rendiconto"
+            testo: >-
+              di stabilire che il contributo è liquidato a saldo, dopo la presentazione del
+              rendiconto dell'iniziativa entro {{termine_rendicontazione}}, nei limiti delle
+              spese documentate;
+          - id: d_erogazione_anticipo
+            se: erogazione == "anticipo"
+            testo: >-
+              di stabilire che il contributo è liquidato con un anticipo di euro
+              {{importo_anticipo}} e il saldo dopo la presentazione del rendiconto entro
+              {{termine_rendicontazione}}, nei limiti delle spese documentate;
+          - id: d_erogazione_unica
+            se: erogazione == "unica"
+            testo: di stabilire che il contributo è liquidato in un'unica soluzione con successivo atto di liquidazione;
+          - id: d_48bis
+            se: verifica_48bis
+            norme: ["urn:nir:stato:decreto.del.presidente.della.repubblica:1973-09-29;602~art48-bis"]
+            testo: >-
+              di dare atto che, prima del pagamento, si procede alla verifica delle inadempienze
+              presso l'agente della riscossione ai sensi dell'art. 48-bis del D.P.R. 602/1973;
+          - id: d_ritenuta
+            se: ritenuta_impresa
+            norme: ["urn:nir:stato:decreto.del.presidente.della.repubblica:1973-09-29;600~art28"]
+            testo: >-
+              di dare atto che sul contributo si applica la ritenuta del 4 per cento a titolo di
+              acconto ai sensi dell'art. 28, comma 2, del D.P.R. 600/1973, salvo che sia
+              destinato all'acquisto di beni strumentali;
+          - id: d_revoca
+            testo: >-
+              di stabilire che il contributo è revocato, in tutto o in parte, se l'iniziativa non
+              è realizzata o non è rendicontata secondo il Regolamento;
+      - titolo: Pubblicità e trasparenza
+        capoversi:
+          - id: d_responsabile
+            testo: di dare atto che il responsabile del procedimento è {{rup}};
+          - id: d_fascicolo
+            norme: ["urn:nir:stato:decreto.legislativo:2005-03-07;82~art41"]
+            testo: >-
+              di dare atto che gli atti e i documenti del procedimento sono conservati nel
+              fascicolo informatico {{fascicolo}}, ai sensi dell'art. 41 del D.Lgs. 82/2005;
+          - id: d_pubblicazione_efficacia
+            se: pubblicazione_efficacia
+            norme: ["urn:nir:stato:decreto.legislativo:2013-03-14;33~art26"]
+            testo: >-
+              di disporre la pubblicazione del presente provvedimento nella sezione
+              "Amministrazione trasparente" all'indirizzo {{url_trasparenza}}, ai sensi degli
+              artt. 26 e 27 del D.Lgs. 33/2013, dando atto che la pubblicazione costituisce
+              condizione legale di efficacia della concessione;
+          - id: d_pubblicazione
+            se: not pubblicazione_efficacia
+            testo: >-
+              di disporre la pubblicazione del presente provvedimento all'Albo pretorio e nella
+              sezione "Amministrazione trasparente" all'indirizzo {{url_trasparenza}};
+          - id: d_ricorso
+            modificabile: false
+            testo: >-
+              di dare atto che avverso il presente provvedimento è ammesso ricorso al Tribunale
+              amministrativo regionale (TAR), sezione di {{sezione_tar}}, entro 60 giorni dalla
+              pubblicazione, o ricorso straordinario al Presidente della Repubblica entro 120
+              giorni.
+
+  - numero: 4
+    titolo: Luogo, data e sottoscrizione
+    sezioni:
+      - titolo: Chiusura
+        capoversi:
+          - id: luogo_data
+            testo: "{{luogo}}, {{data_adozione}}"
+          - id: firma
+            modificabile: false
+            testo: |-
+              Il Dirigente
+              {{firmatario}}

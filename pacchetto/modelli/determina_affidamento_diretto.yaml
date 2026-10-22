@@ -1,0 +1,1265 @@
+# Modello: determina di affidamento diretto di servizi e forniture con impegno di spesa
+# (art. 50, comma 1, lett. b), D.Lgs. 36/2023), organizzato nelle 4 fasi dell'atto
+# amministrativo (docs/le 4 fasi dell'atto amministrativo.pdf).
+#
+# Fonti dei testi: schemi ANCI in docs/anci/
+#   ANCI-1  Schema determina affidamento diretto tramite ODA MePA
+#   ANCI-2  Schema determina affidamento diretto di importo inferiore a 5.000 euro (PAD)
+#   ANCI-3  Schema determina affidamento diretto con confronto di più preventivi su MePA
+#   TAB     Tabella degli elementi essenziali della determina di affidamento
+# I capoversi con "fonte: aggiunto" non sono negli schemi ANCI: molti rispondono agli
+# elementi delle checklist (competenza, conflitto di interessi, termini di esecuzione e di
+# pagamento, dati personali, codice di comportamento, fascicolo informatico).
+#
+# CHECKLIST CORRISPONDENTI (pacchetto/checklist)
+#   scheda_determine.json            generica, per ogni determinazione (tipologia DETERMINA)
+#   scheda_affidamento_diretto_sf.json  di questo modello
+#   scheda_<specificità>.json        di ogni modulo di regole scelto
+#
+# COME È FATTO
+# - domande: chieste all'inizio del percorso; decidono quali capoversi entrano nell'atto.
+# - derivati: valori calcolati dalle risposte (es. fascia di importo).
+# - campi: i dati da compilare, definiti una volta sola; il percorso chiede solo quelli
+#   che compaiono nei capoversi attivi, nella fase in cui compaiono.
+# - fasi > sezioni > capoversi: il testo dell'atto, nell'ordine in cui sarà composto.
+#   Ogni capoverso può avere:
+#     se:          condizione che lo attiva (senza "se" è sempre presente)
+#     facoltativo: l'utente può toglierlo o aggiungerlo; incluso: false se parte escluso
+#                  (i capoversi "eventuali" degli schemi ANCI)
+#     modificabile: l'utente può riscriverne il testo (predefinito: sì)
+#     aiuto:       spiegazione mostrata accanto, con la base normativa
+#     norme:       URN degli articoli citati, verificati su Normattiva alla data dell'atto
+# - {{campo}} nel testo è un dato da compilare; {{derivato}} è calcolato.
+#
+# MODULI DI REGOLE (pacchetto/modelli/regole/*.yaml)
+# Le specificità (servizi cloud, CAM, manodopera...) sono moduli separati. Ognuno è una
+# delle "caratteristiche dell'affidamento" (domanda con opzioni_da_regole) e, quando è
+# scelto, aggiunge domande e campi e inietta capoversi nelle sezioni con "innesto":
+#   oggetto, visti_normativi, dato_atto, elementi_essenziali_192, garanzia, dispositivo
+#
+# CONDIZIONI ("se"): espressioni semplici su domande e derivati
+#   pnrr                          domanda sì/no
+#   not pnrr
+#   strumento == "oda_mepa"
+#   fascia in ["micro", "piccolo"]
+#   importo >= 40000
+#   pnrr and cloud                (and, or, not, parentesi)
+
+codice: DD_AFFIDAMENTO_DIRETTO_SF
+versione: 1
+titolo: Determina di affidamento diretto di servizi e forniture con impegno di spesa
+descrizione: >-
+  Servizi e forniture sotto i 140.000 euro (art. 50, comma 1, lett. b), D.Lgs. 36/2023):
+  ordine diretto o confronto di preventivi sul MePA, oppure altra piattaforma certificata.
+tipologia_atto: DETERMINA
+provvedimento: Determinazione dirigenziale
+organo: Dirigente
+formula_dispositivo: DETERMINA
+
+# ---------------------------------------------------------------------------------------
+# DOMANDE INIZIALI
+# ---------------------------------------------------------------------------------------
+domande:
+  - id: importo
+    testo: Importo dell'affidamento, al netto dell'IVA
+    tipo: importo
+    aiuto: >-
+      Al netto dell'IVA e comprensivo di eventuali opzioni o rinnovi, che vanno esplicitati
+      (art. 14 D.Lgs. 36/2023). L'affidamento diretto di servizi e forniture è ammesso sotto
+      i 140.000 euro (art. 50, comma 1, lett. b).
+    blocca_se: importo >= 140000
+    messaggio_blocco: >-
+      Per servizi e forniture di importo pari o superiore a 140.000 euro l'affidamento
+      diretto non è ammesso: serve una procedura negoziata o ordinaria (art. 50, comma 1,
+      lett. e), D.Lgs. 36/2023).
+
+  - id: prestazione
+    testo: Che cosa si affida?
+    tipo: scelta
+    opzioni:
+      servizio_intellettuale: Servizio di natura intellettuale (consulenza, progettazione, formazione...)
+      servizio_non_intellettuale: Servizio di natura non intellettuale (manutenzione, pulizia, assistenza...)
+      fornitura_senza_posa: Fornitura senza posa in opera
+      fornitura_con_posa: Fornitura con posa in opera
+    aiuto: >-
+      Per i servizi non intellettuali e le forniture con posa in opera la determina indica il
+      contratto collettivo applicabile e il costo della manodopera (artt. 11 e 57, allegato
+      I.01, D.Lgs. 36/2023). Nota: gli schemi ANCI su questo punto si contraddicono tra
+      premesse e dispositivo; qui si segue la Tabella ANCI e il Codice.
+
+  - id: caratteristiche
+    testo: Caratteristiche dell'affidamento
+    tipo: scelta_multipla
+    opzioni_da_regole: true
+    aiuto: >-
+      Spunta le caratteristiche che riguardano questo affidamento: ognuna aggiunge all'atto
+      i richiami normativi, le attestazioni e le clausole che le sono proprie, e i relativi
+      controlli alla verifica. Se nessuna si applica, lascia tutto vuoto.
+
+  - id: strumento
+    testo: Con quale strumento si affida?
+    tipo: scelta
+    opzioni:
+      oda_mepa: Ordine diretto d'acquisto (ODA) sul MePA
+      confronto_mepa: Confronto di più preventivi sul MePA
+      piattaforma: Altra piattaforma di approvvigionamento digitale certificata (es. START)
+      diretto_pcp: Ordine diretto al fornitore, con CIG dall'interfaccia web della PCP di ANAC (solo sotto i 5.000 euro)
+    aiuto: >-
+      Dal 2024 le procedure si svolgono su piattaforme di approvvigionamento digitale
+      certificate (artt. 19-36 D.Lgs. 36/2023). Da 5.000 euro gli enti locali devono usare il
+      MePA, altri mercati elettronici o il sistema telematico della centrale regionale
+      (art. 1, comma 450, L. 296/2006). Sotto i 5.000 euro, se il ricorso a una piattaforma
+      certificata è impossibile o difficoltoso, il CIG si può acquisire con l'interfaccia web
+      della Piattaforma dei Contratti Pubblici di ANAC e ordinare direttamente al fornitore
+      (Comunicato del Presidente ANAC del 18 giugno 2025): è una possibilità che ANAC
+      considera transitoria.
+    blocca_se: strumento == "diretto_pcp" and importo >= 5000
+    messaggio_blocco: >-
+      L'ordine diretto al fornitore con CIG dall'interfaccia web della PCP è ammesso solo per
+      affidamenti di importo inferiore a 5.000 euro: per importi superiori serve una
+      piattaforma di approvvigionamento digitale certificata.
+
+  - id: consip
+    testo: Il bene o servizio è disponibile in una convenzione Consip?
+    tipo: scelta
+    opzioni:
+      assente: No, non è offerto dalle convenzioni Consip
+      autonoma: Sì, ma si procede autonomamente per ottenere una maggiore economia di spesa
+    aiuto: >-
+      Art. 26 L. 488/1999 e art. 1, comma 512, L. 208/2015 (beni e servizi informatici). Se
+      si procede autonomamente, i parametri prezzo-qualità della convenzione sono il limite
+      massimo (benchmark).
+
+  - id: pnrr
+    testo: L'affidamento è finanziato con fondi PNRR o PNC?
+    tipo: si_no
+    aiuto: >-
+      Con il PNRR la determina richiama il quadro normativo europeo e nazionale, l'Avviso di
+      finanziamento e i target; il CUP è obbligatorio.
+
+  - id: cup
+    testo: Il progetto ha un CUP?
+    tipo: si_no
+    vincolo: pnrr implica cup
+    aiuto: >-
+      Obbligatorio per i progetti di investimento pubblico (art. 11 L. 3/2003) e sempre per
+      gli affidamenti finanziati con il PNRR.
+
+  - id: rotazione
+    testo: Il principio di rotazione è rispettato?
+    tipo: scelta
+    se: fascia != "micro"
+    opzioni:
+      rispettata: Sì, l'operatore non è il contraente uscente
+      deroga: No, si deroga motivatamente (art. 49, comma 4)
+    aiuto: >-
+      Sotto i 5.000 euro la rotazione non si applica per legge (art. 49, comma 6) e la
+      domanda non viene posta. La deroga va motivata con struttura del mercato, assenza di
+      alternative e accurata esecuzione del precedente contratto (elementi cumulativi).
+
+  - id: lotti
+    testo: L'affidamento è suddiviso in lotti?
+    tipo: si_no
+    aiuto: La mancata suddivisione in lotti va motivata (art. 58 D.Lgs. 36/2023).
+
+  - id: ccnl_coincide
+    testo: Il contratto collettivo applicato dall'operatore coincide con quello indicato dalla stazione appaltante?
+    tipo: si_no
+    se: ccnl_richiesto
+
+  - id: interferenze
+    testo: Ci sono rischi da interferenza (prestazioni svolte in locali dell'ente)?
+    tipo: si_no
+    aiuto: >-
+      Se esistono si redige il DUVRI e si quantificano i costi della sicurezza, non soggetti
+      a ribasso (art. 26 D.Lgs. 81/2008).
+
+  - id: dati_personali
+    testo: L'operatore economico tratterà dati personali per conto dell'ente?
+    tipo: si_no
+    aiuto: >-
+      Ad esempio servizi informatici, gestione di servizi alla persona, archivi. In tal caso
+      l'operatore è nominato responsabile del trattamento (art. 28 del Regolamento (UE)
+      2016/679).
+
+  - id: garanzia
+    testo: Si richiede la garanzia definitiva?
+    tipo: si_no
+    aiuto: >-
+      Pari al 5% dell'importo contrattuale (artt. 53 e 117 D.Lgs. 36/2023). Se non è
+      richiesta, la determina ne indica il motivo.
+
+  - id: rup_responsabile_fase
+    testo: Il RUP è anche responsabile del procedimento per le fasi di affidamento ed esecuzione?
+    tipo: si_no
+    aiuto: >-
+      In alternativa, secondo il modello organizzativo dell'ente, si nominano responsabili di
+      fase (art. 15, comma 4, D.Lgs. 36/2023).
+
+  - id: incentivi
+    testo: Incentivi per le funzioni tecniche (art. 45)
+    tipo: scelta
+    opzioni:
+      nessuno: Non previsti
+      rinvio: Si rinvia l'individuazione del gruppo di lavoro a un successivo provvedimento
+      impegno: Si impegna ora l'importo degli incentivi
+
+# ---------------------------------------------------------------------------------------
+# VALORI CALCOLATI
+# ---------------------------------------------------------------------------------------
+derivati:
+  fascia:
+    - {se: importo < 5000, valore: micro}
+    - {se: importo < 40000, valore: piccolo}
+    - {valore: medio}
+  servizio: prestazione in ["servizio_intellettuale", "servizio_non_intellettuale"]
+  ccnl_richiesto: prestazione in ["servizio_non_intellettuale", "fornitura_con_posa"]
+  contributo_anac: importo >= 40000
+  il_servizio_la_fornitura:
+    - {se: servizio, valore: il servizio}
+    - {valore: la fornitura}
+  descrizione_strumento:
+    - {se: strumento == "oda_mepa", valore: "Ordine diretto d'acquisto (ODA) del Mercato elettronico della pubblica amministrazione"}
+    - {se: strumento == "confronto_mepa", valore: "confronto di preventivi facendo ricorso al Mercato elettronico della pubblica amministrazione"}
+    - {se: strumento == "diretto_pcp", valore: "ordine diretto all'operatore economico"}
+    - {valore: "Piattaforma di Approvvigionamento Digitale"}
+  soglia_oggetto:
+    - {se: fascia == "micro", valore: "5.000,00"}
+    - {valore: "140.000,00"}
+
+# ---------------------------------------------------------------------------------------
+# CAMPI
+# ---------------------------------------------------------------------------------------
+# tipo: testo | testo_lungo | data | importo | numero | cig | cup | codice_fiscale_piva
+#       | elenco (righe ripetibili con sottocampi)
+# fonte: utente (predefinita) | ente (Dati dell'ente) | profilo (dall'utente) | sistema
+campi:
+  ente: {etichetta: Ente, tipo: testo, fonte: ente}
+  settore: {etichetta: Settore, tipo: testo, fonte: profilo}
+  numero_atto: {etichetta: Numero della determina, tipo: testo, fonte: sistema, obbligatorio: false,
+                aiuto: Assegnato alla registrazione dell'atto.}
+  data_atto: {etichetta: Data della determina, tipo: data, fonte: sistema, obbligatorio: false}
+  cig: {etichetta: CIG, tipo: cig, aiuto: Codice identificativo di gara acquisito tramite la piattaforma (10 caratteri).}
+  cup: {etichetta: CUP, tipo: cup, aiuto: Codice unico di progetto (15 caratteri).}
+  descrizione_prestazione:
+    etichetta: Descrizione del servizio o della fornitura
+    tipo: testo
+    aiuto: >-
+      Il più specifica possibile: la natura della prestazione determina gli istituti
+      applicabili (Tabella ANCI, "Oggetto dell'affidamento").
+  riferimenti_pnrr_oggetto:
+    etichetta: Riferimenti PNRR per l'oggetto
+    tipo: testo
+    aiuto: Missione, Componente, Ambito di intervento, Investimento e Avviso.
+
+  # programmazione
+  dup_delibera: {etichetta: "Delibera di approvazione del DUP (numero e data)", tipo: testo, fonte: ente}
+  dup_triennio: {etichetta: Triennio del DUP, tipo: testo, aiuto: "Es. 2026-2028", fonte: ente}
+  bilancio_delibera: {etichetta: "Delibera di approvazione del bilancio di previsione (numero e data)", tipo: testo, fonte: ente}
+  bilancio_triennio: {etichetta: Triennio del bilancio, tipo: testo, fonte: ente}
+  peg_delibera: {etichetta: "Delibera di approvazione del PEG (numero e data)", tipo: testo, fonte: ente}
+  peg_triennio: {etichetta: Triennio del PEG, tipo: testo, fonte: ente}
+  piao_delibera: {etichetta: "Delibera di approvazione del PIAO (numero e data)", tipo: testo, fonte: ente}
+  piao_triennio: {etichetta: Triennio del PIAO, tipo: testo, fonte: ente}
+
+  # motivazione e procedura
+  esigenza:
+    etichetta: Perché è necessario l'acquisto
+    tipo: testo_lungo
+    aiuto: "Il presupposto di fatto che rende necessario l'affidamento: è la base della motivazione (art. 3 L. 241/1990)."
+  normativa_specifica:
+    etichetta: Ulteriore normativa di settore
+    tipo: testo_lungo
+    obbligatorio: false
+    aiuto: Le norme più significative dell'ambito dell'acquisto (per l'ICT, la digital compliance).
+  motivo_lotti: {etichetta: Perché l'appalto non è suddiviso in lotti, tipo: testo_lungo,
+                 aiuto: "Ragioni tecniche, economiche o gestionali specifiche dell'oggetto (art. 58)."}
+  numero_lotti: {etichetta: Numero di lotti, tipo: numero}
+  articolo_regolamento_contratti: {etichetta: Articolo del regolamento dei contratti, tipo: testo, fonte: ente}
+  piattaforma: {etichetta: Piattaforma di approvvigionamento digitale utilizzata, tipo: testo, aiuto: "Es. START - Regione Toscana."}
+  motivo_no_piattaforma:
+    etichetta: Motivo per cui non si usa una piattaforma certificata
+    tipo: testo_lungo
+    aiuto: >-
+      ANAC ammette l'acquisizione del CIG dall'interfaccia web della PCP solo in caso di
+      impossibilità o difficoltà di ricorso alle piattaforme certificate: va motivato (es.
+      fornitore non presente sulle piattaforme, acquisto urgente di modico valore).
+  numero_preventivi: {etichetta: Numero di preventivi richiesti, tipo: numero}
+  operatore_economico: {etichetta: Operatore economico affidatario, tipo: testo}
+  operatore_cf_piva: {etichetta: Codice fiscale o partita IVA dell'operatore, tipo: codice_fiscale_piva}
+  importo_offerta: {etichetta: "Importo dell'offerta (euro, IVA esclusa)", tipo: importo, predefinito: "{{importo}}"}
+  esperienze_idonee:
+    etichetta: Esperienze pregresse idonee dell'operatore
+    tipo: testo_lungo
+    aiuto: >-
+      Perché le esperienze documentate dell'operatore, anche non strettamente analoghe, sono
+      idonee all'esecuzione delle prestazioni (art. 50, comma 1, lett. b).
+  motivo_deroga_rotazione:
+    etichetta: Motivazione della deroga alla rotazione
+    tipo: testo_lungo
+    aiuto: Struttura del mercato, effettiva assenza di alternative, accurata esecuzione del precedente contratto (art. 49, comma 4).
+  fine_contratto: {etichetta: Fine che il contratto intende perseguire, tipo: testo_lungo, aiuto: "Art. 192, comma 1, lett. a) TUEL."}
+  oggetto_contratto: {etichetta: Oggetto del contratto, tipo: testo, predefinito: "{{descrizione_prestazione}}"}
+  bando_mepa: {etichetta: Bando o categoria del MePA, tipo: testo}
+  ccnl: {etichetta: Contratto collettivo applicabile (indicato dalla stazione appaltante), tipo: testo}
+  ccnl_operatore: {etichetta: Contratto collettivo applicato dall'operatore, tipo: testo}
+  oneri_sicurezza: {etichetta: "Oneri per la sicurezza da interferenze (euro)", tipo: importo}
+  rup: {etichetta: Responsabile unico di progetto (RUP), tipo: testo, fonte: profilo}
+  decreto_incarico:
+    etichetta: Decreto di conferimento dell'incarico dirigenziale (numero e data)
+    tipo: testo
+    fonte: profilo
+    aiuto: >-
+      Es. "del Sindaco n. 12 del 3 gennaio 2026": fonda la competenza ad adottare l'atto
+      (art. 107 TUEL). Si imposta una volta in "Il mio profilo".
+  termine_esecuzione:
+    etichetta: Durata o termine di esecuzione
+    tipo: testo
+    aiuto: "Es. \"entro 30 giorni dall'ordine\" oppure \"dal 1° gennaio al 31 dicembre 2027\"."
+  termine_pagamento:
+    etichetta: Termine di pagamento delle fatture (giorni)
+    tipo: numero
+    predefinito: "30"
+    aiuto: >-
+      30 giorni dal ricevimento della fattura; fino a 60 solo se pattuito espressamente e
+      giustificato dalla natura o dall'oggetto del contratto (art. 4 D.Lgs. 231/2002).
+  fascicolo:
+    etichetta: Fascicolo informatico del procedimento
+    tipo: testo
+    obbligatorio: false
+    aiuto: Numero o classificazione del fascicolo nel sistema di gestione documentale (art. 41 CAD).
+  responsabili_fase: {etichetta: Responsabili di fase (fase e nominativo), tipo: testo_lungo}
+  importo_garanzia: {etichetta: "Importo della garanzia definitiva (euro)", tipo: importo, aiuto: "5% dell'importo contrattuale."}
+  motivo_no_garanzia: {etichetta: Perché non si richiede la garanzia, tipo: testo, aiuto: "Es. esecuzione immediata, scarsa rilevanza economica."}
+
+  # PNRR
+  avviso_pnrr: {etichetta: Avviso PNRR di finanziamento, tipo: testo}
+  missione_pnrr: {etichetta: "Missione, Componente e Investimento", tipo: testo}
+  importo_contributo_pnrr: {etichetta: "Importo del contributo (euro)", tipo: importo}
+  decreto_finanziamento_pnrr: {etichetta: Decreto di finanziamento, tipo: testo}
+  delibera_rup_pnrr: {etichetta: Delibera di nomina del RUP per l'Avviso, tipo: testo, obbligatorio: false}
+  target_pnrr: {etichetta: Target e milestone a cui contribuisce l'affidamento, tipo: testo_lungo}
+
+  # spesa
+  impegni:
+    etichetta: Impegni di spesa
+    tipo: elenco
+    minimo: 1
+    sottocampi:
+      importo: {etichetta: "Importo (euro, IVA inclusa)", tipo: importo}
+      capitolo: {etichetta: Capitolo, tipo: testo}
+      descrizione: {etichetta: Descrizione del capitolo, tipo: testo}
+      missione: {etichetta: Missione, tipo: testo}
+      programma: {etichetta: Programma, tipo: testo}
+      bilancio: {etichetta: Bilancio (esercizio), tipo: testo}
+  capitolo_disponibilita: {etichetta: Capitolo con la disponibilità, tipo: testo, predefinito: "{{impegni.0.capitolo}}"}
+  bilancio_disponibilita: {etichetta: Bilancio, tipo: testo, predefinito: "{{impegni.0.bilancio}}"}
+  contributo_anac_importo: {etichetta: "Contributo ANAC (euro)", tipo: importo}
+  contributo_anac_capitolo: {etichetta: Capitolo del contributo ANAC, tipo: testo}
+  contributo_anac_bilancio: {etichetta: Bilancio del contributo ANAC, tipo: testo}
+  incentivi_importo: {etichetta: "Importo degli incentivi (euro)", tipo: importo}
+  incentivi_capitolo: {etichetta: Capitolo degli incentivi, tipo: testo}
+  incentivi_bilancio: {etichetta: Bilancio degli incentivi, tipo: testo}
+
+  # pubblicità e chiusura
+  articolo_albo: {etichetta: Articolo del regolamento sui contratti per l'albo pretorio, tipo: testo, fonte: ente}
+  url_trasparenza: {etichetta: Indirizzo di Amministrazione trasparente, tipo: testo, fonte: ente}
+  sezione_tar: {etichetta: Sezione del TAR competente, tipo: testo, fonte: ente, aiuto: "Es. Toscana - Firenze."}
+  luogo: {etichetta: Luogo, tipo: testo, fonte: ente}
+  data_adozione: {etichetta: Data di adozione, tipo: data,
+                  aiuto: "Le norme citate sono verificate al testo vigente in questa data."}
+  firmatario: {etichetta: Dirigente firmatario, tipo: testo, fonte: profilo}
+
+# ---------------------------------------------------------------------------------------
+# FASI DELL'ATTO
+# ---------------------------------------------------------------------------------------
+fasi:
+
+  # =====================================================================================
+  - numero: 1
+    titolo: Intestazione e identificazione dell'atto
+    descrizione: >-
+      Ente, tipo di provvedimento, numero e oggetto. L'assenza dell'intestazione è una mera
+      irregolarità formale; l'oggetto esprime in sintesi la funzione del provvedimento.
+    sezioni:
+      - titolo: Intestazione
+        capoversi:
+          - id: intestazione
+            fonte: ANCI-1
+            modificabile: false
+            testo: |-
+              {{ente}}
+              Settore {{settore}}
+              Determinazione dirigenziale n. {{numero_atto}} del {{data_atto}}
+
+      - titolo: Oggetto
+        oggetto: true
+        innesto: oggetto
+        capoversi:
+          - id: oggetto_con_cup
+            se: cup
+            fonte: ANCI-2
+            testo: >-
+              Codice CIG: {{cig}} - CUP {{cup}} - Determina di affidamento diretto, mediante
+              {{descrizione_strumento}}, per {{il_servizio_la_fornitura}} di valore inferiore
+              ad euro {{soglia_oggetto}}, {{descrizione_prestazione}}, ai sensi dell'art. 50,
+              co. 1, lett. b) del D.Lgs. 36/2023.
+          - id: oggetto_senza_cup
+            se: not cup
+            fonte: ANCI-1
+            testo: >-
+              Codice CIG: {{cig}} - Determina di affidamento diretto, mediante
+              {{descrizione_strumento}}, per {{il_servizio_la_fornitura}} di valore inferiore
+              ad euro {{soglia_oggetto}}, {{descrizione_prestazione}}, ai sensi dell'art. 50,
+              co. 1, lett. b) del D.Lgs. 36/2023.
+          - id: oggetto_pnrr
+            se: pnrr
+            fonte: ANCI-1
+            testo: "{{riferimenti_pnrr_oggetto}}"
+            aiuto: In caso di PNRR l'oggetto richiama Misura, Componente, Ambito di intervento, Investimento e Avviso.
+
+      - titolo: Organo
+        capoversi:
+          - id: organo
+            fonte: ANCI-1
+            modificabile: false
+            testo: IL DIRIGENTE DEL SETTORE {{settore}}
+
+  # =====================================================================================
+  - numero: 2
+    titolo: Preambolo e motivazione
+    descrizione: >-
+      I presupposti di fatto e di diritto e le ragioni della decisione. La mancanza del
+      preambolo rende l'atto illegittimo; la mancanza di motivazione è violazione di legge
+      (art. 3 L. 241/1990).
+    sezioni:
+
+      - titolo: Competenza
+        aiuto: Il titolo di competenza del dirigente che adotta l'atto (artt. 107 e 109 TUEL).
+        capoversi:
+          - id: competenza
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art107"]
+            testo: >-
+              Visto il decreto {{decreto_incarico}}, con il quale è stato conferito al
+              sottoscritto l'incarico di direzione del Settore {{settore}}, con le funzioni di
+              cui all'art. 107 del D.Lgs. 267/2000;
+
+      - titolo: Atti di programmazione
+        formula: Premesso che
+        aiuto: Estremi degli atti generali di indirizzo dell'ente (Tabella ANCI).
+        capoversi:
+          - id: dup
+            fonte: ANCI-1
+            testo: con Delibera di Consiglio n. {{dup_delibera}}, è stato approvato il Documento Unico di Programmazione {{dup_triennio}};
+          - id: bilancio
+            fonte: ANCI-1
+            testo: con Delibera di Consiglio n. {{bilancio_delibera}}, è stato approvato il Bilancio di Previsione {{bilancio_triennio}};
+          - id: peg
+            fonte: ANCI-1
+            testo: con Delibera di Giunta n. {{peg_delibera}}, è stato approvato il Piano Esecutivo di Gestione {{peg_triennio}};
+          - id: piao
+            fonte: ANCI-1
+            facoltativo: true
+            incluso: false
+            aiuto: Da richiamare se nel PIAO ci sono obiettivi collegati all'oggetto dell'affidamento.
+            testo: >-
+              con Delibera di Giunta n. {{piao_delibera}}, è stato approvato il Piano Integrato
+              di Attività e Organizzazione {{piao_triennio}} ai sensi dell'art. 6 del D.L. n.
+              80/2021, convertito con modificazioni in Legge n. 113/2021;
+
+      - titolo: Esigenza
+        capoversi:
+          - id: esigenza
+            fonte: ANCI-1
+            testo: "Considerato che si rende necessario l'acquisto di {{descrizione_prestazione}}: {{esigenza}};"
+          - id: attivazione
+            fonte: ANCI-1
+            testo: Ritenuto pertanto necessario attivare la procedura per l'acquisizione del citato servizio/fornitura;
+
+      - titolo: Quadro normativo
+        formula: Visti
+        riferimenti_libreria: true
+        innesto: visti_normativi
+        aiuto: >-
+          Solo gli atti normativi più significativi: contratti pubblici, ambito dell'acquisto,
+          bilancio, eventuale PNRR (Guida ANCI, cap. 2). I riferimenti puntuali si possono
+          aggiungere dalla libreria normativa.
+        capoversi:
+          - id: visto_codice
+            fonte: ANCI-1
+            testo: il D.Lgs. 31 marzo 2023, n. 36 e s.m.i. - "Codice dei contratti pubblici";
+          - id: visto_tuel
+            fonte: ANCI-1
+            testo: il D.Lgs. 18 agosto 2000, n. 267 (Testo Unico degli Enti Locali) e s.m.i.;
+          - id: visto_sicurezza
+            fonte: ANCI-1
+            testo: >-
+              il D.Lgs. 9 aprile 2008, n. 81 "Tutela della salute e della sicurezza nei luoghi
+              di lavoro" e la determinazione AVCP n. 3 del 5 marzo 2008 in materia di rischi
+              interferenziali;
+          - id: visto_trasparenza
+            fonte: ANCI-1
+            testo: il D.Lgs. 33/2013 e l'art. 28 del D.Lgs. 36/2023, in materia di Amministrazione trasparente;
+          - id: visto_normativa_specifica
+            facoltativo: true
+            incluso: false
+            fonte: ANCI-1
+            testo: "{{normativa_specifica}}"
+
+      - titolo: Finanziamento PNRR
+        se: pnrr
+        aiuto: >-
+          Quadro normativo europeo e nazionale ed estremi dell'Avviso da cui deriva il
+          finanziamento (Guida ANCI, par. 1.3). Gli schemi ANCI portano come esempio l'Avviso
+          "Abilitazione al cloud per le PA locali": qui i riferimenti sono da compilare.
+        capoversi:
+          - id: pnrr_visti
+            fonte: ANCI-1
+            testo: |-
+              Visti:
+              - il Regolamento (UE) 2021/241, che istituisce il dispositivo per la ripresa e la resilienza;
+              - la {{missione_pnrr}} del Piano Nazionale di Ripresa e Resilienza (PNRR);
+              - il Decreto-legge 31 maggio 2021, n. 77, convertito con modificazioni dalla legge 29 luglio 2021, n. 108;
+              - il Decreto-legge 9 giugno 2021, n. 80, convertito con modificazioni dalla legge 6 agosto 2021, n. 113;
+              - il Decreto-legge 6 novembre 2021, n. 152, convertito con modificazioni dalla legge 29 dicembre 2021, n. 233;
+          - id: pnrr_rup
+            facoltativo: true
+            incluso: false
+            fonte: ANCI-1
+            testo: >-
+              Richiamata la deliberazione {{delibera_rup_pnrr}} che ha nominato il RUP per
+              l'espletamento di tutti gli adempimenti per la partecipazione all'avviso pubblico
+              di cui all'oggetto;
+          - id: pnrr_avviso
+            fonte: ANCI-1
+            testo: Richiamato l'Avviso pubblico {{avviso_pnrr}} a valere sul Piano Nazionale di Ripresa e Resilienza;
+          - id: pnrr_contributo
+            fonte: ANCI-1
+            testo: >-
+              Posto che la candidatura è stata ammessa e l'ente è risultato aggiudicatario del
+              contributo previsto dall'Avviso, per una somma pari a euro
+              {{importo_contributo_pnrr}}, e che trattasi di intervento finanziato dall'Unione
+              Europea - NextGenerationEU;
+          - id: pnrr_target
+            fonte: ANCI-1
+            testo: >-
+              Posto che, in attuazione delle disposizioni relative al conseguimento dei target e
+              delle milestone, l'affidamento contribuisce al conseguimento dei seguenti target
+              europei previsti dalla Misura: {{target_pnrr}};
+          - id: pnrr_addizionalita
+            fonte: ANCI-1
+            testo: >-
+              Considerato che l'affidamento non è stato finanziato da altri fondi pubblici,
+              nazionali, regionali o europei e rispetta il principio di addizionalità del
+              sostegno dell'Unione Europea previsto dall'art. 9 del Regolamento (UE) 2021/241;
+          - id: pnrr_decreto
+            fonte: ANCI-1
+            testo: >-
+              Considerato che la prestazione è finanziata interamente con fondi PNRR, così come
+              risultante dal {{decreto_finanziamento_pnrr}};
+          - id: pnrr_dnsh
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che l'affidamento è stato progettato nel pieno rispetto del principio
+              europeo di non arrecare un danno significativo all'ambiente "Do No Significant Harm
+              - DNSH";
+
+      - titolo: Procedura di affidamento
+        aiuto: Scelta della procedura in base all'importo e alle caratteristiche dell'appalto.
+        capoversi:
+          - id: transfrontaliero
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art48"]
+            aiuto: >-
+              L'accertamento deve essere concreto (importo, luogo di esecuzione, caratteristiche
+              tecniche): se esiste un interesse transfrontaliero certo servono le procedure
+              ordinarie (art. 48, comma 2).
+            testo: Accertato che per l'appalto in oggetto non sussiste interesse transfrontaliero certo;
+          - id: programmazione
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art37"]
+            testo: >-
+              Dato atto che l'importo del presente affidamento è inferiore a euro 140.000,00 e
+              pertanto, ai sensi dell'art. 37 comma 3 del D.Lgs. 36/2023, non vi è l'obbligo del
+              preventivo inserimento nel programma triennale di acquisti di beni e servizi;
+          - id: visto_art50
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"]
+            testo: Visto l'art. 50 del D.Lgs. 36/2023, che disciplina le procedure sottosoglia;
+          - id: visto_art58
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art58"]
+            testo: >-
+              Visto l'art. 58 del D.Lgs. 36/2023, che stabilisce che per favorire la effettiva
+              partecipazione delle micro, delle piccole e delle medie imprese, gli appalti sono
+              suddivisi in lotti e la mancata suddivisione deve essere motivata;
+          - id: lotti_no
+            se: not lotti
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che il presente appalto non è stato suddiviso in lotti, così come
+              previsto dall'art. 58 del D.Lgs. 36/2023, poiché {{motivo_lotti}};
+          - id: lotti_si
+            se: lotti
+            fonte: aggiunto
+            testo: Dato atto che il presente appalto è stato suddiviso in n. {{numero_lotti}} lotti ai sensi dell'art. 58 del D.Lgs. 36/2023;
+          - id: regolamento_contratti
+            fonte: ANCI-1
+            testo: Richiamato il vigente Regolamento per la disciplina dei contratti, in particolare l'art. {{articolo_regolamento_contratti}};
+          - id: art107
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art107"]
+            testo: Richiamato l'art. 107 del D.Lgs. 267/2000 (TUEL) relativamente a competenze, funzioni e responsabilità dei Dirigenti;
+          - id: risultato
+            facoltativo: true
+            fonte: ANCI-3
+            testo: >-
+              Considerato altresì che, sulla base di una attenta valutazione conservata agli atti
+              dell'Ufficio, tenuto conto dell'oggetto dell'intervento, dell'importo, dei tempi di
+              affidamento e del mercato di riferimento, la procedura di affidamento diretto, ai
+              sensi dell'art. 50 comma 1 lett. b), è da ritenersi idonea a perseguire il principio
+              di risultato e gli ulteriori principi richiamati dall'art. 48, comma 1, del D.Lgs. n.
+              36/2023, soddisfacendo le esigenze di tempestività, semplificazione e il migliore
+              rapporto prezzo/qualità, in attuazione del principio di buon andamento e dei
+              correlati principi di efficienza ed economicità;
+          - id: considerato_art50_art17
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art17"]
+            testo: |-
+              Considerato che:
+              - ai sensi dell'art. 50, comma 1, lett. b), per affidamenti di importo inferiore a 140.000 euro, è possibile procedere mediante affidamento diretto, anche senza previa consultazione di due o più operatori economici;
+              - ai sensi dell'art. 17 comma 2 del D.Lgs. 36/2023, per gli appalti di cui all'art. 50, comma 1, lett. b), la stazione appaltante può procedere all'affidamento diretto previa adozione della sola decisione a contrarre, che contenga l'oggetto dell'affidamento, l'importo, il fornitore, le ragioni della scelta del fornitore, il possesso da parte sua dei requisiti a contrarre;
+
+      - titolo: Strumento di acquisto
+        aiuto: Obblighi e facoltà di ricorso agli strumenti di acquisto aggregato (Tabella ANCI).
+        capoversi:
+          - id: consip_assente
+            se: consip == "assente"
+            fonte: ANCI-1
+            testo: Verificato, ai sensi dell'art. 26 legge 488/1999 e s.m.i., che il servizio/fornitura oggetto dell'affidamento non è offerto dalle Convenzioni Consip;
+          - id: consip_autonoma
+            se: consip == "autonoma"
+            fonte: ANCI-1
+            testo: >-
+              Verificato, ai sensi dell'art. 26 legge 488/1999 e s.m.i., che è presente una
+              convenzione Consip riguardante il servizio/fornitura da acquisire, ma si intende
+              attivare una autonoma procedura con il proposito di poter conseguire una maggiore
+              economia di spesa;
+          - id: micro_no_mepa
+            se: fascia == "micro" and strumento != "diretto_pcp"
+            fonte: ANCI-2
+            testo: >-
+              Dato atto che ai sensi dell'art. 1, comma 450, L. 296/2006 come modificato
+              dall'art. 1, comma 130, della L. 145/2018, nel caso di acquisti di importo
+              inferiore a 5.000,00 euro, non sussiste l'obbligo di ricorso al MePA o ad altri
+              mercati elettronici;
+          - id: strumento_oda
+            se: strumento == "oda_mepa"
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che il servizio/fornitura da acquisire è presente sul Mercato
+              elettronico della pubblica amministrazione e pertanto è possibile procedere
+              all'attivazione di un ordine diretto d'acquisto (ODA);
+          - id: strumento_piattaforma
+            se: strumento == "piattaforma"
+            fonte: ANCI-2
+            testo: >-
+              Ritenuto pertanto di procedere mediante l'acquisizione sottosoglia, ai sensi
+              dell'art. 50, comma 1 lett. b) del D.Lgs. 36/2023, mediante l'utilizzo della
+              seguente Piattaforma di Approvvigionamento Digitale (PAD) certificata
+              {{piattaforma}};
+          - id: strumento_pcp
+            se: strumento == "diretto_pcp"
+            fonte: aggiunto
+            aiuto: >-
+              Testo non presente negli schemi ANCI: la possibilità è descritta nella Guida ANCI
+              (par. 1.4.1) e nella Tabella degli elementi essenziali (voce CIG).
+            testo: >-
+              Dato atto che, trattandosi di affidamento di importo inferiore a 5.000,00 euro,
+              non sussiste l'obbligo di ricorso al MePA o ad altri mercati elettronici ai sensi
+              dell'art. 1, comma 450, L. 296/2006 e che il CIG è stato acquisito mediante
+              l'interfaccia web della Piattaforma dei Contratti Pubblici di ANAC, come consentito
+              dal Comunicato del Presidente ANAC del 18 giugno 2025, in quanto
+              {{motivo_no_piattaforma}};
+
+      - titolo: Scelta dell'operatore e congruità del prezzo
+        aiuto: >-
+          La consultazione di più operatori non è un confronto competitivo ma un'indagine di
+          mercato; la scelta va motivata su congruità e requisiti (art. 17 D.Lgs. 36/2023, art.
+          3 L. 241/1990).
+        capoversi:
+          - id: scelta_oda
+            se: strumento == "oda_mepa"
+            fonte: ANCI-1
+            testo: |-
+              Rilevato che:
+              - da una ricerca svolta sul Mercato elettronico della pubblica amministrazione è risultato che l'operatore economico {{operatore_economico}} rende disponibili il servizio/fornitura oggetto del presente approvvigionamento corrispondente alle caratteristiche necessitate;
+              - il prezzo del servizio/fornitura offerto dal suddetto operatore economico, pari a euro {{importo_offerta}} oltre IVA nei termini di legge, risulta essere congruo rispetto alle esigenze dell'amministrazione da soddisfare e al valore di mercato della prestazione;
+          - id: scelta_confronto
+            se: strumento == "confronto_mepa"
+            fonte: ANCI-3
+            testo: |-
+              Dato atto che:
+              - è stata individuata l'offerta presentata dall'operatore economico {{operatore_economico}} a seguito di richiesta di n. {{numero_preventivi}} preventivi acquisiti tramite MePA;
+              - a seguito di attenta verifica si attesta la congruità del prezzo praticato dall'operatore economico tenuto conto del valore della prestazione sul mercato e dell'esigenza dell'amministrazione;
+              - l'offerta economica presentata è pari a euro {{importo_offerta}} oltre IVA nei termini di legge;
+          - id: scelta_piattaforma
+            se: strumento == "piattaforma"
+            fonte: ANCI-2
+            testo: |-
+              Dato atto che:
+              - è stata svolta un'indagine esplorativa effettuata tramite la PAD sopra citata, ed è stata individuata l'offerta presentata dall'operatore economico {{operatore_economico}}, di importo pari a euro {{importo_offerta}} oltre IVA nei termini di legge;
+              - sulla base di una attenta valutazione conservata agli atti dell'Ufficio è stata verificata la congruità del prezzo praticato dall'operatore economico;
+          - id: scelta_diretta
+            se: strumento == "diretto_pcp"
+            fonte: aggiunto
+            testo: >-
+              Dato atto che è stato richiesto un preventivo all'operatore economico
+              {{operatore_economico}}, che ha offerto la fornitura/il servizio per euro
+              {{importo_offerta}} oltre IVA nei termini di legge, e che il prezzo risulta congruo
+              rispetto ai prezzi di mercato e alle esigenze dell'ente;
+
+      - titolo: Requisiti dell'operatore
+        aiuto: >-
+          Sotto i 40.000 euro basta l'autocertificazione, con controlli a campione; da 40.000
+          euro la determina attesta i controlli con esito positivo (artt. 52, 94, 95, 100 D.Lgs.
+          36/2023).
+        capoversi:
+          - id: requisiti_autocertificati
+            se: fascia in ["micro", "piccolo"]
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art52"]
+            testo: |-
+              Dato atto che:
+              - l'operatore economico ha attestato il possesso dei requisiti di partecipazione di cui agli artt. 94 e 95 del D.Lgs. 36/2023, ivi compresa l'esperienza pregressa idonea all'esecuzione della prestazione contrattuale, ai sensi dell'art. 52, comma 1, del D.Lgs. n. 36/2023;
+              - l'ente procederà alla verifica delle dichiarazioni rese dall'operatore economico sui requisiti di ordine generale e di capacità tecnico-professionale, nel caso in cui lo stesso risulti tra i soggetti da sottoporre a controllo a campione ai sensi dell'art. 52, comma 1, del D.Lgs. n. 36/2023, e in caso di esito negativo applicherà quanto previsto dalle clausole contrattuali in materia di penali e risoluzione del contratto;
+          - id: requisiti_controllati
+            se: fascia == "medio"
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che dai controlli effettuati sull'autocertificazione presentata
+              dall'operatore economico, lo stesso risulta essere in possesso dei requisiti di
+              ordine generale di cui agli articoli 94 e 95 del D.Lgs. 36/2023;
+          - id: esperienze
+            fonte: ANCI-1
+            aiuto: >-
+              Negli schemi ANCI è previsto sopra i 40.000 euro, ma l'art. 50 comma 1 lett. b)
+              richiede sempre esperienze documentate idonee: qui è chiesto in ogni fascia.
+            testo: >-
+              Dato atto che l'operatore economico risulta in possesso di pregresse e documentate
+              esperienze idonee a svolgere le prestazioni oggetto dell'affidamento poiché
+              {{esperienze_idonee}};
+
+      - titolo: Rotazione
+        capoversi:
+          - id: rotazione_micro
+            se: fascia == "micro"
+            fonte: ANCI-2
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art49"]
+            testo: Dato atto che, ai sensi dell'art. 49 comma 6 del D.Lgs. 36/2023, il principio di rotazione non si applica agli appalti di importo inferiore a 5.000,00 euro;
+          - id: rotazione_rispettata
+            se: rotazione == "rispettata"
+            fonte: ANCI-1
+            testo: Dato atto che è stato rispettato il principio di rotazione degli affidamenti;
+          - id: rotazione_deroga
+            se: rotazione == "deroga"
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art49"]
+            testo: >-
+              Dato atto che si è derogato al principio di rotazione ai sensi dell'art. 49, comma
+              4, del D.Lgs. 36/2023 in quanto {{motivo_deroga_rotazione}};
+
+      - titolo: Conflitto di interessi
+        capoversi:
+          - id: conflitto_interessi
+            fonte: aggiunto
+            norme:
+              - "urn:nir:stato:legge:1990-08-07;241~art6-bis"
+              - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art16"
+            testo: >-
+              Dato atto che, ai sensi dell'art. 6-bis della L. 241/1990 e dell'art. 16 del D.Lgs.
+              36/2023, non sussistono situazioni di conflitto di interessi, anche potenziale, in
+              capo al sottoscritto, al RUP e al personale che interviene nella procedura, come
+              risulta dalle dichiarazioni acquisite agli atti;
+          - id: conflitto_interessi_pnrr
+            se: pnrr
+            fonte: aggiunto
+            testo: >-
+              Dato atto che, trattandosi di intervento finanziato con fondi PNRR, le dichiarazioni
+              di assenza di conflitto di interessi sono state acquisite anche ai fini dei
+              controlli previsti dalla normativa sul PNRR;
+
+      - titolo: Specificità dell'affidamento
+        innesto: dato_atto
+        aiuto: Attestazioni proprie delle caratteristiche scelte (moduli di regole).
+        capoversi: []
+
+      - titolo: Elementi essenziali del contratto
+        innesto: elementi_essenziali_192
+        aiuto: Contenuti minimi della determina a contrarre (art. 192, comma 1, TUEL).
+        capoversi:
+          - id: elementi_192
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art192"]
+            testo: |-
+              Ritenuto di fissare i contenuti minimi essenziali ai sensi dell'art. 192 comma 1 del D.Lgs. 267/2000 come segue:
+              a) il fine che il contratto intende perseguire è quello di {{fine_contratto}};
+              b) l'oggetto del contratto è {{oggetto_contratto}};
+          - id: forma_oda
+            se: strumento == "oda_mepa"
+            fonte: ANCI-1
+            testo: |-
+              c) il contratto verrà stipulato mediante ordine di acquisto diretto del Mercato elettronico della pubblica amministrazione;
+              d) le clausole contrattuali sono quelle precisate nel bando {{bando_mepa}} del Mercato elettronico;
+          - id: forma_corrispondenza
+            se: strumento != "oda_mepa"
+            fonte: ANCI-2
+            testo: |-
+              c) il contratto verrà stipulato mediante corrispondenza commerciale;
+              d) le clausole contrattuali sono quelle precisate nella richiesta di offerta trasmessa all'operatore economico;
+          - id: ritenuto_affidare
+            fonte: ANCI-2
+            testo: >-
+              Ritenuto, per le ragioni sopra esposte, di affidare {{il_servizio_la_fornitura}}
+              all'operatore economico {{operatore_economico}} per un importo pari a euro
+              {{importo_offerta}}, oltre IVA nei termini di legge, ai sensi dell'art. 50 comma 1
+              lett. b) del D.Lgs. 36/2023;
+
+      - titolo: Contratto collettivo e costo della manodopera
+        se: ccnl_richiesto
+        aiuto: >-
+          Servizi non intellettuali e forniture con posa in opera (artt. 11 e 57, allegato I.01
+          D.Lgs. 36/2023). Con il PNRR non valgono le deroghe per i servizi intellettuali e le
+          forniture senza posa.
+        capoversi:
+          - id: ccnl_individuato
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art11"]
+            testo: >-
+              Ritenuto di stabilire, ai sensi dell'art. 11, co. 2 del Codice dei contratti, che
+              il contratto collettivo di maggior tutela applicabile al personale dipendente
+              impiegato nell'attività oggetto dell'appalto svolto dall'impresa anche in maniera
+              prevalente, in conformità al comma 1 e all'allegato I.01 del Codice, è il seguente:
+              {{ccnl}};
+          - id: ccnl_coincide
+            se: ccnl_coincide
+            fonte: ANCI-1
+            testo: Ritenuto di dare atto che il sopra citato contratto coincide con quello utilizzato dall'operatore economico;
+          - id: ccnl_equivalente
+            se: not ccnl_coincide
+            fonte: ANCI-1
+            testo: >-
+              Ritenuto di dare atto dell'equivalenza delle tutele assicurate dal diverso
+              contratto collettivo applicato dall'operatore economico a favore dei lavoratori
+              impiegati nell'appalto e precisamente del CCNL {{ccnl_operatore}};
+          - id: ccnl_congruita
+            fonte: ANCI-1
+            testo: >-
+              Ritenuto di dare atto della congruità del costo della manodopera e della sicurezza
+              aziendale indicato in sede di presentazione di offerta dall'operatore economico;
+
+      - titolo: Codici, tracciabilità e copertura della spesa
+        capoversi:
+          - id: cig_cup_con_cup
+            se: cup
+            fonte: ANCI-1
+            testo: Dato atto che al presente appalto è stato assegnato il CIG {{cig}} e il CUP {{cup}};
+          - id: cig_senza_cup
+            se: not cup
+            fonte: ANCI-1
+            testo: Dato atto che al presente appalto è stato assegnato il CIG {{cig}};
+          - id: tracciabilita
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che ai sensi della Legge 13 agosto 2010, n. 136 e s.m.i. (Tracciabilità
+              dei flussi finanziari), i pagamenti relativi alle prestazioni affidate saranno
+              effettuati sul conto corrente dedicato comunicato, unitamente ai nominativi delle
+              persone abilitate ad operare sullo stesso, dall'operatore economico, che, ai sensi
+              della suddetta normativa, è obbligato ad ottemperare a tutti gli obblighi ivi
+              connessi;
+          - id: compatibilita_stanziamenti
+            fonte: ANCI-1
+            testo: >-
+              Accertato che la spesa di cui al presente provvedimento è compatibile con gli
+              stanziamenti di bilancio, ai sensi dell'art. 9, co. 1 del D.L. 78/2009, convertito
+              in legge 102/2009;
+          - id: disponibilita
+            fonte: ANCI-1
+            testo: Vista la disponibilità finanziaria presente sul Cap. {{capitolo_disponibilita}} del bilancio {{bilancio_disponibilita}};
+          - id: finanza_pubblica
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"]
+            testo: Verificato il rispetto delle regole di finanza pubblica ai sensi dell'art. 183, co. 8 del D.Lgs. 267/2000;
+
+      - titolo: Rischi da interferenza
+        capoversi:
+          - id: interferenze_no
+            se: not interferenze
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che per l'espletamento del presente appalto non sono rilevabili rischi
+              interferenti per i quali sia necessario adottare specifiche misure di sicurezza, e
+              che pertanto non risulta necessario prevedere la predisposizione del "Documento
+              Unico di Valutazione dei Rischi da Interferenze" - DUVRI e non sussistono di
+              conseguenza costi della sicurezza di cui all'art. 26, comma 3, del D.Lgs. n.
+              81/2008;
+          - id: interferenze_si
+            se: interferenze
+            fonte: ANCI-1
+            testo: >-
+              Dato atto che per l'espletamento del presente appalto sono rilevabili rischi
+              interferenti e pertanto è stato redatto il Documento Unico di Valutazione dei
+              Rischi da Interferenze - DUVRI di cui all'art. 26, comma 3, del D.Lgs. n. 81/2008,
+              quantificando gli oneri per la sicurezza in euro {{oneri_sicurezza}};
+
+      - titolo: Responsabile unico di progetto
+        aiuto: Indicazione obbligatoria del RUP (art. 15 e allegato I.2 D.Lgs. 36/2023).
+        capoversi:
+          - id: rup
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art15"]
+            testo: Considerato che il Responsabile unico di progetto (RUP) ai sensi dell'art. 15 del D.Lgs. 36/2023 è {{rup}};
+          - id: rup_fase
+            se: rup_responsabile_fase
+            fonte: ANCI-1
+            testo: >-
+              Considerato che il suddetto RUP è anche responsabile del procedimento per le fasi
+              di affidamento ed esecuzione ai sensi dell'art. 4 della legge 241/1990;
+          - id: responsabili_fase
+            se: not rup_responsabile_fase
+            fonte: ANCI-1
+            testo: >-
+              Considerato che, in applicazione del modello organizzativo adottato dall'ente, in
+              osservanza del principio di auto organizzazione amministrativa di cui all'art. 7
+              del D.Lgs. 36/2023, sono stati nominati i seguenti responsabili di procedimento per
+              le fasi di affidamento ed esecuzione: {{responsabili_fase}};
+
+      - titolo: Garanzia definitiva
+        innesto: garanzia
+        capoversi:
+          - id: garanzia_si
+            se: garanzia
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art117"]
+            testo: >-
+              Dato atto che, ai sensi degli artt. 53 e 117 del D.Lgs. 36/2023, l'affidatario è
+              tenuto a presentare garanzia definitiva per un valore pari al 5% del contratto,
+              pari a euro {{importo_garanzia}};
+          - id: garanzia_no
+            se: not garanzia
+            fonte: ANCI-1
+            testo: Dato atto che in considerazione di {{motivo_no_garanzia}} non è richiesta la garanzia definitiva;
+
+  # =====================================================================================
+  - numero: 3
+    titolo: Dispositivo
+    descrizione: >-
+      La decisione dell'amministrazione. Per una determinazione del dirigente la formula è
+      DETERMINA. I punti sono numerati automaticamente nell'ordine dei capoversi attivi.
+    formula: DETERMINA
+    premessa: >-
+      per quanto esposto in narrativa che forma parte integrante e sostanziale del presente
+      provvedimento:
+    numerazione: automatica
+    sezioni:
+      - titolo: Decisione
+        capoversi:
+          - id: d_affidamento
+            fonte: ANCI-1
+            testo: >-
+              di affidare, ai sensi dell'art. 50 comma 1 lett. b) del D.Lgs. 36/2023,
+              {{il_servizio_la_fornitura}} oggetto della presente procedura all'operatore
+              economico {{operatore_economico}} (C.F./P.IVA {{operatore_cf_piva}}) per un
+              importo pari a euro {{importo_offerta}} oltre IVA nei termini di legge;
+
+      - titolo: Impegno di spesa
+        capoversi:
+          - id: d_impegno
+            fonte: ANCI-1
+            ripeti_per: impegni
+            testo: >-
+              di procedere al finanziamento assumendo il seguente impegno di spesa di importo
+              pari a euro {{impegni.importo}} (IVA inclusa) sul cap. {{impegni.capitolo}};
+              descrizione {{impegni.descrizione}}; missione {{impegni.missione}}; programma
+              {{impegni.programma}}; bilancio {{impegni.bilancio}}, che presenta adeguata
+              disponibilità;
+          - id: d_regolarita
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art147-bis"]
+            testo: di attestare la regolarità e la correttezza del presente atto ai sensi e per gli effetti di quanto dispone l'art. 147-bis del D.Lgs. 267/2000;
+          - id: d_pnrr_art47
+            se: pnrr
+            fonte: ANCI-1
+            testo: >-
+              con riferimento all'art. 47 del D.L. n. 77/2021, convertito in legge n. 108/2021,
+              recante "Pari opportunità e inclusione lavorativa nei contratti pubblici PNRR e
+              PNC", di dare applicazione ai commi 2 (obbligo di presentazione del Rapporto sulla
+              situazione del personale per le imprese con più di 50 dipendenti) e 3-bis e di
+              applicare le prescrizioni contenute nel comma 4;
+          - id: d_pnrr_finanziamento
+            se: pnrr
+            fonte: ANCI-1
+            testo: di dare atto che la suddetta prestazione è finanziata interamente con fondi PNRR, così come risultante dal {{decreto_finanziamento_pnrr}};
+          - id: d_183
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"]
+            testo: >-
+              di dare atto che, ai sensi dell'art. 183, comma 8, D.Lgs. 267/2000, il sottoscritto
+              ha accertato preventivamente che il programma dei conseguenti pagamenti relativi
+              all'impegno di spesa che si assume con il presente atto è compatibile con i relativi
+              stanziamenti di cassa e con le regole di finanza pubblica in materia di pareggio di
+              bilancio come, peraltro, accertato con la sottoscrizione del presente atto da parte
+              del Responsabile del Settore contabile ai sensi e per gli effetti dell'art. 183,
+              comma 7 e dell'art. 147-bis del D.Lgs. 267/2000;
+          - id: d_anac_impegno
+            se: contributo_anac
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che il contributo ad ANAC dovuto in relazione al presente affidamento
+              è quantificato in euro {{contributo_anac_importo}} e pertanto di finanziare il
+              relativo importo assumendo un impegno di spesa di pari importo sul cap.
+              {{contributo_anac_capitolo}} del bilancio {{contributo_anac_bilancio}}, che
+              presenta adeguata disponibilità;
+          - id: d_anac_non_dovuto
+            se: not contributo_anac
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che, trattandosi di contratto di importo inferiore a 40.000,00 euro,
+              non vi è obbligo di pagare il contributo a favore di ANAC;
+
+      - titolo: Requisiti, sicurezza e rotazione
+        capoversi:
+          - id: d_requisiti_autocertificati
+            se: fascia in ["micro", "piccolo"]
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che l'operatore economico ha autocertificato il possesso dei requisiti
+              generali di cui agli artt. 94 e 95 e di quelli di qualificazione di cui all'art. 100
+              del D.Lgs. 36/2023, a norma di quanto stabilito dall'art. 52, co. 1 del medesimo
+              decreto;
+          - id: d_requisiti_controllati
+            se: fascia == "medio"
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che, dai controlli effettuati, l'operatore economico risulta essere in
+              possesso dei requisiti di ordine generale di cui agli artt. 94 e 95 e di quelli di
+              qualificazione di cui all'art. 100 del D.Lgs. 36/2023;
+          - id: d_interferenze_no
+            se: not interferenze
+            fonte: ANCI-1
+            testo: >-
+              di confermare l'assenza di rischi da interferenza e pertanto di stabilire che
+              nessuna somma riguardante la gestione dei suddetti rischi verrà riconosciuta
+              all'operatore economico affidatario, e che non si rende necessaria la
+              predisposizione del Documento unico di valutazione dei rischi interferenziali
+              (DUVRI);
+          - id: d_interferenze_si
+            se: interferenze
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che è stato redatto il DUVRI e che gli oneri per la gestione dei rischi
+              interferenziali, non soggetti a ribasso, ammontano a euro {{oneri_sicurezza}};
+          - id: d_rotazione_rispettata
+            se: rotazione == "rispettata"
+            fonte: ANCI-1
+            testo: di dare atto di aver rispettato il principio di rotazione;
+          - id: d_rotazione_deroga
+            se: rotazione == "deroga"
+            fonte: ANCI-1
+            testo: di dare atto che si è derogato al principio di rotazione per le ragioni espresse in narrativa e che si intendono qui integralmente richiamate;
+
+      - titolo: Responsabili
+        capoversi:
+          - id: d_rup
+            fonte: ANCI-1
+            testo: >-
+              di dare atto che il Responsabile unico di progetto è {{rup}} e che è stata
+              acquisita agli atti la documentazione attestante l'insussistenza in capo allo
+              stesso delle cause di incompatibilità e di astensione previste dalla normativa;
+          - id: d_responsabili_fase
+            se: not rup_responsabile_fase
+            fonte: ANCI-1
+            testo: >-
+              di disporre la nomina dei responsabili del procedimento per le fasi di affidamento
+              ed esecuzione: {{responsabili_fase}}, dando atto che è stata acquisita agli atti la
+              documentazione attestante l'insussistenza in capo agli stessi delle cause di
+              incompatibilità e di astensione previste dalla normativa;
+
+      - titolo: Stipula del contratto
+        capoversi:
+          - id: d_stipula_oda
+            se: strumento == "oda_mepa"
+            fonte: ANCI-1
+            testo: >-
+              di disporre l'invio dell'ODA del Mercato elettronico della pubblica amministrazione
+              all'operatore economico {{operatore_economico}}, integrando, a tal fine, gli
+              adempimenti riguardanti la stipula del contratto;
+          - id: d_stipula_corrispondenza
+            se: strumento != "oda_mepa"
+            fonte: ANCI-2
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art18"]
+            testo: >-
+              di procedere alla stipula del contratto ai sensi dell'art. 18, comma 1, del D.Lgs.
+              n. 36/2023, mediante corrispondenza secondo l'uso del commercio consistente in un
+              apposito scambio di lettere, anche tramite posta elettronica certificata o sistemi
+              elettronici di recapito certificato qualificato;
+
+      - titolo: Condizioni del contratto
+        capoversi:
+          - id: d_termine_esecuzione
+            fonte: aggiunto
+            testo: di stabilire che la prestazione dovrà essere eseguita {{termine_esecuzione}};
+          - id: d_pagamento
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2002-10-09;231~art4"]
+            testo: >-
+              di stabilire che il pagamento sarà effettuato entro {{termine_pagamento}} giorni
+              dal ricevimento della fattura elettronica, previo accertamento della regolare
+              esecuzione della prestazione e della regolarità contributiva dell'operatore
+              economico, ai sensi dell'art. 4 del D.Lgs. 231/2002;
+          - id: d_dati_personali_responsabile
+            se: dati_personali
+            fonte: aggiunto
+            testo: >-
+              di dare atto che i dati personali sono trattati nel rispetto del Regolamento (UE)
+              2016/679 e del D.Lgs. 196/2003 e che, poiché l'esecuzione del contratto comporta il
+              trattamento di dati personali per conto dell'ente, l'operatore economico sarà
+              nominato responsabile del trattamento ai sensi dell'art. 28 del Regolamento;
+          - id: d_dati_personali
+            se: not dati_personali
+            fonte: aggiunto
+            testo: >-
+              di dare atto che i dati personali acquisiti nel procedimento sono trattati nel
+              rispetto del Regolamento (UE) 2016/679 e del D.Lgs. 196/2003, previa informativa
+              all'operatore economico;
+          - id: d_codice_comportamento
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.del.presidente.della.repubblica:2013-04-16;62~art2"]
+            testo: >-
+              di dare atto che gli obblighi di condotta previsti dal D.P.R. 62/2013 e dal Codice
+              di comportamento dell'ente si estendono, per quanto compatibili, ai collaboratori
+              a qualsiasi titolo dell'operatore economico e che la loro violazione è causa di
+              risoluzione del contratto;
+
+      - titolo: Clausole specifiche
+        innesto: dispositivo
+        aiuto: Prescrizioni proprie delle caratteristiche scelte (moduli di regole).
+        capoversi: []
+
+      - titolo: Contratto collettivo
+        se: ccnl_richiesto
+        capoversi:
+          - id: d_ccnl
+            fonte: ANCI-1
+            testo: >-
+              di stabilire, ai sensi dell'art. 11, co. 2 del Codice dei contratti, che il
+              contratto collettivo di maggior tutela applicabile al personale dipendente
+              impiegato nell'attività oggetto dell'appalto è il seguente: {{ccnl}};
+          - id: d_ccnl_coincide
+            se: ccnl_coincide
+            fonte: ANCI-1
+            testo: di dare atto che il sopra citato contratto coincide con quello utilizzato dall'operatore economico;
+          - id: d_ccnl_equivalente
+            se: not ccnl_coincide
+            fonte: ANCI-1
+            testo: >-
+              di dare atto dell'equivalenza delle tutele assicurate dal diverso contratto
+              collettivo applicato dall'operatore economico a favore dei lavoratori impiegati
+              nell'appalto e precisamente del CCNL {{ccnl_operatore}};
+          - id: d_ccnl_congruita
+            fonte: ANCI-1
+            testo: >-
+              di dare atto della congruità del costo della manodopera e della sicurezza aziendale
+              indicato in sede di presentazione dell'offerta dall'operatore economico;
+
+      - titolo: Codici e incentivi
+        capoversi:
+          - id: d_cig_cup
+            se: cup
+            fonte: ANCI-1
+            testo: di dare atto che per l'affidamento oggetto del presente atto è stato acquisito il CIG {{cig}} e il CUP {{cup}};
+          - id: d_cig
+            se: not cup
+            fonte: ANCI-1
+            testo: di dare atto che per l'affidamento oggetto del presente atto è stato acquisito il CIG {{cig}};
+          - id: d_incentivi_rinvio
+            se: incentivi == "rinvio"
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art45"]
+            testo: di rinviare a un successivo provvedimento l'individuazione del gruppo di lavoro ai fini dell'incentivazione di cui all'art. 45 del D.Lgs. 36/2023;
+          - id: d_incentivi_impegno
+            se: incentivi == "impegno"
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art45"]
+            testo: >-
+              di impegnare l'importo di euro {{incentivi_importo}} al cap. {{incentivi_capitolo}}
+              del bilancio {{incentivi_bilancio}}, quale importo per gli incentivi tecnici di cui
+              all'art. 45 del D.Lgs. 36/2023;
+
+      - titolo: Pubblicità, trasparenza e ricorsi
+        capoversi:
+          - id: d_fascicolo
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2005-03-07;82~art41"]
+            testo: >-
+              di dare atto che gli atti e i documenti del procedimento sono conservati nel
+              fascicolo informatico {{fascicolo}}, ai sensi dell'art. 41 del D.Lgs. 82/2005;
+          - id: d_albo
+            fonte: ANCI-1
+            testo: >-
+              di disporre che il presente provvedimento venga pubblicato, ai fini della generale
+              conoscenza, all'Albo pretorio ai sensi dell'art. {{articolo_albo}} del Regolamento
+              per la disciplina dei contratti e di disporne anche la pubblicazione, ai fini della
+              pubblicità degli atti, ai sensi dell'art. 27 del D.Lgs. 36/2023;
+          - id: d_trasparenza
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art28"]
+            testo: >-
+              di disporre, ai sensi dell'art. 28 del D.Lgs. 36/2023, che tutti gli atti relativi
+              alla procedura in oggetto saranno pubblicati e aggiornati sul profilo del
+              committente, nella sezione "Amministrazione trasparente", all'indirizzo
+              {{url_trasparenza}}, con l'applicazione delle disposizioni di cui al D.Lgs.
+              33/2013;
+          - id: d_avviso_risultati
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"]
+            testo: >-
+              di disporre la pubblicazione dell'avviso sui risultati della presente procedura di
+              affidamento, in conformità a quanto stabilito dall'art. 50, co. 9 del D.Lgs.
+              36/2023;
+          - id: d_ricorso
+            fonte: ANCI-1
+            modificabile: false
+            aiuto: >-
+              Per gli atti delle procedure di affidamento il termine di ricorso al TAR è di 30
+              giorni (rito speciale, art. 120 del codice del processo amministrativo).
+            testo: >-
+              di dare atto, altresì, ai sensi dell'art. 3 della legge 241/1990 sul procedimento
+              amministrativo, che qualunque soggetto ritenga il presente atto amministrativo
+              illegittimo e venga dallo stesso direttamente leso, può proporre ricorso al
+              Tribunale amministrativo regionale (TAR), sezione di {{sezione_tar}}, entro e non
+              oltre 30 giorni da quello di pubblicazione all'albo online.
+
+  # =====================================================================================
+  - numero: 4
+    titolo: Luogo, data e sottoscrizione
+    descrizione: >-
+      Perfezionamento formale dell'atto. L'assenza di luogo o data è un'irregolarità; la
+      sottoscrizione è dell'autorità competente.
+    sezioni:
+      - titolo: Chiusura
+        capoversi:
+          - id: luogo_data
+            fonte: ANCI-1
+            testo: "{{luogo}}, {{data_adozione}}"
+          - id: firma
+            fonte: ANCI-1
+            modificabile: false
+            testo: |-
+              Il Dirigente
+              {{firmatario}}
+          - id: firma_digitale
+            fonte: aggiunto
+            facoltativo: true
+            testo: Documento firmato digitalmente ai sensi del D.Lgs. 7 marzo 2005, n. 82 e norme collegate.

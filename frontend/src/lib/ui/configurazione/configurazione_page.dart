@@ -16,6 +16,7 @@ class ConfigurazionePage extends StatefulWidget {
 
 class _ConfigurazionePageState extends State<ConfigurazionePage> {
   late Future<Map<String, dynamic>> _elenco;
+  bool _disattivati = false; // mostra anche gli oggetti disattivati
 
   @override
   void initState() {
@@ -68,7 +69,7 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
                 items: [
                   const DropdownMenuItem<String?>(value: null, child: Text('Vuoto')),
                   for (final e in esistenti)
-                    if (e['nuovo'] != true)
+                    if (e['nuovo'] != true && e['stato'] != 'DISATTIVATO')
                       DropdownMenuItem<String?>(value: e['codice'] as String, child: Text('Copia di: ${e['titolo']}')),
                 ],
                 onChanged: (v) => aggiorna(() => copiaDa = v),
@@ -109,7 +110,15 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
             backgroundColor: sfondo,
           ),
         );
+    final redazione = o['redazione'] as Map<String, dynamic>?;
     return Wrap(children: [
+      if (o['stato'] == 'DISATTIVATO') chip('disattivato', tema.colorScheme.errorContainer, Icons.block),
+      if (o['stato'] == 'IN_REDAZIONE')
+        chip(
+          redazione?['mia'] == true ? 'in redazione da te' : 'in redazione da ${redazione?['autore'] ?? 'altro utente'}',
+          Colors.amber.shade100,
+          redazione?['mia'] == true ? Icons.edit_note : Icons.lock_outline,
+        ),
       if (o['nuovo'] == true)
         chip('nuovo, mai pubblicato', tema.colorScheme.tertiaryContainer)
       else if (o['pacchetto'] == null)
@@ -118,13 +127,14 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
         chip('standard modificato', tema.colorScheme.secondaryContainer)
       else
         chip('standard', tema.colorScheme.surfaceContainerHighest),
-      if (o['bozza'] != null) chip('bozza in corso', Colors.amber.shade100, Icons.edit_note),
       if ((o['proposte'] ?? 0) > 0)
         chip('${o['proposte']} proposte', tema.colorScheme.tertiaryContainer, Icons.feedback_outlined),
     ]);
   }
 
-  Widget _elencoDi(String tipo, List<Map<String, dynamic>> voci, String vuoto, String Function(Map<String, dynamic>) sotto) {
+  Widget _elencoDi(String tipo, List<Map<String, dynamic>> tutte, String vuoto, String Function(Map<String, dynamic>) sotto) {
+    final voci = [for (final o in tutte) if (_disattivati || o['stato'] != 'DISATTIVATO') o];
+    final nascosti = tutte.length - voci.length;
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         heroTag: tipo,
@@ -137,11 +147,21 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
         }),
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 88), children: [
+        Row(children: [
+          Expanded(
+            child: Text(nascosti > 0 ? '$nascosti disattivati nascosti' : '', style: Theme.of(context).textTheme.bodySmall),
+          ),
+          const Text('Mostra disattivati'),
+          Switch(value: _disattivati, onChanged: (v) => setState(() => _disattivati = v)),
+        ]),
         if (voci.isEmpty) Text(vuoto),
         for (final o in voci)
           Card(
             child: ListTile(
-              title: Text('${o['titolo']}${o['versione'] != null ? ' (v${o['versione']})' : ''}'),
+              title: Text(
+                '${o['titolo']}${o['versione'] != null ? ' (v${o['versione']})' : ''}',
+                style: o['stato'] == 'DISATTIVATO' ? TextStyle(color: Theme.of(context).disabledColor) : null,
+              ),
               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text([o['codice'], sotto(o)].where((s) => s.toString().isNotEmpty).join(' · ')),
                 const SizedBox(height: 4),
@@ -164,10 +184,19 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
         final modelli = listaDi(e['modelli']);
         final moduli = listaDi(e['moduli']);
         final schede = listaDi(e['checklist']);
+        final vuoto = modelli.isEmpty && moduli.isEmpty && schede.isEmpty;
         final titoli = {for (final m in modelli) m['codice']: m['titolo'], for (final m in moduli) m['codice']: m['titolo']};
         return DefaultTabController(
           length: 3,
           child: Column(children: [
+            if (vuoto)
+              const MaterialBanner(
+                leading: Icon(Icons.info_outline),
+                content: Text('Nessun modello, specificità o checklist installato. Un amministratore '
+                    'carica il pacchetto standard in Amministrazione → Pacchetti; in alternativa si '
+                    'creano qui da zero con il pulsante "Nuovo".'),
+                actions: [SizedBox.shrink()],
+              ),
             TabBar(tabs: [
               Tab(icon: const Icon(Icons.article_outlined), text: 'Modelli di atto (${modelli.length})'),
               Tab(icon: const Icon(Icons.extension_outlined), text: 'Specificità (${moduli.length})'),

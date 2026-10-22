@@ -1,0 +1,88 @@
+# Code tra API, converter e verifica-worker (vedi common/coda.py).
+# Credenziali e cookie Erlang nel Secret rabbitmq-secret (vedi secret.example.yaml).
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/part-of: atti-pa
+spec:
+  serviceName: rabbitmq
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/part-of: atti-pa
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100   # utente rabbitmq dell'immagine alpine
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:4.0-management-alpine
+          ports:
+            - { name: amqp, containerPort: 5672 }
+            - { name: gestione, containerPort: 15672 }
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom: { secretKeyRef: { name: rabbitmq-secret, key: utente } }
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom: { secretKeyRef: { name: rabbitmq-secret, key: password } }
+            - name: RABBITMQ_COOKIE
+              valueFrom: { secretKeyRef: { name: rabbitmq-secret, key: cookie } }
+            # cookie Erlang esplicito: non dipende da file creati nel volume
+            - name: RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
+              value: "-setcookie $(RABBITMQ_COOKIE)"
+            - name: RABBITMQ_CTL_ERL_ARGS
+              value: "-setcookie $(RABBITMQ_COOKIE)"
+          readinessProbe:
+            tcpSocket: { port: amqp }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "status"]
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: dati, mountPath: /var/lib/rabbitmq }
+  volumeClaimTemplates:
+    - metadata:
+        name: dati
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: rook-ceph-block
+        resources:
+          requests:
+            storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/part-of: atti-pa
+spec:
+  selector:
+    app.kubernetes.io/name: rabbitmq
+  ports:
+    - { name: amqp, port: 5672, targetPort: amqp }
+    - { name: gestione, port: 15672, targetPort: gestione }

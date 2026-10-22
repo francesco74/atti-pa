@@ -40,10 +40,13 @@ radice del repository (`docker build -f <componente>/Dockerfile .`).
 | `frontend/`        | Deployment + Service         | App Flutter Web servita da nginx |
 | `common/`          | — (libreria)                 | Codice condiviso: modelli, code, archivio, client Normattiva, verifica, LLM, prompt |
 | —                  | StatefulSet                  | RabbitMQ: code tra API, converter e worker |
-| `deploy/`          | —                            | Manifest Kubernetes (kustomize), schema SQL, checklist, script di manutenzione |
+| —                  | StatefulSet                  | MySQL 8: database (schema in `deploy/k8s/sql/`, creato al primo avvio) |
+| `deploy/`          | —                            | Manifest Kubernetes (kustomize), schema SQL, script del pacchetto e di manutenzione |
+| `pacchetto/`       | —                            | Sorgenti del pacchetto standard: modelli di atto, specificità, checklist (da cui si crea lo zip) |
+| `manuale/`         | —                            | Manuali d'uso |
 
 ```
-               Ingress (atti.ente.local)
+     Ingress (attipa.provincia.lucca.it)
               /                        \
         /  frontend                /api  api ──── converter (HTTP: PDF delle bozze)
                                     │     │  \
@@ -68,7 +71,7 @@ non parte o si perde, il worker reinvia il lavoro dopo `WORKER_REINVIO_MINUTI`.
 
 ## Modelli di atto
 
-La redazione segue un **modello** per ogni tipo di atto (`deploy/modelli/*.yaml`): la
+La redazione segue un **modello** per ogni tipo di atto (`pacchetto/modelli/*.yaml`): la
 determina di affidamento diretto di servizi e forniture (costruita sugli schemi ANCI), quella
 di affidamento diretto di lavori, il conferimento di un incarico di patrocinio legale e la
 concessione di un contributo.
@@ -101,7 +104,7 @@ quando è scelto:
   definitiva), che l'utente applica con un clic.
 
 **Checklist su tre livelli.** A ogni elemento della redazione corrisponde la sua scheda di
-controllo (`deploy/checklist/*.json`):
+controllo (`pacchetto/checklist/*.json`):
 
 | Livello | Redazione | Checklist |
 |---|---|---|
@@ -131,13 +134,15 @@ modulo crea una nuova versione dei modelli che lo usano.
 
 **Il database comanda.** Modelli di atto, specificità e checklist si modificano nell'app:
 l'ente ne è padrone e resta autonomo anche senza sottoscrizione. I contenuti standard che
-forniamo arrivano come **pacchetto** (`deploy/pacchetto.yaml` con le cartelle `modelli/` e
-`checklist/`, oppure uno zip con la stessa struttura):
+forniamo arrivano come **pacchetto**, uno zip con il manifesto `pacchetto.yaml` e le cartelle
+`modelli/` e `checklist/`. I sorgenti del pacchetto standard sono nella cartella
+[`pacchetto/`](pacchetto/) del repository: non servono al sistema in funzione, servono a
+produrre lo zip (`python deploy/pacchetto.py crea` → `atti-pa-modelli-<versione>.zip`), che
+si consegna con l'installazione.
 
-- **primo avvio**: con il database vuoto l'API importa il pacchetto incluso
-  nell'installazione (`IMPORTA_PACCHETTO_INIZIALE`, cartella `PACCHETTO_DIR`); poi nessun
-  file sovrascrive più nulla;
-- **aggiornamenti**: in Amministrazione → Pacchetti si carica il nuovo pacchetto. L'app
+- **prima installazione**: il sistema parte vuoto; l'amministratore, in Amministrazione →
+  Pacchetti, carica lo zip standard: tutti gli oggetti risultano nuovi e si importano;
+- **aggiornamenti**: allo stesso modo si carica il nuovo pacchetto. L'app
   confronta, oggetto per oggetto, lo standard da cui deriva la versione dell'ente, la
   versione dell'ente e il nuovo standard, e propone cosa fare:
 
@@ -190,8 +195,8 @@ specificità e checklist si modificano senza scrivere YAML:
 Da riga di comando:
 
 ```bash
-python deploy/pacchetto.py prova                 # controlla il pacchetto in deploy/
-python deploy/pacchetto.py crea                  # crea lo zip da distribuire
+python deploy/pacchetto.py prova                 # controlla il pacchetto in pacchetto/
+python deploy/pacchetto.py crea                  # crea lo zip standard da consegnare
 python deploy/pacchetto.py analizza FILE.zip     # cosa cambierebbe nel database
 python deploy/pacchetto.py importa FILE.zip      # importa con le azioni proposte
 python deploy/pacchetto.py esporta FILE.zip      # esporta la configurazione dell'ente
@@ -204,7 +209,9 @@ docker compose up --build
 ```
 
 Apre l'applicazione su http://localhost:8080 in modalità uso personale (senza Active
-Directory). L'LLM predefinito è Ollama sul computer (`ollama serve`, modello
+Directory). Il sistema parte vuoto: per avere i modelli standard crea lo zip
+(`python deploy/pacchetto.py crea`) e caricalo in Amministrazione → Pacchetti, oppure
+importalo da riga di comando (`python deploy/pacchetto.py importa pacchetto/`). L'LLM predefinito è Ollama sul computer (`ollama serve`, modello
 `mistral-small`); per usare un altro provider:
 
 ```bash
@@ -290,26 +297,44 @@ con altri siti: le impostazioni di atti-pa sono solo annotazioni del suo Ingress
 (`deploy/k8s/ingress.yaml`) e `PROXY_HOPS=1` fa fidare l'API delle intestazioni
 `X-Forwarded-*` impostate dall'Ingress. Nell'app web lo stesso valore
 controlla i messaggi nella console del browser.
-La pipeline GitHub Actions esegue test (anche su MySQL 8), compila il frontend e costruisce
-tutte le immagini.
+La pipeline GitHub Actions (`.github/workflows/ci.yml`) esegue i test, applica lo schema su
+MySQL 8, crea lo zip del pacchetto standard (tra gli artefatti dell'esecuzione), compila il
+frontend e costruisce tutte le immagini senza pubblicarle.
 
 ## Installazione su Kubernetes
 
-1. Costruire e pubblicare le immagini nel registry dell'ente; aggiornare `images` in
-   `deploy/k8s/kustomization.yaml`.
-2. Creare il database MySQL 8 e lo schema:
+1. Costruire e pubblicare le immagini nel registry interno
+   (`registry.intranet.provincia.lucca/atti.pa`), da una macchina della rete interna dopo
+   `docker login`:
    ```bash
-   mysql -u root -p -e "CREATE DATABASE atti_pa CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-   mysql -u atti_pa -p atti_pa < deploy/sql/0001_schema_iniziale.sql
+   deploy/immagini.sh 0.1.0
    ```
+   e aggiornare `newTag` in `deploy/k8s/kustomization.yaml`. GitHub Actions costruisce le
+   immagini solo per controllo: non raggiunge il registry interno.
+2. Il database MySQL 8 gira nel namespace (`deploy/k8s/mysql.yaml`, volume
+   `rook-ceph-block`): al primo avvio crea da solo database, utente e schema
+   (`deploy/k8s/sql/`).
 3. Creare i segreti (vedi `deploy/k8s/secret.example.yaml`): `atti-pa-secret`,
-   la ConfigMap `ldap-ca` con il certificato della CA di Active Directory e il Secret TLS `atti-pa-tls`.
+   `mysql-secret`, `rabbitmq-secret`, `atti-pa-registry` (credenziali per scaricare le immagini dal registry
+   interno), la ConfigMap `ldap-ca` con il certificato della CA di Active Directory e il
+   Secret TLS `attipa-tls-secret`. I file con i valori reali non vanno versionati (`.gitignore`
+   esclude `deploy/k8s/secret.yaml` e `deploy/k8s/*-secret.yaml`).
 4. Adattare `deploy/k8s/configmap.yaml` (LDAP, gruppi AD, indirizzo dell'LLM, livello dei log)
    e l'host dell'Ingress.
 5. `kubectl apply -k deploy/k8s`
+6. Accedere come amministratore e, in Amministrazione → Pacchetti, caricare il pacchetto
+   standard `atti-pa-modelli-<versione>.zip` (creato con `python deploy/pacchetto.py crea`).
 
-Le modifiche successive allo schema si distribuiscono come nuovi file in `deploy/sql/`
-(`0002_...sql`), da eseguire in ordine sul database prima di aggiornare le immagini.
+Le modifiche successive allo schema si distribuiscono come nuovi file in `deploy/k8s/sql/`
+(`0002_...sql`), da eseguire in ordine sul database prima di aggiornare le immagini:
+
+```bash
+kubectl -n atti-pa exec -i mysql-0 -- sh -c 'mysql -uatti_pa -p"$MYSQL_PASSWORD" atti_pa' \
+  < deploy/k8s/sql/0002_....sql
+```
+
+e da aggiungere a `configMapGenerator` in `deploy/k8s/kustomization.yaml`, così le nuove
+installazioni li eseguono al primo avvio.
 
 ## Fonte dei dati normativi
 
@@ -339,4 +364,4 @@ questo cerca anche le citazioni scritte in altre forme (una chiamata per verific
 ci sono norme inserite manualmente; `LLM_RICONOSCIMENTO_NORME_MANUALI=false` la disattiva).
 Una citazione proposta dal modello è accettata solo se il testo si trova davvero nell'atto
 ed è segnalata come da verificare. Inserire e modificare le norme è riservato a
-controllori e amministratori. Schema del database: `deploy/sql/0007_norme_manuali.sql`.
+controllori e amministratori. Tabelle: `norme_atti` (fonte `MANUALE`) e `norme_testi_caricati` in `deploy/k8s/sql/0001_schema.sql`.

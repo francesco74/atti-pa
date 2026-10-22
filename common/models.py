@@ -1,4 +1,4 @@
-"""Modelli ORM condivisi. Devono restare allineati allo schema in deploy/sql/."""
+"""Modelli ORM condivisi. Devono restare allineati allo schema in deploy/k8s/sql/."""
 
 from __future__ import annotations
 

@@ -1,0 +1,103 @@
+{
+  "codice": "SCHEDA_AFFIDAMENTO_DIRETTO_SF",
+  "titolo": "Scheda di controllo della determina di affidamento diretto di servizi e forniture",
+  "tipologia_atto": "DETERMINA",
+  "descrizione": "Scheda del modello di atto: si applica alle determine di affidamento diretto di servizi e forniture, insieme alla scheda generica delle determinazioni e a quelle delle specificità (es. servizi cloud). Ricavata dalla scheda di controllo dei contratti pubblici (appalti e concessioni in forma di scrittura privata o lettera commerciale): per ogni punto si verifica che la determina contenga gli elementi richiesti per il contratto; aggiunti RUP e responsabili di fase, cronoprogramma ed esigibilità della spesa. Il contratto firmato e la pubblicazione sulla Banca Dati Nazionale dei Contratti Pubblici restano da verificare al controllore.",
+  "elementi": [
+    {
+      "titolo": "1. Natura e forma del contratto",
+      "regola": "Verifica che la determina individui il tipo di contratto e la forma con cui sarà stipulato.\nÈ CONFORME se l'atto indica: (a) se si tratta di lavori, servizi o forniture (o di una concessione); (b) la forma di stipula: scrittura privata, anche in modalità elettronica, oppure corrispondenza secondo l'uso commerciale (lettera commerciale), consentita per gli affidamenti diretti; (c) gli elementi essenziali del contratto (oggetto, corrispettivo, contraente).\nÈ NON_CONFORME se la forma di stipula indicata non è ammessa per la procedura seguita (ad esempio lettera commerciale per una procedura che non sia un affidamento diretto) o se non è possibile capire se si tratta di lavori, servizi o forniture.\nÈ DUBBIO se la forma di stipula non è indicata.\nNella motivazione riporta tipo di contratto e forma di stipula individuati.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art18",
+        "urn:nir:stato:regio.decreto:1942-03-16;262~art1325",
+        "urn:nir:stato:regio.decreto:1942-03-16;262~art1655"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Riferimenti alla determina a contrarre e alla normativa",
+      "regola": "Verifica che l'atto contenga i contenuti della determina a contrarre e richiami la normativa applicabile.\nÈ CONFORME se l'atto: (a) dichiara la volontà di contrarre e indica il fine da perseguire, l'oggetto, la forma, le clausole essenziali e le modalità di scelta del contraente; (b) per l'affidamento diretto, individua in un unico atto oggetto, importo e contraente, con le ragioni della scelta e il possesso dei requisiti di carattere generale e, se richiesti, di quelli economico-finanziari e tecnico-professionali; (c) richiama il Codice dei contratti pubblici (D.Lgs. 36/2023) e le norme specifiche della procedura.\nÈ NON_CONFORME se manca l'indicazione dell'oggetto, dell'importo o del contraente, oppure se manca qualsiasi riferimento normativo alla procedura seguita.\nÈ DUBBIO se gli elementi ci sono ma sono generici (ad esempio ragioni della scelta solo formali).\nNella motivazione elenca gli elementi mancanti o carenti.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art17",
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art192"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Criterio di selezione dell'operatore economico",
+      "regola": "Verifica come è stato scelto l'operatore economico.\nÈ CONFORME se: (a) per una procedura di gara (aperta, ristretta o negoziata) l'atto riporta gli estremi della procedura o della gara (bando, lettera di invito, verbali, CIG) e il criterio di aggiudicazione; oppure (b) per un affidamento diretto, anche senza confronto tra più preventivi, l'atto motiva la scelta indicando che l'operatore possiede documentate esperienze pregresse idonee all'esecuzione delle prestazioni contrattuali (ad esempio contratti analoghi già eseguiti, curriculum, iscrizione a elenchi o albi della stazione appaltante).\nÈ NON_CONFORME se non è indicato né il riferimento a una procedura di gara né, per l'affidamento diretto, alcuna motivazione della scelta dell'operatore.\nÈ DUBBIO se la scelta è motivata solo con formule generiche (ad esempio \"ditta di fiducia\", \"affidabilità\") senza riferimento a esperienze documentate.\nNell'evidenza riporta il passaggio con la motivazione della scelta.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Procedura coerente con l'importo e principio di rotazione",
+      "regola": "Verifica che la procedura scelta sia ammessa per l'importo stimato dell'affidamento, calcolato al netto dell'IVA.\nSoglie dell'art. 50, comma 1, del D.Lgs. 36/2023:\n- lavori di importo inferiore a 150.000 euro: affidamento diretto;\n- servizi e forniture (compresi i servizi di ingegneria e architettura) di importo inferiore a 140.000 euro: affidamento diretto;\n- lavori da 150.000 euro a meno di 1.000.000 di euro: procedura negoziata senza bando, previa consultazione di almeno 5 operatori economici;\n- lavori da 1.000.000 di euro fino alla soglia europea: procedura negoziata senza bando con almeno 10 operatori economici, oppure procedura ordinaria;\n- servizi e forniture da 140.000 euro fino alla soglia europea: procedura negoziata senza bando, previa consultazione di almeno 5 operatori economici.\nOltre le soglie di rilevanza europea (art. 14, aggiornate periodicamente dai regolamenti dell'Unione europea, da ultimo il Regolamento delegato (UE) 2023/2495 del 15/11/2023) si applicano le procedure ordinarie.\nPrincipio di rotazione: non si può affidare al contraente uscente un contratto con lo stesso oggetto o nello stesso settore merceologico, salvo motivazione specifica; per gli affidamenti diretti di importo inferiore a 5.000 euro si può derogare alla rotazione.\nÈ CONFORME se l'importo è indicato e la procedura è ammessa per quell'importo e per il tipo di prestazione, e il principio di rotazione è rispettato o la deroga è motivata o consentita.\nÈ NON_CONFORME se la procedura non è ammessa per l'importo (ad esempio affidamento diretto di servizi per 180.000 euro) o se l'affidamento al contraente uscente non è motivato.\nÈ DUBBIO se l'importo non è indicato, se non è chiaro se è al netto dell'IVA, se è molto vicino a una soglia, o se l'atto non dice nulla sulla rotazione.\nNella motivazione riporta importo, tipo di prestazione e procedura individuati.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art50",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art49",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art14"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5. Tempi di pagamento delle fatture",
+      "regola": "Verifica che la determina indichi i tempi di pagamento delle fatture.\nIl termine ordinario per le pubbliche amministrazioni è di 30 giorni dal ricevimento della fattura; può arrivare a 60 giorni solo se pattuito espressamente e giustificato dalla natura o dall'oggetto del contratto.\nÈ CONFORME se l'atto indica un termine di pagamento non superiore a 30 giorni, oppure un termine fino a 60 giorni con la relativa giustificazione, oppure rinvia espressamente a un atto richiamato (capitolato, lettera d'ordine, condizioni del mercato elettronico) che li stabilisce.\nÈ NON_CONFORME se il termine supera i 60 giorni, o supera i 30 giorni senza alcuna giustificazione.\nÈ DUBBIO se i tempi di pagamento non sono indicati né richiamati.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2002-10-09;231~art4"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "6. Termini di conclusione della prestazione o dei lavori",
+      "regola": "Verifica che l'atto indichi la durata del contratto o il termine entro cui la prestazione deve essere eseguita o i lavori conclusi.\nÈ CONFORME se è indicata una durata, una data di conclusione o un termine di consegna (anche per rinvio espresso al capitolato, al preventivo o all'offerta richiamati).\nÈ NON_CONFORME se si tratta di un contratto di durata o di lavori e non è indicato alcun termine né richiamato alcun documento che lo stabilisca.\nÈ DUBBIO se il termine è indicato in modo indeterminato (ad esempio \"nei tempi tecnici necessari\").\nNella motivazione riporta il termine individuato.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "7. Fondi soggetti a rendicontazione",
+      "regola": "Verifica che l'atto specifichi la fonte di finanziamento e se si tratta di fondi soggetti a rendicontazione (ad esempio PNRR, PNC, fondi europei, contributi statali o regionali vincolati).\nÈ CONFORME se l'atto indica la fonte di finanziamento (capitolo di bilancio, contributo, misura PNRR...) e, per i fondi soggetti a rendicontazione, lo dichiara e riporta gli elementi richiesti (in particolare il CUP e, per il PNRR, la misura o l'investimento di riferimento e gli obblighi connessi).\nÈ NON_CONFORME se l'atto riguarda fondi soggetti a rendicontazione (PNRR, fondi europei o vincolati) ma mancano il CUP o il riferimento alla misura di finanziamento.\nÈ DUBBIO se l'atto non permette di capire se i fondi sono soggetti a rendicontazione.\nNella motivazione riporta la fonte di finanziamento individuata.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "8. Normativa sulla protezione dei dati personali",
+      "regola": "Verifica che l'atto richiami la normativa sulla protezione dei dati personali applicabile al rapporto contrattuale.\nÈ CONFORME se l'atto richiama il Regolamento (UE) 2016/679 (GDPR) e/o il D.Lgs. 196/2003 (Codice in materia di protezione dei dati personali), ad esempio con riferimento all'informativa all'operatore economico e, se l'appaltatore tratterà dati personali per conto dell'ente, alla sua nomina a responsabile del trattamento (art. 28 GDPR).\nÈ NON_CONFORME se il contratto comporta evidentemente il trattamento di dati personali per conto dell'ente (ad esempio servizi informatici, gestione di servizi alla persona) e l'atto non prevede la nomina a responsabile del trattamento né richiama la normativa.\nÈ DUBBIO se la normativa non è richiamata e non è chiaro se l'appaltatore tratterà dati personali.\nNon valutare qui la presenza di dati personali nel testo: se ne occupa il rilevamento dei dati personali.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "9. Richiamo al codice di comportamento dei dipendenti",
+      "regola": "Verifica che l'atto richiami il codice di comportamento dei dipendenti pubblici (D.P.R. 62/2013) e/o il codice di comportamento dell'ente, i cui obblighi si estendono, per quanto compatibili, ai collaboratori a qualsiasi titolo delle imprese fornitrici di beni o servizi e che realizzano opere per l'amministrazione.\nÈ CONFORME se l'atto richiama il codice di comportamento e ne prevede l'estensione all'appaltatore e ai suoi collaboratori (di norma con la clausola di risoluzione del contratto in caso di violazione), oppure rinvia a un capitolato o a condizioni contrattuali che lo prevedono.\nÈ NON_CONFORME se il codice di comportamento non è richiamato in alcun modo.\nÈ DUBBIO se è richiamato ma senza estenderne gli obblighi all'appaltatore.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.del.presidente.della.repubblica:2013-04-16;62~art2"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "10. Piattaforma di e-procurement e pubblicità sulla Banca Dati Nazionale dei Contratti Pubblici",
+      "regola": "Verifica che l'affidamento sia gestito su una piattaforma di approvvigionamento digitale certificata, ai fini della pubblicità e della trasparenza tramite la Banca Dati Nazionale dei Contratti Pubblici (BDNCP) dell'ANAC e la Piattaforma per la pubblicità legale (PCP).\nÈ CONFORME se l'atto indica la piattaforma utilizzata (ad esempio START della Regione Toscana, MePA o Acquisti in rete di Consip, o altra piattaforma certificata) e il CIG acquisito.\nÈ NON_CONFORME se l'atto dichiara che la procedura si è svolta fuori da una piattaforma digitale certificata senza indicare una delle eccezioni previste, oppure se manca il CIG.\nÈ DUBBIO se il CIG è indicato ma la piattaforma non è nominata.\nNella motivazione riporta piattaforma e CIG individuati. La pubblicazione sulla BDNCP resta da verificare al controllore.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art25",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art28"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "11. RUP ed eventuali responsabili di fase",
+      "regola": "Verifica l'indicazione del Responsabile Unico del Progetto.\nÈ CONFORME se l'atto indica il RUP nominativamente (o richiama l'atto di nomina) e, se sono stati individuati, i responsabili di fase per programmazione, progettazione, affidamento o esecuzione.\nÈ NON_CONFORME se il RUP non è indicato.\nÈ DUBBIO se il RUP è indicato solo come ruolo senza nominativo.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art15"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "12. Cronoprogramma ed esigibilità della spesa; banche dati",
+      "regola": "Per lavori, servizi e forniture in fase di esecuzione, verifica che l'atto dia conto della tempistica e degli adempimenti verso le banche dati.\nÈ CONFORME se l'atto indica il cronoprogramma o l'esigibilità della spesa per esercizio e richiama gli adempimenti informativi pertinenti (CIG, comunicazioni a SITAT/Osservatorio regionale, Banca dati nazionale dei contratti pubblici).\nÈ DUBBIO se è indicato il CIG ma mancano cronoprogramma o esigibilità.",
+      "riferimenti": [],
+      "obbligatorio": false
+    }
+  ],
+  "modello": "DD_AFFIDAMENTO_DIRETTO_SF"
+}

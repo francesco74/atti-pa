@@ -9,7 +9,6 @@ from __future__ import annotations
 import atexit
 import logging
 import time
-from pathlib import Path
 from http import HTTPStatus
 
 from routers import auth, bozze, checklists, controllo, modelli, norme, norme_manuali
@@ -29,7 +28,6 @@ from web import AttiFlask, ErroreApi
 from common.config import Settings, get_settings
 from common.db import crea_engine, crea_sessionmaker
 from common.coda import Coda
-from common.pacchetti import importa_pacchetto_iniziale
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
 from common.normattiva import NormattivaClient
@@ -87,21 +85,6 @@ def create_app(
         # connessione a RabbitMQ al primo invio: l'API parte anche se il broker non risponde
         coda=Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso),
     )
-
-    if settings.importa_pacchetto_iniziale:
-        # il database comanda: il pacchetto standard si importa solo se il database è vuoto
-        try:
-            resoconto = app.ciclo.esegui(
-                importa_pacchetto_iniziale(motore, Path(settings.pacchetto_dir))
-            )
-            if resoconto is None:
-                log.info("Modelli e checklist: comanda il database (pacchetto non importato)")
-            else:
-                log.info("Pacchetto iniziale importato: %s", resoconto)
-                for avviso in resoconto.avvisi:
-                    log.warning("Modelli e checklist non coerenti: %s", avviso)
-        except Exception:
-            log.exception("Importazione del pacchetto iniziale non riuscita")
 
     async def chiudi_risorse() -> None:
         stato = app.state

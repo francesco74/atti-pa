@@ -34,6 +34,7 @@ const _tipi = {'modello': 'Modello', 'modulo': 'Specificità', 'checklist': 'Che
 
 class _PacchettiPageState extends State<PacchettiPage> {
   late Future<List<dynamic>> _pacchetti;
+  bool _vuoto = false; // nessun modello, specificità o checklist: sistema appena installato
   Map<String, dynamic>? _analisi; // pacchetto caricato e analizzato, in attesa di decisione
   final Map<String, String> _decisioni = {};
   bool _mostraInvariati = false;
@@ -45,9 +46,17 @@ class _PacchettiPageState extends State<PacchettiPage> {
     _carica();
   }
 
-  void _carica() => setState(() {
-        _pacchetti = apiDi(context).get('/api/v1/pacchetti').then((v) => v as List);
-      });
+  void _carica() {
+    final api = apiDi(context);
+    setState(() {
+      _pacchetti = api.get('/api/v1/pacchetti').then((v) => v as List);
+    });
+    api.get('/api/v1/configurazione').then((v) {
+      final e = v as Map<String, dynamic>;
+      final vuoto = ['modelli', 'moduli', 'checklist'].every((k) => (e[k] as List).isEmpty);
+      if (mounted) setState(() => _vuoto = vuoto);
+    }).catchError((_) {});
+  }
 
   Future<void> _caricaPacchetto() async {
     final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: ['zip']);
@@ -214,6 +223,19 @@ class _PacchettiPageState extends State<PacchettiPage> {
         'dall\'ente non vengono mai sostituite senza una scelta esplicita.',
         style: tema.textTheme.bodyMedium,
       ),
+      if (_vuoto && _analisi == null) ...[
+        const SizedBox(height: 12),
+        Card(
+          color: tema.colorScheme.primaryContainer,
+          child: const ListTile(
+            leading: Icon(Icons.rocket_launch_outlined),
+            title: Text('Nessun modello installato'),
+            subtitle: Text('Per cominciare carica il pacchetto standard fornito con l\'installazione '
+                '(atti-pa-modelli-<versione>.zip): tutti gli oggetti risultano nuovi e si importano '
+                'con "Importa". Dopo potrai modificarli in "Modelli e checklist".'),
+          ),
+        ),
+      ],
       const SizedBox(height: 12),
       Wrap(spacing: 8, runSpacing: 8, children: [
         FilledButton.icon(

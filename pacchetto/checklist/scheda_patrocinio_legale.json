@@ -1,0 +1,60 @@
+{
+  "codice": "SCHEDA_INCARICO_PATROCINIO_LEGALE",
+  "titolo": "Scheda di controllo della determina di conferimento di incarico di patrocinio legale",
+  "tipologia_atto": "DETERMINA",
+  "modello": "DD_INCARICO_PATROCINIO_LEGALE",
+  "descrizione": "Scheda del modello di atto: si applica alle determine di conferimento di incarichi di patrocinio legale (servizi legali esclusi, art. 56, comma 1, lett. h), D.Lgs. 36/2023), insieme alla scheda generica delle determinazioni.",
+  "elementi": [
+    {
+      "titolo": "1. Autorizzazione a stare in giudizio",
+      "regola": "Verifica che l'atto richiami l'atto con cui l'organo competente secondo lo statuto (di norma la Giunta o il Sindaco) ha autorizzato l'ente a promuovere o resistere nel giudizio.\nÈ CONFORME se l'atto di autorizzazione è richiamato con i suoi estremi.\nÈ NON_CONFORME se manca.\nÈ DUBBIO se è richiamato in modo generico.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Inquadramento dell'incarico e principi",
+      "regola": "Verifica che l'atto inquadri l'incarico tra i servizi legali esclusi dal Codice dei contratti (art. 56, comma 1, lett. h), D.Lgs. 36/2023) e dia conto del rispetto dei principi degli artt. 1, 2 e 3 (art. 13, comma 5): risultato, fiducia, accesso al mercato.\nÈ CONFORME se l'inquadramento e i principi sono richiamati.\nÈ DUBBIO se l'incarico è trattato come affidamento diretto ordinario o l'inquadramento manca.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art56",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art13"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Motivazione della scelta dell'avvocato",
+      "regola": "Verifica che la scelta dell'avvocato sia motivata in modo trasparente: individuazione da un elenco dell'ente nel rispetto della rotazione, confronto di preventivi, oppure specifica competenza nella materia documentata dal curriculum.\nÈ CONFORME se la modalità di scelta e le ragioni sono indicate.\nÈ NON_CONFORME se la scelta non è motivata.\nÈ DUBBIO se la motivazione è generica.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Compenso, parametri forensi ed equo compenso",
+      "regola": "Verifica che il compenso sia indicato e giustificato rispetto ai parametri forensi (D.M. 55/2014, aggiornato dal D.M. 147/2022), in relazione al valore e alle fasi del giudizio, e rispetti la disciplina dell'equo compenso (L. 49/2023).\nÈ CONFORME se compenso e confronto con i parametri sono indicati.\nÈ NON_CONFORME se il compenso non è indicato.\nÈ DUBBIO se manca il confronto con i parametri.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5. Dichiarazioni dell'avvocato e polizza",
+      "regola": "Verifica che l'atto dia conto delle dichiarazioni dell'avvocato sull'assenza di conflitti di interessi e incompatibilità e della polizza professionale obbligatoria (art. 12 L. 247/2012).\nÈ CONFORME se entrambe sono indicate.\nÈ DUBBIO se ne manca una.\nÈ NON_CONFORME se mancano entrambe.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "6. Disciplinare d'incarico",
+      "regola": "Verifica che l'atto approvi o richiami il disciplinare d'incarico che regola prestazioni, compenso, pagamenti e obblighi di informazione.\nÈ CONFORME se il disciplinare è approvato o richiamato.\nÈ DUBBIO se manca.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "7. CIG e tracciabilità",
+      "regola": "Verifica che l'atto indichi il CIG e richiami gli obblighi di tracciabilità dei flussi finanziari (L. 136/2010), applicabili anche ai servizi legali esclusi in quanto contratti pubblici.\nÈ CONFORME se CIG e tracciabilità sono indicati.\nÈ NON_CONFORME se manca il CIG.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "8. Dati personali della controparte",
+      "regola": "Verifica che l'atto non riporti dati personali non necessari della controparte persona fisica (nome, indirizzo, dati sulla salute o giudiziari), essendo destinato alla pubblicazione.\nÈ CONFORME se il giudizio è individuato senza dati personali non necessari.\nÈ NON_CONFORME se compaiono dati relativi alla salute o giudiziari della controparte.\nÈ DUBBIO se compare il nome della controparte persona fisica.",
+      "riferimenti": [],
+      "obbligatorio": true
+    }
+  ]
+}

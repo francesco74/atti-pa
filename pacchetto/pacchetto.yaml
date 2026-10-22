@@ -1,0 +1,26 @@
+# Pacchetto standard di modelli di atto, specificità e checklist.
+#
+# Il pacchetto è questa cartella (pacchetto/): il manifesto, modelli/*.yaml (modelli di atto),
+# modelli/regole/*.yaml (specificità) e checklist/*.json. Si distribuisce come zip con la
+# stessa struttura, creato con:
+#     python deploy/pacchetto.py crea
+#
+# Il sistema parte vuoto: l'amministratore carica lo zip in Amministrazione → Pacchetti
+# (oppure python deploy/pacchetto.py importa FILE.zip). Poi comanda il database: l'ente
+# modifica modelli e checklist nell'app e importa i pacchetti successivi allo stesso modo,
+# scegliendo cosa aggiornare.
+#
+# A ogni rilascio che cambia i contenuti si aumenta la versione.
+
+nome: Modelli standard Atti PA
+versione: "2026.1"
+descrizione: >-
+  Determine di affidamento diretto di servizi e forniture e di lavori, incarico di
+  patrocinio legale, concessione di contributi; specificità cloud ICT, CAM, alta intensità
+  di manodopera, utenze, servizi di ingegneria e architettura, servizi sociali, immobile
+  vincolato; scheda di controllo generica delle determinazioni e schede di ogni modello e
+  specificità.
+
+# tipologie di atto usate dai contenuti: create se mancano, mai cancellate
+tipologie:
+  - {codice: DETERMINA, descrizione: Determinazione dirigenziale, ordine: 10}

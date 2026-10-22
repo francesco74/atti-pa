@@ -16,6 +16,9 @@ spec:
         app.kubernetes.io/name: frontend
         app.kubernetes.io/part-of: atti-pa
     spec:
+      # credenziali del registry interno (Secret atti-pa-registry, vedi secret.example.yaml)
+      imagePullSecrets:
+        - name: atti-pa-registry
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -24,6 +27,7 @@ spec:
       containers:
         - name: frontend
           image: atti-pa/frontend:0.1.0
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080

@@ -1,0 +1,117 @@
+{
+  "codice": "SCHEDA_AFFIDAMENTO_DIRETTO_LAVORI",
+  "titolo": "Scheda di controllo della determina di affidamento diretto di lavori",
+  "tipologia_atto": "DETERMINA",
+  "modello": "DD_AFFIDAMENTO_DIRETTO_LAVORI",
+  "descrizione": "Scheda del modello di atto: si applica alle determine di affidamento diretto di lavori sotto i 150.000 euro, insieme alla scheda generica delle determinazioni e a quelle delle specificità (es. immobile vincolato, CAM). Riprende gli elementi della scheda dei contratti pubblici e aggiunge quelli propri dei lavori: progetto e quadro economico, requisiti dell'esecutore, sicurezza del cantiere, direzione dei lavori, polizze, penali.",
+  "elementi": [
+    {
+      "titolo": "1. Procedura coerente con l'importo e principio di rotazione",
+      "regola": "Verifica che i lavori siano di importo inferiore a 150.000 euro, al netto dell'IVA, come richiesto per l'affidamento diretto (art. 50, comma 1, lett. a), D.Lgs. 36/2023), e che l'atto dia conto del rispetto del principio di rotazione o motivi la deroga (art. 49), salvo gli affidamenti sotto i 5.000 euro.\nÈ CONFORME se l'importo è inferiore alla soglia e la rotazione è rispettata o motivatamente derogata.\nÈ NON_CONFORME se l'importo raggiunge la soglia o se la deroga alla rotazione non è motivata.\nÈ DUBBIO se l'importo non è chiaro.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art50",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art49"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Scelta dell'impresa ed esperienze pregresse",
+      "regola": "Verifica che l'atto motivi la scelta dell'impresa con documentate esperienze pregresse idonee all'esecuzione dei lavori (art. 50, comma 1, lett. a)) e ne attesti la congruità dell'offerta.\nÈ CONFORME se esperienze e congruità sono indicate.\nÈ NON_CONFORME se la scelta non è motivata.\nÈ DUBBIO se la motivazione è generica.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Progetto e quadro economico",
+      "regola": "Verifica che l'atto richiami il progetto dei lavori, la sua verifica (art. 42 D.Lgs. 36/2023) e l'atto di approvazione, e riporti il quadro economico con l'importo dei lavori, i costi della manodopera, gli oneri per la sicurezza e le somme a disposizione.\nÈ CONFORME se progetto approvato e quadro economico sono indicati.\nÈ NON_CONFORME se manca qualsiasi riferimento al progetto.\nÈ DUBBIO se il progetto è richiamato ma il quadro economico è incompleto.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art42"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Requisiti di qualificazione dell'impresa",
+      "regola": "Verifica che l'atto dia conto dei requisiti dell'impresa: l'attestazione SOA adeguata alla categoria prevalente, se posseduta, oppure i requisiti di ordine tecnico-organizzativo dell'art. 28, comma 1, dell'allegato II.12 al D.Lgs. 36/2023, previsti per i lavori di importo pari o inferiore a 150.000 euro, oltre ai requisiti generali degli artt. 94 e 95. Per i requisiti generali: sotto i 40.000 euro basta la dichiarazione sostitutiva dell'impresa, con verifica anche a campione (art. 52, comma 1); da 40.000 euro l'atto deve dare atto dell'esito positivo dei controlli.\nÈ CONFORME se la qualificazione e la categoria prevalente sono indicate e, per i requisiti generali, l'atto richiama la dichiarazione sostitutiva (sotto i 40.000 euro) o l'esito dei controlli (da 40.000 euro).\nÈ NON_CONFORME se l'atto non dice nulla sui requisiti dell'impresa, oppure se per un affidamento da 40.000 euro in su si limita alla dichiarazione dell'impresa senza dare atto dei controlli.\nÈ DUBBIO se è indicata la categoria ma non come è dimostrata la qualificazione.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art100",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art52"
+      ],
+      "obbligatorio": true,
+      "capoversi": [
+        "requisiti_soa",
+        "requisiti_sotto_soglia",
+        "requisiti_autocertificati",
+        "requisiti_controllati"
+      ]
+    },
+    {
+      "titolo": "5. Costi della manodopera e oneri della sicurezza",
+      "regola": "Verifica che l'atto indichi i costi della manodopera e gli oneri per la sicurezza e dia conto che non sono soggetti a ribasso (art. 41, comma 14, D.Lgs. 36/2023), e indichi il contratto collettivo applicabile (art. 11).\nÈ CONFORME se costi della manodopera, oneri della sicurezza e contratto collettivo sono indicati.\nÈ NON_CONFORME se mancano gli oneri della sicurezza o il contratto collettivo.\nÈ DUBBIO se manca uno solo degli elementi.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art11"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "6. Sicurezza del cantiere",
+      "regola": "Verifica che l'atto dia conto della sicurezza del cantiere: se è prevista la presenza di più imprese esecutrici, la designazione del coordinatore per la progettazione e del coordinatore per l'esecuzione e il piano di sicurezza e coordinamento (artt. 90 e 100 D.Lgs. 81/2008); altrimenti il piano operativo di sicurezza dell'impresa.\nÈ CONFORME se gli adempimenti pertinenti sono indicati.\nÈ NON_CONFORME se l'atto non dice nulla sulla sicurezza del cantiere.\nÈ DUBBIO se non è chiaro se nel cantiere operino più imprese.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2008-04-09;81~art90"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "7. Direzione dei lavori",
+      "regola": "Verifica che l'atto indichi il direttore dei lavori, nominato prima dell'affidamento (art. 114, comma 2, D.Lgs. 36/2023), e, se svolge anche le funzioni di coordinatore per l'esecuzione, che ne ricorrano le condizioni (art. 114, comma 4).\nÈ CONFORME se il direttore dei lavori è indicato.\nÈ NON_CONFORME se il direttore dei lavori non è indicato.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art114"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "8. Garanzia definitiva e polizza per danni e responsabilità civile",
+      "regola": "Verifica che l'atto richieda la garanzia definitiva (5 per cento, artt. 53 e 117) o motivi perché non la richiede, e preveda la polizza dell'esecutore per i danni alle opere e la responsabilità civile verso terzi, da consegnare almeno dieci giorni prima della consegna dei lavori (art. 117, comma 10).\nÈ CONFORME se garanzia (o motivazione) e polizza sono previste.\nÈ NON_CONFORME se manca la polizza.\nÈ DUBBIO se la garanzia non è richiesta senza motivazione specifica.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art53",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art117"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "9. Termine di esecuzione e penali",
+      "regola": "Verifica che l'atto indichi il tempo utile per l'ultimazione dei lavori e le penali per il ritardo, comprese tra lo 0,3 e l'1 per mille dell'importo netto contrattuale per giorno e nel limite complessivo del 10 per cento (art. 126 D.Lgs. 36/2023).\nÈ CONFORME se termine e penali sono indicati entro i limiti.\nÈ NON_CONFORME se le penali superano i limiti di legge.\nÈ DUBBIO se manca il termine o le penali.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art126"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "10. Pagamenti",
+      "regola": "Verifica che l'atto indichi i tempi di pagamento (30 giorni dal ricevimento della fattura, fino a 60 solo se giustificato, art. 4 D.Lgs. 231/2002) e le modalità (stati di avanzamento, certificato di regolare esecuzione).\nÈ CONFORME se tempi e modalità sono indicati.\nÈ NON_CONFORME se il termine supera i 60 giorni o i 30 senza giustificazione.\nÈ DUBBIO se i tempi non sono indicati.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2002-10-09;231~art4"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "11. CIG, CUP, piattaforma e tracciabilità",
+      "regola": "Verifica che l'atto indichi il CIG, il CUP quando si tratta di un investimento pubblico (di norma manutenzioni straordinarie e nuove opere), la piattaforma di approvvigionamento digitale utilizzata (o il motivo per cui il CIG è acquisito dall'interfaccia web della PCP sotto i 5.000 euro) e gli obblighi di tracciabilità dei flussi finanziari.\nÈ CONFORME se gli elementi pertinenti sono indicati.\nÈ NON_CONFORME se manca il CIG.\nÈ DUBBIO se manca il CUP per un investimento o la piattaforma non è nominata.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art25",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art28"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "12. RUP e responsabili di fase",
+      "regola": "Verifica l'indicazione del Responsabile unico del progetto (art. 15 D.Lgs. 36/2023) e degli eventuali responsabili di fase.\nÈ CONFORME se il RUP è indicato nominativamente.\nÈ NON_CONFORME se il RUP non è indicato.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art15"
+      ],
+      "obbligatorio": true
+    }
+  ]
+}

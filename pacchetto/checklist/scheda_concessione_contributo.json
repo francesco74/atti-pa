@@ -1,0 +1,57 @@
+{
+  "codice": "SCHEDA_CONCESSIONE_CONTRIBUTO",
+  "titolo": "Scheda di controllo della determina di concessione di contributi",
+  "tipologia_atto": "DETERMINA",
+  "modello": "DD_CONCESSIONE_CONTRIBUTO",
+  "descrizione": "Scheda del modello di atto: si applica alle determine di concessione di contributi, sovvenzioni e vantaggi economici (art. 12 L. 241/1990), insieme alla scheda generica delle determinazioni.",
+  "elementi": [
+    {
+      "titolo": "1. Criteri predeterminati",
+      "regola": "Verifica che l'atto richiami i criteri e le modalità predeterminati e pubblicati per la concessione (regolamento dell'ente o avviso pubblico), come richiesto dall'art. 12 della L. 241/1990, e ne dia conto nella motivazione.\nÈ CONFORME se il regolamento o l'avviso sono richiamati e applicati.\nÈ NON_CONFORME se il contributo è concesso senza alcun riferimento a criteri predeterminati.\nÈ DUBBIO se i criteri sono richiamati ma non se ne vede l'applicazione.",
+      "riferimenti": [
+        "urn:nir:stato:legge:1990-08-07;241~art12"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Istruttoria e interesse pubblico",
+      "regola": "Verifica che l'atto dia conto dell'istruttoria (domanda, requisiti del beneficiario, punteggio o criteri applicati, determinazione dell'importo) e della finalità di interesse pubblico perseguita.\nÈ CONFORME se istruttoria e finalità sono esposte.\nÈ NON_CONFORME se manca qualsiasi istruttoria.\nÈ DUBBIO se l'istruttoria è generica.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Pubblicazione come condizione di efficacia",
+      "regola": "Per contributi di importo superiore a 1.000 euro nell'anno allo stesso beneficiario, verifica che l'atto disponga la pubblicazione in Amministrazione trasparente ai sensi degli artt. 26 e 27 del D.Lgs. 33/2013, che ne costituisce condizione legale di efficacia.\nÈ CONFORME se la pubblicazione è disposta come condizione di efficacia.\nÈ DUBBIO se è disposta senza indicarne il valore di condizione di efficacia.\nÈ NON_CONFORME se non è disposta per un contributo superiore a 1.000 euro.\nÈ NON_APPLICABILE per importi inferiori.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2013-03-14;33~art26"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Riservatezza dei beneficiari persone fisiche",
+      "regola": "Se il beneficiario è una persona fisica e dal contributo si possono ricavare informazioni sulla salute o sul disagio economico-sociale, verifica che i suoi dati identificativi non siano riportati nell'atto pubblicato (art. 26, comma 4, D.Lgs. 33/2013).\nÈ CONFORME se il beneficiario è indicato con un codice o i dati sono in un allegato non pubblicato.\nÈ NON_CONFORME se compaiono nome e dati della persona in situazione di disagio.\nÈ NON_APPLICABILE se il beneficiario non è una persona fisica in tali condizioni.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2013-03-14;33~art26"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5. Aiuti di Stato",
+      "regola": "Se il beneficiario svolge un'attività economica, verifica che l'atto valuti se il contributo è un aiuto di Stato e, in tal caso, ne indichi il regime (di norma \"de minimis\", Reg. (UE) 2023/2831) e la registrazione nel Registro nazionale degli aiuti di Stato (codice COR).\nÈ CONFORME se regime e registrazione sono indicati.\nÈ NON_CONFORME se il beneficiario è un'impresa e la questione non è considerata.\nÈ NON_APPLICABILE se il beneficiario non svolge attività economica.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "6. Adempimenti per il pagamento",
+      "regola": "Verifica che l'atto preveda, per importi superiori a 5.000 euro, la verifica delle inadempienze presso l'agente della riscossione (art. 48-bis D.P.R. 602/1973) e, per i contributi alle imprese, la ritenuta del 4 per cento (art. 28, comma 2, D.P.R. 600/1973), salvo che siano destinati a beni strumentali.\nÈ CONFORME se gli adempimenti pertinenti sono previsti.\nÈ DUBBIO se mancano.\nÈ NON_APPLICABILE se l'importo e il beneficiario non li richiedono.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "7. Erogazione, rendicontazione e revoca",
+      "regola": "Verifica che l'atto stabilisca le modalità di erogazione (anticipo, saldo), la rendicontazione delle spese con il relativo termine e i casi di revoca del contributo.\nÈ CONFORME se modalità, rendicontazione e revoca sono indicate.\nÈ DUBBIO se ne manca una.",
+      "riferimenti": [],
+      "obbligatorio": true
+    }
+  ]
+}

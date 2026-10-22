@@ -19,16 +19,20 @@ spec:
         app.kubernetes.io/name: api
         app.kubernetes.io/part-of: atti-pa
     spec:
+      # credenziali del registry interno (Secret atti-pa-registry, vedi secret.example.yaml)
+      imagePullSecrets:
+        - name: atti-pa-registry
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
         fsGroup: 10001  # scrittura nell'archivio dei file
         seccompProfile:
           type: RuntimeDefault
-      # Lo schema del database si crea in installazione con deploy/sql/*.sql
+      # Lo schema del database lo crea MySQL al primo avvio (mysql.yaml, deploy/k8s/sql)
       containers:
         - name: api
           image: atti-pa/api:0.1.0
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8000

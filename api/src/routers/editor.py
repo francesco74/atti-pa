@@ -1,8 +1,13 @@
 """Editor di modelli, specificità e checklist (common/editor.py) e proposte di modifica.
 
-Il gestore dei modelli modifica in bozza; la bozza non cambia gli atti finché un
-amministratore non la pubblica come nuova versione. Chi scrive un atto può proporre la
-modifica di un capoverso: la proposta arriva al gestore.
+Ogni oggetto è in uno di tre stati:
+    ABILITATO       la versione pubblicata è usata dagli atti
+    IN_REDAZIONE    un gestore l'ha preso in carico: lavora su una bozza, l'unica possibile,
+                    che solo lui modifica; gli atti continuano a usare la versione pubblicata
+    DISATTIVATO     nessuna versione è usata dagli atti
+La bozza non cambia gli atti finché un amministratore non la pubblica: diventa la nuova
+versione e sostituisce quella da cui è nata. Chi scrive un atto può proporre la modifica di
+un capoverso: la proposta arriva al gestore.
 """
 
 from datetime import datetime
@@ -37,6 +42,7 @@ from common.models import (
     ModelloAtto,
     ModuloDiRegole,
     PropostaModello,
+    Ruolo,
     TipologiaAtto,
     User,
 )
@@ -47,6 +53,7 @@ from common.pacchetti import (
     salva_checklist,
     salva_modello,
     salva_modulo,
+    ultima_versione,
     versione_attiva,
 )
 
@@ -85,6 +92,45 @@ def _modificato(o) -> bool | None:
     return None if o.pacchetto is None else o.impronta != o.impronta_base
 
 
+def _stato(attivo, bozza) -> str:
+    if bozza is not None:
+        return "IN_REDAZIONE"
+    return "ABILITATO" if attivo is not None else "DISATTIVATO"
+
+
+def _redazione(bozza: BozzaConfigurazione | None, nomi: dict) -> dict | None:
+    """Chi ha in carico l'oggetto e da quando."""
+    if bozza is None:
+        return None
+    return {
+        "autore_id": bozza.autore_id,
+        "autore": nomi.get(bozza.autore_id),
+        "dal": bozza.created_at.isoformat() if bozza.created_at else None,
+        "mia": bozza.autore_id == utente().id,
+    }
+
+
+async def _nomi(sessione, ids) -> dict:
+    ids = {i for i in ids if i}
+    if not ids:
+        return {}
+    return {
+        u.id: u.nome_completo
+        for u in (await sessione.scalars(select(User).where(User.id.in_(ids)))).all()
+    }
+
+
+async def _bozza_mia(sessione, tipo: Tipo, codice: str) -> BozzaConfigurazione:
+    """La bozza in carico all'utente: chi non l'ha presa in carico non la modifica."""
+    bozza = await _bozza(sessione, tipo, codice)
+    if bozza is None:
+        raise ErroreApi(HTTPStatus.CONFLICT, "Prendi in carico l'oggetto prima di modificarlo")
+    if bozza.autore_id != utente().id:
+        nome = (await _nomi(sessione, [bozza.autore_id])).get(bozza.autore_id) or "un altro utente"
+        raise ErroreApi(HTTPStatus.CONFLICT, f"In redazione da {nome}: le modifiche sono bloccate")
+    return bozza
+
+
 # --- elenco ------------------------------------------------------------------------------------
 
 
@@ -107,8 +153,11 @@ async def elenco():
         ).all()
     )
 
+    nomi = await _nomi(sessione, [b.autore_id for b in bozze.values()])
+
     def voce(tipo: Tipo, o, titolo: str, **altro) -> dict:
         b = bozze.pop((tipo, o.codice), None)
+        attivo = o.attiva if tipo == "checklist" else o.attivo
         return {
             "tipo": tipo,
             "codice": o.codice,
@@ -117,26 +166,23 @@ async def elenco():
             "pacchetto": o.pacchetto,
             "modificato": _modificato(o),
             "bozza": b.updated_at.isoformat() if b and b.updated_at else (True if b else None),
+            "stato": _stato(o if attivo else None, b),
+            "redazione": _redazione(b, nomi),
             **altro,
         }
 
-    modelli = (
-        await sessione.scalars(
-            select(ModelloAtto).where(ModelloAtto.attivo.is_(True)).order_by(ModelloAtto.titolo)
-        )
-    ).all()
-    moduli = (
-        await sessione.scalars(
-            select(ModuloDiRegole)
-            .where(ModuloDiRegole.attivo.is_(True))
-            .order_by(ModuloDiRegole.etichetta)
-        )
-    ).all()
-    schede = (
-        await sessione.scalars(
-            select(Checklist).where(Checklist.attiva.is_(True)).order_by(Checklist.titolo)
-        )
-    ).all()
+    async def ultime(classe, attivo, ordine):
+        """Per ogni codice la versione attiva o, se disattivato, l'ultima."""
+        righe = (await sessione.scalars(select(classe).order_by(classe.versione.desc()))).all()
+        scelte: dict = {}
+        for r in righe:
+            if r.codice not in scelte or (getattr(r, attivo) and not getattr(scelte[r.codice], attivo)):
+                scelte[r.codice] = r
+        return sorted(scelte.values(), key=lambda r: getattr(r, ordine))
+
+    modelli = await ultime(ModelloAtto, "attivo", "titolo")
+    moduli = await ultime(ModuloDiRegole, "attivo", "etichetta")
+    schede = await ultime(Checklist, "attiva", "titolo")
     risultato = {
         "modelli": [
             voce("modello", m, m.titolo, proposte=proposte.get(m.codice, 0)) for m in modelli
@@ -159,6 +205,8 @@ async def elenco():
                 "pacchetto": None,
                 "modificato": None,
                 "bozza": b.updated_at.isoformat() if b.updated_at else True,
+                "stato": "IN_REDAZIONE",
+                "redazione": _redazione(b, nomi),
                 "nuovo": True,
             }
         )
@@ -218,6 +266,9 @@ async def dettaglio(tipo: str, codice: str):
     sessione = db()
     attivo = await versione_attiva(sessione, tipo, codice)
     bozza = await _bozza(sessione, tipo, codice)
+    stato = _stato(attivo, bozza)
+    if attivo is None:
+        attivo = await ultima_versione(sessione, tipo, codice)  # disattivato: l'ultima
     if attivo is None and bozza is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
     standard = None
@@ -229,10 +280,12 @@ async def dettaglio(tipo: str, codice: str):
             }
         except (ModelloNonValido, ValueError):
             standard = None
-    autore = await sessione.get(User, bozza.autore_id) if bozza and bozza.autore_id else None
+    nomi = await _nomi(sessione, [bozza.autore_id] if bozza else [])
     return {
         "tipo": tipo,
         "codice": codice,
+        "stato": stato,
+        "redazione": _redazione(bozza, nomi),
         "pubblicata": None
         if attivo is None
         else {
@@ -247,7 +300,7 @@ async def dettaglio(tipo: str, codice: str):
             "definizione": bozza.definizione_json,
             "versione_partenza": bozza.versione_partenza,
             "aggiornata_il": bozza.updated_at.isoformat() if bozza.updated_at else None,
-            "autore": autore.nome_completo if autore else None,
+            "autore": nomi.get(bozza.autore_id),
         },
         "standard": standard,
         "contesto": await _contesto(sessione, tipo),
@@ -280,25 +333,132 @@ class NuovoIn(BaseModel):
 @bp.put("/configurazione/<tipo>/<codice>/bozza")
 @gestore_modelli
 async def salva_bozza(tipo: str, codice: str):
-    """Salva la bozza anche se non è ancora valida; risponde con errori e avvisi."""
+    """Salva la bozza di chi ha in carico l'oggetto, anche se non è ancora valida; risponde
+    con errori e avvisi."""
     tipo = _tipo(tipo)
     dati = corpo(DefinizioneIn)
     sessione = db()
-    bozza = await _bozza(sessione, tipo, codice)
-    if bozza is None:
-        attivo = await versione_attiva(sessione, tipo, codice)
-        bozza = BozzaConfigurazione(
-            tipo=tipo,
-            codice=codice,
-            versione_partenza=attivo.versione if attivo else None,
-            definizione_json={},
-        )
-        sessione.add(bozza)
+    bozza = await _bozza_mia(sessione, tipo, codice)
     bozza.definizione_json = dati.definizione
-    bozza.autore_id = utente().id
     esito = await controlla(sessione, tipo, codice, dati.definizione)
     await sessione.commit()
     return esito
+
+
+@bp.post("/configurazione/<tipo>/<codice>/prendi")
+@gestore_modelli
+async def prendi_in_carico(tipo: str, codice: str):
+    """Inizia a modificare: nasce la bozza, copia della versione pubblicata, e l'oggetto passa
+    in redazione. Gli altri non possono modificarlo finché la bozza non è pubblicata o
+    scartata; gli atti continuano a usare la versione pubblicata."""
+    tipo = _tipo(tipo)
+    sessione = db()
+    bozza = await _bozza(sessione, tipo, codice)
+    if bozza is not None:
+        await _bozza_mia(sessione, tipo, codice)  # già mia, oppure in carico ad altri: 409
+        return nessun_contenuto()
+    attivo = await versione_attiva(sessione, tipo, codice)
+    if attivo is None:
+        if await ultima_versione(sessione, tipo, codice) is not None:
+            raise ErroreApi(HTTPStatus.CONFLICT, "L'oggetto è disattivato: riattivalo prima")
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
+    sessione.add(
+        BozzaConfigurazione(
+            tipo=tipo,
+            codice=codice,
+            versione_partenza=attivo.versione,
+            definizione_json=await _definizione_pubblicata(sessione, tipo, attivo),
+            autore_id=utente().id,
+        )
+    )
+    audit(sessione, utente(), tipo, attivo.id, "IN_REDAZIONE", {"codice": codice})
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+@bp.post("/configurazione/<tipo>/<codice>/sblocca")
+@solo_admin
+async def sblocca(tipo: str, codice: str):
+    """L'amministratore prende in carico una bozza di un altro (es. assente): la bozza resta."""
+    tipo = _tipo(tipo)
+    sessione = db()
+    bozza = await _bozza(sessione, tipo, codice)
+    if bozza is None:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Nessuna bozza in corso")
+    precedente = bozza.autore_id
+    bozza.autore_id = utente().id
+    audit(sessione, utente(), tipo, bozza.id, "SBLOCCATA", {"codice": codice, "da": precedente})
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+async def _dipendenze(sessione, tipo: Tipo, codice: str) -> list[str]:
+    """Cosa continua a rimandare all'oggetto disattivato."""
+    avvisi = []
+    if tipo in ("modello", "modulo"):
+        campo = Checklist.modello if tipo == "modello" else Checklist.modulo
+        for c in (
+            await sessione.scalars(select(Checklist).where(Checklist.attiva.is_(True), campo == codice))
+        ).all():
+            avvisi.append(f"La checklist {c.codice} ({c.titolo}) resta attiva: valuta di disattivarla")
+    if tipo == "modello":
+        for m in (
+            await sessione.scalars(select(ModuloDiRegole).where(ModuloDiRegole.attivo.is_(True)))
+        ).all():
+            if codice in ((m.definizione_json or {}).get("modelli") or []):
+                avvisi.append(f"La specificità {m.codice} ({m.etichetta}) indica ancora questo modello")
+    return avvisi
+
+
+@bp.post("/configurazione/<tipo>/<codice>/disattiva")
+@solo_admin
+async def disattiva(tipo: str, codice: str):
+    """Nessuna versione resta in uso per gli atti nuovi. Bozze di atto e verifiche già fatte
+    restano sulla loro versione; una specificità esce dai modelli, ricomposti."""
+    tipo = _tipo(tipo)
+    sessione = db()
+    if await _bozza(sessione, tipo, codice) is not None:
+        raise ErroreApi(
+            HTTPStatus.CONFLICT, "L'oggetto è in redazione: pubblica o scarta prima la bozza"
+        )
+    attivo = await versione_attiva(sessione, tipo, codice)
+    if attivo is None:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato o già disattivato")
+    if tipo == "checklist":
+        attivo.attiva = False
+    else:
+        attivo.attivo = False
+    avvisi = await _dipendenze(sessione, tipo, codice)
+    if tipo == "modulo":
+        await sessione.flush()
+        avvisi += await ricomponi_modelli(sessione, utente().id)
+    audit(sessione, utente(), tipo, attivo.id, "DISATTIVATA", {"codice": codice})
+    await sessione.commit()
+    return {"avvisi": avvisi}
+
+
+@bp.post("/configurazione/<tipo>/<codice>/riattiva")
+@solo_admin
+async def riattiva(tipo: str, codice: str):
+    """Torna in uso l'ultima versione."""
+    tipo = _tipo(tipo)
+    sessione = db()
+    if await versione_attiva(sessione, tipo, codice) is not None:
+        raise ErroreApi(HTTPStatus.CONFLICT, "L'oggetto è già abilitato")
+    ultima = await ultima_versione(sessione, tipo, codice)
+    if ultima is None:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
+    if tipo == "checklist":
+        ultima.attiva = True
+    else:
+        ultima.attivo = True
+    avvisi = []
+    if tipo == "modulo":
+        await sessione.flush()
+        avvisi = await ricomponi_modelli(sessione, utente().id)
+    audit(sessione, utente(), tipo, ultima.id, "RIATTIVATA", {"codice": codice})
+    await sessione.commit()
+    return {"versione": ultima.versione, "avvisi": avvisi}
 
 
 @bp.post("/configurazione/<tipo>/nuovo")
@@ -308,9 +468,9 @@ async def nuovo(tipo: str):
     tipo = _tipo(tipo)
     dati = corpo(NuovoIn)
     sessione = db()
-    esiste = await versione_attiva(sessione, tipo, dati.codice)
+    esiste = await ultima_versione(sessione, tipo, dati.codice)
     if esiste or await _bozza(sessione, tipo, dati.codice):
-        raise ErroreApi(HTTPStatus.CONFLICT, "Codice già usato")
+        raise ErroreApi(HTTPStatus.CONFLICT, "Codice già usato (anche da un oggetto disattivato)")
     if dati.copia_da:
         origine = await versione_attiva(sessione, tipo, dati.copia_da)
         if origine is None:
@@ -363,10 +523,14 @@ def _vuoto(tipo: Tipo) -> dict:
 @bp.delete("/configurazione/<tipo>/<codice>/bozza")
 @gestore_modelli
 async def scarta_bozza(tipo: str, codice: str):
+    """La bozza si butta e l'oggetto torna abilitato (un oggetto nuovo sparisce). Solo chi
+    l'ha in carico o un amministratore."""
     tipo = _tipo(tipo)
     sessione = db()
     bozza = await _bozza(sessione, tipo, codice)
     if bozza is not None:
+        if not utente().ha_ruolo(Ruolo.ADMIN):
+            await _bozza_mia(sessione, tipo, codice)
         await sessione.delete(bozza)
         await sessione.commit()
     return nessun_contenuto()

@@ -8,10 +8,10 @@ standard forniti dall'azienda arrivano come pacchetti: una cartella o uno zip co
     modelli/regole/*.yaml   specificità
     checklist/*.json        schede di controllo
 
-Al primo avvio, con il database vuoto, l'API importa il pacchetto incluso
-nell'installazione (deploy/). Poi nessun file sovrascrive più nulla: i pacchetti successivi
-si importano da Amministrazione dopo un'analisi che, per ogni oggetto, confronta tre
-versioni con le impronte del contenuto:
+Il sistema parte vuoto: il pacchetto standard (sorgenti in pacchetto/, zip creato con
+deploy/pacchetto.py crea) si carica da Amministrazione come tutti i successivi. Nessun file
+sovrascrive nulla da solo: ogni pacchetto si importa dopo un'analisi che, per ogni
+oggetto, confronta tre versioni con le impronte del contenuto:
 
     base     lo standard da cui deriva la versione dell'ente (impronta_base)
     ente     la versione attiva nel database (impronta)
@@ -41,8 +41,8 @@ from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import func, select, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import undefer
 
 from common.configurazione import (
@@ -60,7 +60,6 @@ from common.models import (
     Checklist,
     ModelloAtto,
     ModuloDiRegole,
-    PacchettoImportato,
     TipologiaAtto,
 )
 from common.modelli import (
@@ -75,7 +74,6 @@ from common.modelli import (
 log = logging.getLogger("common.pacchetti")
 
 MANIFESTO = "pacchetto.yaml"
-LOCK = "atti_pa_configurazione"
 MAX_FILE_ZIP = 500  # file in un pacchetto
 MAX_BYTE_ZIP = 20 * 1024 * 1024  # contenuto decompresso
 
@@ -292,7 +290,7 @@ async def versione_attiva(db: AsyncSession, tipo: Tipo, codice: str):
     )
 
 
-async def _ultima(db: AsyncSession, tipo: Tipo, codice: str):
+async def ultima_versione(db: AsyncSession, tipo: Tipo, codice: str):
     classe = _classe(tipo)
     return await db.scalar(
         select(classe)
@@ -317,7 +315,7 @@ async def _nuova_versione(db: AsyncSession, tipo: Tipo, codice: str) -> int:
 async def _base(db: AsyncSession, tipo: Tipo, codice: str, base: Base | None) -> Base:
     if base is not MANTIENI_BASE:
         return base
-    precedente = await _ultima(db, tipo, codice)
+    precedente = await ultima_versione(db, tipo, codice)
     if precedente is None:
         return Base(None, None, None)
     return Base(precedente.pacchetto, precedente.impronta_base, precedente.base_sorgente)
@@ -518,7 +516,7 @@ async def analizza(db: AsyncSession, pacchetto: Pacchetto) -> list[Voce]:
         for o in pacchetto.di_tipo(tipo):
             attivo = await versione_attiva(db, tipo, o.codice)
             if attivo is None:
-                if await _ultima(db, tipo, o.codice) is not None:
+                if await ultima_versione(db, tipo, o.codice) is not None:
                     voci.append(_voce(o, "DISATTIVATO", "mantieni", ["mantieni", "applica"]))
                 else:
                     voci.append(_voce(o, "NUOVO", "applica", ["applica", "mantieni"]))
@@ -668,44 +666,3 @@ async def esporta(db: AsyncSession, nome: str, versione: str) -> dict[str, str]:
     for r in (await db.scalars(select(Checklist).where(Checklist.attiva.is_(True)))).all():
         file[f"checklist/{r.codice.lower()}.json"] = sorgente_checklist(checklist_in(r))
     return file
-
-
-# --- primo avvio -----------------------------------------------------------------------------
-
-
-async def importa_pacchetto_iniziale(engine: AsyncEngine, cartella: Path) -> Resoconto | None:
-    """Con il database vuoto (nessun modello né checklist) importa il pacchetto della
-    cartella; altrimenti non fa nulla: comanda il database. Sotto lock: con più processi
-    o più pod lo esegue uno solo. Restituisce None se il database era già configurato."""
-    async with engine.connect() as conn:
-        mysql = conn.dialect.name in ("mysql", "mariadb")
-        if mysql:
-            ottenuto = await conn.scalar(text("SELECT GET_LOCK(:n, 60)"), {"n": LOCK})
-            await conn.commit()
-            if ottenuto != 1:
-                log.error("Importazione iniziale saltata: lock non ottenuto in 60 secondi")
-                return None
-        try:
-            async with AsyncSession(bind=conn, expire_on_commit=False) as db:
-                presenti = await db.scalar(select(func.count(ModelloAtto.id))) or 0
-                presenti += await db.scalar(select(func.count(Checklist.id))) or 0
-                if presenti:
-                    return None
-                pacchetto = leggi_pacchetto(da_cartella(cartella))
-                r = await importa(db, pacchetto)
-                db.add(
-                    PacchettoImportato(
-                        nome=pacchetto.manifesto.nome,
-                        versione=pacchetto.manifesto.versione,
-                        descrizione=pacchetto.manifesto.descrizione,
-                        stato="IMPORTATO",
-                        resoconto_json=r.come_dict(),
-                        importato_il=func.now(),
-                    )
-                )
-                await db.commit()
-                return r
-        finally:
-            if mysql:
-                await conn.execute(text("SELECT RELEASE_LOCK(:n)"), {"n": LOCK})
-                await conn.commit()

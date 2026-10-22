@@ -1,4 +1,4 @@
-"""Pacchetti e database che comanda: importazione iniziale, analisi a tre vie (standard di
+"""Pacchetti e database che comanda: primo pacchetto sul database vuoto, analisi a tre vie (standard di
 riferimento, versione dell'ente, nuovo standard), decisioni, ricomposizione dei modelli,
 esportazione. Su SQLite in memoria.
     python -m unittest common.tests.test_pacchetti
@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from common.configurazione import leggi_checklist
-from common.models import Base, Checklist, ModelloAtto, PacchettoImportato, TipologiaAtto
+from common.models import Base, Checklist, ModelloAtto, TipologiaAtto
 from common.pacchetti import (
     MANTIENI_BASE,
     PacchettoNonValido,
@@ -25,14 +25,13 @@ from common.pacchetti import (
     da_zip,
     esporta,
     importa,
-    importa_pacchetto_iniziale,
     in_zip,
     leggi_pacchetto,
     salva_checklist,
     versione_attiva,
 )
 
-PACCHETTO = Path(__file__).resolve().parents[2] / "deploy"
+PACCHETTO = Path(__file__).resolve().parents[2] / "pacchetto"
 
 
 def _con_versione(file: dict[str, str], versione: str) -> dict[str, str]:
@@ -58,22 +57,26 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
         await self.motore.dispose()
 
     async def _iniziale(self):
-        r = await importa_pacchetto_iniziale(self.motore, PACCHETTO)
-        self.assertIsNotNone(r)
+        """Il sistema parte vuoto: il pacchetto standard si importa come tutti gli altri."""
+        async with AsyncSession(self.motore, expire_on_commit=False) as db:
+            r = await importa(db, leggi_pacchetto(self.file))
+            await db.commit()
         self.assertEqual(r.errori, [])
         self.assertEqual(r.avvisi, [])
         return r
 
-    async def test_primo_avvio_poi_comanda_il_database(self):
+    async def test_primo_pacchetto_sul_database_vuoto(self):
+        pacchetto = leggi_pacchetto(self.file)
+        async with AsyncSession(self.motore) as db:
+            voci = await analizza(db, pacchetto)
+        self.assertTrue(voci)
+        self.assertEqual({v.stato for v in voci}, {"NUOVO"})
         r = await self._iniziale()
-        self.assertTrue(r.applicati)
+        self.assertEqual(len(r.applicati), len(voci))
         async with AsyncSession(self.motore) as db:
             self.assertIsNotNone(await db.get(TipologiaAtto, "DETERMINA"))
             modelli = (await db.scalars(select(ModelloAtto))).all()
             self.assertTrue(all(m.pacchetto == "Modelli standard Atti PA 2026.1" for m in modelli))
-            self.assertEqual(len((await db.scalars(select(PacchettoImportato))).all()), 1)
-        # secondo avvio: il database non è vuoto, non si importa nulla
-        self.assertIsNone(await importa_pacchetto_iniziale(self.motore, PACCHETTO))
 
     async def test_stesso_pacchetto_tutto_invariato(self):
         await self._iniziale()

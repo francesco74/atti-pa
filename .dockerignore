@@ -12,9 +12,7 @@
 frontend/src/build
 frontend/src/.dart_tool
 deploy
-# pacchetto standard di modelli e checklist: importato al primo avvio con il database vuoto
-!deploy/pacchetto.yaml
-!deploy/modelli/*.yaml
-!deploy/modelli/regole/*.yaml
-!deploy/checklist/*.json
+# pacchetto standard: si distribuisce come zip e si carica dall'app
+pacchetto
+manuale
 docs

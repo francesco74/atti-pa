@@ -1,0 +1,150 @@
+# Modulo di regole: utenze (energia elettrica, gas, carburanti, combustibili per
+# riscaldamento, telefonia fissa e mobile).
+#
+# Art. 1, comma 7, D.L. 95/2012 (L. 135/2012): per queste categorie le amministrazioni si
+# approvvigionano con le convenzioni e gli accordi quadro di Consip e delle centrali di
+# committenza regionali oppure con procedure autonome sui sistemi telematici di
+# negoziazione messi a disposizione da tali soggetti. Fuori da queste modalità si può
+# affidare solo tramite altre centrali di committenza o procedure a evidenza pubblica, con
+# corrispettivi inferiori almeno del 5 per cento (telefonia fissa e mobile) o del 2 per
+# cento (carburanti, energia elettrica, gas, combustibili per riscaldamento) rispetto ai
+# migliori corrispettivi delle convenzioni; questi contratti si trasmettono all'ANAC e sono
+# sottoposti a condizione risolutiva se diventano disponibili convenzioni più vantaggiose
+# di oltre il 10 per cento. I contratti in violazione sono nulli (comma 8).
+# Testo vigente verificato su Normattiva il 21 ottobre 2026.
+# Nelle 4 fasi:
+#   2. Visti              art. 1, comma 7, D.L. 95/2012
+#      Dato atto          modalità di approvvigionamento consentita
+#      Art. 192 TUEL      condizione risolutiva (affidamento fuori dalle convenzioni)
+#   3. Dispositivo        condizione risolutiva e adeguamento ai corrispettivi migliori
+# Checklist corrispondente: pacchetto/checklist/scheda_utenze.json.
+
+codice: UTENZE
+fattore: utenze
+etichetta: Utenze esclusive (energia, gas, carburanti, telefonia)
+descrizione: "Attiva: obbligo di convenzioni Consip o centrali regionali, deroga con corrispettivi inferiori e condizione risolutiva"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF]
+
+domande:
+  - id: categoria_utenza
+    testo: Quale categoria merceologica?
+    tipo: scelta
+    opzioni:
+      energia_elettrica: Energia elettrica
+      gas: Gas
+      carburanti: Carburanti (rete ed extra-rete)
+      riscaldamento: Combustibili per riscaldamento
+      telefonia_fissa: Telefonia fissa
+      telefonia_mobile: Telefonia mobile
+
+  - id: modalita_utenza
+    testo: Come si acquista?
+    tipo: scelta
+    opzioni:
+      sistemi_telematici: Procedura autonoma sul mercato elettronico o sui sistemi telematici di Consip o della centrale regionale
+      fuori_convenzione: "Al di fuori di tali modalità (altra centrale di committenza o procedura a evidenza pubblica), con corrispettivi inferiori a quelli delle convenzioni"
+      convenzione: Adesione a una convenzione o a un accordo quadro Consip o della centrale regionale
+    blocca_se: modalita_utenza == "convenzione"
+    vincolo: modalita_utenza == "sistemi_telematici" implica strumento != "diretto_pcp"
+    messaggio_blocco: >-
+      L'adesione a una convenzione o a un accordo quadro è un atto diverso dall'affidamento
+      diretto (si ordina alle condizioni della convenzione): il modello di determina di
+      adesione non è ancora disponibile.
+    aiuto: >-
+      I contratti stipulati senza rispettare queste modalità sono nulli e comportano
+      responsabilità disciplinare e per danno erariale (art. 1, commi 7 e 8, D.L. 95/2012).
+
+derivati:
+  categoria_utenza_testo:
+    - {se: categoria_utenza == "energia_elettrica", valore: energia elettrica}
+    - {se: categoria_utenza == "gas", valore: gas}
+    - {se: categoria_utenza == "carburanti", valore: carburanti}
+    - {se: categoria_utenza == "riscaldamento", valore: combustibili per riscaldamento}
+    - {se: categoria_utenza == "telefonia_fissa", valore: telefonia fissa}
+    - {se: categoria_utenza == "telefonia_mobile", valore: telefonia mobile}
+  # risparmio minimo rispetto ai migliori corrispettivi delle convenzioni (art. 1, comma 7)
+  risparmio_minimo:
+    - {se: 'categoria_utenza in ["telefonia_fissa", "telefonia_mobile"]', valore: "5"}
+    - {valore: "2"}
+
+campi:
+  convenzione_riferimento:
+    etichetta: Convenzione o accordo quadro di riferimento e suoi corrispettivi
+    tipo: testo_lungo
+    aiuto: >-
+      La convenzione Consip o della centrale regionale attiva per la categoria e i
+      corrispettivi migliori che offre, con cui si confronta l'offerta.
+  confronto_corrispettivi:
+    etichetta: Confronto tra i corrispettivi offerti e quelli della convenzione
+    tipo: testo_lungo
+    aiuto: >-
+      Perché i corrispettivi dell'affidamento sono inferiori ai migliori corrispettivi della
+      convenzione almeno del 5 per cento (telefonia) o del 2 per cento (energia, gas,
+      carburanti, combustibili), come richiesto dall'art. 1, comma 7, D.L. 95/2012.
+
+inserti:
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_utenze
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legge:2012-07-06;95~art1"]
+        testo: >-
+          l'art. 1, comma 7, del D.L. 6 luglio 2012, n. 95, convertito, con modificazioni,
+          dalla L. 7 agosto 2012, n. 135, in materia di approvvigionamento di energia
+          elettrica, gas, carburanti, combustibili per riscaldamento, telefonia fissa e
+          telefonia mobile;
+
+  - innesto: dato_atto
+    capoversi:
+      - id: utenze_sistemi_telematici
+        se: modalita_utenza == "sistemi_telematici"
+        fonte: aggiunto
+        testo: >-
+          Dato atto che, trattandosi di {{categoria_utenza_testo}}, si procede con autonoma
+          procedura mediante {{descrizione_strumento}}, sistema telematico di negoziazione
+          messo a disposizione da Consip S.p.A. o dalla centrale di committenza regionale,
+          come previsto dall'art. 1, comma 7, del D.L. 95/2012;
+      - id: utenze_fuori_convenzione
+        se: modalita_utenza == "fuori_convenzione"
+        fonte: aggiunto
+        testo: >-
+          Dato atto che, trattandosi di {{categoria_utenza_testo}}, si procede al di fuori
+          delle convenzioni, degli accordi quadro e dei sistemi telematici di Consip S.p.A. e
+          della centrale di committenza regionale, come consentito dall'art. 1, comma 7, del
+          D.L. 95/2012, mediante procedura a evidenza pubblica, in quanto l'affidamento
+          prevede corrispettivi inferiori almeno del {{risparmio_minimo}} per cento rispetto
+          ai migliori corrispettivi della convenzione di riferimento
+          ({{convenzione_riferimento}}): {{confronto_corrispettivi}};
+
+  - innesto: elementi_essenziali_192
+    prima_di: ritenuto_affidare
+    capoversi:
+      - id: clausole_utenze
+        se: modalita_utenza == "fuori_convenzione"
+        fonte: aggiunto
+        testo: >-
+          Ritenuto altresì di sottoporre il contratto a condizione risolutiva, con
+          possibilità per il contraente di adeguarsi ai migliori corrispettivi, nel caso in cui
+          si rendano disponibili convenzioni di Consip S.p.A. o della centrale di committenza
+          regionale con condizioni di maggior vantaggio economico in percentuale superiore al
+          10 per cento rispetto al contratto stipulato, ai sensi dell'art. 1, comma 7, del D.L.
+          95/2012;
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_utenze_condizione_risolutiva
+        se: modalita_utenza == "fuori_convenzione"
+        fonte: aggiunto
+        testo: >-
+          di dare atto che il contratto è sottoposto a condizione risolutiva, con
+          possibilità per l'operatore economico di adeguarsi ai migliori corrispettivi nel
+          caso in cui si rendano disponibili convenzioni di Consip S.p.A. o della centrale di
+          committenza regionale con condizioni di maggior vantaggio economico in percentuale
+          superiore al 10 per cento, ai sensi dell'art. 1, comma 7, del D.L. 95/2012;
+      - id: d_utenze_anac
+        se: modalita_utenza == "fuori_convenzione"
+        fonte: aggiunto
+        testo: >-
+          di disporre la trasmissione del contratto all'Autorità nazionale anticorruzione, ai
+          sensi dell'art. 1, comma 7, del D.L. 95/2012;

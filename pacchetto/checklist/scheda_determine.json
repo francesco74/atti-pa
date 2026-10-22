@@ -1,0 +1,128 @@
+{
+  "codice": "SCHEDA_DETERMINE",
+  "titolo": "Scheda di controllo delle determinazioni dirigenziali",
+  "tipologia_atto": "DETERMINA",
+  "descrizione": "Scheda generica: si applica a ogni determinazione, insieme alla scheda del modello di atto e a quelle delle specificità. Ricavata dalla scheda del Gruppo Interno Controllo Atti (punti 1, 2, 5, 6, 7, 8, 9, 11) e arricchita: oggetto dell'atto, termine di ricorso per gli atti delle procedure di affidamento, esecutività degli atti con spesa. I punti 3 e 4 (riferimenti normativi) sono coperti dalla verifica automatica dei riferimenti su Normattiva; i punti 10 e 12 restano al controllore. Gli elementi propri dei contratti pubblici (RUP, cronoprogramma, banche dati) sono nella scheda del modello di affidamento.",
+  "elementi": [
+    {
+      "titolo": "1. Competenza del dirigente individuato con decreto",
+      "regola": "Verifica che l'atto sia adottato dal soggetto competente.\nÈ CONFORME se: (a) l'atto indica il dirigente o responsabile che lo adotta e richiama l'atto di conferimento dell'incarico (decreto del Presidente/Sindaco o atto equivalente) con numero o data; (b) l'oggetto è un atto di gestione rientrante nelle funzioni dirigenziali e non un atto di indirizzo riservato agli organi politici.\nÈ NON_CONFORME se manca qualsiasi indicazione del titolo di competenza, oppure se l'atto contiene scelte di indirizzo politico riservate agli organi di governo.\nÈ DUBBIO se il decreto è richiamato in modo generico (senza numero né data) o se la competenza non è chiara.\nNella motivazione ricorda che l'esistenza e la validità del decreto non sono verificabili dal testo e vanno controllate dal controllore.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art107",
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art109"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2a. Articolazione dell'atto: intestazione, premesse, motivazione, dispositivo",
+      "regola": "Verifica la struttura formale della determinazione.\nÈ CONFORME se sono riconoscibili: intestazione (ente, struttura, oggetto), premesse o preambolo (richiami normativi e di fatto, tipicamente \"Visto\", \"Premesso\", \"Considerato\"), parte motiva e dispositivo (la parte che dispone, tipicamente introdotta da \"DETERMINA\").\nÈ NON_CONFORME se manca il dispositivo o la parte motiva.\nÈ DUBBIO se le parti sono presenti ma confuse tra loro (ad esempio decisioni inserite nelle premesse).\nNella motivazione elenca le parti mancanti o carenti.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2b. Indicazione dell'autorità e dei termini per ricorrere",
+      "regola": "Verifica che l'atto indichi il termine e l'autorità cui è possibile ricorrere, come richiesto per ogni atto notificato al destinatario.\nÈ CONFORME se l'atto indica almeno il ricorso giurisdizionale (TAR competente, entro 60 giorni) e, di norma, il ricorso straordinario al Presidente della Repubblica (entro 120 giorni), o altro rimedio specifico previsto dalla legge. Per gli atti delle procedure di affidamento di contratti pubblici il termine di ricorso al TAR è di 30 giorni (rito speciale dell'art. 120 del codice del processo amministrativo): se un atto di affidamento indica 60 giorni, è DUBBIO.\nÈ NON_CONFORME se l'indicazione manca del tutto in un atto che produce effetti verso terzi.\nÈ NON_APPLICABILE se l'atto è meramente interno e non produce effetti verso terzi (in tal caso spiegane il motivo).\nÈ DUBBIO se l'indicazione è incompleta (manca il termine o l'autorità).",
+      "riferimenti": [
+        "urn:nir:stato:legge:1990-08-07;241~art3"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2c. Fascicolo informatico del procedimento (art. 41 CAD)",
+      "regola": "Verifica che l'atto dia conto della gestione documentale del procedimento.\nÈ CONFORME se l'atto richiama il fascicolo informatico/digitale del procedimento, o indica che gli atti e i documenti richiamati sono depositati e conservati nel fascicolo o nel sistema di gestione documentale dell'ente (anche con riferimento al numero di fascicolo o di protocollo).\nÈ NON_CONFORME se non c'è alcun riferimento al fascicolo o al deposito degli atti del procedimento.\nÈ DUBBIO se c'è solo un generico rinvio \"agli atti d'ufficio\".",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2005-03-07;82~art41"
+      ],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "2d. Oggetto dell'atto",
+      "regola": "Verifica che l'oggetto esprima in sintesi il contenuto e la funzione del provvedimento.\nÈ CONFORME se l'oggetto indica il tipo di decisione (ad esempio affidamento, impegno, liquidazione, concessione) e il suo contenuto essenziale (prestazione, beneficiario o finalità), ed è coerente con quanto disposto nel dispositivo.\nÈ NON_CONFORME se l'oggetto manca o descrive una decisione diversa da quella del dispositivo.\nÈ DUBBIO se l'oggetto è generico (ad esempio \"Provvedimenti\" o \"Determinazione\") o non permette di capire cosa si decide.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5a. Coerenza con la programmazione: DUP e PIAO",
+      "regola": "Verifica se l'atto, quando attua attività inserite negli atti di programmazione, richiama la programmazione dell'ente.\nÈ CONFORME se l'atto richiama il DUP (Documento Unico di Programmazione: missione, programma o obiettivo) e/o il PIAO (Piano Integrato di Attività e Organizzazione) pertinenti.\nÈ DUBBIO se l'attività appare programmatica (opere, servizi, progetti, obiettivi) ma non c'è alcun richiamo a DUP o PIAO.\nÈ NON_APPLICABILE se l'atto non riguarda attività di programmazione (ad esempio atti vincolati o di mera esecuzione di obblighi di legge): spiega perché.\nNella motivazione precisa che la coerenza nel merito con DUP e PIAO non è verificabile dal solo testo e va controllata dal controllore.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "5b. Copertura finanziaria e coerenza con il Bilancio di previsione",
+      "regola": "Se la determinazione comporta una spesa, verifica che indichi gli elementi dell'impegno.\nÈ CONFORME se l'atto indica: importo, esercizio del bilancio di previsione, imputazione (missione/programma/capitolo o voce del piano dei conti), soggetto creditore o modalità di individuazione, e prevede il visto di regolarità contabile attestante la copertura finanziaria.\nÈ NON_CONFORME se l'atto comporta una spesa ma manca l'imputazione a bilancio o l'importo.\nÈ DUBBIO se mancano solo alcuni elementi (ad esempio il capitolo o il riferimento al visto contabile).\nÈ NON_APPLICABILE se l'atto non comporta spesa.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5d. Esecutività degli atti con spesa",
+      "regola": "Se la determinazione comporta un impegno di spesa, verifica che ne dia conto come condizione di esecutività.\nÈ CONFORME se l'atto prevede l'apposizione del visto di regolarità contabile attestante la copertura finanziaria da parte del responsabile del servizio finanziario, o dichiara che l'atto diviene esecutivo con tale visto.\nÈ DUBBIO se l'atto comporta spesa ma non menziona il visto di regolarità contabile.\nÈ NON_APPLICABILE se l'atto non comporta spesa.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art151",
+        "urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "6. Motivazione: presupposti di fatto e ragioni giuridiche",
+      "regola": "Verifica la motivazione del provvedimento.\nÈ CONFORME se l'atto espone in modo puntuale i presupposti di fatto (quale situazione o esigenza concreta giustifica la decisione) e le ragioni giuridiche (le norme o i regolamenti che fondano il potere e la scelta), e se la decisione nel dispositivo è coerente con quanto motivato.\nÈ NON_CONFORME se la motivazione manca, è apodittica o fatta solo di formule di stile, oppure se il dispositivo dispone cose non motivate.\nÈ DUBBIO se la motivazione c'è ma è generica su uno dei due aspetti (fatto o diritto).\nNell'evidenza riporta il passaggio più significativo della motivazione o, se carente, la frase che lo dimostra.",
+      "riferimenti": [
+        "urn:nir:stato:legge:1990-08-07;241~art3"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "7a. Responsabile del procedimento e responsabile del provvedimento",
+      "regola": "Verifica che l'atto individui il responsabile del procedimento.\nÈ CONFORME se l'atto indica nominativamente il responsabile del procedimento e, quando è persona diversa da chi adotta l'atto, distingue il responsabile del procedimento dal responsabile del provvedimento.\nÈ NON_CONFORME se il responsabile del procedimento non è indicato.\nÈ DUBBIO se è indicato solo il ruolo o l'ufficio senza nominativo, o se i due ruoli sono confusi.",
+      "riferimenti": [
+        "urn:nir:stato:legge:1990-08-07;241~art5",
+        "urn:nir:stato:legge:1990-08-07;241~art6"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "7b. Firma dell'EQ: attribuzione o delega del Dirigente",
+      "regola": "Se l'atto è adottato da un incaricato di Elevata Qualificazione (EQ, già posizione organizzativa) o comunque da un soggetto diverso dal dirigente, verifica che richiami l'atto del Dirigente con cui gli sono state attribuite o delegate le funzioni (numero e/o data).\nÈ CONFORME se la delega o attribuzione è richiamata con i suoi estremi.\nÈ NON_CONFORME se l'atto è firmato da un'EQ senza alcun richiamo alla delega.\nÈ DUBBIO se la delega è richiamata in modo generico.\nÈ NON_APPLICABILE se l'atto è adottato direttamente dal dirigente.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2001-03-30;165~art17"
+      ],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "8a. Conflitto di interessi",
+      "regola": "Verifica che l'atto dia conto dell'assenza di conflitto di interessi.\nÈ CONFORME se l'atto attesta l'assenza di situazioni di conflitto di interessi, anche potenziale, in capo al responsabile del procedimento e a chi adotta l'atto (e, per i contratti pubblici, al personale che interviene nella procedura) oppure richiama le relative dichiarazioni acquisite.\nPer interventi finanziati con fondi PNRR la dichiarazione di assenza di conflitto di interessi deve essere sempre acquisita e richiamata: se l'atto riguarda il PNRR e manca, è NON_CONFORME.\nÈ NON_CONFORME se manca qualsiasi riferimento al conflitto di interessi.\nÈ DUBBIO se il riferimento è generico o riguarda solo alcuni dei soggetti coinvolti.",
+      "riferimenti": [
+        "urn:nir:stato:legge:1990-08-07;241~art6bis",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art16"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "8b. Obblighi di pubblicità e trasparenza",
+      "regola": "Verifica che l'atto disponga la pubblicità prevista.\nPer i contratti pubblici è CONFORME se l'atto richiama gli obblighi di pubblicità e trasparenza dell'art. 28 del d.lgs. 36/2023 (pubblicazione in Amministrazione trasparente e trasmissione alla Banca dati nazionale dei contratti pubblici).\nPer gli altri atti è CONFORME se dispone la pubblicazione all'albo pretorio e, quando prevista, in Amministrazione trasparente.\nÈ NON_CONFORME se non è prevista alcuna forma di pubblicità.\nÈ DUBBIO se è prevista solo la pubblicazione all'albo per un atto relativo a un contratto pubblico.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art28"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "8c. Misure del PIAO, sezione 2.3 Rischi corruttivi e trasparenza",
+      "regola": "Se il provvedimento è funzionale al raggiungimento di un obiettivo di performance, verifica che dia atto del rispetto delle misure di prevenzione della corruzione previste nella sezione 2.3 \"Rischi corruttivi e trasparenza\" del PIAO, anche nella fase di progetto.\nÈ CONFORME se l'atto richiama l'obiettivo di performance e il rispetto delle misure del PIAO.\nÈ DUBBIO se richiama l'obiettivo di performance ma non le misure di prevenzione.\nÈ NON_APPLICABILE se dal testo non risulta alcun collegamento con obiettivi di performance.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "9. Tutela della riservatezza dei dati personali",
+      "regola": "Verifica il rispetto della riservatezza nel testo destinato alla pubblicazione.\nÈ CONFORME se l'atto non contiene dati personali eccedenti rispetto alla finalità (principio di minimizzazione) e, se necessari, li sostituisce con omissis o li rinvia ad allegati non pubblicati.\nÈ NON_CONFORME se compaiono dati relativi alla salute, dati giudiziari o altre categorie particolari di dati, oppure dati identificativi di persone fisiche (codice fiscale, indirizzo di residenza, IBAN, condizioni economiche o sociali) non necessari.\nÈ DUBBIO se compaiono dati personali la cui necessità non è chiara.\nNell'evidenza riporta il passaggio con i dati personali, oscurandone il valore.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "11. Altre annotazioni: semplificazione, digitalizzazione, pari opportunità, accesso",
+      "regola": "Non è un controllo di conformità ma una richiesta di osservazioni. Valuta se l'atto presenta margini di miglioramento su: (a) semplificazione del linguaggio o del procedimento; (b) digitalizzazione (documenti, firme, comunicazioni, pagamenti); (c) aspetti che meritano un focus specifico; (d) pari opportunità e linguaggio non discriminatorio; (e) accessibilità e diritto di accesso.\nRispondi CONFORME se non emergono osservazioni rilevanti; rispondi DUBBIO se ci sono osservazioni, indicandole in modo concreto nel campo suggerimento.\nNon usare NON_CONFORME per questo elemento.",
+      "riferimenti": [],
+      "obbligatorio": false
+    }
+  ]
+}

@@ -17,5 +17,5 @@ pypdf==6.20.0
 anthropic==1.13.0
 # Code RabbitMQ (common/coda.py)
 aio-pika==10.1.1
-# modelli di atto (deploy/modelli/*.yaml)
+# modelli di atto (pacchetto/modelli/*.yaml)
 pyyaml==6.0.3

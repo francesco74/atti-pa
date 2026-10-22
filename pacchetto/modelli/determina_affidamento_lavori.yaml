@@ -1,0 +1,822 @@
+# Modello: determina di affidamento diretto di lavori con impegno di spesa
+# (art. 50, comma 1, lett. a), D.Lgs. 36/2023: lavori di importo inferiore a 150.000 euro),
+# organizzato nelle 4 fasi dell'atto amministrativo.
+#
+# Struttura e testi comuni seguono la determina di affidamento di servizi e forniture
+# (determina_affidamento_diretto.yaml, dagli schemi ANCI); le parti proprie dei lavori
+# ("fonte: aggiunto") sono scritte sul Codice dei contratti:
+#   - progetto e quadro economico (artt. 41-42, allegato I.7);
+#   - requisiti dell'esecutore (art. 100 e allegato II.12; attestazione SOA solo da 150.000
+#     euro, art. 100, comma 4);
+#   - sicurezza del cantiere: coordinatori per la progettazione e l'esecuzione, piano di
+#     sicurezza e coordinamento (D.Lgs. 81/2008, artt. 90 e 100);
+#   - direttore dei lavori nominato prima dell'affidamento (art. 114, comma 2), che sotto
+#     1 milione di euro può svolgere anche le funzioni di coordinatore per l'esecuzione
+#     (art. 114, comma 4);
+#   - costi della manodopera e della sicurezza scorporati dal ribasso (art. 41, comma 14);
+#   - polizza dell'esecutore per danni alle opere e responsabilità civile (art. 117,
+#     comma 10); penali per il ritardo (art. 126).
+#
+# CHECKLIST CORRISPONDENTI (pacchetto/checklist)
+#   scheda_determine.json            generica, per ogni determinazione (tipologia DETERMINA)
+#   scheda_affidamento_lavori.json   di questo modello
+#   scheda_<specificità>.json        di ogni modulo di regole scelto (es. immobile vincolato)
+#
+# Formato del file: vedi determina_affidamento_diretto.yaml e common/modelli.py.
+
+codice: DD_AFFIDAMENTO_DIRETTO_LAVORI
+versione: 1
+titolo: Determina di affidamento diretto di lavori con impegno di spesa
+descrizione: >-
+  Lavori sotto i 150.000 euro (art. 50, comma 1, lett. a), D.Lgs. 36/2023): manutenzioni e
+  piccoli interventi, con progetto e quadro economico, sicurezza del cantiere e direzione dei
+  lavori.
+tipologia_atto: DETERMINA
+provvedimento: Determinazione dirigenziale
+organo: Dirigente
+formula_dispositivo: DETERMINA
+
+# ---------------------------------------------------------------------------------------
+# DOMANDE INIZIALI
+# ---------------------------------------------------------------------------------------
+domande:
+  - id: importo
+    testo: Importo dei lavori, al netto dell'IVA (compresi oneri per la sicurezza)
+    tipo: importo
+    aiuto: >-
+      L'affidamento diretto di lavori è ammesso sotto i 150.000 euro (art. 50, comma 1,
+      lett. a), D.Lgs. 36/2023).
+    blocca_se: importo >= 150000
+    messaggio_blocco: >-
+      Per lavori di importo pari o superiore a 150.000 euro l'affidamento diretto non è
+      ammesso: serve una procedura negoziata senza bando o una procedura ordinaria (art. 50,
+      comma 1, lett. c) e d), D.Lgs. 36/2023).
+
+  - id: tipo_intervento
+    testo: Che tipo di intervento?
+    tipo: scelta
+    opzioni:
+      manutenzione_ordinaria: Manutenzione ordinaria
+      manutenzione_straordinaria: Manutenzione straordinaria
+      nuova_opera: Nuova opera o ristrutturazione
+
+  - id: caratteristiche
+    testo: Caratteristiche dell'intervento
+    tipo: scelta_multipla
+    opzioni_da_regole: true
+    aiuto: >-
+      Spunta le caratteristiche che riguardano questo intervento: ognuna aggiunge all'atto
+      i richiami normativi, le attestazioni e le clausole che le sono proprie, e la sua
+      checklist alla verifica. Se nessuna si applica, lascia tutto vuoto.
+
+  - id: strumento
+    testo: Con quale strumento si affida?
+    tipo: scelta
+    opzioni:
+      oda_mepa: Ordine diretto d'acquisto (ODA) sul MePA
+      confronto_mepa: Confronto di più preventivi sul MePA
+      piattaforma: Altra piattaforma di approvvigionamento digitale certificata (es. START)
+      diretto_pcp: Ordine diretto all'impresa, con CIG dall'interfaccia web della PCP di ANAC (solo sotto i 5.000 euro)
+    blocca_se: strumento == "diretto_pcp" and importo >= 5000
+    messaggio_blocco: >-
+      L'ordine diretto con CIG dall'interfaccia web della PCP è ammesso solo sotto i 5.000
+      euro: per importi superiori serve una piattaforma di approvvigionamento digitale
+      certificata.
+
+  - id: pnrr
+    testo: L'intervento è finanziato con fondi PNRR o PNC?
+    tipo: si_no
+
+  - id: cup
+    testo: L'intervento ha un CUP?
+    tipo: si_no
+    vincolo: pnrr implica cup
+    aiuto: >-
+      Obbligatorio per i progetti di investimento pubblico (art. 11 L. 3/2003), quindi di
+      norma per le manutenzioni straordinarie e le nuove opere, e sempre con il PNRR.
+
+  - id: rotazione
+    testo: Il principio di rotazione è rispettato?
+    tipo: scelta
+    se: fascia != "micro"
+    opzioni:
+      rispettata: Sì, l'impresa non è il contraente uscente
+      deroga: No, si deroga motivatamente (art. 49, comma 4)
+
+  - id: piu_imprese
+    testo: Nel cantiere è prevista la presenza di più imprese esecutrici, anche non contemporanea?
+    tipo: si_no
+    aiuto: >-
+      In tal caso il committente designa il coordinatore per la progettazione e il
+      coordinatore per l'esecuzione e si redige il piano di sicurezza e coordinamento (artt.
+      90 e 100 D.Lgs. 81/2008); altrimenti l'impresa redige il proprio piano operativo di
+      sicurezza.
+
+  - id: dl_coordinatore
+    testo: Il direttore dei lavori svolge anche le funzioni di coordinatore per l'esecuzione?
+    tipo: si_no
+    se: piu_imprese
+    aiuto: >-
+      Possibile per lavori fino a 1 milione di euro senza lavori complessi né rischi di
+      interferenza, se il direttore dei lavori ha i requisiti previsti per la sicurezza (art.
+      114, comma 4, D.Lgs. 36/2023).
+
+  - id: soa
+    testo: L'impresa è in possesso di attestazione SOA adeguata?
+    tipo: si_no
+    aiuto: >-
+      Sotto i 150.000 euro l'attestazione SOA non è richiesta (art. 100, comma 4): se
+      l'impresa la possiede, basta a dimostrare i requisiti; altrimenti si verificano i
+      requisiti semplificati dell'art. 28, comma 1, dell'allegato II.12.
+
+  - id: garanzia
+    testo: Si richiede la garanzia definitiva?
+    tipo: si_no
+    aiuto: >-
+      Pari al 5% dell'importo contrattuale (artt. 53 e 117 D.Lgs. 36/2023); in casi motivati
+      si può non richiederla (art. 53, comma 4).
+
+  - id: rup_responsabile_fase
+    testo: Il RUP è anche responsabile del procedimento per le fasi di affidamento ed esecuzione?
+    tipo: si_no
+
+  - id: incentivi
+    testo: Incentivi per le funzioni tecniche (art. 45)
+    tipo: scelta
+    opzioni:
+      nessuno: Non previsti
+      rinvio: Si rinvia l'individuazione del gruppo di lavoro a un successivo provvedimento
+      impegno: Si impegna ora l'importo degli incentivi
+
+# ---------------------------------------------------------------------------------------
+# VALORI CALCOLATI
+# ---------------------------------------------------------------------------------------
+derivati:
+  fascia:
+    - {se: importo < 5000, valore: micro}
+    - {se: importo < 40000, valore: piccolo}
+    - {valore: medio}
+  contributo_anac: importo >= 40000
+  descrizione_strumento:
+    - {se: strumento == "oda_mepa", valore: "Ordine diretto d'acquisto (ODA) del Mercato elettronico della pubblica amministrazione"}
+    - {se: strumento == "confronto_mepa", valore: "confronto di preventivi facendo ricorso al Mercato elettronico della pubblica amministrazione"}
+    - {se: strumento == "diretto_pcp", valore: "ordine diretto all'impresa"}
+    - {valore: "Piattaforma di Approvvigionamento Digitale"}
+  soglia_oggetto:
+    - {se: fascia == "micro", valore: "5.000,00"}
+    - {valore: "150.000,00"}
+  tipo_intervento_testo:
+    - {se: tipo_intervento == "manutenzione_ordinaria", valore: di manutenzione ordinaria}
+    - {se: tipo_intervento == "manutenzione_straordinaria", valore: di manutenzione straordinaria}
+    - {valore: di nuova opera o ristrutturazione}
+
+# ---------------------------------------------------------------------------------------
+# CAMPI
+# ---------------------------------------------------------------------------------------
+campi:
+  ente: {etichetta: Ente, tipo: testo, fonte: ente}
+  settore: {etichetta: Settore, tipo: testo, fonte: profilo}
+  numero_atto: {etichetta: Numero della determina, tipo: testo, fonte: sistema, obbligatorio: false}
+  data_atto: {etichetta: Data della determina, tipo: data, fonte: sistema, obbligatorio: false}
+  cig: {etichetta: CIG, tipo: cig}
+  cup: {etichetta: CUP, tipo: cup}
+  descrizione_lavori:
+    etichetta: Descrizione dei lavori
+    tipo: testo
+    aiuto: Natura dell'intervento e opera o immobile interessato (es. rifacimento della copertura della scuola primaria di via ...).
+  luogo_lavori: {etichetta: Luogo dei lavori, tipo: testo}
+  riferimenti_pnrr_oggetto: {etichetta: Riferimenti PNRR per l'oggetto, tipo: testo}
+  decreto_incarico:
+    etichetta: Decreto di conferimento dell'incarico dirigenziale (numero e data)
+    tipo: testo
+    fonte: profilo
+    aiuto: >-
+      Es. "del Sindaco n. 12 del 3 gennaio 2026": fonda la competenza ad adottare l'atto
+      (art. 107 TUEL). Si imposta una volta in "Il mio profilo".
+
+  # programmazione
+  dup_delibera: {etichetta: "Delibera di approvazione del DUP (numero e data)", tipo: testo, fonte: ente}
+  dup_triennio: {etichetta: Triennio del DUP, tipo: testo, aiuto: "Es. 2026-2028", fonte: ente}
+  bilancio_delibera: {etichetta: "Delibera di approvazione del bilancio di previsione (numero e data)", tipo: testo, fonte: ente}
+  bilancio_triennio: {etichetta: Triennio del bilancio, tipo: testo, fonte: ente}
+  peg_delibera: {etichetta: "Delibera di approvazione del PEG (numero e data)", tipo: testo, fonte: ente}
+  peg_triennio: {etichetta: Triennio del PEG, tipo: testo, fonte: ente}
+
+  # esigenza e progetto
+  esigenza:
+    etichetta: Perché i lavori sono necessari
+    tipo: testo_lungo
+    aiuto: "Il presupposto di fatto (es. stato di degrado, sicurezza, adeguamento normativo): è la base della motivazione."
+  normativa_specifica: {etichetta: Ulteriore normativa di settore, tipo: testo_lungo, obbligatorio: false}
+  progetto_approvazione:
+    etichetta: Atto di approvazione del progetto (estremi)
+    tipo: testo
+    aiuto: >-
+      Il provvedimento che approva il progetto esecutivo (o il livello di progettazione
+      adeguato all'intervento) e il quadro economico.
+  progettista: {etichetta: Progettista, tipo: testo}
+  importo_lavori_ribasso: {etichetta: "Importo dei lavori soggetto a ribasso (euro)", tipo: importo}
+  costo_manodopera_lavori: {etichetta: "Costi della manodopera (euro)", tipo: importo,
+                            aiuto: "Stimati sulle tabelle del costo medio del lavoro (art. 41, comma 13): non soggetti a ribasso."}
+  oneri_sicurezza_lavori: {etichetta: "Oneri per la sicurezza (euro)", tipo: importo, aiuto: Non soggetti a ribasso.}
+  somme_disposizione: {etichetta: "Somme a disposizione dell'amministrazione (euro)", tipo: importo,
+                       aiuto: "IVA, spese tecniche, imprevisti, incentivi, contributo ANAC..."}
+  totale_quadro_economico: {etichetta: "Totale del quadro economico (euro)", tipo: importo}
+
+  # procedura e operatore
+  articolo_regolamento_contratti: {etichetta: Articolo del regolamento dei contratti, tipo: testo, fonte: ente}
+  piattaforma: {etichetta: Piattaforma di approvvigionamento digitale utilizzata, tipo: testo}
+  motivo_no_piattaforma: {etichetta: Motivo per cui non si usa una piattaforma certificata, tipo: testo_lungo}
+  numero_preventivi: {etichetta: Numero di preventivi richiesti, tipo: numero}
+  bando_mepa: {etichetta: Bando o categoria del MePA, tipo: testo, aiuto: "Es. Lavori di manutenzione - Edili."}
+  operatore_economico: {etichetta: Impresa affidataria, tipo: testo}
+  operatore_cf_piva: {etichetta: Codice fiscale o partita IVA dell'impresa, tipo: codice_fiscale_piva}
+  importo_offerta: {etichetta: "Importo contrattuale (euro, IVA esclusa)", tipo: importo, predefinito: "{{importo}}",
+                    aiuto: Comprensivo dei costi della manodopera e degli oneri per la sicurezza.}
+  esperienze_idonee:
+    etichetta: Esperienze pregresse idonee dell'impresa
+    tipo: testo_lungo
+    aiuto: Lavori analoghi eseguiti, anche iscrizione a elenchi dell'ente (art. 50, comma 1, lett. a)).
+  categoria_lavori: {etichetta: Categoria prevalente dei lavori, tipo: testo, aiuto: "Es. OG1 - Edifici civili e industriali."}
+  attestazione_soa: {etichetta: Attestazione SOA dell'impresa (categoria e classifica), tipo: testo}
+  motivo_deroga_rotazione: {etichetta: Motivazione della deroga alla rotazione, tipo: testo_lungo}
+  fine_contratto: {etichetta: Fine che il contratto intende perseguire, tipo: testo_lungo}
+  ccnl: {etichetta: Contratto collettivo applicabile (indicato dalla stazione appaltante), tipo: testo, aiuto: "Es. CCNL Edilizia industria."}
+  termine_esecuzione: {etichetta: Tempo utile per l'esecuzione dei lavori, tipo: testo,
+                       aiuto: "Es. \"60 giorni naturali e consecutivi dalla data del verbale di consegna\"."}
+  penale_per_mille: {etichetta: Penale giornaliera per il ritardo (per mille dell'importo netto), tipo: testo, predefinito: "1",
+                     aiuto: "Tra lo 0,3 e l'1 per mille per ogni giorno di ritardo, fino al 10% dell'importo (art. 126)."}
+  termine_pagamento: {etichetta: Termine di pagamento delle fatture (giorni), tipo: numero, predefinito: "30"}
+  fascicolo: {etichetta: Fascicolo informatico del procedimento, tipo: testo, obbligatorio: false}
+
+  # responsabili
+  rup: {etichetta: Responsabile unico di progetto (RUP), tipo: testo, fonte: profilo}
+  responsabili_fase: {etichetta: Responsabili di fase (fase e nominativo), tipo: testo_lungo}
+  direttore_lavori: {etichetta: Direttore dei lavori, tipo: testo}
+  coordinatore_progettazione: {etichetta: Coordinatore per la sicurezza in fase di progettazione, tipo: testo}
+  coordinatore_esecuzione: {etichetta: Coordinatore per la sicurezza in fase di esecuzione, tipo: testo}
+  importo_garanzia: {etichetta: "Importo della garanzia definitiva (euro)", tipo: importo}
+  motivo_no_garanzia: {etichetta: Perché non si richiede la garanzia definitiva, tipo: testo}
+  somma_assicurata: {etichetta: "Somma assicurata con la polizza per danni alle opere (euro)", tipo: importo,
+                     predefinito: "{{importo_offerta}}", aiuto: "Di norma pari all'importo del contratto (art. 117, comma 10)."}
+
+  # PNRR
+  decreto_finanziamento_pnrr: {etichetta: Decreto di finanziamento PNRR, tipo: testo}
+
+  # spesa
+  impegni:
+    etichetta: Impegni di spesa
+    tipo: elenco
+    minimo: 1
+    sottocampi:
+      importo: {etichetta: "Importo (euro, IVA inclusa)", tipo: importo}
+      capitolo: {etichetta: Capitolo, tipo: testo}
+      descrizione: {etichetta: Descrizione del capitolo, tipo: testo}
+      missione: {etichetta: Missione, tipo: testo}
+      programma: {etichetta: Programma, tipo: testo}
+      bilancio: {etichetta: Bilancio (esercizio), tipo: testo}
+  capitolo_disponibilita: {etichetta: Capitolo con la disponibilità, tipo: testo, predefinito: "{{impegni.0.capitolo}}"}
+  bilancio_disponibilita: {etichetta: Bilancio, tipo: testo, predefinito: "{{impegni.0.bilancio}}"}
+  contributo_anac_importo: {etichetta: "Contributo ANAC (euro)", tipo: importo}
+  contributo_anac_capitolo: {etichetta: Capitolo del contributo ANAC, tipo: testo}
+  contributo_anac_bilancio: {etichetta: Bilancio del contributo ANAC, tipo: testo}
+  incentivi_importo: {etichetta: "Importo degli incentivi (euro)", tipo: importo}
+  incentivi_capitolo: {etichetta: Capitolo degli incentivi, tipo: testo}
+  incentivi_bilancio: {etichetta: Bilancio degli incentivi, tipo: testo}
+
+  # pubblicità e chiusura
+  articolo_albo: {etichetta: Articolo del regolamento sui contratti per l'albo pretorio, tipo: testo, fonte: ente}
+  url_trasparenza: {etichetta: Indirizzo di Amministrazione trasparente, tipo: testo, fonte: ente}
+  sezione_tar: {etichetta: Sezione del TAR competente, tipo: testo, fonte: ente, aiuto: "Es. Toscana - Firenze."}
+  luogo: {etichetta: Luogo, tipo: testo, fonte: ente}
+  data_adozione: {etichetta: Data di adozione, tipo: data,
+                  aiuto: "Le norme citate sono verificate al testo vigente in questa data."}
+  firmatario: {etichetta: Dirigente firmatario, tipo: testo, fonte: profilo}
+
+# ---------------------------------------------------------------------------------------
+# FASI DELL'ATTO
+# ---------------------------------------------------------------------------------------
+fasi:
+  - numero: 1
+    titolo: Intestazione e identificazione dell'atto
+    sezioni:
+      - titolo: Intestazione
+        capoversi:
+          - id: intestazione
+            fonte: ANCI-1
+            modificabile: false
+            testo: |-
+              {{ente}}
+              Settore {{settore}}
+              Determinazione dirigenziale n. {{numero_atto}} del {{data_atto}}
+
+      - titolo: Oggetto
+        oggetto: true
+        innesto: oggetto
+        capoversi:
+          - id: oggetto_con_cup
+            se: cup
+            fonte: aggiunto
+            testo: >-
+              Codice CIG: {{cig}} - CUP {{cup}} - Determina di affidamento diretto, mediante
+              {{descrizione_strumento}}, dei lavori {{tipo_intervento_testo}} di importo
+              inferiore ad euro {{soglia_oggetto}}: {{descrizione_lavori}}, ai sensi dell'art.
+              50, co. 1, lett. a) del D.Lgs. 36/2023.
+          - id: oggetto_senza_cup
+            se: not cup
+            fonte: aggiunto
+            testo: >-
+              Codice CIG: {{cig}} - Determina di affidamento diretto, mediante
+              {{descrizione_strumento}}, dei lavori {{tipo_intervento_testo}} di importo
+              inferiore ad euro {{soglia_oggetto}}: {{descrizione_lavori}}, ai sensi dell'art.
+              50, co. 1, lett. a) del D.Lgs. 36/2023.
+          - id: oggetto_pnrr
+            se: pnrr
+            testo: "{{riferimenti_pnrr_oggetto}}"
+
+      - titolo: Organo
+        capoversi:
+          - id: organo
+            modificabile: false
+            testo: IL DIRIGENTE DEL SETTORE {{settore}}
+
+  # =====================================================================================
+  - numero: 2
+    titolo: Preambolo e motivazione
+    sezioni:
+      - titolo: Competenza
+        capoversi:
+          - id: competenza
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art107"]
+            testo: >-
+              Visto il decreto {{decreto_incarico}}, con il quale è stato conferito al
+              sottoscritto l'incarico di direzione del Settore {{settore}}, con le funzioni di
+              cui all'art. 107 del D.Lgs. 267/2000;
+
+      - titolo: Atti di programmazione
+        formula: Premesso che
+        capoversi:
+          - id: dup
+            testo: con Delibera di Consiglio n. {{dup_delibera}}, è stato approvato il Documento Unico di Programmazione {{dup_triennio}};
+          - id: bilancio
+            testo: con Delibera di Consiglio n. {{bilancio_delibera}}, è stato approvato il Bilancio di Previsione {{bilancio_triennio}};
+          - id: peg
+            testo: con Delibera di Giunta n. {{peg_delibera}}, è stato approvato il Piano Esecutivo di Gestione {{peg_triennio}};
+
+      - titolo: Esigenza
+        capoversi:
+          - id: esigenza
+            testo: "Considerato che si rende necessario eseguire i lavori di {{descrizione_lavori}}, presso {{luogo_lavori}}: {{esigenza}};"
+
+      - titolo: Progetto e quadro economico
+        aiuto: Livelli e contenuti della progettazione (art. 41 e allegato I.7); verifica della progettazione (art. 42).
+        capoversi:
+          - id: progetto
+            fonte: aggiunto
+            norme:
+              - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+              - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art42"
+            testo: >-
+              Visto il progetto dei lavori redatto da {{progettista}}, verificato ai sensi
+              dell'art. 42 del D.Lgs. 36/2023 e approvato con {{progetto_approvazione}};
+          - id: quadro_economico
+            fonte: aggiunto
+            testo: >-
+              Dato atto che il quadro economico dell'intervento prevede lavori soggetti a
+              ribasso per euro {{importo_lavori_ribasso}}, costi della manodopera per euro
+              {{costo_manodopera_lavori}} e oneri per la sicurezza per euro
+              {{oneri_sicurezza_lavori}}, non soggetti a ribasso ai sensi dell'art. 41, comma
+              14, del D.Lgs. 36/2023, e somme a disposizione dell'amministrazione per euro
+              {{somme_disposizione}}, per un totale di euro {{totale_quadro_economico}};
+
+      - titolo: Quadro normativo
+        formula: Visti
+        riferimenti_libreria: true
+        innesto: visti_normativi
+        capoversi:
+          - id: visto_codice
+            testo: il D.Lgs. 31 marzo 2023, n. 36 e s.m.i. - "Codice dei contratti pubblici";
+          - id: visto_tuel
+            testo: il D.Lgs. 18 agosto 2000, n. 267 (Testo Unico degli Enti Locali) e s.m.i.;
+          - id: visto_sicurezza
+            testo: il D.Lgs. 9 aprile 2008, n. 81 "Tutela della salute e della sicurezza nei luoghi di lavoro";
+          - id: visto_trasparenza
+            testo: il D.Lgs. 33/2013 e l'art. 28 del D.Lgs. 36/2023, in materia di Amministrazione trasparente;
+          - id: visto_normativa_specifica
+            facoltativo: true
+            incluso: false
+            testo: "{{normativa_specifica}}"
+
+      - titolo: Procedura di affidamento
+        capoversi:
+          - id: art50
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"]
+            testo: >-
+              Visto l'art. 50, comma 1, lett. a), del D.Lgs. 36/2023, che consente
+              l'affidamento diretto dei lavori di importo inferiore a 150.000 euro, anche senza
+              consultazione di più operatori economici, assicurando che siano scelti soggetti in
+              possesso di documentate esperienze pregresse idonee all'esecuzione delle
+              prestazioni contrattuali;
+          - id: regolamento_contratti
+            testo: Visto l'art. {{articolo_regolamento_contratti}} del Regolamento dell'Ente per la disciplina dei contratti;
+          - id: strumento_mepa
+            se: strumento in ["oda_mepa", "confronto_mepa"]
+            testo: >-
+              Dato atto che si procede mediante {{descrizione_strumento}}, bando
+              {{bando_mepa}}, che garantisce la tracciabilità della procedura e la pubblicità
+              prevista dagli artt. 25 e 28 del D.Lgs. 36/2023;
+          - id: strumento_piattaforma
+            se: strumento == "piattaforma"
+            testo: Dato atto che si procede tramite la piattaforma di approvvigionamento digitale certificata {{piattaforma}};
+          - id: strumento_pcp
+            se: strumento == "diretto_pcp"
+            testo: >-
+              Dato atto che, trattandosi di affidamento di importo inferiore a 5.000 euro, il
+              CIG è stato acquisito tramite l'interfaccia web della Piattaforma dei Contratti
+              Pubblici di ANAC, come consentito dal Comunicato del Presidente ANAC del 18 giugno
+              2025, in quanto {{motivo_no_piattaforma}};
+          - id: preventivi
+            se: strumento == "confronto_mepa"
+            testo: Dato atto che sono stati richiesti n. {{numero_preventivi}} preventivi;
+
+      - titolo: Scelta dell'impresa e requisiti
+        capoversi:
+          - id: esperienze
+            testo: >-
+              Dato atto che l'impresa {{operatore_economico}} è in possesso di documentate
+              esperienze pregresse idonee all'esecuzione dei lavori, in quanto
+              {{esperienze_idonee}}, e che l'importo offerto, pari a euro {{importo_offerta}},
+              è ritenuto congruo;
+          - id: requisiti_soa
+            se: soa
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art100"]
+            testo: >-
+              Dato atto che l'impresa è in possesso dell'attestazione di qualificazione SOA
+              {{attestazione_soa}}, adeguata alla categoria prevalente dei lavori
+              ({{categoria_lavori}}), che dimostra i requisiti di partecipazione e di
+              esecuzione ai sensi dell'art. 100, comma 4, del D.Lgs. 36/2023;
+          - id: requisiti_sotto_soglia
+            se: not soa
+            fonte: aggiunto
+            testo: >-
+              Dato atto che, trattandosi di lavori di importo inferiore a 150.000 euro, per i
+              quali non è richiesta l'attestazione SOA, l'impresa possiede i requisiti di
+              ordine tecnico-organizzativo previsti dall'art. 28, comma 1, dell'allegato II.12
+              al D.Lgs. 36/2023 per la categoria prevalente dei lavori ({{categoria_lavori}});
+          # Requisiti generali: sotto i 40.000 euro basta la dichiarazione sostitutiva, con
+          # verifica anche a campione (art. 52, comma 1); da 40.000 euro la determina dà atto
+          # dei controlli eseguiti. Stessa distinzione del modello di servizi e forniture.
+          - id: requisiti_autocertificati
+            se: fascia in ["micro", "piccolo"]
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art52"]
+            aiuto: >-
+              Sotto i 40.000 euro l'impresa attesta i requisiti con dichiarazione sostitutiva e
+              l'ente li verifica anche a campione, con modalità predeterminate ogni anno (art.
+              52, comma 1, D.Lgs. 36/2023); se la verifica è negativa si applica il comma 2
+              (risoluzione del contratto, segnalazione all'ANAC).
+            testo: |-
+              Dato atto che:
+              - l'impresa ha attestato, con dichiarazione sostitutiva, il possesso dei requisiti di ordine generale di cui agli artt. 94 e 95 del D.Lgs. 36/2023 e dei requisiti di qualificazione richiesti, ai sensi dell'art. 52, comma 1, del medesimo decreto;
+              - l'ente procederà alla verifica delle dichiarazioni rese dall'impresa nel caso in cui la stessa risulti tra i soggetti da sottoporre a controllo a campione ai sensi dell'art. 52, comma 1, del D.Lgs. n. 36/2023, e in caso di esito negativo applicherà quanto previsto dal comma 2 del medesimo articolo e dalle clausole contrattuali in materia di risoluzione del contratto;
+          - id: requisiti_controllati
+            se: fascia == "medio"
+            fonte: ANCI-1
+            aiuto: >-
+              Da 40.000 euro non si applica l'autocertificazione dell'art. 52: i requisiti si
+              verificano prima dell'affidamento, di norma tramite il Fascicolo virtuale
+              dell'operatore economico (FVOE).
+            testo: >-
+              Dato atto che dai controlli effettuati l'impresa risulta essere in possesso dei
+              requisiti di ordine generale di cui agli artt. 94 e 95 del D.Lgs. 36/2023 e dei
+              requisiti di qualificazione richiesti;
+
+      - titolo: Rotazione
+        se: fascia != "micro"
+        capoversi:
+          - id: rotazione_rispettata
+            se: rotazione == "rispettata"
+            testo: Dato atto del rispetto del principio di rotazione di cui all'art. 49 del D.Lgs. 36/2023;
+          - id: rotazione_deroga
+            se: rotazione == "deroga"
+            testo: >-
+              Dato atto che si è derogato al principio di rotazione ai sensi dell'art. 49, comma
+              4, del D.Lgs. 36/2023 in quanto {{motivo_deroga_rotazione}};
+
+      - titolo: Conflitto di interessi
+        capoversi:
+          - id: conflitto_interessi
+            fonte: aggiunto
+            testo: >-
+              Dato atto che, ai sensi dell'art. 6-bis della L. 241/1990 e dell'art. 16 del D.Lgs.
+              36/2023, non sussistono situazioni di conflitto di interessi, anche potenziale, in
+              capo al sottoscritto, al RUP e al personale che interviene nella procedura, come
+              risulta dalle dichiarazioni acquisite agli atti;
+
+      - titolo: Specificità dell'intervento
+        innesto: dato_atto
+        capoversi: []
+
+      - titolo: Elementi essenziali del contratto
+        innesto: elementi_essenziali_192
+        capoversi:
+          - id: elementi_192
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art192"]
+            testo: |-
+              Ritenuto di fissare i contenuti minimi essenziali ai sensi dell'art. 192 comma 1 del D.Lgs. 267/2000 come segue:
+              a) il fine che il contratto intende perseguire è quello di {{fine_contratto}};
+              b) l'oggetto del contratto è l'esecuzione dei lavori di {{descrizione_lavori}};
+              c) il contratto verrà stipulato mediante scrittura privata, anche in modalità elettronica, ovvero mediante corrispondenza secondo l'uso commerciale ai sensi dell'art. 18, comma 1, del D.Lgs. 36/2023;
+              d) le clausole contrattuali sono quelle del progetto approvato e della richiesta di offerta;
+          - id: ritenuto_affidare
+            testo: >-
+              Ritenuto, per le ragioni sopra esposte, di affidare i lavori all'impresa
+              {{operatore_economico}} per un importo pari a euro {{importo_offerta}}, comprensivo
+              dei costi della manodopera e degli oneri per la sicurezza, oltre IVA nei termini di
+              legge, ai sensi dell'art. 50, comma 1, lett. a) del D.Lgs. 36/2023;
+
+      - titolo: Sicurezza del cantiere
+        aiuto: Coordinatori e piano di sicurezza (D.Lgs. 81/2008, artt. 90, 100 e 101).
+        capoversi:
+          - id: sicurezza_coordinatori
+            se: piu_imprese
+            fonte: aggiunto
+            testo: >-
+              Dato atto che, essendo prevista nel cantiere la presenza di più imprese
+              esecutrici, sono stati designati, ai sensi dell'art. 90 del D.Lgs. 81/2008, il
+              coordinatore per la sicurezza in fase di progettazione, {{coordinatore_progettazione}},
+              che ha redatto il piano di sicurezza e coordinamento, e il coordinatore per la
+              sicurezza in fase di esecuzione, {{coordinatore_esecuzione}};
+          - id: sicurezza_pos
+            se: not piu_imprese
+            fonte: aggiunto
+            testo: >-
+              Dato atto che nel cantiere non è prevista la presenza di più imprese esecutrici e
+              che l'impresa affidataria redige il proprio piano operativo di sicurezza ai sensi
+              del D.Lgs. 81/2008, da consegnare prima dell'inizio dei lavori;
+
+      - titolo: Direzione dei lavori
+        capoversi:
+          - id: direttore_lavori
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art114"]
+            testo: >-
+              Dato atto che, ai sensi dell'art. 114, comma 2, del D.Lgs. 36/2023, è stato
+              nominato direttore dei lavori {{direttore_lavori}};
+          - id: dl_coordinatore
+            se: piu_imprese and dl_coordinatore
+            fonte: aggiunto
+            testo: >-
+              Dato atto che il direttore dei lavori, in possesso dei requisiti previsti dalla
+              normativa sulla sicurezza, svolge anche le funzioni di coordinatore per la
+              sicurezza in fase di esecuzione, ai sensi dell'art. 114, comma 4, del D.Lgs.
+              36/2023;
+
+      - titolo: Contratto collettivo e costo della manodopera
+        capoversi:
+          - id: ccnl
+            fonte: ANCI-1
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art11"]
+            testo: >-
+              Ritenuto di stabilire, ai sensi dell'art. 11, co. 2 del Codice dei contratti, che
+              il contratto collettivo applicabile al personale impiegato nei lavori è il
+              seguente: {{ccnl}}, e di dare atto della congruità dei costi della manodopera e
+              della sicurezza aziendale indicati dall'impresa;
+
+      - titolo: Codici, tracciabilità e copertura della spesa
+        capoversi:
+          - id: cig_cup_con_cup
+            se: cup
+            testo: Dato atto che al presente appalto è stato assegnato il CIG {{cig}} e il CUP {{cup}};
+          - id: cig_senza_cup
+            se: not cup
+            testo: Dato atto che al presente appalto è stato assegnato il CIG {{cig}};
+          - id: tracciabilita
+            testo: >-
+              Dato atto che ai sensi della Legge 13 agosto 2010, n. 136 (Tracciabilità dei
+              flussi finanziari), i pagamenti saranno effettuati sul conto corrente dedicato
+              comunicato dall'impresa, obbligata ad ottemperare a tutti gli obblighi connessi;
+          - id: disponibilita
+            testo: Vista la disponibilità finanziaria presente sul Cap. {{capitolo_disponibilita}} del bilancio {{bilancio_disponibilita}};
+          - id: finanza_pubblica
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"]
+            testo: Verificato il rispetto delle regole di finanza pubblica ai sensi dell'art. 183, co. 8 del D.Lgs. 267/2000;
+
+      - titolo: Responsabile unico di progetto
+        capoversi:
+          - id: rup
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art15"]
+            testo: Considerato che il Responsabile unico di progetto (RUP) ai sensi dell'art. 15 del D.Lgs. 36/2023 è {{rup}};
+          - id: responsabili_fase
+            se: not rup_responsabile_fase
+            testo: >-
+              Considerato che, in applicazione del modello organizzativo adottato dall'ente,
+              sono stati nominati i seguenti responsabili di procedimento per le fasi di
+              affidamento ed esecuzione: {{responsabili_fase}};
+
+      - titolo: Garanzie e coperture assicurative
+        innesto: garanzia
+        capoversi:
+          - id: garanzia_si
+            se: garanzia
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art117"]
+            testo: >-
+              Dato atto che, ai sensi degli artt. 53 e 117 del D.Lgs. 36/2023, l'impresa è tenuta
+              a presentare garanzia definitiva pari al 5% dell'importo contrattuale, pari a euro
+              {{importo_garanzia}};
+          - id: garanzia_no
+            se: not garanzia
+            testo: Dato atto che in considerazione di {{motivo_no_garanzia}} non è richiesta la garanzia definitiva;
+          - id: polizza_car
+            fonte: aggiunto
+            testo: >-
+              Dato atto che l'impresa è tenuta a consegnare, almeno dieci giorni prima della
+              consegna dei lavori, la polizza di assicurazione per i danni alle opere e agli
+              impianti, anche preesistenti, per una somma assicurata di euro
+              {{somma_assicurata}}, e per la responsabilità civile verso terzi, ai sensi
+              dell'art. 117, comma 10, del D.Lgs. 36/2023;
+
+  # =====================================================================================
+  - numero: 3
+    titolo: Dispositivo
+    formula: DETERMINA
+    premessa: >-
+      per quanto esposto in narrativa che forma parte integrante e sostanziale del presente
+      provvedimento:
+    numerazione: automatica
+    sezioni:
+      - titolo: Decisione
+        capoversi:
+          - id: d_affidamento
+            testo: >-
+              di affidare, ai sensi dell'art. 50 comma 1 lett. a) del D.Lgs. 36/2023, i lavori
+              di {{descrizione_lavori}} all'impresa {{operatore_economico}} (C.F./P.IVA
+              {{operatore_cf_piva}}) per un importo pari a euro {{importo_offerta}}, comprensivo
+              di euro {{costo_manodopera_lavori}} per costi della manodopera e di euro
+              {{oneri_sicurezza_lavori}} per oneri della sicurezza, oltre IVA nei termini di legge;
+
+      - titolo: Impegno di spesa
+        capoversi:
+          - id: d_impegno
+            ripeti_per: impegni
+            testo: >-
+              di procedere al finanziamento assumendo il seguente impegno di spesa di importo
+              pari a euro {{impegni.importo}} (IVA inclusa) sul cap. {{impegni.capitolo}};
+              descrizione {{impegni.descrizione}}; missione {{impegni.missione}}; programma
+              {{impegni.programma}}; bilancio {{impegni.bilancio}}, che presenta adeguata
+              disponibilità;
+          - id: d_regolarita
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art147-bis"]
+            testo: di attestare la regolarità e la correttezza del presente atto ai sensi dell'art. 147-bis del D.Lgs. 267/2000;
+          - id: d_pnrr_finanziamento
+            se: pnrr
+            testo: di dare atto che l'intervento è finanziato con fondi PNRR, come risulta dal {{decreto_finanziamento_pnrr}};
+          - id: d_183
+            norme: ["urn:nir:stato:decreto.legislativo:2000-08-18;267~art183"]
+            testo: >-
+              di dare atto che, ai sensi dell'art. 183, comma 8, del D.Lgs. 267/2000, il
+              programma dei pagamenti è compatibile con gli stanziamenti di cassa e con le regole
+              di finanza pubblica, e che il presente atto diviene esecutivo con l'apposizione del
+              visto di regolarità contabile attestante la copertura finanziaria ai sensi
+              dell'art. 183, comma 7;
+          - id: d_anac_impegno
+            se: contributo_anac
+            testo: >-
+              di impegnare il contributo dovuto ad ANAC, pari a euro {{contributo_anac_importo}},
+              sul cap. {{contributo_anac_capitolo}} del bilancio {{contributo_anac_bilancio}};
+          - id: d_anac_non_dovuto
+            se: not contributo_anac
+            testo: di dare atto che, trattandosi di contratto di importo inferiore a 40.000,00 euro, non è dovuto il contributo a favore di ANAC;
+
+      - titolo: Responsabili e sicurezza
+        capoversi:
+          - id: d_rup
+            testo: >-
+              di dare atto che il Responsabile unico di progetto è {{rup}} e il direttore dei
+              lavori è {{direttore_lavori}}, e che è stata acquisita la documentazione attestante
+              l'insussistenza delle cause di incompatibilità e di astensione;
+          - id: d_coordinatori
+            se: piu_imprese
+            testo: >-
+              di dare atto che il coordinatore per la sicurezza in fase di esecuzione è
+              {{coordinatore_esecuzione}} e che il piano di sicurezza e coordinamento è parte
+              integrante del contratto;
+
+      - titolo: Stipula del contratto
+        capoversi:
+          - id: d_stipula
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art18"]
+            testo: >-
+              di procedere alla stipula del contratto ai sensi dell'art. 18, comma 1, del D.Lgs.
+              36/2023, mediante scrittura privata, anche in modalità elettronica, o mediante
+              corrispondenza secondo l'uso del commercio;
+
+      - titolo: Condizioni del contratto
+        capoversi:
+          - id: d_termine_esecuzione
+            fonte: aggiunto
+            testo: di stabilire che i lavori dovranno essere ultimati entro {{termine_esecuzione}};
+          - id: d_penali
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art126"]
+            testo: >-
+              di stabilire che per ogni giorno di ritardo nell'ultimazione dei lavori si applica
+              una penale pari al {{penale_per_mille}} per mille dell'importo netto contrattuale,
+              nel limite complessivo del 10 per cento di tale importo, ai sensi dell'art. 126 del
+              D.Lgs. 36/2023;
+          - id: d_pagamento
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2002-10-09;231~art4"]
+            testo: >-
+              di stabilire che i pagamenti saranno effettuati entro {{termine_pagamento}} giorni
+              dal ricevimento della fattura elettronica, emessa sulla base degli stati di
+              avanzamento o del certificato di regolare esecuzione, previa verifica della
+              regolarità contributiva dell'impresa, ai sensi dell'art. 4 del D.Lgs. 231/2002;
+          - id: d_codice_comportamento
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.del.presidente.della.repubblica:2013-04-16;62~art2"]
+            testo: >-
+              di dare atto che gli obblighi di condotta previsti dal D.P.R. 62/2013 e dal Codice
+              di comportamento dell'ente si estendono, per quanto compatibili, ai collaboratori a
+              qualsiasi titolo dell'impresa e che la loro violazione è causa di risoluzione del
+              contratto;
+          - id: d_dati_personali
+            fonte: aggiunto
+            testo: >-
+              di dare atto che i dati personali acquisiti nel procedimento sono trattati nel
+              rispetto del Regolamento (UE) 2016/679 e del D.Lgs. 196/2003, previa informativa
+              all'impresa;
+
+      - titolo: Clausole specifiche
+        innesto: dispositivo
+        capoversi: []
+
+      - titolo: Codici e incentivi
+        capoversi:
+          - id: d_cig_cup
+            se: cup
+            testo: di dare atto che per l'affidamento è stato acquisito il CIG {{cig}} e il CUP {{cup}};
+          - id: d_cig
+            se: not cup
+            testo: di dare atto che per l'affidamento è stato acquisito il CIG {{cig}};
+          - id: d_incentivi_rinvio
+            se: incentivi == "rinvio"
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art45"]
+            testo: di rinviare a un successivo provvedimento l'individuazione del gruppo di lavoro ai fini dell'incentivazione di cui all'art. 45 del D.Lgs. 36/2023;
+          - id: d_incentivi_impegno
+            se: incentivi == "impegno"
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art45"]
+            testo: >-
+              di impegnare l'importo di euro {{incentivi_importo}} al cap. {{incentivi_capitolo}}
+              del bilancio {{incentivi_bilancio}}, per gli incentivi tecnici di cui all'art. 45 del
+              D.Lgs. 36/2023;
+
+      - titolo: Pubblicità, trasparenza e ricorsi
+        capoversi:
+          - id: d_fascicolo
+            fonte: aggiunto
+            norme: ["urn:nir:stato:decreto.legislativo:2005-03-07;82~art41"]
+            testo: >-
+              di dare atto che gli atti e i documenti del procedimento sono conservati nel
+              fascicolo informatico {{fascicolo}}, ai sensi dell'art. 41 del D.Lgs. 82/2005;
+          - id: d_albo
+            testo: >-
+              di disporre la pubblicazione del presente provvedimento all'Albo pretorio ai sensi
+              dell'art. {{articolo_albo}} del Regolamento per la disciplina dei contratti e ai
+              sensi dell'art. 27 del D.Lgs. 36/2023;
+          - id: d_trasparenza
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art28"]
+            testo: >-
+              di disporre, ai sensi dell'art. 28 del D.Lgs. 36/2023, la pubblicazione degli atti
+              della procedura nella sezione "Amministrazione trasparente" all'indirizzo
+              {{url_trasparenza}}, con l'applicazione del D.Lgs. 33/2013;
+          - id: d_avviso_risultati
+            norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art50"]
+            testo: di disporre la pubblicazione dell'avviso sui risultati della procedura ai sensi dell'art. 50, co. 9 del D.Lgs. 36/2023;
+          - id: d_ricorso
+            modificabile: false
+            testo: >-
+              di dare atto, ai sensi dell'art. 3 della legge 241/1990, che avverso il presente
+              provvedimento è ammesso ricorso al Tribunale amministrativo regionale (TAR),
+              sezione di {{sezione_tar}}, entro 30 giorni dalla pubblicazione all'albo online.
+
+  # =====================================================================================
+  - numero: 4
+    titolo: Luogo, data e sottoscrizione
+    sezioni:
+      - titolo: Chiusura
+        capoversi:
+          - id: luogo_data
+            testo: "{{luogo}}, {{data_adozione}}"
+          - id: firma
+            modificabile: false
+            testo: |-
+              Il Dirigente
+              {{firmatario}}
+          - id: firma_digitale
+            fonte: aggiunto
+            facoltativo: true
+            testo: Documento firmato digitalmente ai sensi del D.Lgs. 7 marzo 2005, n. 82 e norme collegate.

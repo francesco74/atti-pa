@@ -1,5 +1,6 @@
 # Regole per il controller Ingress già presente nel cluster e condiviso con altri siti:
-# le annotazioni valgono solo per questo Ingress (host atti.ente.local), non per gli altri.
+# le annotazioni valgono solo per questo Ingress (host attipa.provincia.lucca.it), non per
+# gli altri. Il TLS termina qui; atti-pa non passa dal gateway nginx del namespace rag.
 # Frontend e API sullo stesso dominio: il cookie di sessione funziona senza CORS.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -12,16 +13,19 @@ metadata:
     # (60 s) e DOCUMENTI_TIMEOUT (150 s) restano sotto i 180 s, UPLOAD_MAX_MB (20) sotto 25 MB.
     # Con un controller diverso vanno impostati gli equivalenti.
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "180"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "180"
+    # http → https: il cookie di sessione è Secure (COOKIE_SECURE), in http il login non va
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   # classe del controller esistente (kubectl get ingressclass)
-  ingressClassName: nginx
+  ingressClassName: ingress-nginx-internet
   tls:
-    - hosts: [atti.ente.local]
-      secretName: atti-pa-tls
+    - hosts: [attipa.provincia.lucca.it]
+      secretName: attipa-tls-secret
   rules:
-    - host: atti.ente.local
+    - host: attipa.provincia.lucca.it
       http:
         paths:
           - path: /api

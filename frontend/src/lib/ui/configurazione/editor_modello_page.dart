@@ -247,40 +247,87 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
 
   // --- albero -------------------------------------------------------------------------------
 
-  Widget _voce(String titolo, _Sel s, {String? sotto, IconData? icona, int livello = 0, Color? colore}) {
+  // ricerca nella struttura: testo e tipo di elemento (tutto, capoversi, domande, dati)
+  String _ricerca = '';
+  String _tipoRicerca = 'tutto';
+  int _risultati = 0;
+
+  bool get _filtroAttivo => _ricerca.trim().isNotEmpty || _tipoRicerca != 'tutto';
+
+  static const _tipiRicerca = {'tutto': 'Tutto', 'capoversi': 'Capoversi', 'domande': 'Domande', 'dati': 'Dati'};
+
+  String _famiglia(String tipo) => switch (tipo) {
+        'capoverso' || 'capoverso_inserto' => 'capoversi',
+        'domanda' => 'domande',
+        'dato' => 'dati',
+        _ => 'altro',
+      };
+
+  /// La voce supera il filtro? testi: dove cercare (oltre al titolo).
+  bool _visibile(_Sel s, String titolo, Iterable<Object?> testi) {
+    if (!_filtroAttivo) return true;
+    if (_tipoRicerca != 'tutto' && _famiglia(s.tipo) != _tipoRicerca) return false;
+    return corrisponde(_ricerca, [titolo, ...testi]);
+  }
+
+  /// Voce dell'albero; null se esclusa dalla ricerca. contesto: mostrata comunque (es. la
+  /// sezione di un capoverso trovato), senza contarla tra i risultati.
+  Widget? _voce(String titolo, _Sel s,
+      {String? sotto, IconData? icona, int livello = 0, Color? colore, Iterable<Object?> cerca = const [], bool contesto = false}) {
+    final trovata = _visibile(s, titolo, [sotto, ...cerca]);
+    if (!trovata && !contesto) return null;
+    if (trovata && _filtroAttivo) _risultati++;
+    final q = trovata ? _ricerca : '';
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
       contentPadding: EdgeInsets.only(left: 8.0 + 16 * livello, right: 4),
       leading: icona == null ? null : Icon(icona, size: 18, color: colore),
-      title: Text(titolo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: sotto == null ? null : Text(sotto, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: testoEvidenziato(context, titolo, q),
+      subtitle: sotto == null ? null : testoEvidenziato(context, sotto, q),
       selected: _sel == s,
       onTap: () => _seleziona(s),
     );
   }
 
-  Widget _gruppo(String titolo, List<Widget> figli, {VoidCallback? aggiungi, String? aggiungiEtichetta}) {
+  /// Gruppo dell'albero; con la ricerca attiva, solo se contiene risultati (e aperto).
+  Widget? _gruppo(String titolo, List<Widget?> figli, {VoidCallback? aggiungi, String? aggiungiEtichetta}) {
+    final visibili = figli.whereType<Widget>().toList();
+    if (_filtroAttivo && visibili.isEmpty) return null;
     return ExpansionTile(
+      key: PageStorageKey('$titolo#$_filtroAttivo'),
       initiallyExpanded: true,
       dense: true,
       tilePadding: const EdgeInsets.symmetric(horizontal: 8),
       title: Text(titolo, style: Theme.of(context).textTheme.titleSmall),
-      trailing: aggiungi == null
+      trailing: aggiungi == null || _filtroAttivo
           ? null
           : IconButton(tooltip: aggiungiEtichetta ?? 'Aggiungi', icon: const Icon(Icons.add), onPressed: aggiungi),
-      children: figli,
+      children: visibili,
     );
   }
 
   String _anteprimaTesto(Object? t) {
     final s = (t ?? '').toString().replaceAll('\n', ' ');
+    // con la ricerca il testo intero: la parola trovata può essere oltre i primi caratteri
+    if (_filtroAttivo) return s;
     return s.length > 60 ? '${s.substring(0, 60)}…' : s;
   }
 
   bool _capoversoCambiato(Map<String, dynamic> c) {
     final st = _capoversoStandard(c['id'] as String);
     return st != null && st.toString() != c.toString();
+  }
+
+  Widget? _vocCapoverso(Map<String, dynamic> c, _Sel s, Set<Object?> proposteAperte, Color colCambiato) {
+    final proposta = proposteAperte.contains(c['id']);
+    return _voce(_anteprimaTesto(c['testo']), s,
+        sotto: [c['id'], if (c['se'] != null) 'condizionato', if (c['facoltativo'] == true) 'facoltativo', if (proposta) 'proposta di modifica']
+            .join(' · '),
+        cerca: [c['testo'], c['aiuto']],
+        icona: proposta ? Icons.feedback_outlined : Icons.notes,
+        colore: _capoversoCambiato(c) || proposta ? colCambiato : null,
+        livello: 2);
   }
 
   Widget _albero() {
@@ -290,48 +337,59 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
     final domande = _lista('domande');
     final colCambiato = tema.colorScheme.tertiary;
     final proposteAperte = {for (final p in _proposte) p['capoverso']};
-    return ListView(children: [
-      _voce(modulo ? 'Specificità' : 'Dati generali', const _Sel('generale'), icona: Icons.info_outline),
+    _risultati = 0;
+
+    List<Widget?> sezioniDellaFase(int i) => [
+          _voce('Impostazioni della fase', _Sel('fase', i), icona: Icons.tune, livello: 1, cerca: [_fase(i)['titolo']]),
+          for (var j = 0; j < _sezioni(i).length; j++) ...() {
+            final capoversi = [
+              for (var k = 0; k < _capoversi(i, j).length; k++)
+                _vocCapoverso(_capoversi(i, j)[k] as Map<String, dynamic>, _Sel('capoverso', i, j, k), proposteAperte, colCambiato),
+            ].whereType<Widget>().toList();
+            return [
+              _voce(_sezione(i, j)['titolo']?.toString() ?? '', _Sel('sezione', i, j),
+                  icona: Icons.segment,
+                  livello: 1,
+                  sotto: _sezione(i, j)['innesto'] != null ? 'punto di innesto: ${_sezione(i, j)['innesto']}' : null,
+                  contesto: capoversi.isNotEmpty),
+              ...capoversi,
+            ];
+          }(),
+        ];
+
+    final voci = <Widget?>[
+      _voce(modulo ? 'Specificità' : 'Dati generali', const _Sel('generale'), icona: Icons.info_outline,
+          cerca: [definizione['titolo'], definizione['etichetta'], definizione['codice']]),
       _gruppo('Domande iniziali', [
         for (var i = 0; i < domande.length; i++)
           _voce((domande[i] as Map)['testo']?.toString() ?? '', _Sel('domanda', i),
-              sotto: (domande[i] as Map)['id']?.toString(), icona: Icons.help_outline, livello: 1),
+              sotto: (domande[i] as Map)['id']?.toString(),
+              cerca: [...((domande[i] as Map)['opzioni'] as Map? ?? const {}).values, (domande[i] as Map)['aiuto']],
+              icona: Icons.help_outline,
+              livello: 1),
       ], aggiungi: () {
         modifica(() => domande.add(<String, dynamic>{'id': 'nuova_domanda_${domande.length + 1}', 'testo': 'Nuova domanda', 'tipo': 'si_no'}));
         _seleziona(_Sel('domanda', domande.length - 1));
       }, aggiungiEtichetta: 'Aggiungi una domanda'),
       if (!modulo)
         for (var i = 0; i < _fasi.length; i++)
-          _gruppo('Fase ${_fase(i)['numero']} · ${_fase(i)['titolo']}', [
-            _voce('Impostazioni della fase', _Sel('fase', i), icona: Icons.tune, livello: 1),
-            for (var j = 0; j < _sezioni(i).length; j++) ...[
-              _voce(_sezione(i, j)['titolo']?.toString() ?? '', _Sel('sezione', i, j),
-                  icona: Icons.segment, livello: 1,
-                  sotto: _sezione(i, j)['innesto'] != null ? 'punto di innesto: ${_sezione(i, j)['innesto']}' : null),
-              for (var k = 0; k < _capoversi(i, j).length; k++)
-                () {
-                  final c = _capoversi(i, j)[k] as Map<String, dynamic>;
-                  return _voce(_anteprimaTesto(c['testo']), _Sel('capoverso', i, j, k),
-                      sotto: [c['id'], if (c['se'] != null) 'condizionato', if (c['facoltativo'] == true) 'facoltativo', if (proposteAperte.contains(c['id'])) 'proposta di modifica']
-                          .join(' · '),
-                      icona: proposteAperte.contains(c['id']) ? Icons.feedback_outlined : Icons.notes,
-                      colore: _capoversoCambiato(c) || proposteAperte.contains(c['id']) ? colCambiato : null,
-                      livello: 2);
-                }(),
-            ],
-          ], aggiungi: () {
+          _gruppo('Fase ${_fase(i)['numero']} · ${_fase(i)['titolo']}', sezioniDellaFase(i), aggiungi: () {
             modifica(() => _sezioni(i).add(<String, dynamic>{'titolo': 'Nuova sezione', 'capoversi': <dynamic>[]}));
             _seleziona(_Sel('sezione', i, _sezioni(i).length - 1));
           }, aggiungiEtichetta: 'Aggiungi una sezione'),
       if (modulo)
         _gruppo('Testi inseriti nei modelli', [
-          for (var i = 0; i < _inserti.length; i++) ...[
-            _voce('Innesto: ${(_inserti[i] as Map)['innesto']}', _Sel('inserto', i), icona: Icons.call_merge, livello: 1),
-            for (var k = 0; k < _capoversiInserto(i).length; k++)
-              _voce(_anteprimaTesto((_capoversiInserto(i)[k] as Map)['testo']), _Sel('capoverso_inserto', i, 0, k),
-                  sotto: (_capoversiInserto(i)[k] as Map)['id']?.toString(), icona: Icons.notes, livello: 2,
-                  colore: _capoversoCambiato(_capoversiInserto(i)[k] as Map<String, dynamic>) ? colCambiato : null),
-          ],
+          for (var i = 0; i < _inserti.length; i++) ...() {
+            final capoversi = [
+              for (var k = 0; k < _capoversiInserto(i).length; k++)
+                _vocCapoverso(_capoversiInserto(i)[k] as Map<String, dynamic>, _Sel('capoverso_inserto', i, 0, k), proposteAperte, colCambiato),
+            ].whereType<Widget>().toList();
+            return [
+              _voce('Innesto: ${(_inserti[i] as Map)['innesto']}', _Sel('inserto', i),
+                  icona: Icons.call_merge, livello: 1, contesto: capoversi.isNotEmpty),
+              ...capoversi,
+            ];
+          }(),
         ], aggiungi: () {
           modifica(() => _inserti.add(<String, dynamic>{'innesto': 'dispositivo', 'capoversi': <dynamic>[
                 <String, dynamic>{'id': _nuovoId(definizione['codice'].toString().toLowerCase()), 'testo': 'Nuovo testo'}
@@ -341,7 +399,10 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
       _gruppo('Dati da compilare', [
         for (final n in campi.keys)
           _voce((campi[n] as Map)['etichetta']?.toString() ?? n, _Sel('dato', 0, 0, 0, n),
-              sotto: '$n · ${(campi[n] as Map)['tipo'] ?? 'testo'}', icona: Icons.label_outline, livello: 1),
+              sotto: '$n · ${(campi[n] as Map)['tipo'] ?? 'testo'}',
+              cerca: [(campi[n] as Map)['aiuto']],
+              icona: Icons.label_outline,
+              livello: 1),
       ], aggiungi: () {
         var n = 1;
         while (campi.containsKey('nuovo_dato_$n')) {
@@ -362,7 +423,8 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
       }, aggiungiEtichetta: 'Aggiungi un valore calcolato'),
       _gruppo('Risposte consigliate', [
         for (var i = 0; i < _lista('suggerimenti').length; i++)
-          _voce('Per «${(_lista('suggerimenti')[i] as Map)['domanda']}»', _Sel('suggerimento', i), icona: Icons.lightbulb_outline, livello: 1),
+          _voce('Per «${(_lista('suggerimenti')[i] as Map)['domanda']}»', _Sel('suggerimento', i),
+              cerca: [(_lista('suggerimenti')[i] as Map)['messaggio']], icona: Icons.lightbulb_outline, livello: 1),
       ], aggiungi: domande.isEmpty && !modulo
           ? null
           : () {
@@ -378,6 +440,18 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
           for (var i = 0; i < _lista('scenari').length; i++)
             _voce((_lista('scenari')[i] as Map)['nome']?.toString() ?? '', _Sel('scenario', i), icona: Icons.science_outlined, livello: 1),
         ]),
+    ];
+    return Column(children: [
+      CampoRicerca(
+        suggerimento: 'Cerca capoversi, domande, dati...',
+        valore: _ricerca,
+        risultati: _filtroAttivo ? _risultati : null,
+        filtri: _tipiRicerca,
+        filtro: _tipoRicerca,
+        onFiltro: (f) => setState(() => _tipoRicerca = f),
+        onChanged: (v) => setState(() => _ricerca = v),
+      ),
+      Expanded(child: ListView(children: voci.whereType<Widget>().toList())),
     ]);
   }
 
@@ -638,6 +712,10 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
             TextButton(onPressed: () => _gestisciProposta(p, 'RESPINTA'), child: const Text('Respingi')),
             FilledButton.tonal(
               onPressed: () async {
+                if (!inModifica) {
+                  mostraErrore(context, 'Prendi in carico il modello per applicare la proposta');
+                  return;
+                }
                 modifica(() => capoverso['testo'] = p['testo_proposto']);
                 setState(() => _generazione++);
                 await _gestisciProposta(p, 'ACCOLTA');
@@ -1338,12 +1416,19 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
           ]),
           actions: azioniEditor(),
         ),
-        body: LayoutBuilder(builder: (context, vincoli) {
+        body: Column(children: [
+          avvisoStato(),
+          Expanded(
+            child: LayoutBuilder(builder: (context, vincoli) {
           final largo = vincoli.maxWidth >= 1200;
           final albero = Column(children: [Expanded(child: _albero()), const Divider(height: 1), pannelloControllo()]);
+          // in sola lettura si scorre ma non si modifica
           final centro = SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: KeyedSubtree(key: ValueKey('${_sel.chiave}#$_generazione'), child: _editorCorrente()),
+            child: IgnorePointer(
+              ignoring: !inModifica,
+              child: KeyedSubtree(key: ValueKey('${_sel.chiave}#$_generazione'), child: _editorCorrente()),
+            ),
           );
           if (!largo) {
             return DefaultTabController(
@@ -1362,6 +1447,8 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
             Expanded(flex: 4, child: _pannelloAnteprima()),
           ]);
         }),
+          ),
+        ]),
       ),
     );
   }

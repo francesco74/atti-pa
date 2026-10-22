@@ -1,0 +1,106 @@
+# Modulo di regole: servizi sociali e servizi alla persona.
+#
+# - Art. 128 D.Lgs. 36/2023: servizi alla persona dell'allegato XIV alla direttiva
+#   2014/24/UE. Sotto la soglia europea si applicano i principi del comma 3 (qualità,
+#   continuità, accessibilità, disponibilità e completezza dei servizi; esigenze degli
+#   utenti, compresi i gruppi svantaggiati; coinvolgimento degli utenti) (comma 8); la
+#   programmazione rispetta la legislazione di settore (comma 4).
+# - Gli istituti di amministrazione condivisa del Titolo VII del Codice del Terzo settore
+#   (co-programmazione, co-progettazione, accreditamento) non rientrano nel Codice dei
+#   contratti (art. 6): questo modulo riguarda un contratto a prestazioni corrispettive.
+# - Se l'affidatario è un ente del Terzo settore, se ne verifica l'iscrizione al RUNTS
+#   (D.Lgs. 117/2017) o, per le cooperative sociali, all'albo regionale (L. 381/1991).
+# Nelle 4 fasi:
+#   2. Visti              art. 128, L. 328/2000, eventualmente D.Lgs. 117/2017
+#      Dato atto          principi del comma 3, programmazione sociale, iscrizione RUNTS
+#   3. Dispositivo        continuità del servizio e degli operatori di riferimento
+# Suggerisce la nomina dell'operatore a responsabile del trattamento dei dati personali.
+# Checklist corrispondente: pacchetto/checklist/scheda_servizi_sociali.json.
+
+codice: SERVIZI_SOCIALI
+fattore: servizi_sociali
+etichetta: Servizi sociali e alla persona
+descrizione: "Attiva: principi dell'art. 128 del Codice, programmazione sociale, iscrizione al RUNTS degli enti del Terzo settore"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF]
+
+domande:
+  - id: affidatario_ets
+    testo: L'affidatario è un ente del Terzo settore o una cooperativa sociale?
+    tipo: si_no
+    aiuto: >-
+      In tal caso l'atto dà conto dell'iscrizione al Registro unico nazionale del Terzo
+      settore (RUNTS) o, per le cooperative sociali, all'albo regionale.
+
+campi:
+  programmazione_sociale:
+    etichetta: Strumento di programmazione sociale di riferimento
+    tipo: testo
+    aiuto: Es. Piano di zona dell'ambito territoriale, programmazione regionale o distrettuale.
+  iscrizione_ets:
+    etichetta: Iscrizione dell'affidatario (RUNTS o albo regionale delle cooperative sociali)
+    tipo: testo
+    aiuto: Sezione e numero di iscrizione, da verificare alla data dell'affidamento.
+
+inserti:
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_servizi_persona
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art128"]
+        testo: >-
+          l'art. 128 del D.Lgs. 36/2023, sull'affidamento dei servizi alla persona, e la legge
+          8 novembre 2000, n. 328, legge quadro per la realizzazione del sistema integrato di
+          interventi e servizi sociali;
+      - id: visto_terzo_settore
+        se: affidatario_ets
+        fonte: aggiunto
+        testo: il D.Lgs. 3 luglio 2017, n. 117, "Codice del Terzo settore";
+
+  - innesto: dato_atto
+    capoversi:
+      - id: sociali_principi
+        fonte: aggiunto
+        testo: >-
+          Dato atto che l'affidamento, di importo inferiore alla soglia di rilevanza europea,
+          è svolto nel rispetto dei principi di cui all'art. 128, commi 3 e 8, del D.Lgs.
+          36/2023, garantendo la qualità, la continuità, l'accessibilità, la disponibilità e
+          la completezza del servizio, tenuto conto delle esigenze specifiche degli utenti,
+          compresi i gruppi svantaggiati, e promuovendone il coinvolgimento;
+      - id: sociali_programmazione
+        fonte: aggiunto
+        testo: >-
+          Dato atto che il servizio è coerente con lo strumento di programmazione sociale di
+          riferimento ({{programmazione_sociale}}), ai sensi dell'art. 128, comma 4, del
+          D.Lgs. 36/2023;
+      - id: sociali_contratto
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art6"]
+        testo: >-
+          Dato atto che l'affidamento costituisce un contratto a prestazioni corrispettive e
+          non uno strumento di amministrazione condivisa di cui al Titolo VII del D.Lgs.
+          117/2017, che resta escluso dall'applicazione del Codice dei contratti ai sensi
+          dell'art. 6 del D.Lgs. 36/2023;
+      - id: sociali_runts
+        se: affidatario_ets
+        fonte: aggiunto
+        testo: >-
+          Dato atto che l'operatore economico risulta iscritto {{iscrizione_ets}};
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_sociali_continuita
+        fonte: aggiunto
+        facoltativo: true
+        testo: >-
+          di stabilire che l'operatore economico garantisce la continuità del servizio e,
+          per quanto possibile, degli operatori di riferimento per gli utenti, e comunica
+          tempestivamente ogni variazione del personale impiegato;
+
+suggerimenti:
+  - domanda: dati_personali
+    valore: true
+    messaggio: >-
+      Nei servizi alla persona l'operatore tratta di norma dati personali degli utenti,
+      spesso anche relativi alla salute: va nominato responsabile del trattamento (art. 28
+      del Regolamento (UE) 2016/679).

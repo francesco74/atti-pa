@@ -137,8 +137,8 @@ I ruoli si ricevono dai gruppi di Active Directory.
 
 | Ruolo | Gruppo AD (nome predefinito) | Nell'editor |
 |---|---|---|
-| **Gestore dei modelli** | `ATTI-PA-Gestori-Modelli` | apre l'editor, modifica e salva le bozze, crea oggetti nuovi, gestisce le proposte dei redattori. **Non pubblica.** |
-| **Amministratore** | gruppo amministratori | tutto quello che fa il gestore, più la **pubblicazione** e l'importazione dei pacchetti |
+| **Gestore dei modelli** | `ATTI-PA-Gestori-Modelli` | apre l'editor, prende in carico gli oggetti e ne modifica la bozza, crea oggetti nuovi, gestisce le proposte dei redattori. **Non pubblica e non disattiva.** |
+| **Amministratore** | gruppo amministratori | tutto quello che fa il gestore, più la **pubblicazione**, la **disattivazione** e riattivazione, lo **sblocco** delle bozze di altri e l'importazione dei pacchetti |
 | **Redattore** | gruppo redattori | non vede l'editor; dalla bozza di un atto può **proporre** il nuovo testo di un capoverso |
 
 La voce di menu **Modelli e checklist** compare solo a gestori e amministratori. Se dopo
@@ -151,11 +151,39 @@ all'accesso.
 
 Questo è il punto più importante del manuale.
 
+### 3.0 I tre stati
+
+Ogni modello, specificità e checklist è sempre in uno di tre stati:
+
+| Stato | Significato | Per gli atti |
+|---|---|---|
+| **Abilitato** | c'è una versione pubblicata e nessuno la sta modificando | si usa la versione pubblicata |
+| **In redazione** | un gestore l'ha preso in carico e lavora su una bozza | si continua a usare la versione pubblicata da cui la bozza è nata |
+| **Disattivato** | un amministratore l'ha disattivato | non si usa più per gli atti nuovi |
+
+Regole:
+
+- **Aprire l'editor non blocca nulla**: l'oggetto si apre in **sola lettura** (striscia in
+  alto «Sola lettura...»). Si può guardare, scorrere, usare l'anteprima e le risposte di
+  prova, ma non modificare.
+- Per modificare premi **Inizia a modificare** (in alto o nella striscia): nasce la
+  **bozza**, copia della versione pubblicata, e l'oggetto passa **in redazione** a tuo nome.
+- Per ogni oggetto esiste **una sola bozza**. Finché è in redazione, gli altri lo vedono in
+  sola lettura con la striscia «In redazione da Mario Rossi dal ...» (vedono la tua bozza,
+  ma non possono modificarla né crearne un'altra).
+- La redazione finisce quando la bozza è **pubblicata** (la bozza sostituisce la versione da
+  cui è nata e l'oggetto torna abilitato) oppure **scartata** (resta la versione
+  pubblicata).
+- Se chi ha in carico la bozza è assente, un amministratore può usare **⋮ → Sblocca e
+  prendi in carico**: la bozza non si perde, passa all'amministratore.
+- Un oggetto **disattivato** non si può modificare: prima un amministratore lo
+  **riattiva** (capitolo 3.6).
+
 ```
-  Versione pubblicata (v3)  ──── usata dagli atti nuovi
+  Versione pubblicata (v3)  ──── ABILITATO, usata dagli atti nuovi
           │
-          │ apri l'editor e modifica
-          ▼
+          │ Inizia a modificare          (da qui: IN REDAZIONE, bloccato per gli altri;
+          ▼                                gli atti continuano a usare la v3)
   Modifiche in memoria      ──── «modifiche non salvate» (si perdono se chiudi il browser)
           │
           │ Salva bozza
@@ -189,13 +217,13 @@ La bozza è salvata sul server. Caratteristiche:
 
 - **gli atti non la vedono**: chi scrive un atto continua a usare la versione pubblicata;
   puoi quindi lavorare con calma, anche per giorni;
-- è **una sola per oggetto**: se due gestori modificano lo stesso modello, lavorano sulla
-  stessa bozza e l'ultimo che salva sovrascrive le modifiche dell'altro. Accordatevi su chi
-  modifica cosa;
+- è **una sola per oggetto** ed è **di chi l'ha presa in carico**: solo lui la salva o la
+  scarta (oltre all'amministratore, che può scartarla o sbloccarla);
 - quando riapri l'editor, ritrovi la bozza dove l'avevi lasciata;
 - puoi salvarla **anche se contiene errori**: gli errori impediscono solo la pubblicazione;
-- si butta via con **⋮ → Scarta la bozza**: si torna alla versione pubblicata. Per un oggetto
-  nuovo mai pubblicato, scartare la bozza lo elimina del tutto.
+- si butta via con **⋮ → Scarta la bozza**: si torna alla versione pubblicata e l'oggetto
+  torna abilitato. Per un oggetto nuovo mai pubblicato, scartare la bozza lo elimina del
+  tutto.
 
 ### 3.3 Il controllo continuo
 
@@ -237,8 +265,29 @@ cancellare quel lavoro: in questo caso confronta la bozza con la versione pubbli
 ### 3.5 Come lavora un gestore senza diritti di pubblicazione
 
 Il gestore prepara la bozza, la porta a «Nessun problema» (o almeno a zero errori) e avvisa
-un amministratore. L'amministratore apre lo stesso oggetto, controlla con **⋮ → Confronta
-con la versione pubblicata** cosa è cambiato e preme **Pubblica**.
+un amministratore. L'amministratore apre lo stesso oggetto (vede la bozza in sola lettura),
+controlla con **⋮ → Confronta con la versione pubblicata** cosa è cambiato e preme
+**Pubblica**: non serve sbloccare la bozza per pubblicarla.
+
+### 3.6 Disattivare e riattivare
+
+Solo un amministratore, dal menu **⋮** dell'editor:
+
+- **Disattiva** (oggetto abilitato, non in redazione: se c'è una bozza, prima va pubblicata
+  o scartata):
+  - un **modello** non si può più scegliere per gli atti nuovi;
+  - una **specificità** sparisce dalle caratteristiche dei modelli, che ricevono una nuova
+    versione senza i suoi testi;
+  - una **checklist** non è più applicata dalla verifica.
+
+  Le bozze di atto già iniziate e le verifiche già fatte restano sulla loro versione. Dopo la
+  disattivazione l'app elenca cosa controllare: per esempio la checklist del modello che
+  resta attiva, o le specificità che indicano ancora il modello disattivato.
+- **Riattiva** (oggetto disattivato): torna in uso l'ultima versione; per una specificità i
+  modelli vengono ricomposti con i suoi testi.
+
+Il codice di un oggetto disattivato resta occupato: non si può creare un oggetto nuovo con
+lo stesso codice (riattiva quello vecchio).
 
 ---
 
@@ -260,10 +309,14 @@ versione pubblicata (es. *v3*), codice e alcuni **bollini**:
 | **standard modificato** | nasce dallo standard ma l'ente l'ha cambiato |
 | **creato dall'ente** | non viene da un pacchetto |
 | **nuovo, mai pubblicato** | esiste solo come bozza |
-| **bozza in corso** | qualcuno ha salvato una bozza non ancora pubblicata |
+| **in redazione da te / da ...** | l'oggetto è preso in carico e ha una bozza non ancora pubblicata |
+| **disattivato** | non usato dagli atti (visibile solo con **Mostra disattivati**) |
 | **N proposte** | (solo modelli) ci sono proposte aperte dei redattori |
 
-Clicca un elemento per aprirne l'editor.
+Gli oggetti disattivati sono nascosti: l'interruttore **Mostra disattivati**, in cima a ogni
+scheda, li fa comparire (con il titolo in grigio).
+
+Clicca un elemento per aprirne l'editor (in sola lettura finché non lo prendi in carico).
 
 ### 4.1 Creare un oggetto nuovo
 
@@ -279,7 +332,8 @@ Clicca un elemento per aprirne l'editor.
    - **Copia di: ...**: l'oggetto nasce identico a quello scelto. È quasi sempre la scelta
      migliore: partire da un modello simile e cambiarlo è molto più semplice che partire da
      zero.
-5. Premi **Crea la bozza**: si apre subito l'editor.
+5. Premi **Crea la bozza**: si apre subito l'editor, con l'oggetto già in redazione a tuo
+   nome.
 
 L'oggetto nuovo è solo una bozza (bollino *nuovo, mai pubblicato*) finché un amministratore
 non lo pubblica.
@@ -296,7 +350,9 @@ sono nei capitoli successivi.
 
 ### 5.1 Correggere il testo di un capoverso
 
-1. **Modelli e checklist** → scheda **Modelli di atto** → clicca il modello.
+1. **Modelli e checklist** → scheda **Modelli di atto** → clicca il modello e premi
+   **Inizia a modificare** (se è in redazione da un altro, non puoi: accordati con lui o
+   chiedi a un amministratore).
 2. A sinistra, nella **Struttura**, apri la fase e trova il capoverso (l'elenco mostra
    l'inizio del testo). In alternativa, trovalo nell'**anteprima** a destra e cliccaci
    sopra: viene selezionato.
@@ -312,7 +368,7 @@ Esempio: nel modello di patrocinio vuoi aggiungere, solo quando l'ente **resiste
 giudizio, il capoverso «Dato atto che il ricorso è stato notificato all'ente in data
 {{data_notifica}};».
 
-1. Apri il modello. Nella struttura seleziona la **sezione** in cui va il capoverso
+1. Apri il modello e premi **Inizia a modificare**. Nella struttura seleziona la **sezione** in cui va il capoverso
    (es. «Dato atto che»).
 2. Al centro premi **Aggiungi un capoverso**: compare in fondo alla sezione con il testo
    «Nuovo testo» ed è già selezionato.
@@ -364,7 +420,7 @@ redattore lo aggiunge se serve).
 
 ### 5.6 Aggiungere un controllo a una checklist
 
-1. **Checklist** → clicca la scheda.
+1. **Checklist** → clicca la scheda → **Inizia a modificare**.
 2. A sinistra premi **Aggiungi un controllo**.
 3. Compila **Titolo**, **Cosa verificare** e gli esiti (capitolo 11.3).
 4. Aggiungi le norme con **Aggiungi** nel riquadro **Norme citate**.
@@ -409,14 +465,37 @@ diventano tre schede: **Struttura**, **Elemento**, **Anteprima**.
 └──────────────────────┴───────────────────────────────────┴──────────────────────────────┘
 ```
 
-- **In alto**: titolo, stato della versione, pulsanti **Salva bozza**, **⋮** (altre azioni)
-  e **Pubblica**.
+- **In alto**: titolo, stato (versione pubblicata, in redazione, disattivato), pulsanti
+  **Inizia a modificare** oppure **Salva bozza**, **⋮** (altre azioni) e **Pubblica**.
+- **Sotto la barra**, quando non puoi modificare, una striscia spiega perché (sola lettura,
+  in redazione da un altro, disattivato) con il pulsante per procedere.
 - **A sinistra**: la **struttura** del modello, con in fondo il riquadro di **errori e
   avvisi**.
 - **Al centro**: l'editor dell'elemento selezionato nella struttura.
 - **A destra**: l'**anteprima** dell'atto.
 
 ### 6.2 La struttura (colonna sinistra)
+
+**Cercare.** In cima alla struttura c'è la casella **Cerca**. Mentre scrivi, l'albero mostra
+solo gli elementi che contengono il testo:
+
+- **capoversi**: nel testo, nell'identificativo e nell'aiuto;
+- **domande**: nel testo, nell'identificativo e nelle opzioni;
+- **dati**: nel nome (`importo_offerta`) e nell'etichetta («Importo dell'offerta»);
+- valori calcolati, sezioni, risposte consigliate, scenari.
+
+Il testo trovato è evidenziato e sotto la casella compare il numero di risultati. Le fasi e
+le sezioni restano visibili come intestazioni solo se contengono qualcosa di trovato, così
+si vede dove si trova ogni risultato. La ricerca non distingue maiuscole e minuscole né
+lettere accentate («comunita» trova «comunità»).
+
+I pulsanti **Tutto · Capoversi · Domande · Dati** restringono la ricerca a un tipo di
+elemento; scelti senza scrivere nulla, mostrano tutti gli elementi di quel tipo (es. **Dati**
+= l'elenco completo dei dati). La **✕** o il tasto **Esc** azzerano la ricerca. Mentre la
+ricerca è attiva i pulsanti **+** dei gruppi sono nascosti: azzerala per aggiungere elementi.
+
+Altri modi per trovare un elemento: cliccare il capoverso nell'**anteprima** (capitolo 9.1);
+nella scheda di un dato, l'elenco **Usato nei capoversi** (capitolo 6.8).
 
 Clicca una voce per modificarla al centro. Le voci:
 
@@ -909,6 +988,12 @@ sulla versione precedente.
 A sinistra i **controlli** in ordine, con il riquadro di errori e avvisi; a destra il
 controllo selezionato. Su uno schermo stretto le due parti diventano schede.
 
+La casella **Cerca** in cima all'elenco filtra i controlli per titolo, testo della regola,
+norme citate (anche in forma breve, es. «36/2023» o «art. 50») e identificativi dei
+capoversi collegati. Se il testo trovato è nella regola e non nel titolo, sotto il titolo
+compare il brano della regola con il testo evidenziato. Esc o ✕ azzerano la ricerca; durante
+la ricerca il pulsante **Aggiungi un controllo** è nascosto.
+
 ### 11.2 Dati generali della checklist
 
 | Casella | Spiegazione |
@@ -1068,6 +1153,8 @@ Dal menu **⋮** in alto:
   provenienza.
 - **Sorgente (modalità avanzata)** – capitolo 15.
 - **Scarta la bozza** – capitolo 3.2.
+- **Sblocca e prendi in carico**, **Disattiva**, **Riattiva** – solo amministratori
+  (capitoli 3.0 e 3.6).
 
 **Ripristina lo standard** (sul singolo capoverso) riporta quel capoverso com'è nello
 standard. Gli altri capoversi non cambiano. Il ripristino, come ogni modifica, va salvato e
@@ -1100,7 +1187,8 @@ documento. Sotto il capoverso riscritto compaiono due collegamenti:
 - Selezionando il capoverso, in cima compare il riquadro della proposta: chi l'ha fatta,
   quando, la motivazione e il testo proposto.
 
-Due azioni:
+Due azioni (per applicare la proposta il modello deve essere in redazione a tuo nome:
+prima premi **Inizia a modificare**):
 
 - **Applica alla bozza** – il testo proposto sostituisce quello del capoverso **nella
   bozza** e la proposta risulta accolta. Controlla il testo (i dati devono essere validi),
@@ -1142,6 +1230,12 @@ Le modifiche sono in bozza: gli atti usano solo la versione pubblicata. Chiedi a
 amministratore di pubblicare. Ricorda anche che le bozze di atto già iniziate restano sulla
 versione con cui sono nate: per vedere le modifiche serve un atto nuovo.
 
+**Non riesco a scrivere nelle caselle.**
+L'oggetto è in sola lettura: premi **Inizia a modificare**. Se la striscia dice «In
+redazione da ...», l'oggetto è preso in carico da un altro: aspetta che pubblichi o scarti
+la bozza, oppure chiedi a un amministratore di sbloccarlo. Se dice «Disattivato», va prima
+riattivato.
+
 **Il pulsante Pubblica è grigio.**
 Non sei amministratore (passa il mouse sul pulsante: compare il motivo), oppure non ci sono
 modifiche né bozze da pubblicare.
@@ -1170,17 +1264,17 @@ spazi e alle maiuscole: `{{Importo}}` e `{{importo}}` sono diversi.
 **La condizione è mostrata come testo e non con i menu.**
 È una condizione avanzata (capitolo 7.3). Si modifica come testo, oppure si semplifica.
 
-**Due colleghi lavorano sullo stesso modello.**
-La bozza è una sola: vince l'ultimo salvataggio. Lavorate uno alla volta, oppure su oggetti
-diversi.
+**Due colleghi vogliono lavorare sullo stesso modello.**
+Non è possibile contemporaneamente: il primo che preme **Inizia a modificare** lo prende in
+carico, l'altro lo vede in sola lettura finché la bozza non è pubblicata o scartata.
 
 **Ho chiuso il browser senza salvare.**
 Le modifiche non salvate sono perse; la bozza salvata in precedenza è ancora lì.
 
 **Voglio eliminare un modello, una specificità o una checklist.**
-Un oggetto mai pubblicato si elimina con **⋮ → Scarta la bozza**. Per gli oggetti pubblicati
-l'editor non ha ancora un comando di disattivazione: oggi si può farlo con un pacchetto
-(Amministrazione → Pacchetti, azione *disattiva*).
+Un oggetto mai pubblicato si elimina con **⋮ → Scarta la bozza**. Un oggetto pubblicato non
+si elimina (le versioni servono agli atti che le hanno usate) ma si **disattiva** (capitolo
+3.6).
 
 **Arriva un nuovo pacchetto standard: perdo le mie modifiche?**
 No. L'amministratore, in Amministrazione → Pacchetti, vede per ogni oggetto se l'ente l'ha
@@ -1193,7 +1287,9 @@ bollino *standard modificato* indica gli oggetti personalizzati.
 
 | Termine | Significato |
 |---|---|
-| **Bozza** (della configurazione) | modifiche salvate ma non pubblicate, invisibili agli atti. Da non confondere con la bozza di un atto |
+| **Bozza** (della configurazione) | copia in lavorazione di un oggetto, una sola per oggetto, di chi l'ha presa in carico; invisibile agli atti finché non è pubblicata. Da non confondere con la bozza di un atto |
+| **In redazione** | stato di un oggetto preso in carico da un gestore: gli altri non possono modificarlo |
+| **Disattivato** | stato di un oggetto non più usato dagli atti nuovi |
 | **Capoverso** | unità di testo dell'atto, con il suo identificativo, la condizione e le impostazioni |
 | **Caratteristica** | una specificità scelta da chi scrive l'atto |
 | **Checklist** (scheda di controllo) | elenco di controlli applicati dalla verifica |

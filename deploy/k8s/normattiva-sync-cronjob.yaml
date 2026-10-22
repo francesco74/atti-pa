@@ -24,6 +24,9 @@ spec:
             app.kubernetes.io/part-of: atti-pa
         spec:
           restartPolicy: Never
+          # credenziali del registry interno (Secret atti-pa-registry, vedi secret.example.yaml)
+          imagePullSecrets:
+            - name: atti-pa-registry
           securityContext:
             runAsNonRoot: true
             runAsUser: 10001

@@ -13,10 +13,14 @@ dist/
 .coverage
 htmlcov/
 docs/
-deploy/
 
-# Config locale
+# Config locale e segreti
 .env
+# segreti Kubernetes reali (nel repository solo secret.example.yaml)
+deploy/k8s/secret.yaml
+deploy/k8s/*-secret.yaml
+# zip del pacchetto standard: si ricrea con python deploy/pacchetto.py crea
+atti-pa-modelli-*.zip
 # archivio locale dei file degli atti (ARCHIVIO_DIR in sviluppo)
 /archivio/
 

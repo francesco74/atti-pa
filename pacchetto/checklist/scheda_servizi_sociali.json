@@ -1,0 +1,45 @@
+{
+  "codice": "SCHEDA_SERVIZI_SOCIALI",
+  "titolo": "Scheda di controllo della specificità Servizi sociali e alla persona",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "SERVIZI_SOCIALI",
+  "descrizione": "Scheda della specificità: si applica agli affidamenti di servizi sociali e alla persona (art. 128 D.Lgs. 36/2023, allegato XIV alla direttiva 2014/24/UE). Corrisponde al modulo di regole pacchetto/modelli/regole/servizi_sociali.yaml.",
+  "elementi": [
+    {
+      "titolo": "1. Principi dell'art. 128",
+      "regola": "Se l'atto affida servizi sociali o alla persona, verifica che dia conto dei principi dell'art. 128, comma 3, del D.Lgs. 36/2023, applicabili anche sotto soglia (comma 8): qualità, continuità, accessibilità, disponibilità e completezza dei servizi, esigenze specifiche degli utenti compresi i gruppi svantaggiati, coinvolgimento degli utenti.\nÈ CONFORME se l'atto motiva il rispetto di questi principi in relazione al servizio.\nÈ DUBBIO se li richiama solo in modo formale.\nÈ NON_CONFORME se l'atto riguarda servizi alla persona e non ne fa alcun cenno.\nÈ NON_APPLICABILE se l'atto non riguarda servizi sociali o alla persona.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art128"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Coerenza con la programmazione sociale",
+      "regola": "Verifica che l'atto richiami lo strumento di programmazione sociale di riferimento (piano di zona, programmazione regionale o distrettuale), come previsto dall'art. 128, comma 4.\nÈ CONFORME se lo strumento è richiamato.\nÈ DUBBIO se manca.\nÈ NON_APPLICABILE se l'atto non riguarda servizi sociali.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art128"
+      ],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "3. Contratto o amministrazione condivisa",
+      "regola": "Verifica che dall'atto risulti chiaramente se si tratta di un appalto (contratto a prestazioni corrispettive) o di uno strumento di amministrazione condivisa con il Terzo settore (co-programmazione, co-progettazione, accreditamento, Titolo VII D.Lgs. 117/2017), che è escluso dal Codice dei contratti (art. 6 D.Lgs. 36/2023), e che la disciplina applicata sia coerente.\nÈ CONFORME se la natura del rapporto è chiara e coerente con la procedura.\nÈ NON_CONFORME se l'atto mescola le due discipline (ad esempio una co-progettazione con corrispettivo e ribasso).\nÈ NON_APPLICABILE se l'atto non riguarda servizi sociali.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art6"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Iscrizione degli enti del Terzo settore",
+      "regola": "Se l'affidatario è un ente del Terzo settore o una cooperativa sociale, verifica che l'atto ne indichi l'iscrizione al Registro unico nazionale del Terzo settore (RUNTS) o, per le cooperative sociali, all'albo regionale.\nÈ CONFORME se l'iscrizione è indicata.\nÈ DUBBIO se l'affidatario sembra un ente del Terzo settore e l'iscrizione non è indicata.\nÈ NON_APPLICABILE se l'affidatario non è un ente del Terzo settore.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "5. Dati personali degli utenti",
+      "regola": "Verifica che, trattandosi di servizi che comportano il trattamento di dati personali degli utenti (spesso anche relativi alla salute), l'atto preveda la nomina dell'operatore a responsabile del trattamento ai sensi dell'art. 28 del Regolamento (UE) 2016/679 e non contenga dati personali degli utenti.\nÈ CONFORME se la nomina è prevista e l'atto non riporta dati degli utenti.\nÈ NON_CONFORME se l'atto riporta dati personali degli utenti, in particolare relativi alla salute.\nÈ DUBBIO se la nomina non è prevista.\nÈ NON_APPLICABILE se il servizio non comporta trattamento di dati personali.",
+      "riferimenti": [],
+      "obbligatorio": true
+    }
+  ]
+}

@@ -87,12 +87,6 @@ class Settings(BaseSettings):
     # chiamata per atto (più di una per gli atti oltre LLM_MAX_CARATTERI_ATTO)
     llm_dati_personali: bool = True
 
-    # Modelli di atto e checklist: all'avvio dell'API si caricano dai file quelli cambiati
-    # (common/configurazione.py). Le cartelle predefinite sono quelle del repository, copiate
-    # anche nell'immagine dell'API; in Kubernetes si possono montare da una ConfigMap.
-    # pacchetto standard importato al primo avvio, con il database vuoto (common/pacchetti.py)
-    importa_pacchetto_iniziale: bool = True
-    pacchetto_dir: str = str(Path(__file__).resolve().parents[1] / "deploy")
     # Cartella con prompt personalizzati: i file presenti sostituiscono quelli di
     # common/prompt/ con lo stesso nome (vuota = solo quelli predefiniti)
     llm_prompt_dir: str | None = None

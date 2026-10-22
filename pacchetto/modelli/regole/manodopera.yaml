@@ -1,0 +1,111 @@
+# Modulo di regole: servizi ad alta intensità di manodopera.
+#
+# Sono i contratti nei quali il costo della manodopera è pari o superiore al 50 per cento
+# dell'importo complessivo dei corrispettivi (art. 2, comma 1, lett. e), allegato I.1 al
+# D.Lgs. 36/2023; testo verificato su Normattiva il 21 ottobre 2026). Si sommano alle regole del modello sul contratto collettivo (art. 11), già
+# attive per i servizi non intellettuali e le forniture con posa in opera.
+# Nelle 4 fasi:
+#   2. Dato atto          costo della manodopera stimato e scorporato dal ribasso (art. 41,
+#                         commi 13 e 14); clausola sociale e impegni dell'operatore
+#                         (artt. 57, comma 1, e 102)
+#      Art. 192 TUEL      impegni dell'art. 102 tra le clausole essenziali
+#   3. Dispositivo        verifica in esecuzione; divieto di affidare a terzi la prevalente
+#                         esecuzione (art. 119, comma 1)
+# Checklist corrispondente: pacchetto/checklist/scheda_manodopera.json.
+
+codice: MANODOPERA
+fattore: alta_manodopera
+etichetta: Alta intensità di manodopera
+descrizione: "Attiva: costo della manodopera scorporato dal ribasso, clausola sociale e stabilità occupazionale, contratto collettivo"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF]
+
+domande:
+  - id: personale_uscente
+    testo: C'è personale impiegato dal precedente affidatario del servizio da salvaguardare?
+    tipo: si_no
+    blocca_se: prestazione in ["servizio_intellettuale", "fornitura_senza_posa"]
+    messaggio_blocco: >-
+      L'alta intensità di manodopera riguarda i servizi di natura non intellettuale e le
+      forniture con posa in opera: per le prestazioni intellettuali e le forniture senza
+      posa la clausola sociale dell'art. 57, comma 1, non si applica. Togli la
+      caratteristica o correggi la risposta a "Che cosa si affida?".
+    aiuto: >-
+      Se il servizio era già affidato, la clausola sociale tutela la stabilità occupazionale
+      del personale impiegato, compatibilmente con l'organizzazione d'impresa del nuovo
+      affidatario (artt. 57, comma 1, e 102 D.Lgs. 36/2023).
+
+campi:
+  costo_manodopera:
+    etichetta: "Costo della manodopera stimato (euro)"
+    tipo: importo
+    aiuto: >-
+      Calcolato sulle tabelle del costo medio del lavoro del Ministero del lavoro (art. 41,
+      comma 13, D.Lgs. 36/2023): è scorporato dall'importo soggetto a ribasso.
+  percentuale_manodopera:
+    etichetta: Incidenza della manodopera sull'importo del contratto (%)
+    tipo: numero
+    aiuto: Pari o superiore al 50% dei corrispettivi (art. 2, comma 1, lett. e), allegato I.1).
+
+inserti:
+  - innesto: dato_atto
+    capoversi:
+      - id: manodopera_costo
+        fonte: aggiunto
+        norme:
+          - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"
+        testo: >-
+          Dato atto che l'affidamento riguarda servizi ad alta intensità di manodopera, nei
+          quali il costo della manodopera è pari o superiore al 50 per cento dell'importo
+          complessivo dei corrispettivi (art. 2, comma 1, lett. e), dell'allegato I.1 al
+          D.Lgs. 36/2023), e che il costo della manodopera, stimato ai sensi dell'art. 41,
+          comma 13, del D.Lgs. 36/2023, è pari a euro {{costo_manodopera}}, corrispondente al
+          {{percentuale_manodopera}} per cento dell'importo;
+      - id: manodopera_scorporo
+        fonte: aggiunto
+        testo: >-
+          Dato atto che, ai sensi dell'art. 41, comma 14, del D.Lgs. 36/2023, i costi della
+          manodopera e della sicurezza sono stati scorporati dall'importo assoggettato a
+          ribasso, ferma restando la possibilità per l'operatore economico di dimostrare che
+          il ribasso complessivo deriva da una più efficiente organizzazione aziendale;
+      - id: clausola_sociale
+        se: personale_uscente
+        fonte: aggiunto
+        norme:
+          - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art57"
+          - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art102"
+        testo: >-
+          Dato atto che la richiesta di offerta contiene, ai sensi degli artt. 57, comma 1, e
+          102 del D.Lgs. 36/2023, la clausola sociale volta a garantire la stabilità
+          occupazionale del personale impiegato dal precedente affidatario, compatibilmente
+          con l'organizzazione d'impresa dell'operatore economico, e che l'operatore ha
+          indicato nell'offerta le modalità con cui intende adempiere tale impegno;
+      - id: impegni_operatore
+        se: not personale_uscente
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art102"]
+        testo: >-
+          Dato atto che l'operatore economico ha assunto gli impegni di cui all'art. 102 del
+          D.Lgs. 36/2023 in materia di applicazione dei contratti collettivi e di pari
+          opportunità generazionali, di genere e di inclusione lavorativa, indicandone
+          nell'offerta le modalità di adempimento;
+
+  - innesto: elementi_essenziali_192
+    prima_di: ritenuto_affidare
+    capoversi:
+      - id: clausole_manodopera
+        fonte: aggiunto
+        testo: >-
+          Ritenuto altresì di inserire tra le clausole essenziali del contratto gli impegni
+          dell'operatore economico di cui all'art. 102 del D.Lgs. 36/2023 e il rispetto dei
+          costi della manodopera indicati nell'offerta;
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_manodopera
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art119"]
+        testo: >-
+          di dare atto che i costi della manodopera ammontano a euro {{costo_manodopera}} e
+          che il loro rispetto e l'applicazione del contratto collettivo indicato sono
+          verificati in corso di esecuzione, e che ai sensi dell'art. 119, comma 1, del D.Lgs.
+          36/2023 non può essere affidata a terzi la prevalente esecuzione del contratto;

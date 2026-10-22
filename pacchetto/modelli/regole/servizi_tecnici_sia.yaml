@@ -1,0 +1,113 @@
+# Modulo di regole: servizi di ingegneria e architettura (SIA): progettazione, direzione
+# dei lavori, coordinamento della sicurezza, collaudo, supporto al RUP.
+#
+# - Affidamento diretto sotto 140.000 euro (art. 50, comma 1, lett. b), D.Lgs. 36/2023).
+# - Corrispettivi determinati secondo l'allegato I.13 (art. 41, comma 15); per gli
+#   affidamenti diretti possono essere ridotti in misura non superiore al 20 per cento
+#   (art. 41, comma 15-quater, introdotto dal D.Lgs. 209/2024).
+# - Equo compenso delle prestazioni professionali (L. 21 aprile 2023, n. 49).
+# - Iscrizione all'ordine professionale e polizza di responsabilità civile professionale
+#   (art. 5 D.P.R. 7 agosto 2012, n. 137).
+# Nelle 4 fasi:
+#   2. Visti              allegato I.13, L. 49/2023
+#      Dato atto          corrispettivo e riduzione; iscrizione all'ordine; polizza
+#   3. Dispositivo        corrispettivo comprensivo di spese e oneri; consegna degli elaborati
+# Checklist corrispondente: pacchetto/checklist/scheda_sia.json.
+#
+# DA VERIFICARE: il rapporto tra la riduzione del 20 per cento e l'equo compenso è
+# discusso (parere MIT n. 4169/2026 e circolare CNI n. 98/2023): il testo richiama
+# entrambe le norme senza prendere posizione.
+
+codice: SIA
+fattore: sia
+etichetta: Servizi tecnici di ingegneria e architettura (SIA)
+descrizione: "Attiva: corrispettivi dell'allegato I.13 con riduzione massima del 20%, equo compenso, iscrizione all'ordine, polizza professionale"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF]
+
+domande:
+  - id: prestazione_sia
+    testo: Quale prestazione tecnica si affida?
+    tipo: scelta
+    opzioni:
+      progettazione: Progettazione (fattibilità tecnico-economica o esecutiva)
+      direzione_lavori: Direzione dei lavori o dell'esecuzione
+      sicurezza: Coordinamento della sicurezza in progettazione o in esecuzione
+      collaudo: Collaudo o verifica di conformità
+      supporto_rup: Supporto tecnico-amministrativo al RUP
+      altro: Altro servizio di ingegneria e architettura
+    blocca_se: prestazione != "servizio_intellettuale"
+    messaggio_blocco: >-
+      I servizi di ingegneria e architettura sono servizi di natura intellettuale: correggi
+      la risposta a "Che cosa si affida?".
+
+derivati:
+  prestazione_sia_testo:
+    - {se: prestazione_sia == "progettazione", valore: progettazione}
+    - {se: prestazione_sia == "direzione_lavori", valore: direzione dei lavori o dell'esecuzione}
+    - {se: prestazione_sia == "sicurezza", valore: coordinamento della sicurezza}
+    - {se: prestazione_sia == "collaudo", valore: collaudo o verifica di conformità}
+    - {se: prestazione_sia == "supporto_rup", valore: supporto tecnico-amministrativo al RUP}
+    - {valore: servizio di ingegneria e architettura}
+
+campi:
+  corrispettivo_i13:
+    etichetta: "Corrispettivo calcolato secondo l'allegato I.13 (euro)"
+    tipo: importo
+    aiuto: >-
+      Compensi, spese e oneri accessori calcolati con i parametri dell'allegato I.13 al
+      D.Lgs. 36/2023 (per le prestazioni non ancora coperte, il D.M. 17 giugno 2016): il
+      calcolo va allegato agli atti.
+  ordine_professionale:
+    etichetta: Ordine professionale e numero di iscrizione del professionista
+    tipo: testo
+  polizza_rc:
+    etichetta: Polizza di responsabilità civile professionale (compagnia, numero, massimale)
+    tipo: testo
+
+inserti:
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_i13
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art41"]
+        testo: >-
+          l'art. 41, commi 15 e 15-quater, e l'allegato I.13 del D.Lgs. 36/2023, in materia
+          di corrispettivi dei servizi di ingegneria e architettura;
+      - id: visto_equo_compenso
+        fonte: aggiunto
+        testo: >-
+          la legge 21 aprile 2023, n. 49, recante disposizioni in materia di equo compenso
+          delle prestazioni professionali;
+
+  - innesto: dato_atto
+    capoversi:
+      - id: sia_corrispettivo
+        fonte: aggiunto
+        aiuto: >-
+          Per gli affidamenti diretti il corrispettivo dell'allegato I.13 può essere ridotto
+          al massimo del 20 per cento (art. 41, comma 15-quater).
+        testo: >-
+          Dato atto che il corrispettivo per la prestazione di {{prestazione_sia_testo}},
+          determinato secondo l'allegato I.13 del D.Lgs. 36/2023, è pari a euro
+          {{corrispettivo_i13}}, e che il corrispettivo pattuito, pari a euro
+          {{importo_offerta}}, comporta una riduzione non superiore al 20 per cento, come
+          consentito dall'art. 41, comma 15-quater, del medesimo decreto, tenuto conto della
+          L. 49/2023 sull'equo compenso;
+      - id: sia_requisiti
+        fonte: aggiunto
+        testo: >-
+          Dato atto che il professionista è iscritto all'ordine professionale ({{ordine_professionale}})
+          ed è in possesso della polizza di assicurazione per la responsabilità civile
+          professionale prevista dall'art. 5 del D.P.R. 7 agosto 2012, n. 137
+          ({{polizza_rc}});
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_sia_corrispettivo
+        fonte: aggiunto
+        testo: >-
+          di dare atto che il corrispettivo di euro {{importo_offerta}} è comprensivo dei
+          compensi, delle spese e degli oneri accessori, oltre contributi previdenziali e IVA
+          nei termini di legge, e che il professionista è tenuto a mantenere la copertura
+          assicurativa professionale per l'intera durata dell'incarico;

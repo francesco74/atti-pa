@@ -20,6 +20,9 @@ spec:
     spec:
       # tempo per completare la verifica in corso dopo SIGTERM
       terminationGracePeriodSeconds: 600
+      # credenziali del registry interno (Secret atti-pa-registry, vedi secret.example.yaml)
+      imagePullSecrets:
+        - name: atti-pa-registry
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -28,6 +31,7 @@ spec:
       containers:
         - name: worker
           image: atti-pa/verifica-worker:0.1.0
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: atti-pa-config

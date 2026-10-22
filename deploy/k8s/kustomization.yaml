@@ -8,29 +8,42 @@ resources:
   - api.yaml
   - verifica-worker.yaml
   - converter.yaml
+  - mysql.yaml
   - rabbitmq.yaml
   - archivio.yaml
   - frontend.yaml
   - normattiva-sync-cronjob.yaml
   - ingress.yaml
-  - networkpolicy.yaml
 
 # Da creare a parte (vedi secret.example.yaml):
-#   Secret atti-pa-secret, Secret rabbitmq-secret, ConfigMap ldap-ca, Secret TLS atti-pa-tls
+#   Secret atti-pa-secret, Secret mysql-secret, Secret rabbitmq-secret, Secret atti-pa-registry,
+#   ConfigMap ldap-ca, Secret TLS attipa-tls-secret
+
+# Schema del database, eseguito da MySQL al primo avvio (mysql.yaml): ogni nuovo file
+# sql/0002_...sql va aggiunto qui (e applicato a mano sul database già esistente)
+configMapGenerator:
+  - name: mysql-schema
+    files:
+      - sql/0001_schema.sql
+    options:
+      disableNameSuffixHash: true   # cambiare lo schema non riavvia MySQL
+
+# Immagini nel registry interno, pubblicate con deploy/immagini.sh <versione>: a ogni
+# rilascio aggiornare newTag (RabbitMQ si scarica da Docker Hub)
 
 images:
   - name: atti-pa/api
-    newName: registry.ente.local/atti-pa/api
+    newName: registry.intranet.provincia.lucca/atti.pa/api
     newTag: "0.1.0"
   - name: atti-pa/verifica-worker
-    newName: registry.ente.local/atti-pa/verifica-worker
+    newName: registry.intranet.provincia.lucca/atti.pa/verifica-worker
     newTag: "0.1.0"
   - name: atti-pa/converter
-    newName: registry.ente.local/atti-pa/converter
+    newName: registry.intranet.provincia.lucca/atti.pa/converter
     newTag: "0.1.0"
   - name: atti-pa/frontend
-    newName: registry.ente.local/atti-pa/frontend
+    newName: registry.intranet.provincia.lucca/atti.pa/frontend
     newTag: "0.1.0"
   - name: atti-pa/normattiva-sync
-    newName: registry.ente.local/atti-pa/normattiva-sync
+    newName: registry.intranet.provincia.lucca/atti.pa/normattiva-sync
     newTag: "0.1.0"

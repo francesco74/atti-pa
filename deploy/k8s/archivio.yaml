@@ -1,0 +1,15 @@
+# Archivio dei file originali degli atti (ARCHIVIO_DIR): scritto dall'API (2 repliche),
+# letto dal consumatore del converter. Serve uno storage ReadWriteMany: CephFS.
+# Va incluso nei backup insieme al database.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: archivio-atti
+  labels:
+    app.kubernetes.io/part-of: atti-pa
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: rook-cephfs
+  resources:
+    requests:
+      storage: 20Gi

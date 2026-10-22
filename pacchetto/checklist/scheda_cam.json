@@ -1,0 +1,37 @@
+{
+  "codice": "SCHEDA_CAM",
+  "titolo": "Scheda di controllo della specificità Merceologia soggetta a CAM",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "CAM",
+  "descrizione": "Scheda della specificità: si applica agli affidamenti di categorie per le quali il Ministero dell'ambiente e della sicurezza energetica ha adottato i criteri ambientali minimi (art. 57, comma 2, D.Lgs. 36/2023). Corrisponde al modulo di regole pacchetto/modelli/regole/cam.yaml.",
+  "elementi": [
+    {
+      "titolo": "1. Richiamo dei criteri ambientali minimi",
+      "regola": "Se l'affidamento riguarda una categoria soggetta a criteri ambientali minimi (CAM), verifica che l'atto richiami l'art. 57, comma 2, del D.Lgs. 36/2023 e il decreto ministeriale che adotta i CAM della categoria.\nÈ CONFORME se sono richiamati sia l'art. 57 sia il decreto CAM pertinente.\nÈ DUBBIO se è richiamato solo uno dei due o il decreto è indicato in modo generico.\nÈ NON_CONFORME se l'atto riguarda una categoria soggetta a CAM e non li richiama in alcun modo.\nÈ NON_APPLICABILE se l'affidamento non riguarda categorie soggette a CAM.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art57"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Specifiche tecniche e clausole contrattuali dei CAM",
+      "regola": "Verifica che l'atto dia conto dell'inserimento, nella richiesta di offerta o nella documentazione dell'affidamento, almeno delle specifiche tecniche e delle clausole contrattuali dei CAM, obbligatorie per l'intero valore dell'affidamento.\nÈ CONFORME se l'atto attesta che specifiche tecniche e clausole contrattuali dei CAM sono state inserite e accettate dall'operatore.\nÈ NON_CONFORME se l'atto riguarda una categoria soggetta a CAM e non dice nulla sul loro inserimento.\nÈ DUBBIO se sono richiamati i CAM senza precisare che le specifiche tecniche e le clausole contrattuali fanno parte dell'affidamento.\nÈ NON_APPLICABILE se l'affidamento non riguarda categorie soggette a CAM.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art57"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Mezzi di prova e verifica in esecuzione",
+      "regola": "Verifica che l'atto indichi come è comprovato il rispetto dei CAM (certificazioni, etichette ambientali, schede tecniche, dichiarazioni previste dal decreto CAM) e chi lo verifica in corso di esecuzione.\nÈ CONFORME se sono indicati i mezzi di prova e la verifica in esecuzione.\nÈ DUBBIO se è indicato solo uno dei due aspetti.\nÈ NON_APPLICABILE se l'affidamento non riguarda categorie soggette a CAM.",
+      "riferimenti": [],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "4. Rispetto dei CAM come clausola essenziale",
+      "regola": "Verifica che il rispetto dei CAM per tutta la durata del contratto sia tra le clausole essenziali o comunque sia previsto come obbligo contrattuale, la cui violazione costituisce inadempimento.\nÈ CONFORME se l'obbligo è previsto.\nÈ DUBBIO se l'obbligo è previsto ma senza conseguenze in caso di violazione.\nÈ NON_APPLICABILE se l'affidamento non riguarda categorie soggette a CAM.",
+      "riferimenti": [],
+      "obbligatorio": false
+    }
+  ]
+}

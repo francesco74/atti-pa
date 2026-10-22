@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../stato/auth_state.dart';
@@ -36,7 +37,15 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
       ? null
       : Map<String, dynamic>.from((dettaglio!['standard'] as Map)['definizione'] as Map);
   bool get haBozza => dettaglio?['bozza'] != null;
-  bool get puoPubblicare => context.read<AuthState>().utente?.isAdmin ?? false;
+  bool get admin => context.read<AuthState>().utente?.isAdmin ?? false;
+  bool get puoPubblicare => admin;
+
+  /// ABILITATO, IN_REDAZIONE (bozza presa in carico da qualcuno), DISATTIVATO.
+  String get stato => dettaglio?['stato'] as String? ?? 'ABILITATO';
+  Map<String, dynamic>? get redazione => dettaglio?['redazione'] as Map<String, dynamic>?;
+
+  /// La bozza è in carico a questo utente: solo allora si modifica.
+  bool get inModifica => haBozza && redazione?['mia'] == true;
 
   /// Chiamato dopo il caricamento (es. per ricavare le variabili delle condizioni).
   void dopoCaricamento() {}
@@ -63,6 +72,10 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
 
   /// Da chiamare dopo ogni modifica della definizione.
   void modifica(VoidCallback cambiamento) {
+    if (!inModifica) {
+      mostraMessaggio(context, 'Sola lettura: premi "Inizia a modificare" per prendere in carico l\'oggetto');
+      return;
+    }
     setState(() {
       cambiamento();
       modificata = true;
@@ -148,6 +161,67 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
     }
   }
 
+  /// Presa in carico: nasce la bozza e l'oggetto è in redazione; gli altri non possono
+  /// modificarlo, gli atti continuano a usare la versione pubblicata.
+  Future<void> prendiInCarico() async {
+    try {
+      await apiDi(context).post('$percorso/prendi');
+      if (mounted) await carica();
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
+  Future<void> sblocca() async {
+    if (!await conferma(context, 'Prendere in carico la bozza?',
+        'La bozza di ${redazione?['autore'] ?? 'un altro utente'} resta com\'è e passa a te: '
+            'chi la stava modificando non potrà più salvarla.')) {
+      return;
+    }
+    if (!mounted) return;
+    try {
+      await apiDi(context).post('$percorso/sblocca');
+      if (mounted) await carica();
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
+  Future<void> cambiaAttivazione(bool attiva) async {
+    if (!attiva &&
+        !await conferma(context, 'Disattivare?', switch (tipo) {
+          'modello' => 'Il modello non si potrà più scegliere per gli atti nuovi. Le bozze di atto già '
+              'iniziate e le verifiche restano sulla loro versione.',
+          'modulo' => 'La specificità sparisce dalle caratteristiche dei modelli, che ricevono una '
+              'nuova versione senza i suoi testi.',
+          _ => 'La verifica degli atti non applicherà più questa checklist.',
+        })) {
+      return;
+    }
+    if (!mounted) return;
+    try {
+      final r = await apiDi(context).post('$percorso/${attiva ? 'riattiva' : 'disattiva'}') as Map<String, dynamic>;
+      if (!mounted) return;
+      final avvisi = List<String>.from(r['avvisi'] as List? ?? const []);
+      mostraMessaggio(context, attiva ? 'Riattivato' : 'Disattivato');
+      if (avvisi.isNotEmpty) {
+        await showDialog<void>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Da controllare'),
+            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              for (final a in avvisi) Padding(padding: const EdgeInsets.only(bottom: 6), child: Text('• $a')),
+            ]),
+            actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Chiudi'))],
+          ),
+        );
+      }
+      if (mounted) await carica();
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
   Future<void> confronta(String con) async {
     try {
       final r = await apiDi(context).post('$percorso/confronta', {'definizione': definizione, 'con': con})
@@ -218,11 +292,18 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
             padding: EdgeInsets.all(14),
             child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
           ),
-        TextButton.icon(
-          onPressed: salvataggio || !modificata ? null : salvaBozza,
-          icon: const Icon(Icons.save_outlined),
-          label: Text(modificata ? 'Salva bozza' : 'Bozza salvata'),
-        ),
+        if (inModifica)
+          TextButton.icon(
+            onPressed: salvataggio || !modificata ? null : salvaBozza,
+            icon: const Icon(Icons.save_outlined),
+            label: Text(modificata ? 'Salva bozza' : 'Bozza salvata'),
+          )
+        else if (stato == 'ABILITATO')
+          FilledButton.tonalIcon(
+            onPressed: prendiInCarico,
+            icon: const Icon(Icons.edit),
+            label: const Text('Inizia a modificare'),
+          ),
         PopupMenuButton<String>(
           tooltip: 'Altre azioni',
           onSelected: (a) => switch (a) {
@@ -231,6 +312,9 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
             'sorgente' => sorgente(),
             'storico' => storico(),
             'scarta' => scartaBozza(),
+            'sblocca' => sblocca(),
+            'disattiva' => cambiaAttivazione(false),
+            'riattiva' => cambiaAttivazione(true),
             _ => null,
           },
           itemBuilder: (_) => [
@@ -240,7 +324,11 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
               const PopupMenuItem(value: 'standard', child: Text('Confronta con lo standard')),
             const PopupMenuItem(value: 'sorgente', child: Text('Sorgente (modalità avanzata)')),
             if (dettaglio?['pubblicata'] != null) const PopupMenuItem(value: 'storico', child: Text('Versioni')),
-            if (haBozza) const PopupMenuItem(value: 'scarta', child: Text('Scarta la bozza')),
+            if (haBozza && (inModifica || admin)) const PopupMenuItem(value: 'scarta', child: Text('Scarta la bozza')),
+            if (haBozza && !inModifica && admin)
+              const PopupMenuItem(value: 'sblocca', child: Text('Sblocca e prendi in carico')),
+            if (admin && stato == 'ABILITATO') const PopupMenuItem(value: 'disattiva', child: Text('Disattiva')),
+            if (admin && stato == 'DISATTIVATO') const PopupMenuItem(value: 'riattiva', child: Text('Riattiva')),
           ],
         ),
         Padding(
@@ -260,12 +348,57 @@ mixin EditorConfigurazione<T extends StatefulWidget> on State<T> {
   Widget statoVersione() {
     final pub = dettaglio?['pubblicata'] as Map?;
     final testo = [
-      if (pub != null) 'Pubblicata: v${pub['versione']}' else 'Nuovo, mai pubblicato',
+      if (stato == 'DISATTIVATO')
+        'Disattivato (ultima versione: v${pub?['versione']})'
+      else if (pub != null)
+        'Pubblicata: v${pub['versione']}'
+      else
+        'Nuovo, mai pubblicato',
       if (pub?['pacchetto'] != null)
         pub!['modificato'] == true ? 'standard modificato dall\'ente' : 'standard (${pub['pacchetto']})',
-      if (haBozza || modificata) 'bozza in corso${modificata ? ', modifiche non salvate' : ''}',
+      if (haBozza)
+        inModifica
+            ? 'in redazione da te${modificata ? ', modifiche non salvate' : ''}'
+            : 'in redazione da ${redazione?['autore'] ?? 'un altro utente'}',
     ].join(' · ');
     return Text(testo, style: Theme.of(context).textTheme.bodySmall);
+  }
+
+  /// Striscia sopra l'editor quando non si può modificare: perché e cosa fare.
+  Widget avvisoStato() {
+    if (inModifica) return const SizedBox.shrink();
+    final tema = Theme.of(context);
+    final (IconData icona, String testo, Widget? azione) = switch (stato) {
+      'DISATTIVATO' => (
+          Icons.block,
+          'Disattivato: non è usato dagli atti nuovi.${admin ? '' : ' Può riattivarlo un amministratore.'}',
+          admin ? TextButton(onPressed: () => cambiaAttivazione(true), child: const Text('Riattiva')) : null,
+        ),
+      'IN_REDAZIONE' => (
+          Icons.lock_outline,
+          'In redazione da ${redazione?['autore'] ?? 'un altro utente'} dal ${formatData(redazione?['dal'])}: '
+              'vedi la sua bozza in sola lettura. Gli atti usano la versione pubblicata.',
+          admin ? TextButton(onPressed: sblocca, child: const Text('Sblocca e prendi in carico')) : null,
+        ),
+      _ => (
+          Icons.visibility_outlined,
+          'Sola lettura: è la versione usata dagli atti. Per modificarla prendila in carico: '
+              'gli altri non potranno modificarla finché la tua bozza non è pubblicata o scartata.',
+          TextButton(onPressed: prendiInCarico, child: const Text('Inizia a modificare')),
+        ),
+    };
+    return Material(
+      color: tema.colorScheme.secondaryContainer.withValues(alpha: 0.6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Row(children: [
+          Icon(icona, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Text(testo)),
+          ?azione,
+        ]),
+      ),
+    );
   }
 
   /// Errori e avvisi del controllo.
@@ -457,6 +590,21 @@ class _SorgenteDialogState extends State<SorgenteDialog> {
   }
 }
 
+/// URN di un articolo in forma breve, es. "art. 50 D.Lgs. 36/2023".
+String normaBreve(String urn) {
+  final m = RegExp(r'urn:nir:stato:([^:]+):(\d{4})-\d\d-\d\d;([^~]+)~art(.+)$').firstMatch(urn);
+  if (m == null) return urn;
+  final tipo = switch (m.group(1)) {
+    'decreto.legislativo' => 'D.Lgs.',
+    'legge' => 'L.',
+    'decreto.legge' => 'D.L.',
+    'decreto.del.presidente.della.repubblica' => 'D.P.R.',
+    _ => m.group(1)!,
+  };
+  return 'art. ${m.group(4)} $tipo ${m.group(3)}/${m.group(2)}';
+}
+
+
 /// Elenco di URN di norme, con aggiunta dalla libreria normativa o a mano.
 class NormeEditor extends StatelessWidget {
   const NormeEditor({super.key, required this.norme, required this.onChanged, required this.aggiungiDaLibreria});
@@ -464,19 +612,6 @@ class NormeEditor extends StatelessWidget {
   final List<String> norme;
   final ValueChanged<List<String>> onChanged;
   final Future<List<String>> Function() aggiungiDaLibreria;
-
-  String _breve(String urn) {
-    final m = RegExp(r'urn:nir:stato:([^:]+):(\d{4})-\d\d-\d\d;([^~]+)~art(.+)$').firstMatch(urn);
-    if (m == null) return urn;
-    final tipo = switch (m.group(1)) {
-      'decreto.legislativo' => 'D.Lgs.',
-      'legge' => 'L.',
-      'decreto.legge' => 'D.L.',
-      'decreto.del.presidente.della.repubblica' => 'D.P.R.',
-      _ => m.group(1)!,
-    };
-    return 'art. ${m.group(4)} $tipo ${m.group(3)}/${m.group(2)}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +622,7 @@ class NormeEditor extends StatelessWidget {
           Tooltip(
             message: n,
             child: InputChip(
-              label: Text(_breve(n)),
+              label: Text(normaBreve(n)),
               onDeleted: () => onChanged([...norme]..remove(n)),
             ),
           ),
@@ -499,6 +634,144 @@ class NormeEditor extends StatelessWidget {
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Aggiungi'),
         ),
+      ]),
+    );
+  }
+}
+
+// --- ricerca nella struttura -------------------------------------------------------------------
+
+const _accentate = 'àáâäèéêëìíîïòóôöùúûüÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜ';
+const _semplici = 'aaaaeeeeiiiioooouuuuaaaaeeeeiiiioooouuuu';
+
+/// Testo per la ricerca: minuscolo e senza accenti, con la stessa lunghezza dell'originale
+/// (le posizioni trovate valgono anche per il testo originale).
+String normalizzaRicerca(String testo) {
+  final b = StringBuffer();
+  for (final c in testo.toLowerCase().split('')) {
+    final i = _accentate.indexOf(c);
+    b.write(i < 0 ? c : _semplici[i]);
+  }
+  return b.toString();
+}
+
+/// Il testo con le occorrenze della ricerca evidenziate.
+Widget testoEvidenziato(BuildContext context, String testo, String ricerca, {TextStyle? stile, int righe = 1}) {
+  final q = normalizzaRicerca(ricerca.trim());
+  if (q.isEmpty) return Text(testo, style: stile, maxLines: righe, overflow: TextOverflow.ellipsis);
+  final n = normalizzaRicerca(testo);
+  final colori = Theme.of(context).colorScheme;
+  final parti = <TextSpan>[];
+  var da = 0;
+  for (var i = n.indexOf(q); i >= 0; i = n.indexOf(q, i + q.length)) {
+    if (i > da) parti.add(TextSpan(text: testo.substring(da, i)));
+    parti.add(TextSpan(
+      text: testo.substring(i, i + q.length),
+      style: TextStyle(backgroundColor: colori.tertiaryContainer, color: colori.onTertiaryContainer, fontWeight: FontWeight.w600),
+    ));
+    da = i + q.length;
+  }
+  if (da < testo.length) parti.add(TextSpan(text: testo.substring(da)));
+  return Text.rich(TextSpan(style: stile, children: parti), maxLines: righe, overflow: TextOverflow.ellipsis);
+}
+
+/// Il testo cercato compare in uno dei testi dell'elemento?
+bool corrisponde(String ricerca, Iterable<Object?> testi) {
+  final q = normalizzaRicerca(ricerca.trim());
+  return q.isEmpty || testi.any((t) => t != null && normalizzaRicerca(t.toString()).contains(q));
+}
+
+/// Casella di ricerca sopra la struttura: numero di risultati, ✕ ed Esc per azzerare,
+/// filtri rapidi facoltativi per tipo di elemento.
+class CampoRicerca extends StatefulWidget {
+  const CampoRicerca({
+    super.key,
+    required this.onChanged,
+    this.valore = '',
+    this.risultati,
+    this.suggerimento = 'Cerca',
+    this.filtri = const {},
+    this.filtro,
+    this.onFiltro,
+  });
+
+  final ValueChanged<String> onChanged;
+  final String valore; // testo iniziale (la casella può essere ricreata, es. cambiando scheda)
+  final int? risultati; // null: nessuna ricerca in corso
+  final String suggerimento;
+  final Map<String, String> filtri; // codice → etichetta; vuota: nessun filtro rapido
+  final String? filtro;
+  final ValueChanged<String>? onFiltro;
+
+  @override
+  State<CampoRicerca> createState() => _CampoRicercaState();
+}
+
+class _CampoRicercaState extends State<CampoRicerca> {
+  late final _testo = TextEditingController(text: widget.valore);
+
+  @override
+  void dispose() {
+    _testo.dispose();
+    super.dispose();
+  }
+
+  void _azzera() {
+    _testo.clear();
+    widget.onChanged('');
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): _azzera},
+          child: TextField(
+            controller: _testo,
+            decoration: InputDecoration(
+              isDense: true,
+              prefixIcon: const Icon(Icons.search, size: 20),
+              hintText: widget.suggerimento,
+              border: const OutlineInputBorder(),
+              suffixIcon: _testo.text.isEmpty
+                  ? null
+                  : IconButton(tooltip: 'Azzera (Esc)', icon: const Icon(Icons.close, size: 18), onPressed: _azzera),
+            ),
+            onChanged: (v) {
+              setState(() {});
+              widget.onChanged(v);
+            },
+          ),
+        ),
+        if (widget.filtri.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Wrap(spacing: 4, runSpacing: 4, children: [
+              for (final f in widget.filtri.entries)
+                ChoiceChip(
+                  visualDensity: VisualDensity.compact,
+                  label: Text(f.value),
+                  selected: widget.filtro == f.key,
+                  onSelected: (_) => widget.onFiltro?.call(f.key),
+                ),
+            ]),
+          ),
+        if (widget.risultati != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(
+              widget.risultati == 0
+                  ? 'Nessun risultato'
+                  : widget.risultati == 1
+                      ? '1 risultato'
+                      : '${widget.risultati} risultati',
+              style: tema.textTheme.bodySmall,
+            ),
+          ),
       ]),
     );
   }

@@ -1,4 +1,4 @@
-"""Modelli di atto a 4 fasi (deploy/modelli/*.yaml): definizione, condizioni, composizione.
+"""Modelli di atto a 4 fasi (pacchetto/modelli/*.yaml): definizione, condizioni, composizione.
 
 Un modello descrive un tipo di atto (es. determina di affidamento diretto) con:
 - domande iniziali, che decidono quali capoversi entrano nell'atto;
@@ -11,11 +11,11 @@ Le condizioni ("se") sono espressioni semplici (and, or, not, ==, !=, <, <=, >, 
 implica) valutate da un piccolo interprete: non sono mai eseguite come codice Python.
 
 Le specificità tecniche o normative (servizi cloud, CAM, lavori su immobili vincolati...)
-stanno in moduli di regole separati (deploy/modelli/regole/*.yaml). Ogni modulo ha un
+stanno in moduli di regole separati (pacchetto/modelli/regole/*.yaml). Ogni modulo ha un
 fattore abilitante, scelto tra le "caratteristiche" dell'atto, e inietta capoversi nei punti
 di innesto del modello (oggetto, visti, dato atto, dispositivo...), aggiunge domande e
 campi e suggerisce risposte. Il modello e i suoi moduli sono composti in un'unica
-definizione al caricamento (componi). I controlli stanno nelle checklist (deploy/checklist):
+definizione al caricamento (componi). I controlli stanno nelle checklist (pacchetto/checklist):
 una generica per tipologia di atto, una per modello e una per ogni modulo di regole.
 """
 

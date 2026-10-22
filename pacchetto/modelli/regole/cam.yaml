@@ -1,0 +1,81 @@
+# Modulo di regole: merceologia soggetta ai criteri ambientali minimi (CAM).
+#
+# Art. 57, comma 2, D.Lgs. 36/2023: la documentazione progettuale e di gara contiene almeno
+# le specifiche tecniche e le clausole contrattuali dei CAM definiti con decreto del
+# Ministero dell'ambiente e della sicurezza energetica per la categoria dell'appalto.
+# Nelle 4 fasi:
+#   2. Visti              art. 57, comma 2, e il decreto CAM della categoria
+#      Dato atto          specifiche tecniche e clausole contrattuali inserite; mezzi di prova
+#      Art. 192 TUEL      rispetto dei CAM tra le clausole essenziali
+#   3. Dispositivo        verifica in esecuzione; la violazione è inadempimento
+# Si applica sia ai servizi e forniture sia ai lavori (es. CAM per l'edilizia).
+# Checklist corrispondente: pacchetto/checklist/scheda_cam.json.
+# Nota: negli affidamenti diretti le certificazioni ambientali non riducono la garanzia
+# definitiva (art. 53, comma 4-bis, D.Lgs. 36/2023).
+
+codice: CAM
+fattore: cam
+etichetta: Merceologia soggetta a CAM
+descrizione: "Attiva: decreto CAM del Ministero dell'ambiente, specifiche tecniche e clausole contrattuali, mezzi di prova e certificazioni ambientali"
+modelli: [DD_AFFIDAMENTO_DIRETTO_SF, DD_AFFIDAMENTO_DIRETTO_LAVORI]
+
+campi:
+  dm_cam:
+    etichetta: Decreto CAM applicabile (estremi e categoria)
+    tipo: testo
+    aiuto: >-
+      Il decreto del Ministero dell'ambiente e della sicurezza energetica che adotta i
+      criteri ambientali minimi per la categoria dell'affidamento (es. servizi di pulizia,
+      carta, arredi, apparecchiature elettroniche...), come pubblicato sul sito del MASE.
+  cam_mezzi_prova:
+    etichetta: Mezzi di prova del rispetto dei CAM
+    tipo: testo_lungo
+    aiuto: >-
+      Certificazioni, etichette ambientali, schede tecniche o dichiarazioni previste dal
+      decreto CAM per verificare le specifiche tecniche (es. Ecolabel UE, FSC/PEFC,
+      EPEAT...).
+
+inserti:
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_cam
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2023-03-31;36~art57"]
+        testo: >-
+          l'art. 57, comma 2, del D.Lgs. 36/2023, sui criteri ambientali minimi, e il decreto
+          del Ministero dell'ambiente e della sicurezza energetica {{dm_cam}};
+
+  - innesto: dato_atto
+    capoversi:
+      - id: cam_inseriti
+        fonte: aggiunto
+        aiuto: >-
+          I CAM sono obbligatori per l'intero valore dell'affidamento: la richiesta di offerta
+          o l'ordine contengono almeno le specifiche tecniche e le clausole contrattuali del
+          decreto.
+        testo: >-
+          Dato atto che la richiesta di offerta contiene almeno le specifiche tecniche e le
+          clausole contrattuali dei criteri ambientali minimi adottati con il citato decreto,
+          ai sensi dell'art. 57, comma 2, del D.Lgs. 36/2023, e che l'operatore economico ne ha
+          dichiarato il rispetto, comprovato dai seguenti mezzi di prova: {{cam_mezzi_prova}};
+
+  - innesto: elementi_essenziali_192
+    prima_di: ritenuto_affidare
+    capoversi:
+      - id: clausole_cam
+        fonte: aggiunto
+        testo: >-
+          Ritenuto altresì di inserire tra le clausole essenziali del contratto il rispetto,
+          per tutta la sua durata, delle specifiche tecniche e delle clausole contrattuali dei
+          criteri ambientali minimi applicabili;
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_cam
+        fonte: aggiunto
+        testo: >-
+          di stabilire che il rispetto dei criteri ambientali minimi è verificato in corso di
+          esecuzione dal direttore dell'esecuzione o dal RUP sulla base dei mezzi di prova
+          indicati in narrativa e che la loro violazione costituisce inadempimento
+          contrattuale;

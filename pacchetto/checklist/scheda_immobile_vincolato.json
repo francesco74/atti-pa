@@ -1,0 +1,40 @@
+{
+  "codice": "SCHEDA_IMMOBILE_VINCOLATO",
+  "titolo": "Scheda di controllo della specificità Immobile vincolato",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "IMMOBILE_VINCOLATO",
+  "descrizione": "Scheda della specificità: si applica ai lavori su beni culturali o paesaggistici tutelati dal D.Lgs. 42/2004. Corrisponde al modulo di regole pacchetto/modelli/regole/immobile_vincolato.yaml.",
+  "elementi": [
+    {
+      "titolo": "1. Autorizzazione della Soprintendenza",
+      "regola": "Se i lavori riguardano un bene culturale tutelato, verifica che l'atto dia conto dell'autorizzazione all'esecuzione dei lavori rilasciata dalla Soprintendenza (art. 21, comma 4, D.Lgs. 42/2004), con i suoi estremi.\nÈ CONFORME se l'autorizzazione è indicata.\nÈ NON_CONFORME se si tratta di un bene culturale e l'autorizzazione manca.\nÈ NON_APPLICABILE se l'immobile non è un bene culturale.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2004-01-22;42~art21"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Autorizzazione paesaggistica",
+      "regola": "Se l'intervento riguarda un bene paesaggistico, verifica che l'atto dia conto dell'autorizzazione paesaggistica (art. 146 D.Lgs. 42/2004).\nÈ CONFORME se l'autorizzazione è indicata.\nÈ NON_CONFORME se si tratta di un bene paesaggistico e l'autorizzazione manca.\nÈ NON_APPLICABILE se l'intervento non riguarda beni paesaggistici.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2004-01-22;42~art146"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Qualificazione per i beni culturali",
+      "regola": "Se i lavori riguardano un bene culturale, verifica che l'atto dia conto della qualificazione specifica dell'impresa e del direttore tecnico prevista dall'allegato II.18 al D.Lgs. 36/2023 (art. 133), in particolare nelle categorie OG2 o OS2-A, e che non sia ammesso l'avvalimento (art. 132, comma 2).\nÈ CONFORME se qualificazione e divieto di avvalimento sono indicati.\nÈ DUBBIO se è indicata solo una qualificazione generica (es. OG1).\nÈ NON_APPLICABILE se l'immobile non è un bene culturale.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art132",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art133"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Rispetto delle prescrizioni in esecuzione",
+      "regola": "Verifica che il dispositivo imponga l'esecuzione dei lavori nel rispetto delle prescrizioni delle autorizzazioni e sottoponga le varianti alla preventiva autorizzazione dell'autorità competente.\nÈ CONFORME se è previsto.\nÈ DUBBIO se manca.\nÈ NON_APPLICABILE se l'intervento non riguarda beni vincolati.",
+      "riferimenti": [],
+      "obbligatorio": false
+    }
+  ]
+}

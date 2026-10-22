@@ -1,0 +1,62 @@
+{
+  "codice": "SCHEDA_ICT_CLOUD",
+  "titolo": "Scheda di controllo della specificità Servizi / Forniture Cloud ICT",
+  "tipologia_atto": "DETERMINA",
+  "modulo": "ICT_CLOUD",
+  "descrizione": "Scheda della specificità: si applica agli atti per beni e servizi informatici e servizi cloud, insieme alla scheda generica delle determinazioni e a quella del modello di atto. Corrisponde al modulo di regole pacchetto/modelli/regole/ict_cloud.yaml: gli elementi verificano che l'atto contenga ciò che il modulo inserisce nella bozza (Regolamento ACN per le infrastrutture digitali e i servizi cloud, qualificazione nel Catalogo ACN, CAD).",
+  "elementi": [
+    {
+      "titolo": "1. Codice dell'amministrazione digitale",
+      "regola": "Verifica che, trattandosi di beni o servizi informatici o di connettività, l'atto richiami il Codice dell'amministrazione digitale.\nÈ CONFORME se tra i presupposti normativi è richiamato il D.Lgs. 7 marzo 2005, n. 82 (Codice dell'amministrazione digitale).\nÈ NON_CONFORME se l'atto riguarda beni o servizi informatici e il CAD non è richiamato.\nÈ NON_APPLICABILE se l'atto non riguarda beni o servizi informatici.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "2. Richiamo del Regolamento cloud dell'ACN",
+      "regola": "Se l'atto affida servizi erogati in cloud (SaaS, PaaS, IaaS), verifica che tra i presupposti normativi sia richiamato il Regolamento per le infrastrutture digitali e per i servizi cloud per la pubblica amministrazione, adottato dall'Agenzia per la Cybersicurezza Nazionale ai sensi dell'art. 33-septies, comma 4, del D.L. 179/2012.\nÈ CONFORME se il Regolamento è richiamato.\nÈ NON_CONFORME se l'atto affida servizi cloud e il Regolamento non è richiamato.\nÈ NON_APPLICABILE se l'atto non riguarda servizi cloud.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legge:2012-10-18;179~art33-septies"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "3. Qualificazione ACN dei servizi cloud",
+      "regola": "Se l'atto affida servizi cloud, verifica che attesti la loro qualificazione nel Catalogo delle infrastrutture digitali e dei servizi cloud dell'Agenzia per la Cybersicurezza Nazionale.\nÈ CONFORME se l'atto attesta che i servizi sono qualificati nel Catalogo ACN, indica il servizio e il livello di qualificazione e dà conto che il livello è adeguato alla classificazione dei dati e dei servizi interessati (ordinari, critici, strategici).\nÈ NON_CONFORME se l'atto affida servizi cloud senza alcuna attestazione della qualificazione ACN.\nÈ DUBBIO se la qualificazione è attestata in modo generico, senza indicare il servizio, il livello o la classificazione dei dati.\nÈ NON_APPLICABILE se l'atto non riguarda servizi cloud.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legge:2012-10-18;179~art33-septies"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "4. Mantenimento della qualificazione ACN",
+      "regola": "Se l'atto affida servizi cloud, verifica che il dispositivo o le clausole essenziali del contratto impongano all'operatore economico di mantenere la qualificazione ACN dei servizi per tutta la durata del contratto.\nÈ CONFORME se è previsto l'obbligo di mantenere la qualificazione e la risoluzione del contratto (o altra conseguenza espressa) in caso di sua perdita o sospensione.\nÈ DUBBIO se l'obbligo è previsto ma senza alcuna conseguenza in caso di perdita della qualificazione.\nÈ NON_CONFORME se l'atto affida servizi cloud e non prevede alcun obbligo di mantenimento.\nÈ NON_APPLICABILE se l'atto non riguarda servizi cloud.",
+      "riferimenti": [],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "5. Garanzia definitiva e continuità del servizio cloud",
+      "regola": "Se l'atto affida servizi cloud, verifica come tratta la garanzia definitiva, strumento di tutela da interruzioni del servizio e da inadempimenti nella migrazione e nella continuità operativa.\nÈ CONFORME se la garanzia definitiva è richiesta, oppure se l'atto motiva in modo specifico perché non la richiede.\nÈ DUBBIO se la garanzia non è richiesta e la motivazione è generica, soprattutto se i servizi trattano dati critici o strategici dell'ente.\nÈ NON_APPLICABILE se l'atto non riguarda servizi cloud.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art53",
+        "urn:nir:stato:decreto.legislativo:2023-03-31;36~art117"
+      ],
+      "obbligatorio": false
+    },
+    {
+      "titolo": "6. Valutazione comparativa del software (art. 68 CAD)",
+      "regola": "Se l'atto acquisisce programmi informatici (licenze o sviluppo di software), verifica che dia conto della valutazione comparativa di tipo tecnico ed economico tra riuso di soluzioni di altre amministrazioni, software libero e soluzioni proprietarie.\nÈ CONFORME se l'atto riporta la valutazione comparativa e il suo esito.\nÈ NON_CONFORME se l'atto acquisisce software senza alcun riferimento alla valutazione comparativa.\nÈ NON_APPLICABILE se l'atto non acquisisce programmi informatici.",
+      "riferimenti": [
+        "urn:nir:stato:decreto.legislativo:2005-03-07;82~art68"
+      ],
+      "obbligatorio": true
+    },
+    {
+      "titolo": "7. Acquisti ICT tramite Consip o soggetti aggregatori",
+      "regola": "Per i beni e servizi informatici e di connettività, verifica che l'atto dia conto del ricorso agli strumenti di acquisto di Consip o dei soggetti aggregatori oppure, in loro assenza o inidoneità, delle ragioni che consentono di procedere autonomamente.\nÈ CONFORME se l'atto indica lo strumento Consip o del soggetto aggregatore utilizzato, oppure attesta che il bene o servizio non è disponibile o non è idoneo e motiva l'acquisto autonomo.\nÈ DUBBIO se l'atto non dice nulla sugli strumenti Consip.\nÈ NON_APPLICABILE se l'atto non riguarda beni o servizi informatici.",
+      "riferimenti": [
+        "urn:nir:stato:legge:2015-12-28;208~art1"
+      ],
+      "obbligatorio": false
+    }
+  ]
+}

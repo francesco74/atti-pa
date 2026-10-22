@@ -149,7 +149,43 @@ class _EditorChecklistPageState extends State<EditorChecklistPage> with EditorCo
 
   // --- elenco ------------------------------------------------------------------------------
 
+  // ricerca tra i controlli: titolo, regola, norme, capoversi collegati
+  String _ricerca = '';
+
+  /// Brano della regola intorno al testo cercato, quando non è nel titolo.
+  String? _brano(String regola) {
+    final q = normalizzaRicerca(_ricerca.trim());
+    final i = normalizzaRicerca(regola).indexOf(q);
+    if (q.isEmpty || i < 0) return null;
+    final da = (i - 40).clamp(0, regola.length);
+    final a = (i + q.length + 60).clamp(0, regola.length);
+    return '${da > 0 ? '…' : ''}${regola.substring(da, a).replaceAll('\n', ' ')}${a < regola.length ? '…' : ''}';
+  }
+
   Widget _elenco() {
+    final cerca = _ricerca.trim().isNotEmpty;
+    final trovati = [
+      for (var i = 0; i < _elementi.length; i++)
+        if (corrisponde(_ricerca, [
+          _elemento(i)['titolo'],
+          _elemento(i)['regola'],
+          for (final n in List<String>.from(_elemento(i)['riferimenti'] as List? ?? const [])) ...[n, normaBreve(n)],
+          ...List<String>.from(_elemento(i)['capoversi'] as List? ?? const []),
+        ]))
+          i,
+    ];
+    return Column(children: [
+      CampoRicerca(
+        suggerimento: 'Cerca nei controlli, nelle regole, nelle norme...',
+        valore: _ricerca,
+        risultati: cerca ? trovati.length : null,
+        onChanged: (v) => setState(() => _ricerca = v),
+      ),
+      Expanded(child: _elencoControlli(trovati, cerca)),
+    ]);
+  }
+
+  Widget _elencoControlli(List<int> trovati, bool cerca) {
     return ListView(children: [
       ListTile(
         dense: true,
@@ -160,20 +196,26 @@ class _EditorChecklistPageState extends State<EditorChecklistPage> with EditorCo
         onTap: () => _seleziona(null),
       ),
       const Divider(height: 1),
-      for (var i = 0; i < _elementi.length; i++)
+      for (final i in trovati)
         ListTile(
           dense: true,
           leading: CircleAvatar(radius: 12, child: Text('${i + 1}', style: const TextStyle(fontSize: 11))),
-          title: Text(_elemento(i)['titolo']?.toString() ?? '', maxLines: 2, overflow: TextOverflow.ellipsis),
-          subtitle: Text([
-            if (_elemento(i)['obbligatorio'] == false) 'facoltativo',
-            if ((_elemento(i)['capoversi'] as List? ?? const []).isNotEmpty)
-              'collegato a ${(_elemento(i)['capoversi'] as List).length} capoversi',
-          ].join(' · ')),
+          title: testoEvidenziato(context, _elemento(i)['titolo']?.toString() ?? '', _ricerca, righe: 2),
+          subtitle: () {
+            final titolo = _elemento(i)['titolo']?.toString() ?? '';
+            final brano = cerca && !corrisponde(_ricerca, [titolo]) ? _brano(_elemento(i)['regola']?.toString() ?? '') : null;
+            if (brano != null) return testoEvidenziato(context, brano, _ricerca, righe: 3);
+            return Text([
+              if (_elemento(i)['obbligatorio'] == false) 'facoltativo',
+              if ((_elemento(i)['capoversi'] as List? ?? const []).isNotEmpty)
+                'collegato a ${(_elemento(i)['capoversi'] as List).length} capoversi',
+            ].join(' · '));
+          }(),
           selected: _sel == i,
           onTap: () => _seleziona(i),
         ),
-      Padding(
+      if (!cerca)
+        Padding(
         padding: const EdgeInsets.all(8),
         child: OutlinedButton.icon(
           onPressed: () {
@@ -411,17 +453,24 @@ class _EditorChecklistPageState extends State<EditorChecklistPage> with EditorCo
           ]),
           actions: azioniEditor(),
         ),
-        body: LayoutBuilder(builder: (context, vincoli) {
+        body: Column(children: [
+          avvisoStato(),
+          Expanded(
+            child: LayoutBuilder(builder: (context, vincoli) {
           final elenco = Column(children: [Expanded(child: _elenco()), const Divider(height: 1), pannelloControllo()]);
+          // in sola lettura si scorre ma non si modifica
           final centro = SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Align(
               alignment: Alignment.topLeft,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 900),
-                child: KeyedSubtree(
-                  key: ValueKey('$sel#$_generazione'),
-                  child: sel == null ? _editorGenerale() : _editorElemento(sel),
+                child: IgnorePointer(
+                  ignoring: !inModifica,
+                  child: KeyedSubtree(
+                    key: ValueKey('$sel#$_generazione'),
+                    child: sel == null ? _editorGenerale() : _editorElemento(sel),
+                  ),
                 ),
               ),
             ),
@@ -441,6 +490,8 @@ class _EditorChecklistPageState extends State<EditorChecklistPage> with EditorCo
             Expanded(child: centro),
           ]);
         }),
+          ),
+        ]),
       ),
     );
   }

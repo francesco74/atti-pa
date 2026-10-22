@@ -1,0 +1,114 @@
+# Modulo di regole: lavori su immobili vincolati (beni culturali o beni paesaggistici).
+#
+# - Beni culturali (D.Lgs. 42/2004, parte seconda): l'esecuzione di opere e lavori è
+#   subordinata all'autorizzazione del soprintendente (art. 21, comma 4). Ai contratti
+#   sui beni culturali si applicano gli artt. 132-134 del D.Lgs. 36/2023: non è ammesso
+#   l'avvalimento (art. 132, comma 2); requisiti di qualificazione degli esecutori e dei
+#   direttori tecnici, livelli della progettazione e collaudo sono nell'allegato II.18
+#   (art. 133) (categorie OG2 per il restauro e la manutenzione dei beni immobili tutelati,
+#   OS2-A per le superfici decorate).
+# - Beni paesaggistici (parte terza): autorizzazione paesaggistica (art. 146).
+# Nelle 4 fasi:
+#   2. Visti              D.Lgs. 42/2004; artt. 132-133 e allegato II.18 D.Lgs. 36/2023
+#      Dato atto          autorizzazioni acquisite; qualificazione specifica; no avvalimento
+#   3. Dispositivo        esecuzione secondo le prescrizioni; comunicazioni alla
+#                         Soprintendenza
+# Checklist corrispondente: pacchetto/checklist/scheda_immobile_vincolato.json.
+
+codice: IMMOBILE_VINCOLATO
+fattore: immobile_vincolato
+etichetta: Immobile vincolato (beni culturali o paesaggistici)
+descrizione: "Attiva: autorizzazione della Soprintendenza o paesaggistica, qualificazione per i beni culturali (OG2, OS2-A), divieto di avvalimento"
+modelli: [DD_AFFIDAMENTO_DIRETTO_LAVORI]
+
+domande:
+  - id: tipo_vincolo
+    testo: Che tipo di vincolo riguarda l'immobile?
+    tipo: scelta
+    opzioni:
+      culturale: Bene culturale (parte seconda del D.Lgs. 42/2004)
+      paesaggistico: Bene paesaggistico (parte terza del D.Lgs. 42/2004)
+      entrambi: Entrambi
+
+derivati:
+  vincolo_culturale: tipo_vincolo in ["culturale", "entrambi"]
+  vincolo_paesaggistico: tipo_vincolo in ["paesaggistico", "entrambi"]
+
+campi:
+  autorizzazione_soprintendenza:
+    etichetta: Autorizzazione della Soprintendenza (estremi)
+    tipo: testo
+    aiuto: Autorizzazione all'esecuzione dei lavori sul bene culturale (art. 21, comma 4, D.Lgs. 42/2004).
+  autorizzazione_paesaggistica:
+    etichetta: Autorizzazione paesaggistica (estremi)
+    tipo: testo
+    aiuto: Rilasciata ai sensi dell'art. 146 D.Lgs. 42/2004.
+  qualificazione_beni_culturali:
+    etichetta: Qualificazione dell'impresa per i beni culturali (categoria e requisiti)
+    tipo: testo
+    aiuto: >-
+      Categoria OG2 (restauro e manutenzione dei beni immobili tutelati) o OS2-A (superfici
+      decorate e beni mobili di interesse storico-artistico), con i requisiti dell'allegato
+      II.18 al D.Lgs. 36/2023, compreso il direttore tecnico.
+
+inserti:
+  - innesto: visti_normativi
+    prima_di: visto_normativa_specifica
+    capoversi:
+      - id: visto_beni_culturali
+        fonte: aggiunto
+        testo: >-
+          il D.Lgs. 22 gennaio 2004, n. 42, "Codice dei beni culturali e del paesaggio";
+      - id: visto_contratti_beni_culturali
+        se: vincolo_culturale
+        fonte: aggiunto
+        norme:
+          - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art132"
+          - "urn:nir:stato:decreto.legislativo:2023-03-31;36~art133"
+        testo: >-
+          gli artt. 132 e 133 e l'allegato II.18 del D.Lgs. 36/2023, sui contratti nel settore
+          dei beni culturali;
+
+  - innesto: dato_atto
+    capoversi:
+      - id: vincolo_soprintendenza
+        se: vincolo_culturale
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2004-01-22;42~art21"]
+        testo: >-
+          Dato atto che l'immobile oggetto dei lavori è un bene culturale tutelato ai sensi
+          della parte seconda del D.Lgs. 42/2004 e che l'esecuzione dei lavori è stata
+          autorizzata dalla Soprintendenza con {{autorizzazione_soprintendenza}}, ai sensi
+          dell'art. 21, comma 4, del medesimo decreto;
+      - id: vincolo_paesaggistico
+        se: vincolo_paesaggistico
+        fonte: aggiunto
+        norme: ["urn:nir:stato:decreto.legislativo:2004-01-22;42~art146"]
+        testo: >-
+          Dato atto che l'intervento interessa un bene paesaggistico ed è stata rilasciata
+          l'autorizzazione paesaggistica {{autorizzazione_paesaggistica}}, ai sensi dell'art.
+          146 del D.Lgs. 42/2004;
+      - id: vincolo_qualificazione
+        se: vincolo_culturale
+        fonte: aggiunto
+        testo: >-
+          Dato atto che l'impresa possiede la qualificazione richiesta per i lavori sui beni
+          culturali ({{qualificazione_beni_culturali}}), secondo l'allegato II.18 del D.Lgs.
+          36/2023, e che, ai sensi dell'art. 132, comma 2, del medesimo decreto, non è ammesso
+          l'avvalimento;
+
+  - innesto: dispositivo
+    capoversi:
+      - id: d_vincolo_prescrizioni
+        fonte: aggiunto
+        testo: >-
+          di stabilire che i lavori sono eseguiti nel rispetto delle prescrizioni contenute
+          nelle autorizzazioni richiamate in narrativa e che ogni variante è sottoposta alla
+          preventiva autorizzazione dell'autorità competente;
+      - id: d_vincolo_comunicazione
+        se: vincolo_culturale
+        fonte: aggiunto
+        facoltativo: true
+        testo: >-
+          di trasmettere il presente provvedimento alla Soprintendenza competente e di
+          comunicarle la data di inizio dei lavori;

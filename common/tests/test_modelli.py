@@ -25,7 +25,7 @@ from common.modelli import (
 )
 
 RADICE = Path(__file__).resolve().parents[2]
-PACCHETTO = RADICE / "deploy"
+PACCHETTO = RADICE / "pacchetto"
 MODELLI = PACCHETTO / "modelli"
 CHECKLIST = PACCHETTO / "checklist"
 
