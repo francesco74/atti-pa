@@ -6,7 +6,7 @@ degli enti locali, pensati per girare su Kubernetes all'interno della rete dell'
 | Modulo        | Utenti                    | Cosa fa                                                                                                                                                                   |
 | ------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Redazione** | redattori (uso personale) | Percorso guidato in 4 fasi (intestazione, preambolo e motivazione, dispositivo, chiusura) secondo un modello di atto, riferimenti normativi presi da Normattiva e verificati alla data di adozione, controllo rapido, documento ODT/PDF/PDF-A anche con omissis |
-| **Controllo** | gruppo controllo atti | Controllo successivo (art. 147-bis TUEL) di singoli atti: per ogni controllo l'atto, la data di adozione e l'audit (verifica dei riferimenti e della loro coerenza, checklist, revisione del controllore). Il sorteggio del campione avviene fuori dal programma |
+| **Controllo** | gruppo controllo atti | Controllo successivo (art. 147-bis TUEL) di singoli atti: per ogni controllo l'atto, la data di adozione e l'audit (verifica dei riferimenti e della loro coerenza, checklist, revisione del controllore) e il verbale del controllo in PDF, PDF/A o ODT, esportabile anche prima della revisione. Il sorteggio del campione avviene fuori dal programma |
 
 Principi:
 

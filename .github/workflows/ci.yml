@@ -49,7 +49,9 @@ jobs:
         run: python -m unittest discover -s common/tests -t .
       - name: Test dell'API
         working-directory: api/tests
-        run: python test_editor_api.py
+        run: |
+          python test_editor_api.py
+          python test_verbale_api.py
       - name: Pacchetto standard
         run: |
           python deploy/pacchetto.py prova

@@ -1,23 +1,29 @@
 """Verifiche asincrone di bozze e atti controllati (eseguite dal verifica-worker)."""
 
+import re
 from datetime import date, datetime
 from http import HTTPStatus
+from typing import Literal
 
 from flask import Blueprint
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 
-from composizione import aggiorna_bozza, data_riferimento, valuta
+from composizione import aggiorna_bozza, data_riferimento, impostazioni_ente, valuta
 from common import coda
-from deps import audit, autenticato, controllore, db, impostazioni, notifica, utente
+from deps import audit, autenticato, controllore, db, impostazioni, notifica, risorse, utente
+from documenti import DocumentiError
 from schemas import Schema
-from web import ErroreApi, corpo, out, parametri
+from verbale import DatiVerbale, verbale_odt
+from web import ErroreApi, allegato, corpo, out, parametri
 from common.models import (
     AttoControllato,
     Bozza,
     Checklist,
     Ruolo,
+    SessioneControllo,
     StatoVerifica,
+    TipologiaAtto,
     User,
     Verifica,
 )
@@ -229,3 +235,55 @@ async def revisione(verifica_id: str):
     await sessione.commit()
     await sessione.refresh(verifica)
     return out(VerificaOut, verifica)
+
+
+MIME = {
+    "odt": "application/vnd.oasis.opendocument.text",
+    "pdf": "application/pdf",
+    "pdfa": "application/pdf",
+}
+
+
+class VerbaleQuery(BaseModel):
+    formato: Literal["odt", "pdf", "pdfa"] = "pdf"
+
+
+@bp.get("/<verifica_id>/verbale")
+@controllore
+async def verbale(verifica_id: str):
+    """Verbale del controllo di un atto: dati, esiti per scheda, riferimenti normativi,
+    conclusioni. Anche prima della revisione, con gli esiti automatici dichiarati tali."""
+    q = parametri(VerbaleQuery)
+    sessione = db()
+    verifica = await sessione.get(Verifica, verifica_id)
+    if verifica is None or not verifica.atto_controllato_id:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
+    if verifica.stato != StatoVerifica.COMPLETATA:
+        raise ErroreApi(HTTPStatus.CONFLICT, "La verifica automatica non è conclusa")
+    atto = await sessione.get(AttoControllato, verifica.atto_controllato_id)
+    controllo = await sessione.get(SessioneControllo, atto.sessione_id)
+    revisore = await sessione.get(User, verifica.revisore_id) if verifica.revisore_id else None
+    tipologia = await sessione.get(TipologiaAtto, atto.tipologia_atto) if atto.tipologia_atto else None
+    ente = (await impostazioni_ente(sessione)).dati_json or {}
+    odt = verbale_odt(
+        DatiVerbale(
+            ente=str(ente.get("ente") or ""),
+            controllo=controllo.titolo if controllo else "",
+            atto=atto,
+            verifica=verifica,
+            revisore=(revisore.nome_completo or revisore.username) if revisore else None,
+            tipologia=tipologia.descrizione if tipologia else None,
+            oggi=datetime.now(impostazioni().tz).date(),
+        )
+    )
+    contenuto = odt
+    if q.formato != "odt":
+        try:
+            contenuto = await risorse().documenti.converti(odt, "verbale.odt", q.formato)
+        except DocumentiError as e:
+            raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
+    numero = re.sub(r"[^A-Za-z0-9_-]+", "-", atto.numero_registro or "").strip("-")
+    nome = f"verbale-controllo{f'-{numero}' if numero else ''}.{'odt' if q.formato == 'odt' else 'pdf'}"
+    audit(sessione, utente(), "verifica", verifica.id, "VERBALE", {"formato": q.formato})
+    await sessione.commit()
+    return allegato(contenuto, MIME[q.formato], nome)

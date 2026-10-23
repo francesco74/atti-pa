@@ -184,6 +184,18 @@ class _AttoPageState extends State<AttoPage> {
     );
   }
 
+  /// Verbale del controllo (PDF, PDF/A, ODT): esiti del controllore se la revisione è
+  /// salvata, altrimenti quelli automatici dichiarati come tali.
+  Future<void> _esportaVerbale(String formato) async {
+    final numero = (_atto?['numero_registro'] ?? '').toString().replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-');
+    final nome = 'verbale-controllo${numero.isEmpty ? '' : '-$numero'}.${formato == 'odt' ? 'odt' : 'pdf'}';
+    try {
+      await salvaFile(apiDi(context), '/api/v1/verifiche/${_verifica!['id']}/verbale', nome, query: {'formato': formato});
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
   Widget _colonnaVerifica() {
     final v = _verifica;
     if (v == null) {
@@ -324,6 +336,24 @@ class _AttoPageState extends State<AttoPage> {
             padding: const EdgeInsets.only(right: 8),
             child: Chip(label: Text(statiAtto[a['stato']] ?? a['stato'].toString())),
           ),
+          if (_verifica?['stato'] == 'COMPLETATA')
+            PopupMenuButton<String>(
+              tooltip: 'Esporta il verbale del controllo (riporta la revisione salvata)',
+              onSelected: _esportaVerbale,
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'pdf', child: Text('Verbale in PDF')),
+                PopupMenuItem(value: 'pdfa', child: Text('Verbale in PDF/A (archiviazione)')),
+                PopupMenuItem(value: 'odt', child: Text('Verbale in ODT (modificabile)')),
+              ],
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.picture_as_pdf_outlined),
+                  SizedBox(width: 6),
+                  Text('Esporta il verbale'),
+                ]),
+              ),
+            ),
         ],
       ),
       body: LayoutBuilder(builder: (context, vincoli) {
