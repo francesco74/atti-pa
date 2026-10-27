@@ -279,43 +279,44 @@ def _attivo(classe):
     return classe.attiva if classe is Checklist else classe.attivo
 
 
-async def versione_attiva(db: AsyncSession, tipo: Tipo, codice: str):
+async def versione_attiva(db: AsyncSession, ente_id: str, tipo: Tipo, codice: str):
     classe = _classe(tipo)
     return await db.scalar(
         select(classe)
-        .where(classe.codice == codice, _attivo(classe).is_(True))
+        .where(classe.ente_id == ente_id, classe.codice == codice, _attivo(classe).is_(True))
         .options(undefer(classe.base_sorgente))
         .order_by(classe.versione.desc())
         .limit(1)
     )
 
 
-async def ultima_versione(db: AsyncSession, tipo: Tipo, codice: str):
+async def ultima_versione(db: AsyncSession, ente_id: str, tipo: Tipo, codice: str):
     classe = _classe(tipo)
     return await db.scalar(
         select(classe)
-        .where(classe.codice == codice)
+        .where(classe.ente_id == ente_id, classe.codice == codice)
         .options(undefer(classe.base_sorgente))
         .order_by(classe.versione.desc())
         .limit(1)
     )
 
 
-async def _nuova_versione(db: AsyncSession, tipo: Tipo, codice: str) -> int:
+async def _nuova_versione(db: AsyncSession, ente_id: str, tipo: Tipo, codice: str) -> int:
     classe = _classe(tipo)
-    for vecchia in (await db.scalars(select(classe).where(classe.codice == codice))).all():
+    stesso = (classe.ente_id == ente_id, classe.codice == codice)
+    for vecchia in (await db.scalars(select(classe).where(*stesso))).all():
         if classe is Checklist:
             vecchia.attiva = False
         else:
             vecchia.attivo = False
-    ultima = await db.scalar(select(func.max(classe.versione)).where(classe.codice == codice))
+    ultima = await db.scalar(select(func.max(classe.versione)).where(*stesso))
     return (ultima or 0) + 1
 
 
-async def _base(db: AsyncSession, tipo: Tipo, codice: str, base: Base | None) -> Base:
+async def _base(db: AsyncSession, ente_id: str, tipo: Tipo, codice: str, base: Base | None) -> Base:
     if base is not MANTIENI_BASE:
         return base
-    precedente = await ultima_versione(db, tipo, codice)
+    precedente = await ultima_versione(db, ente_id, tipo, codice)
     if precedente is None:
         return Base(None, None, None)
     return Base(precedente.pacchetto, precedente.impronta_base, precedente.base_sorgente)
@@ -324,6 +325,7 @@ async def _base(db: AsyncSession, tipo: Tipo, codice: str, base: Base | None) ->
 def _audit(db: AsyncSession, utente_id: str | None, entita: str, oggetto, azione: str, **altro):
     db.add(
         AuditLog(
+            ente_id=oggetto.ente_id,
             user_id=utente_id,
             entita=entita,
             entita_id=oggetto.id,
@@ -333,10 +335,14 @@ def _audit(db: AsyncSession, utente_id: str | None, entita: str, oggetto, azione
     )
 
 
-async def moduli_attivi(db: AsyncSession) -> dict[str, tuple[ModuloRegole, str]]:
-    """Specificità attive: {codice: (definizione, impronta)}."""
+async def moduli_attivi(db: AsyncSession, ente_id: str) -> dict[str, tuple[ModuloRegole, str]]:
+    """Specificità attive dell'ente: {codice: (definizione, impronta)}."""
     righe = (
-        await db.scalars(select(ModuloDiRegole).where(ModuloDiRegole.attivo.is_(True)))
+        await db.scalars(
+            select(ModuloDiRegole).where(
+                ModuloDiRegole.ente_id == ente_id, ModuloDiRegole.attivo.is_(True)
+            )
+        )
     ).all()
     return {
         r.codice: (ModuloRegole.model_validate(r.definizione_json), r.impronta or "")
@@ -345,14 +351,15 @@ async def moduli_attivi(db: AsyncSession) -> dict[str, tuple[ModuloRegole, str]]
 
 
 async def salva_modulo(
-    db: AsyncSession, sorgente: str, base: Base | None, utente_id: str | None = None
+    db: AsyncSession, ente_id: str, sorgente: str, base: Base | None, utente_id: str | None = None
 ) -> ModuloDiRegole:
     """Nuova versione di una specificità. Dopo, ricomporre i modelli (ricomponi_modelli)."""
     d = leggi_modulo(sorgente)
-    base = await _base(db, "modulo", d.codice, base)
+    base = await _base(db, ente_id, "modulo", d.codice, base)
     nuovo = ModuloDiRegole(
+        ente_id=ente_id,
         codice=d.codice,
-        versione=await _nuova_versione(db, "modulo", d.codice),
+        versione=await _nuova_versione(db, ente_id, "modulo", d.codice),
         etichetta=d.etichetta,
         definizione_json=d.model_dump(mode="json"),
         sorgente=sorgente,
@@ -369,18 +376,19 @@ async def salva_modulo(
 
 
 async def salva_modello(
-    db: AsyncSession, sorgente: str, base: Base | None, utente_id: str | None = None
+    db: AsyncSession, ente_id: str, sorgente: str, base: Base | None, utente_id: str | None = None
 ) -> ModelloAtto:
-    """Nuova versione di un modello, composta con le specificità attive."""
+    """Nuova versione di un modello, composta con le specificità attive dell'ente."""
     d = _modello_base(sorgente)
     if await db.get(TipologiaAtto, d.tipologia_atto) is None:
         raise ValueError(f"tipologia di atto inesistente: {d.tipologia_atto}")
-    moduli = await moduli_attivi(db)
+    moduli = await moduli_attivi(db, ente_id)
     composto = leggi_modello(sorgente, [m for m, _ in moduli.values()]).d
-    base = await _base(db, "modello", d.codice, base)
+    base = await _base(db, ente_id, "modello", d.codice, base)
     nuovo = ModelloAtto(
+        ente_id=ente_id,
         codice=d.codice,
-        versione=await _nuova_versione(db, "modello", d.codice),
+        versione=await _nuova_versione(db, ente_id, "modello", d.codice),
         titolo=d.titolo,
         provvedimento=d.provvedimento,
         tipologia_atto=d.tipologia_atto,
@@ -401,15 +409,20 @@ async def salva_modello(
 
 
 async def salva_checklist(
-    db: AsyncSession, dati: ChecklistNuovaIn, base: Base | None, utente_id: str | None = None
+    db: AsyncSession,
+    ente_id: str,
+    dati: ChecklistNuovaIn,
+    base: Base | None,
+    utente_id: str | None = None,
 ) -> Checklist:
     """Nuova versione di una checklist (anche quelle modificate dall'app)."""
     if await db.get(TipologiaAtto, dati.tipologia_atto) is None:
         raise ValueError(f"tipologia di atto inesistente: {dati.tipologia_atto}")
-    base = await _base(db, "checklist", dati.codice, base)
+    base = await _base(db, ente_id, "checklist", dati.codice, base)
     nuova = Checklist(
+        ente_id=ente_id,
         codice=dati.codice,
-        versione=await _nuova_versione(db, "checklist", dati.codice),
+        versione=await _nuova_versione(db, ente_id, "checklist", dati.codice),
         titolo=dati.titolo,
         tipologia_atto=dati.tipologia_atto,
         modello=dati.modello,
@@ -428,15 +441,15 @@ async def salva_checklist(
     return nuova
 
 
-async def ricomponi_modelli(db: AsyncSession, utente_id: str | None = None) -> list[str]:
+async def ricomponi_modelli(db: AsyncSession, ente_id: str, utente_id: str | None = None) -> list[str]:
     """Nuova versione dei modelli attivi le cui specificità sono cambiate (aggiunte, tolte
     o modificate). Restituisce gli errori: un modello che non si compone resta com'è."""
-    moduli = await moduli_attivi(db)
+    moduli = await moduli_attivi(db, ente_id)
     errori = []
     modelli = (
         await db.scalars(
             select(ModelloAtto)
-            .where(ModelloAtto.attivo.is_(True))
+            .where(ModelloAtto.ente_id == ente_id, ModelloAtto.attivo.is_(True))
             .options(undefer(ModelloAtto.sorgente), undefer(ModelloAtto.base_sorgente))
         )
     ).all()
@@ -451,7 +464,7 @@ async def ricomponi_modelli(db: AsyncSession, utente_id: str | None = None) -> l
         if usati == (m.moduli_json or {}):
             continue
         await salva_modello(
-            db, m.sorgente, Base(m.pacchetto, m.impronta_base, m.base_sorgente), utente_id
+            db, ente_id, m.sorgente, Base(m.pacchetto, m.impronta_base, m.base_sorgente), utente_id
         )
     return errori
 
@@ -508,15 +521,15 @@ def _voce(o, stato: Stato, azione: Azione, azioni: list[Azione], versione=None) 
     )
 
 
-async def analizza(db: AsyncSession, pacchetto: Pacchetto) -> list[Voce]:
+async def analizza(db: AsyncSession, ente_id: str, pacchetto: Pacchetto) -> list[Voce]:
     """Cosa succede importando il pacchetto, oggetto per oggetto (confronto a tre vie)."""
     voci: list[Voce] = []
     for tipo in ORDINE_TIPI:
         nel_pacchetto = {o.codice for o in pacchetto.di_tipo(tipo)}
         for o in pacchetto.di_tipo(tipo):
-            attivo = await versione_attiva(db, tipo, o.codice)
+            attivo = await versione_attiva(db, ente_id, tipo, o.codice)
             if attivo is None:
-                if await ultima_versione(db, tipo, o.codice) is not None:
+                if await ultima_versione(db, ente_id, tipo, o.codice) is not None:
                     voci.append(_voce(o, "DISATTIVATO", "mantieni", ["mantieni", "applica"]))
                 else:
                     voci.append(_voce(o, "NUOVO", "applica", ["applica", "mantieni"]))
@@ -535,7 +548,11 @@ async def analizza(db: AsyncSession, pacchetto: Pacchetto) -> list[Voce]:
         classe = _classe(tipo)
         dal_pacchetto = (
             await db.scalars(
-                select(classe).where(_attivo(classe).is_(True), classe.pacchetto.is_not(None))
+                select(classe).where(
+                    classe.ente_id == ente_id,
+                    _attivo(classe).is_(True),
+                    classe.pacchetto.is_not(None),
+                )
             )
         ).all()
         for r in dal_pacchetto:
@@ -577,6 +594,7 @@ async def _tipologie(db: AsyncSession, manifesto: Manifesto) -> None:
 
 async def importa(
     db: AsyncSession,
+    ente_id: str,
     pacchetto: Pacchetto,
     decisioni: dict[str, str] | None = None,
     utente_id: str | None = None,
@@ -587,14 +605,14 @@ async def importa(
     r = Resoconto(pacchetto=pacchetto.manifesto.etichetta)
     await _tipologie(db, pacchetto.manifesto)
     oggetti = {o.chiave: o for o in pacchetto.oggetti}
-    for voce in await analizza(db, pacchetto):
+    for voce in await analizza(db, ente_id, pacchetto):
         azione = decisioni.get(voce.chiave, voce.azione)
         if azione not in voce.azioni:
             r.errori.append(f"{voce.chiave}: azione {azione!r} non ammessa ({voce.stato})")
             continue
         o = oggetti.get(voce.chiave)
         if azione == "disattiva":
-            attivo = await versione_attiva(db, voce.tipo, voce.codice)
+            attivo = await versione_attiva(db, ente_id, voce.tipo, voce.codice)
             if attivo is not None:
                 if voce.tipo == "checklist":
                     attivo.attiva = False
@@ -607,11 +625,13 @@ async def importa(
             try:
                 async with db.begin_nested():  # un oggetto sbagliato non blocca gli altri
                     if voce.tipo == "modulo":
-                        await salva_modulo(db, o.sorgente, base, utente_id)
+                        await salva_modulo(db, ente_id, o.sorgente, base, utente_id)
                     elif voce.tipo == "modello":
-                        await salva_modello(db, o.sorgente, base, utente_id)
+                        await salva_modello(db, ente_id, o.sorgente, base, utente_id)
                     else:
-                        await salva_checklist(db, leggi_checklist(o.sorgente), base, utente_id)
+                        await salva_checklist(
+                            db, ente_id, leggi_checklist(o.sorgente), base, utente_id
+                        )
                 r.applicati.append(voce.chiave)
             except (ModelloNonValido, ValueError) as e:
                 r.errori.append(f"{voce.chiave}: {e}")
@@ -620,20 +640,20 @@ async def importa(
         # il riferimento (le prossime analisi confrontano con questo)
         r.mantenuti.append(voce.chiave)
         if o is not None and voce.stato in ("AGGIORNABILE", "ALLINEATO", "CONFLITTO"):
-            attivo = await versione_attiva(db, voce.tipo, voce.codice)
+            attivo = await versione_attiva(db, ente_id, voce.tipo, voce.codice)
             attivo.pacchetto, attivo.impronta_base = base.pacchetto, base.impronta
             attivo.base_sorgente = base.sorgente
     if any(c.startswith("modulo:") for c in r.applicati + r.disattivati):
-        r.errori += await ricomponi_modelli(db, utente_id)
+        r.errori += await ricomponi_modelli(db, ente_id, utente_id)
     await db.flush()
-    r.avvisi = await controlla_coerenza(db)
+    r.avvisi = await controlla_coerenza(db, ente_id)
     return r
 
 
 # --- esportazione ----------------------------------------------------------------------------
 
 
-async def esporta(db: AsyncSession, nome: str, versione: str) -> dict[str, str]:
+async def esporta(db: AsyncSession, ente_id: str, nome: str, versione: str) -> dict[str, str]:
     """Tutto ciò che è attivo nell'ente come pacchetto: backup, passaggio ad altro ente,
     lavoro fuori dall'app. Si reimporta come qualsiasi pacchetto."""
     tipologie = (await db.scalars(select(TipologiaAtto).order_by(TipologiaAtto.ordine))).all()
@@ -650,7 +670,7 @@ async def esporta(db: AsyncSession, nome: str, versione: str) -> dict[str, str]:
     for r in (
         await db.scalars(
             select(ModuloDiRegole)
-            .where(ModuloDiRegole.attivo.is_(True))
+            .where(ModuloDiRegole.ente_id == ente_id, ModuloDiRegole.attivo.is_(True))
             .options(undefer(ModuloDiRegole.sorgente))
         )
     ).all():
@@ -658,11 +678,15 @@ async def esporta(db: AsyncSession, nome: str, versione: str) -> dict[str, str]:
     for r in (
         await db.scalars(
             select(ModelloAtto)
-            .where(ModelloAtto.attivo.is_(True))
+            .where(ModelloAtto.ente_id == ente_id, ModelloAtto.attivo.is_(True))
             .options(undefer(ModelloAtto.sorgente))
         )
     ).all():
         file[f"modelli/{r.codice.lower()}.yaml"] = r.sorgente
-    for r in (await db.scalars(select(Checklist).where(Checklist.attiva.is_(True)))).all():
+    for r in (
+        await db.scalars(
+            select(Checklist).where(Checklist.ente_id == ente_id, Checklist.attiva.is_(True))
+        )
+    ).all():
         file[f"checklist/{r.codice.lower()}.json"] = sorgente_checklist(checklist_in(r))
     return file

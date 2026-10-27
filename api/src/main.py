@@ -11,7 +11,7 @@ import logging
 import time
 from http import HTTPStatus
 
-from routers import auth, bozze, checklists, controllo, modelli, norme, norme_manuali
+from routers import auth, bozze, checklists, controllo, ente, enti, modelli, norme, norme_manuali
 from flask import g, request
 from flask_cors import CORS
 from sqlalchemy import text
@@ -45,7 +45,7 @@ _MESSAGGI = {
 def create_app(
     settings: Settings | None = None,
     engine: AsyncEngine | None = None,
-    authenticator: LdapAuthenticator | None = None,
+    authenticator: type[LdapAuthenticator] | None = None,
     normattiva: NormattivaClient | None = None,
     ciclo: CicloAsync | None = None,
 ) -> AttiFlask:
@@ -76,7 +76,7 @@ def create_app(
     llm = crea_llm(settings)
     app.state = Risorse(
         settings=settings,
-        authenticator=authenticator or LdapAuthenticator(settings),
+        authenticator=authenticator or LdapAuthenticator,
         engine=motore,
         sessionmaker=crea_sessionmaker(motore),
         normattiva=client_normattiva,
@@ -166,14 +166,14 @@ def create_app(
         return {"status": "ok"}
 
     for modulo in (
-        auth, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze, verifiche,
-        controllo,
+        auth, ente, enti, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
+        verifiche, controllo,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 
     log.info(
         "API avviata: autenticazione %s, LLM %s (%s), documenti %s, log %s",
-        "Active Directory" if settings.auth_enabled else "disattivata",
+        "per ente (locale/Active Directory)" if settings.auth_enabled else "disattivata",
         llm.modello,
         llm.provider,
         settings.documenti_url,

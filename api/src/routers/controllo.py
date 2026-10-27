@@ -19,7 +19,16 @@ from sqlalchemy.orm import undefer
 import asyncio
 import logging
 
-from deps import archivia_caricato, audit, controllore, impostazioni, notifica, risorse, utente
+from deps import (
+    archivia_caricato,
+    audit,
+    controllore,
+    ente_id,
+    impostazioni,
+    notifica,
+    risorse,
+    utente,
+)
 from documenti import DocumentiError
 from deps import db as sessione_db
 from routers.verifiche import accoda, schede_applicabili
@@ -93,6 +102,7 @@ async def elenco_controlli():
     righe = await db.execute(
         select(SessioneControllo, AttoControllato)
         .outerjoin(AttoControllato, AttoControllato.sessione_id == SessioneControllo.id)
+        .where(SessioneControllo.ente_id == ente_id())
         .order_by(SessioneControllo.created_at.desc())
     )
     return [_out(controllo, atto) for controllo, atto in righe.all()]
@@ -114,10 +124,11 @@ async def crea_controllo():
     nome, mime, archiviato = await archivia_caricato(file)
 
     try:
-        controllo = SessioneControllo(titolo=dati.titolo, creata_da=user.id)
+        controllo = SessioneControllo(ente_id=ente_id(), titolo=dati.titolo, creata_da=user.id)
         db.add(controllo)
         await db.flush()
         atto = AttoControllato(
+            ente_id=ente_id(),
             sessione_id=controllo.id,
             numero_registro=dati.numero_registro,
             data_adozione=dati.data_adozione,
@@ -139,7 +150,7 @@ async def crea_controllo():
             {"atto": atto.id, "file": nome, "sha256": archiviato.sha256},
         )  # fmt: skip
         schede = await schede_applicabili(
-            db, dati.tipologia_atto, atto.modello, atto.moduli_json
+            db, ente_id(), dati.tipologia_atto, atto.modello, atto.moduli_json
         )
         verifica = await accoda(db, user, dati.data_adozione, schede, atto_controllato_id=atto.id)
         await db.commit()
@@ -165,7 +176,7 @@ async def crea_controllo():
 async def dettaglio_controllo(controllo_id: str):
     db = sessione_db()
     controllo = await db.get(SessioneControllo, controllo_id)
-    if controllo is None:
+    if controllo is None or controllo.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Controllo non trovato")
     return _out(controllo, await _atto_del_controllo(db, controllo_id))
 
@@ -175,7 +186,7 @@ async def dettaglio_controllo(controllo_id: str):
 async def elimina_controllo(controllo_id: str):
     db, user = sessione_db(), utente()
     controllo = await db.get(SessioneControllo, controllo_id)
-    if controllo is None:
+    if controllo is None or controllo.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Controllo non trovato")
     atto = await _atto_del_controllo(db, controllo_id)
     if atto is not None:
@@ -197,7 +208,7 @@ async def elimina_controllo(controllo_id: str):
 
 async def _atto(db, atto_id: str) -> AttoControllato:
     atto = await db.get(AttoControllato, atto_id)
-    if atto is None:
+    if atto is None or atto.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Atto non trovato")
     return atto
 
@@ -213,7 +224,7 @@ async def dettaglio_atto(atto_id: str):
 async def testo_atto(atto_id: str):
     atto = await sessione_db().scalar(
         select(AttoControllato)
-        .where(AttoControllato.id == atto_id)
+        .where(AttoControllato.id == atto_id, AttoControllato.ente_id == ente_id())
         .options(undefer(AttoControllato.contenuto_testo))
     )
     if atto is None:

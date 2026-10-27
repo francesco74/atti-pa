@@ -132,11 +132,16 @@ async def _risolvi_urn(
 
 
 async def verifica_riferimenti(
-    db: AsyncSession, normattiva: NormattivaClient, testo: str, giorno: date
+    db: AsyncSession,
+    normattiva: NormattivaClient,
+    testo: str,
+    giorno: date,
+    ente_id: str | None = None,
 ) -> list[dict]:
+    """Riferimenti normativi citati nel testo; le norme manuali sono quelle dell'ente."""
     risultati: list[dict] = []
     visti: dict[tuple, dict] = {}
-    manuali = {n.urn: n for n in await norme_manuali(db)}
+    manuali = {n.urn: n for n in await norme_manuali(db, ente_id)}
     denominazioni = [(urn, n.denominazioni_json or []) for urn, n in manuali.items()]
     for rif in estrai_riferimenti(testo, denominazioni):
         chiave = (rif.urn_atto, rif.articolo, rif.comma, rif.lettera)
@@ -295,10 +300,15 @@ async def verifica_norma_manuale(
 
 
 async def riconosci_norme_manuali(
-    db: AsyncSession, llm: LlmClient, testo: str, giorno: date, riferimenti: list[dict]
+    db: AsyncSession,
+    llm: LlmClient,
+    testo: str,
+    giorno: date,
+    riferimenti: list[dict],
+    ente_id: str | None = None,
 ) -> None:
-    """Aggiunge ai riferimenti le citazioni di norme manuali trovate dall'LLM."""
-    manuali = await norme_manuali(db)
+    """Aggiunge ai riferimenti le citazioni di norme manuali dell'ente trovate dall'LLM."""
+    manuali = await norme_manuali(db, ente_id)
     if not manuali:
         return
     try:
@@ -437,6 +447,7 @@ async def analizza(
     giorno: date,
     schede: list[Checklist] | None = None,
     settings: Settings | None = None,
+    ente_id: str | None = None,
 ) -> RisultatoAnalisi:
     """Analisi completa: riferimenti e loro coerenza, segnaposto, dati personali, checklist."""
     risultato = RisultatoAnalisi(segnaposto=segnaposto_non_compilati(testo))
@@ -457,9 +468,9 @@ async def analizza(
         risultato.dati_personali_stato,
         len(risultato.dati_personali),
     )
-    risultato.riferimenti = await verifica_riferimenti(db, normattiva, testo, giorno)
+    risultato.riferimenti = await verifica_riferimenti(db, normattiva, testo, giorno, ente_id)
     if llm is not None and settings is not None and settings.llm_riconoscimento_norme_manuali:
-        await riconosci_norme_manuali(db, llm, testo, giorno, risultato.riferimenti)
+        await riconosci_norme_manuali(db, llm, testo, giorno, risultato.riferimenti, ente_id)
         risultato.modello_llm = llm.modello
     log.debug("%d riferimenti normativi verificati", len(risultato.riferimenti))
     if llm is not None and settings is not None and settings.llm_coerenza_riferimenti:

@@ -28,6 +28,7 @@ void main() {
       'username': 'prova',
       'nome_completo': 'Utente di prova',
       'ruoli': ['CONTROLLORE'],
+      'ente': {'codice': 'prova', 'nome': 'Ente di prova', 'moduli': ['redazione']},
     });
 
     final auth = AuthState(api)

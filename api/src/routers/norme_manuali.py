@@ -19,7 +19,17 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import undefer
 
-from deps import archivia_caricato, audit, autenticato, impostazioni, notifica, risorse, utente
+from deps import (
+    archivia_caricato,
+    audit,
+    autenticato,
+    ente,
+    ente_id,
+    impostazioni,
+    notifica,
+    risorse,
+    utente,
+)
 from deps import db as sessione_db
 from documenti import DocumentiError
 from schemas import Schema
@@ -153,7 +163,7 @@ async def _out(db, norma: NormaAtto) -> dict:
 
 async def _norma(db, urn: str) -> NormaAtto:
     norma = await db.get(NormaAtto, urn) if e_manuale(urn) else None
-    if norma is None:
+    if norma is None or norma.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Norma non trovata")
     return norma
 
@@ -163,7 +173,8 @@ async def _testo(db, testo_id: str, con_testo: bool = False) -> NormaTestoCarica
     if con_testo:
         query = query.options(undefer(NormaTestoCaricato.testo))
     testo = await db.scalar(query)
-    if testo is None:
+    norma = await db.get(NormaAtto, testo.urn_atto) if testo is not None else None
+    if testo is None or norma is None or norma.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Testo non trovato")
     return testo
 
@@ -219,7 +230,7 @@ async def elenco():
     norme = (
         await db.scalars(
             select(NormaAtto)
-            .where(NormaAtto.fonte == FonteNorma.MANUALE)
+            .where(NormaAtto.fonte == FonteNorma.MANUALE, NormaAtto.ente_id == ente_id())
             .order_by(NormaAtto.citazione)
         )
     ).all()
@@ -240,7 +251,7 @@ async def crea():
     dati = modulo(NormaManualeIn)
     db, user = sessione_db(), utente()
     try:
-        urn = str(Urn.manuale(dati.tipo, dati.data, dati.numero))
+        urn = str(Urn.manuale(dati.tipo, dati.data, dati.numero, ente().codice))
     except ValueError as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
     if await db.get(NormaAtto, urn) is not None:
@@ -251,6 +262,7 @@ async def crea():
     norma = NormaAtto(
         urn=urn,
         fonte=FonteNorma.MANUALE,
+        ente_id=ente_id(),
         denominazione=TIPI_MANUALI[dati.tipo].upper()[:100],
         data_provvedimento=dati.data,
         numero=dati.numero.strip(),

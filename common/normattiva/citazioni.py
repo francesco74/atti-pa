@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from common.normattiva.urn import AUTORITA_LOCALE, TIPI_MANUALI, Urn
+from common.normattiva.urn import AUTORITA_LOCALE, TIPI_MANUALI, Urn, autorita_locale
 
 MESI = [
     "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
@@ -45,8 +45,9 @@ def citazione_atto(urn: Urn | str, abbreviata: bool = True) -> str:
     u = Urn.parse(urn) if isinstance(urn, str) else urn
     if u.denominazione == "costituzione":
         return "Costituzione"
+    autorita = AUTORITA_LOCALE if autorita_locale(u.autorita) else u.autorita
     estesa, breve = DENOMINAZIONI.get(
-        (u.autorita, u.denominazione), (u.denominazione.replace(".", " "), u.denominazione)
+        (autorita, u.denominazione), (u.denominazione.replace(".", " "), u.denominazione)
     )
     nome = breve if abbreviata else estesa
     if len(u.data) == 10:

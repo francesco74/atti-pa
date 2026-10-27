@@ -18,10 +18,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import undefer
 
 from composizione import SEGNAPOSTO_CARTA, impostazioni_ente, modello_compilato
-from deps import audit, autenticato, db, impostazioni, solo_admin, utente
+from deps import amministratore_ente, audit, autenticato, db, ente_id, impostazioni, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto, out
-from common.models import ImpostazioniEnte, ModelloAtto, TipologiaAtto
+from common.models import Ente, ModelloAtto, TipologiaAtto
 from common.modelli import campi_ente
 from common.odt import OdtNonValido, estrai_segnaposto
 
@@ -50,7 +50,7 @@ async def _attivi(sessione) -> list[ModelloAtto]:
         (
             await sessione.scalars(
                 select(ModelloAtto)
-                .where(ModelloAtto.attivo.is_(True))
+                .where(ModelloAtto.ente_id == ente_id(), ModelloAtto.attivo.is_(True))
                 .order_by(ModelloAtto.provvedimento, ModelloAtto.titolo)
             )
         ).all()
@@ -81,7 +81,9 @@ async def elenco():
 @solo_admin
 async def tutti():
     righe = await db().scalars(
-        select(ModelloAtto).order_by(ModelloAtto.codice, ModelloAtto.versione.desc())
+        select(ModelloAtto)
+        .where(ModelloAtto.ente_id == ente_id())
+        .order_by(ModelloAtto.codice, ModelloAtto.versione.desc())
     )
     return out(ModelloOut, righe.all())
 
@@ -91,7 +93,7 @@ async def tutti():
 async def sorgente(modello_id: str):
     m = await db().scalar(
         select(ModelloAtto)
-        .where(ModelloAtto.id == modello_id)
+        .where(ModelloAtto.id == modello_id, ModelloAtto.ente_id == ente_id())
         .options(undefer(ModelloAtto.sorgente))
     )
     if m is None:
@@ -107,7 +109,7 @@ class DatiEnteIn(BaseModel):
 
 
 async def _stato_ente(sessione) -> dict:
-    ente = await impostazioni_ente(sessione)
+    ente = await impostazioni_ente(sessione, ente_id())
     campi = campi_ente([modello_compilato(m) for m in await _attivi(sessione)])
     return {
         "campi": list(campi.values()),
@@ -120,30 +122,27 @@ async def _stato_ente(sessione) -> dict:
 @bp.get("/ente")
 @autenticato()
 async def dati_ente():
-    sessione = db()
-    stato = await _stato_ente(sessione)
-    await sessione.commit()  # crea la riga al primo accesso
-    return stato
+    return await _stato_ente(db())
 
 
 @bp.put("/ente")
-@solo_admin
+@amministratore_ente
 async def aggiorna_dati_ente():
     dati = corpo(DatiEnteIn)
     sessione = db()
-    ente = await impostazioni_ente(sessione)
+    ente = await impostazioni_ente(sessione, ente_id())
     ente.dati_json = {
         k: (v.strip() if isinstance(v, str) else v)
         for k, v in dati.valori.items()
         if v not in (None, "")
     }
-    audit(sessione, utente(), "ente", "1", "DATI_AGGIORNATI", {"campi": sorted(ente.dati_json)})
+    audit(sessione, utente(), "ente", ente.id, "DATI_AGGIORNATI", {"campi": sorted(ente.dati_json)})
     await sessione.commit()
     return await _stato_ente(sessione)
 
 
 @bp.post("/ente/carta-intestata")
-@solo_admin
+@amministratore_ente
 async def carica_carta():
     """Carta intestata (.odt) con i segnaposto delle quattro parti dell'atto."""
     file = file_caricato()
@@ -163,10 +162,10 @@ async def carica_carta():
             + ", ".join(f"{{{{{s}}}}}" for s in mancanti),
         )
     sessione = db()
-    ente = await impostazioni_ente(sessione)
+    ente = await impostazioni_ente(sessione, ente_id())
     ente.carta_intestata = contenuto
     ente.carta_intestata_nome = file.filename or "carta_intestata.odt"
-    audit(sessione, utente(), "ente", "1", "CARTA_INTESTATA", {"file": ente.carta_intestata_nome})
+    audit(sessione, utente(), "ente", ente.id, "CARTA_INTESTATA", {"file": ente.carta_intestata_nome})
     await sessione.commit()
     return await _stato_ente(sessione), HTTPStatus.CREATED
 
@@ -175,9 +174,7 @@ async def carica_carta():
 @autenticato()
 async def scarica_carta():
     ente = await db().scalar(
-        select(ImpostazioniEnte)
-        .where(ImpostazioniEnte.id == 1)
-        .options(undefer(ImpostazioniEnte.carta_intestata))
+        select(Ente).where(Ente.id == ente_id()).options(undefer(Ente.carta_intestata))
     )
     if ente is None or not ente.carta_intestata:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Carta intestata non caricata")
@@ -185,12 +182,12 @@ async def scarica_carta():
 
 
 @bp.delete("/ente/carta-intestata")
-@solo_admin
+@amministratore_ente
 async def elimina_carta():
     sessione = db()
-    ente = await impostazioni_ente(sessione)
+    ente = await impostazioni_ente(sessione, ente_id())
     ente.carta_intestata = None
     ente.carta_intestata_nome = None
-    audit(sessione, utente(), "ente", "1", "CARTA_INTESTATA_RIMOSSA")
+    audit(sessione, utente(), "ente", ente.id, "CARTA_INTESTATA_RIMOSSA")
     await sessione.commit()
     return nessun_contenuto()

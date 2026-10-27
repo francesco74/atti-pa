@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: atti-pa
+namespace: attipa
 
 resources:
   - namespace.yaml
@@ -17,7 +17,7 @@ resources:
 
 # Da creare a parte (vedi secret.example.yaml):
 #   Secret atti-pa-secret, Secret mysql-secret, Secret rabbitmq-secret, Secret atti-pa-registry,
-#   ConfigMap ldap-ca, Secret TLS attipa-tls-secret
+#   Secret TLS attipa-tls-secret
 
 # Schema del database, eseguito da MySQL al primo avvio (mysql.yaml): ogni nuovo file
 # sql/0002_...sql va aggiunto qui (e applicato a mano sul database già esistente)

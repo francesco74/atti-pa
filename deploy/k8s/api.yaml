@@ -58,7 +58,6 @@ spec:
               drop: ["ALL"]
           volumeMounts:
             - { name: tmp, mountPath: /tmp }
-            - { name: ldap-ca, mountPath: /etc/atti-pa/ldap, readOnly: true }
             - { name: archivio, mountPath: /var/lib/atti-pa/archivio }
       volumes:
         - name: tmp
@@ -66,10 +65,6 @@ spec:
         - name: archivio
           persistentVolumeClaim:
             claimName: archivio-atti
-        - name: ldap-ca
-          configMap:
-            name: ldap-ca
-            optional: true
 ---
 apiVersion: v1
 kind: Service

@@ -4,9 +4,11 @@ Uso, dalla radice del repository (il database è quello di DATABASE_URL, anche d
 
     python deploy/pacchetto.py prova                    # controlla il pacchetto in pacchetto/
     python deploy/pacchetto.py crea                     # crea lo zip standard da distribuire
-    python deploy/pacchetto.py analizza FILE.zip        # cosa cambierebbe nel database
-    python deploy/pacchetto.py importa FILE.zip         # importa con le azioni proposte
-    python deploy/pacchetto.py esporta FILE.zip         # esporta la configurazione dell'ente
+    python deploy/pacchetto.py analizza ENTE FILE.zip   # cosa cambierebbe per l'ente
+    python deploy/pacchetto.py importa ENTE FILE.zip    # importa con le azioni proposte
+    python deploy/pacchetto.py esporta ENTE FILE.zip    # esporta la configurazione dell'ente
+
+ENTE è il codice dell'ente (es. provincialucca): ogni ente ha i propri modelli.
 
 Il sistema parte vuoto: il primo pacchetto (lo zip standard creato con "crea") si importa
 come i successivi. Al posto di FILE.zip si può indicare una cartella con la struttura del
@@ -26,7 +28,10 @@ RADICE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RADICE))
 
 from common.config import get_settings  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+
 from common.db import crea_engine, crea_sessionmaker  # noqa: E402
+from common.models import Ente  # noqa: E402
 from common.pacchetti import (  # noqa: E402
     PacchettoNonValido,
     analizza,
@@ -39,6 +44,13 @@ from common.pacchetti import (  # noqa: E402
 )
 
 CARTELLA = RADICE / "pacchetto"  # sorgenti del pacchetto standard
+
+
+async def _ente(db, codice: str) -> Ente:
+    ente = await db.scalar(select(Ente).where(Ente.codice == codice))
+    if ente is None:
+        raise LookupError(f"Ente inesistente: {codice} (vedi python deploy/enti.py elenco)")
+    return ente
 
 
 def _file(origine: Path) -> dict[str, str]:
@@ -62,8 +74,10 @@ def main() -> int:
     crea.add_argument("file", nargs="?", type=Path, help="zip da creare (predefinito: nel cwd)")
     for nome in ("analizza", "importa"):
         c = comandi.add_parser(nome)
+        c.add_argument("ente", help="codice dell'ente")
         c.add_argument("origine", type=Path, help="zip o cartella del pacchetto")
     esp = comandi.add_parser("esporta", help="esporta la configurazione dell'ente")
+    esp.add_argument("ente", help="codice dell'ente")
     esp.add_argument("file", type=Path)
     args = parser.parse_args()
 
@@ -86,7 +100,8 @@ def main() -> int:
         if args.comando == "esporta":
 
             async def esp_(db):
-                return await esporta(db, "Configurazione dell'ente", "esportazione")
+                ente = await _ente(db, args.ente)
+                return await esporta(db, ente.id, f"Configurazione di {ente.nome}", "esportazione")
 
             args.file.write_bytes(in_zip(asyncio.run(_con_database(esp_))))
             print(f"Esportato in {args.file}")
@@ -95,10 +110,11 @@ def main() -> int:
         p = leggi_pacchetto(_file(args.origine))
 
         async def esegui(db):
-            for v in await analizza(db, p):
+            ente = await _ente(db, args.ente)
+            for v in await analizza(db, ente.id, p):
                 print(f"{v.stato:13} {v.chiave:45} -> {v.azione}")
             if args.comando == "importa":
-                r = await importa(db, p)
+                r = await importa(db, ente.id, p)
                 await db.commit()
                 print(r)
                 for riga in r.errori + r.avvisi:
@@ -106,7 +122,7 @@ def main() -> int:
 
         asyncio.run(_con_database(esegui))
         return 0
-    except PacchettoNonValido as e:
+    except (PacchettoNonValido, LookupError) as e:
         print(e, file=sys.stderr)
         return 1
 

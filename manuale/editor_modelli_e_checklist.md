@@ -133,17 +133,20 @@ questo permette di:
 
 ## 2. Chi può fare cosa
 
-I ruoli si ricevono dai gruppi di Active Directory.
+Modelli, specificità e checklist sono **dell'ente**: ogni ente dell'installazione ha i
+propri e li modifica senza toccare quelli degli altri. I ruoli si ricevono dai gruppi di
+Active Directory dell'ente (impostati in Amministrazione → Accesso) oppure, per gli utenti
+dell'applicazione, li assegna l'amministratore dell'ente (Amministrazione → Utenti).
 
-| Ruolo | Gruppo AD (nome predefinito) | Nell'editor |
+| Ruolo | Gruppo AD proposto | Nell'editor |
 |---|---|---|
 | **Gestore dei modelli** | `ATTI-PA-Gestori-Modelli` | apre l'editor, prende in carico gli oggetti e ne modifica la bozza, crea oggetti nuovi, gestisce le proposte dei redattori. **Non pubblica e non disattiva.** |
-| **Amministratore** | gruppo amministratori | tutto quello che fa il gestore, più la **pubblicazione**, la **disattivazione** e riattivazione, lo **sblocco** delle bozze di altri e l'importazione dei pacchetti |
-| **Redattore** | gruppo redattori | non vede l'editor; dalla bozza di un atto può **proporre** il nuovo testo di un capoverso |
+| **Amministratore dell'ente** | `ATTI-PA-Admin` | tutto quello che fa il gestore, più la **pubblicazione**, la **disattivazione** e riattivazione, lo **sblocco** delle bozze di altri e l'importazione dei pacchetti |
+| **Redattore** | `ATTI-PA-Redattori` | non vede l'editor; dalla bozza di un atto può **proporre** il nuovo testo di un capoverso |
 
-La voce di menu **Modelli e checklist** compare solo a gestori e amministratori. Se dopo
-l'inserimento nel gruppo AD la voce non compare, esci dall'app e rientra: i ruoli si leggono
-all'accesso.
+La voce di menu **Modelli e checklist** compare solo a gestori e amministratori, e solo se
+per l'ente è abilitato il modulo di redazione. Se dopo l'inserimento nel gruppo AD la voce
+non compare, esci dall'app e rientra: i ruoli si leggono all'accesso.
 
 ---
 

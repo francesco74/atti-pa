@@ -24,7 +24,8 @@ from common.config import Settings  # noqa: E402
 from common.models import (  # noqa: E402
     AttoControllato,
     Base,
-    ImpostazioniEnte,
+    Ente,
+    Modulo,
     Ruolo,
     SessioneControllo,
     StatoVerifica,
@@ -83,15 +84,25 @@ class VerbaleApi(unittest.TestCase):
                 await c.run_sync(Base.metadata.create_all)
             async with AsyncSession(motore, expire_on_commit=False) as db:
                 db.add(TipologiaAtto(codice="DETERMINA", descrizione="Determinazione dirigenziale"))
-                db.add(ImpostazioniEnte(id=1, dati_json={"ente": "Provincia di Prova"}))
-                user = User(username="locale", nome_completo="Utente locale", ruoli=list(Ruolo.TUTTI))
+                ente = Ente(
+                    codice="locale", nome="Provincia di Prova", moduli_json=list(Modulo.TUTTI),
+                    dati_json={"ente": "Provincia di Prova"},
+                )  # fmt: skip
+                db.add(ente)
+                await db.flush()
+                user = User(
+                    ente_id=ente.id, username="locale", nome_completo="Utente locale",
+                    origine="LOCALE", ruoli=list(Ruolo.TUTTI),
+                )  # fmt: skip
                 db.add(user)
                 await db.flush()
-                controllo = SessioneControllo(titolo="Controllo primo semestre", creata_da=user.id)
+                controllo = SessioneControllo(
+                    ente_id=ente.id, titolo="Controllo primo semestre", creata_da=user.id
+                )
                 db.add(controllo)
                 await db.flush()
                 atto = AttoControllato(
-                    sessione_id=controllo.id, numero_registro="123/2026", data_adozione=date(2026, 3, 2),
+                    ente_id=ente.id, sessione_id=controllo.id, numero_registro="123/2026", data_adozione=date(2026, 3, 2),
                     settore="Servizi informatici", tipologia_atto="DETERMINA",
                     modello="DD_AFFIDAMENTO_DIRETTO_SF", moduli_json=["ICT_CLOUD"],
                     oggetto="Affidamento del servizio di posta elettronica", file_nome="atto.pdf",
@@ -100,7 +111,7 @@ class VerbaleApi(unittest.TestCase):
                 db.add(atto)
                 await db.flush()
                 verifica = Verifica(
-                    atto_controllato_id=atto.id, data_riferimento=atto.data_adozione,
+                    ente_id=ente.id, atto_controllato_id=atto.id, data_riferimento=atto.data_adozione,
                     stato=StatoVerifica.COMPLETATA, richiesta_da=user.id, modello_llm="prova",
                     esito_automatico=AUTOMATICI, esito_riferimenti=RIFERIMENTI,
                 )  # fmt: skip

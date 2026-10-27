@@ -17,6 +17,7 @@ from sqlalchemy import (
     LargeBinary,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.mysql import LONGBLOB, LONGTEXT
@@ -35,11 +36,27 @@ class Base(DeclarativeBase):
 
 
 class Ruolo:
+    """Ruoli nell'ente. ADMIN amministra l'ente (pubblica i modelli, gestisce utenti e
+    accessi); INSTALLAZIONE è dell'amministratore dell'installazione, che crea gli enti."""
+
     REDATTORE = "REDATTORE"
     CONTROLLORE = "CONTROLLORE"
     GESTORE_MODELLI = "GESTORE_MODELLI"  # modifica modelli, specificità e checklist in bozza
-    ADMIN = "ADMIN"  # pubblica le modifiche ai modelli
+    ADMIN = "ADMIN"  # amministratore dell'ente: pubblica le modifiche ai modelli
+    INSTALLAZIONE = "INSTALLAZIONE"
     TUTTI = (REDATTORE, CONTROLLORE, GESTORE_MODELLI, ADMIN)
+
+
+class Modulo:
+    """Moduli del sistema, abilitati per ente (Ente.moduli_json)."""
+
+    REDAZIONE = "redazione"  # redazione e controllo degli atti, modelli e checklist
+    TUTTI = (REDAZIONE,)
+
+
+class OrigineUtente:
+    LDAP = "LDAP"  # Active Directory dell'ente: password mai salvata
+    LOCALE = "LOCALE"  # password con hash nel database
 
 
 class StatoVerifica:
@@ -49,11 +66,57 @@ class StatoVerifica:
     ERRORE = "ERRORE"
 
 
-class User(Base):
-    __tablename__ = "users"
+class Ente(Base):
+    """Ente dell'installazione: utenti, configurazione e dati sono separati per ente.
+    Si riconosce dal dominio della richiesta (EnteDominio)."""
+
+    __tablename__ = "enti"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
-    username: Mapped[str] = mapped_column(String(100), unique=True)
+    codice: Mapped[str] = mapped_column(String(50), unique=True)  # es. provincialucca
+    nome: Mapped[str] = mapped_column(String(255))
+    attivo: Mapped[bool] = mapped_column(Boolean, default=True)
+    moduli_json: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    # dati dell'ente usati dai modelli (campi con fonte "ente") e carta intestata
+    dati_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    carta_intestata_nome: Mapped[str | None] = mapped_column(String(255))
+    carta_intestata: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
+    # accesso: utenti locali e/o Active Directory (url, dominio, base_dn, ca_pem,
+    # verifica_certificato, timeout, gruppi {ruolo: gruppo})
+    accesso_locale: Mapped[bool] = mapped_column(Boolean, default=True)
+    ldap_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    def modulo_attivo(self, modulo: str) -> bool:
+        return modulo in (self.moduli_json or [])
+
+
+class EnteDominio(Base):
+    """Dominio (host) con cui si raggiunge l'ente, es. attipa.provincia.lucca.it."""
+
+    __tablename__ = "enti_domini"
+
+    dominio: Mapped[str] = mapped_column(String(255), primary_key=True)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+
+
+class User(Base):
+    """Utente di un ente (Active Directory o locale). L'amministratore dell'installazione
+    non ha ente (ente_id vuoto) e accede da qualunque dominio."""
+
+    __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("ente_id", "username", name="uq_utente_ente"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str | None] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    username: Mapped[str] = mapped_column(String(100))
+    origine: Mapped[str] = mapped_column(String(10), default=OrigineUtente.LDAP)
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+    # cresce a ogni cambio di password o disattivazione: invalida le sessioni aperte
+    token_version: Mapped[int] = mapped_column(Integer, default=0)
     nome_completo: Mapped[str | None] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255))
     ufficio: Mapped[str | None] = mapped_column(String(255))
@@ -67,6 +130,10 @@ class User(Base):
 
     def ha_ruolo(self, *ruoli: str) -> bool:
         return any(r in (self.ruoli or []) for r in ruoli)
+
+    @property
+    def installazione(self) -> bool:
+        return self.ente_id is None and Ruolo.INSTALLAZIONE in (self.ruoli or [])
 
 
 class TipologiaAtto(Base):
@@ -87,6 +154,8 @@ class NormaAtto(Base):
 
     urn: Mapped[str] = mapped_column(String(255), primary_key=True)
     fonte: Mapped[str] = mapped_column(String(20), default=FonteNorma.NORMATTIVA)
+    # solo per le norme manuali (Normattiva è comune a tutti gli enti)
+    ente_id: Mapped[str | None] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     denominazione: Mapped[str] = mapped_column(String(100))
     data_provvedimento: Mapped[date] = mapped_column(Date)
     numero: Mapped[str] = mapped_column(String(20))
@@ -152,6 +221,7 @@ class Riferimento(Base):
     __tablename__ = "riferimenti"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     urn_atto: Mapped[str] = mapped_column(ForeignKey("norme_atti.urn"))
     articolo: Mapped[str] = mapped_column(String(30))
     comma: Mapped[str | None] = mapped_column(String(20))
@@ -184,6 +254,7 @@ class Checklist(Base):
     __tablename__ = "checklists"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     codice: Mapped[str] = mapped_column(String(100))
     versione: Mapped[int] = mapped_column(Integer, default=1)
     titolo: Mapped[str] = mapped_column(String(255))
@@ -230,6 +301,7 @@ class ModelloAtto(Base):
     __tablename__ = "modelli_atto"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     codice: Mapped[str] = mapped_column(String(100))
     versione: Mapped[int] = mapped_column(Integer, default=1)
     titolo: Mapped[str] = mapped_column(String(255))
@@ -256,6 +328,7 @@ class ModuloDiRegole(Base):
     __tablename__ = "moduli_regole"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     codice: Mapped[str] = mapped_column(String(100))
     versione: Mapped[int] = mapped_column(Integer, default=1)
     etichetta: Mapped[str] = mapped_column(String(255))
@@ -276,6 +349,7 @@ class BozzaConfigurazione(Base):
     __tablename__ = "bozze_configurazione"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     tipo: Mapped[str] = mapped_column(String(20))  # modello, modulo, checklist
     codice: Mapped[str] = mapped_column(String(100))
     definizione_json: Mapped[dict[str, Any]] = mapped_column(JSON)
@@ -293,6 +367,7 @@ class PropostaModello(Base):
     __tablename__ = "proposte_modello"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     modello: Mapped[str] = mapped_column(String(100))  # codice del modello
     versione: Mapped[int] = mapped_column(Integer)
     capoverso: Mapped[str] = mapped_column(String(100))
@@ -314,6 +389,7 @@ class PacchettoImportato(Base):
     __tablename__ = "pacchetti"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     nome: Mapped[str] = mapped_column(String(150))
     versione: Mapped[str] = mapped_column(String(50))
     descrizione: Mapped[str | None] = mapped_column(Text)
@@ -326,24 +402,11 @@ class PacchettoImportato(Base):
     importato_il: Mapped[datetime | None] = mapped_column(DateTime)
 
 
-class ImpostazioniEnte(Base):
-    """Dati dell'ente usati da tutti i modelli (una sola riga, id = 1) e carta intestata."""
-
-    __tablename__ = "impostazioni_ente"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
-    dati_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    carta_intestata_nome: Mapped[str | None] = mapped_column(String(255))
-    carta_intestata: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
-
-
 class Bozza(Base):
     __tablename__ = "bozze"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     modello_id: Mapped[str] = mapped_column(ForeignKey("modelli_atto.id"))
     # ricavati dal testo composto, per l'elenco e la ricerca
@@ -372,6 +435,7 @@ class SessioneControllo(Base):
     __tablename__ = "controlli_sessioni"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     titolo: Mapped[str] = mapped_column(String(255))
     stato: Mapped[str] = mapped_column(String(30), default="APERTA")
     creata_da: Mapped[str] = mapped_column(ForeignKey("users.id"))
@@ -382,6 +446,7 @@ class AttoControllato(Base):
     __tablename__ = "atti_controllati"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     sessione_id: Mapped[str] = mapped_column(
         ForeignKey("controlli_sessioni.id", ondelete="CASCADE")
     )
@@ -411,6 +476,7 @@ class Verifica(Base):
     __tablename__ = "verifiche"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     bozza_id: Mapped[str | None] = mapped_column(ForeignKey("bozze.id", ondelete="CASCADE"))
     atto_controllato_id: Mapped[str | None] = mapped_column(
         ForeignKey("atti_controllati.id", ondelete="CASCADE")
@@ -443,6 +509,7 @@ class AuditLog(Base):
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True
     )
+    ente_id: Mapped[str | None] = mapped_column(String(36))
     user_id: Mapped[str | None] = mapped_column(String(36))
     entita: Mapped[str] = mapped_column(String(50))
     entita_id: Mapped[str] = mapped_column(String(255))

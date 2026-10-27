@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
+import 'admin/enti_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
 import 'bozze/bozze_page.dart';
@@ -37,17 +38,68 @@ class _HomeShellState extends State<HomeShell> {
         _generazione++;
       });
 
-  List<_Voce> get _voci => [
-        if (widget.utente.isRedattore)
-          const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
-        const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
-        if (widget.utente.isControllore)
-          const _Voce('Controllo atti', Icons.fact_check, ControlliPage()),
-        if (widget.utente.isGestoreModelli)
-          const _Voce('Modelli e checklist', Icons.architecture, ConfigurazionePage()),
-        if (widget.utente.isAdmin)
-          const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      ];
+  List<_Voce> get _voci {
+    final u = widget.utente;
+    final redazione = u.modulo('redazione'); // redazione e controllo degli atti
+    return [
+      if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
+      if (redazione) const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
+      if (redazione && u.isControllore) const _Voce('Controllo atti', Icons.fact_check, ControlliPage()),
+      if (redazione && u.isGestoreModelli)
+        const _Voce('Modelli e checklist', Icons.architecture, ConfigurazionePage()),
+      if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
+      if (u.installazione) const _Voce('Enti', Icons.domain, EntiPage()),
+      if (!redazione && !u.isAdmin && !u.installazione)
+        const _Voce('Benvenuto', Icons.home, _NessunModulo()),
+    ];
+  }
+
+  /// Cambio della password (solo utenti dell'app: quelle di dominio si cambiano in AD).
+  Future<void> _cambiaPassword() async {
+    final attuale = TextEditingController();
+    final nuova = TextEditingController();
+    final ripeti = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Cambia la password'),
+        content: SizedBox(
+          width: 380,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: attuale, obscureText: true, decoration: const InputDecoration(labelText: 'Password attuale')),
+            TextField(
+              controller: nuova,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Nuova password',
+                helperText: 'Almeno 10 caratteri, con lettere e numeri o simboli',
+              ),
+            ),
+            TextField(controller: ripeti, obscureText: true, decoration: const InputDecoration(labelText: 'Ripeti la nuova password')),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Cambia')),
+        ],
+      ),
+    );
+    final valori = (attuale.text, nuova.text, ripeti.text);
+    attuale.dispose();
+    nuova.dispose();
+    ripeti.dispose();
+    if (ok != true || !mounted) return;
+    if (valori.$2 != valori.$3) {
+      mostraErrore(context, 'Le due password nuove non coincidono');
+      return;
+    }
+    try {
+      await context.read<AuthState>().cambiaPassword(valori.$1, valori.$2);
+      if (mounted) mostraMessaggio(context, 'Password cambiata: le altre sessioni sono state chiuse');
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
 
   String _iniziale(String nome) => nome.isEmpty ? '?' : nome.substring(0, 1).toUpperCase();
 
@@ -121,14 +173,17 @@ class _HomeShellState extends State<HomeShell> {
         PopupMenuItem(
           enabled: false,
           child: Text('${widget.utente.nomeCompleto}\n${widget.utente.ruoli.join(', ')}'
+              '${widget.utente.ente != null ? '\n${widget.utente.ente!.nome}' : ''}'
               '${widget.utente.ufficio != null ? '\n${widget.utente.ufficio}' : ''}'),
         ),
-        const PopupMenuItem(value: 'profilo', child: Text('Il mio profilo')),
+        if (widget.utente.ente != null) const PopupMenuItem(value: 'profilo', child: Text('Il mio profilo')),
+        if (widget.utente.locale) const PopupMenuItem(value: 'password', child: Text('Cambia la password')),
         const PopupMenuItem(value: 'esci', child: Text('Esci')),
       ],
       onSelected: (v) {
         if (v == 'esci') context.read<AuthState>().logout();
         if (v == 'profilo') _profilo();
+        if (v == 'password') _cambiaPassword();
       },
     );
 
@@ -176,4 +231,19 @@ class _HomeShellState extends State<HomeShell> {
             ),
     );
   }
+}
+
+class _NessunModulo extends StatelessWidget {
+  const _NessunModulo();
+
+  @override
+  Widget build(BuildContext context) => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Nessun modulo abilitato per il tuo ente o per i tuoi ruoli: rivolgiti all\'amministratore.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
 }

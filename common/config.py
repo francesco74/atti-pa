@@ -93,22 +93,16 @@ class Settings(BaseSettings):
     # ~60.000 caratteri ≈ 17.000 token: con le norme nel prompt resta in un contesto di 32k
     llm_max_caratteri_atto: int = 60_000
 
-    # Autenticazione
+    # Autenticazione. Gli enti, i loro domini e i modi di accesso (utenti locali, Active
+    # Directory) sono nel database: si gestiscono dall'app o con deploy/enti.py.
+    # AUTH_ENABLED=false: uso personale senza login, con un utente locale con tutti i ruoli.
     auth_enabled: bool = True
-    ldap_url: str = "ldaps://dc.ente.local"
-    ldap_dominio: str = "ente.local"  # per il bind con UPN: utente@dominio
-    ldap_base_dn: str = "DC=ente,DC=local"
-    ldap_ca_cert: str | None = None  # percorso del certificato CA per LDAPS
-    # Verifica del certificato del server con ldaps://. Disattivarla solo per prove o con
-    # certificati autofirmati in una rete fidata: le password viaggiano cifrate ma senza
-    # garanzia di parlare con il vero domain controller (attacco man-in-the-middle).
-    ldap_verifica_certificato: bool = True
-    ldap_timeout: int = 10  # il login è interattivo: un controller che non risponde va scartato
-    # Gruppi AD (CN o DN completo) che concedono i ruoli applicativi
-    ldap_gruppo_redattori: str = "ATTI-PA-Redattori"
-    ldap_gruppo_controllori: str = "ATTI-PA-Controllori"
-    ldap_gruppo_gestori_modelli: str = "ATTI-PA-Gestori-Modelli"
-    ldap_gruppo_admin: str = "ATTI-PA-Admin"
+    # Ente usato quando il dominio della richiesta non è registrato (sviluppo, localhost);
+    # vuoto in produzione: un dominio sconosciuto non apre alcun ente
+    ente_predefinito: str | None = None
+    # Tentativi di accesso falliti tollerati per utente e indirizzo nella finestra (minuti)
+    login_tentativi: int = 5
+    login_finestra_minuti: int = 15
 
     # Nessun segreto predefinito: con AUTH_ENABLED=true l'API non parte senza JWT_SECRET
     jwt_secret: str = ""

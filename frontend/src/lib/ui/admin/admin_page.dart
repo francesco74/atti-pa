@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../util/download.dart';
 import '../comuni.dart';
+import 'package:provider/provider.dart';
+
+import '../../stato/auth_state.dart';
+import 'ente_accesso.dart';
 import 'pacchetti.dart';
 
 /// Da dove viene un modello o una checklist: dal pacchetto standard (eventualmente
@@ -13,20 +17,28 @@ String provenienza(Map<String, dynamic> o) => o['pacchetto'] == null
         ? 'standard (${o['pacchetto']})'
         : 'standard modificato dall\'ente';
 
+/// Amministrazione dell'ente: accesso e utenti sempre; dati, pacchetti e aggiornamenti
+/// delle norme se l'ente usa la redazione degli atti.
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const DefaultTabController(
-      length: 3,
+    final redazione = context.read<AuthState>().utente?.modulo('redazione') ?? false;
+    final schede = <(Tab, Widget)>[
+      const (Tab(icon: Icon(Icons.login), text: 'Accesso'), AccessoEntePage()),
+      const (Tab(icon: Icon(Icons.people_outline), text: 'Utenti'), UtentiEntePage()),
+      if (redazione) ...const [
+        (Tab(icon: Icon(Icons.apartment), text: 'Dati dell\'ente'), _ModelliEnte()),
+        (Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'), PacchettiPage()),
+        (Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'), _Aggiornamenti()),
+      ],
+    ];
+    return DefaultTabController(
+      length: schede.length,
       child: Column(children: [
-        TabBar(tabs: [
-          Tab(icon: Icon(Icons.apartment), text: 'Dati dell\'ente'),
-          Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'),
-          Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'),
-        ]),
-        Expanded(child: TabBarView(children: [_ModelliEnte(), PacchettiPage(), _Aggiornamenti()])),
+        TabBar(isScrollable: true, tabs: [for (final s in schede) s.$1]),
+        Expanded(child: TabBarView(children: [for (final s in schede) s.$2])),
       ]),
     );
   }

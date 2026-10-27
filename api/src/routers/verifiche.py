@@ -11,7 +11,17 @@ from sqlalchemy import select
 
 from composizione import aggiorna_bozza, data_riferimento, impostazioni_ente, valuta
 from common import coda
-from deps import audit, autenticato, controllore, db, impostazioni, notifica, risorse, utente
+from deps import (
+    audit,
+    autenticato,
+    controllore,
+    db,
+    ente_id,
+    impostazioni,
+    notifica,
+    risorse,
+    utente,
+)
 from documenti import DocumentiError
 from schemas import Schema
 from verbale import DatiVerbale, verbale_odt
@@ -67,7 +77,11 @@ class FiltroVerifiche(BaseModel):
 
 
 async def schede_applicabili(
-    sessione, tipologia: str | None, modello: str | None = None, moduli: list[str] | None = None
+    sessione,
+    ente: str,
+    tipologia: str | None,
+    modello: str | None = None,
+    moduli: list[str] | None = None,
 ) -> list[str]:
     """Checklist attive da applicare a un atto, nell'ordine: la generica della tipologia,
     quella del modello di atto, quelle delle specificità scelte."""
@@ -76,7 +90,11 @@ async def schede_applicabili(
     schede = (
         await sessione.scalars(
             select(Checklist)
-            .where(Checklist.tipologia_atto == tipologia, Checklist.attiva.is_(True))
+            .where(
+                Checklist.ente_id == ente,
+                Checklist.tipologia_atto == tipologia,
+                Checklist.attiva.is_(True),
+            )
             .order_by(Checklist.codice)
         )
     ).all()
@@ -89,11 +107,13 @@ async def schede_applicabili(
 
 
 async def _autorizza(sessione, verifica: Verifica, user: User) -> None:
+    if verifica.ente_id != ente_id():
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
     if verifica.bozza_id:
         bozza = await sessione.get(Bozza, verifica.bozza_id)
         if bozza is None or bozza.owner_id != user.id:
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
-    elif not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
+    elif not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
 
 
@@ -101,6 +121,7 @@ async def accoda(
     sessione, user: User, giorno: date, checklist_ids: list[str], **destinazione
 ) -> Verifica:
     verifica = Verifica(
+        ente_id=ente_id(),
         data_riferimento=giorno,
         checklist_ids=checklist_ids or None,
         stato=StatoVerifica.IN_CODA,
@@ -122,26 +143,30 @@ async def richiedi():
     oggi = datetime.now(impostazioni().tz).date()
     if dati.bozza_id:
         bozza = await sessione.get(Bozza, dati.bozza_id)
-        if bozza is None or bozza.owner_id != user.id:
+        if bozza is None or bozza.owner_id != user.id or bozza.ente_id != ente_id():
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Bozza non trovata")
         # il testo verificato è quello composto dal modello con i dati attuali; si applicano
         # la scheda della tipologia, quella del modello e quelle delle specificità scelte
         valutazione = await valuta(sessione, bozza, user)
         aggiorna_bozza(bozza, valutazione)
         schede = await schede_applicabili(
-            sessione, bozza.tipologia_atto, bozza.modello.codice, valutazione.moduli_attivi()
+            sessione,
+            ente_id(),
+            bozza.tipologia_atto,
+            bozza.modello.codice,
+            valutazione.moduli_attivi(),
         )
         verifica = await accoda(
             sessione, user, data_riferimento(bozza, oggi), schede, bozza_id=bozza.id
         )
     else:
-        if not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
+        if not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
             raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione non consentita")
         atto = await sessione.get(AttoControllato, dati.atto_controllato_id)
-        if atto is None:
+        if atto is None or atto.ente_id != ente_id():
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Atto non trovato")
         schede = await schede_applicabili(
-            sessione, atto.tipologia_atto, atto.modello, atto.moduli_json
+            sessione, ente_id(), atto.tipologia_atto, atto.modello, atto.moduli_json
         )
         verifica = await accoda(
             sessione, user, atto.data_adozione, schede, atto_controllato_id=atto.id
@@ -176,14 +201,16 @@ async def elenco():
         )
     sessione = db()
     user = utente()
-    query = select(Verifica).order_by(Verifica.created_at.desc())
+    query = (
+        select(Verifica).where(Verifica.ente_id == ente_id()).order_by(Verifica.created_at.desc())
+    )
     if filtro.bozza_id:
         bozza = await sessione.get(Bozza, filtro.bozza_id)
-        if bozza is None or bozza.owner_id != user.id:
+        if bozza is None or bozza.owner_id != user.id or bozza.ente_id != ente_id():
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Bozza non trovata")
         query = query.where(Verifica.bozza_id == filtro.bozza_id)
     else:
-        if not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
+        if not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
             raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione non consentita")
         query = query.where(Verifica.atto_controllato_id == filtro.atto_controllato_id)
     return out(VerificaOut, (await sessione.scalars(query)).all())
@@ -220,7 +247,7 @@ async def revisione(verifica_id: str):
     dati = corpo(RevisioneIn)
     sessione = db()
     verifica = await sessione.get(Verifica, verifica_id)
-    if verifica is None or not verifica.atto_controllato_id:
+    if verifica is None or not verifica.atto_controllato_id or verifica.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
     if verifica.stato != StatoVerifica.COMPLETATA:
         raise ErroreApi(HTTPStatus.CONFLICT, "La verifica automatica non è conclusa")
@@ -256,7 +283,7 @@ async def verbale(verifica_id: str):
     q = parametri(VerbaleQuery)
     sessione = db()
     verifica = await sessione.get(Verifica, verifica_id)
-    if verifica is None or not verifica.atto_controllato_id:
+    if verifica is None or not verifica.atto_controllato_id or verifica.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
     if verifica.stato != StatoVerifica.COMPLETATA:
         raise ErroreApi(HTTPStatus.CONFLICT, "La verifica automatica non è conclusa")
@@ -264,7 +291,7 @@ async def verbale(verifica_id: str):
     controllo = await sessione.get(SessioneControllo, atto.sessione_id)
     revisore = await sessione.get(User, verifica.revisore_id) if verifica.revisore_id else None
     tipologia = await sessione.get(TipologiaAtto, atto.tipologia_atto) if atto.tipologia_atto else None
-    ente = (await impostazioni_ente(sessione)).dati_json or {}
+    ente = (await impostazioni_ente(sessione, verifica.ente_id)).dati_json or {}
     odt = verbale_odt(
         DatiVerbale(
             ente=str(ente.get("ente") or ""),

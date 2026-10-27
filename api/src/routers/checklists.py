@@ -12,7 +12,7 @@ from flask import Blueprint
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from deps import audit, autenticato, db, solo_admin, utente
+from deps import audit, autenticato, db, ente_id, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, corpo, nessun_contenuto, out, parametri
 from common.configurazione import ChecklistIn, ChecklistNuovaIn, controlla_checklist
@@ -62,7 +62,11 @@ async def _verifica_tipologia(sessione, codice: str) -> None:
 async def elenco():
     """Checklist attive (o tutte le versioni con `tutte=true`)."""
     filtro = parametri(FiltroChecklist)
-    query = select(Checklist).order_by(Checklist.codice, Checklist.versione.desc())
+    query = (
+        select(Checklist)
+        .where(Checklist.ente_id == ente_id())
+        .order_by(Checklist.codice, Checklist.versione.desc())
+    )
     if not filtro.tutte:
         query = query.where(Checklist.attiva.is_(True))
     if filtro.tipologia:
@@ -74,7 +78,7 @@ async def elenco():
 @autenticato()
 async def dettaglio(checklist_id: str):
     cl = await db().get(Checklist, checklist_id)
-    if cl is None:
+    if cl is None or cl.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND)
     return out(ChecklistOut, cl)
 
@@ -85,7 +89,7 @@ async def crea():
     dati = corpo(ChecklistNuovaIn)
     sessione = db()
     await _verifica_tipologia(sessione, dati.tipologia_atto)
-    if await sessione.scalar(select(Checklist.id).where(Checklist.codice == dati.codice).limit(1)):
+    if await sessione.scalar(select(Checklist.id).where(Checklist.ente_id == ente_id(), Checklist.codice == dati.codice).limit(1)):
         raise ErroreApi(HTTPStatus.CONFLICT, "Codice checklist già esistente")
     cl = await _salva(sessione, dati)
     return out(ChecklistOut, cl), HTTPStatus.CREATED
@@ -101,7 +105,7 @@ async def nuova_versione(codice: str):
     sessione = db()
     await _verifica_tipologia(sessione, dati.tipologia_atto)
     esistente = await sessione.scalar(
-        select(Checklist.id).where(Checklist.codice == codice).limit(1)
+        select(Checklist.id).where(Checklist.ente_id == ente_id(), Checklist.codice == codice).limit(1)
     )
     if esistente is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND)
@@ -112,7 +116,7 @@ async def nuova_versione(codice: str):
 async def _salva(sessione, dati: ChecklistNuovaIn) -> Checklist:
     try:
         controlla_checklist(dati)
-        cl = await salva_checklist(sessione, dati, MANTIENI_BASE, utente().id)
+        cl = await salva_checklist(sessione, ente_id(), dati, MANTIENI_BASE, utente().id)
     except ValueError as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
     await sessione.commit()
@@ -124,7 +128,11 @@ async def _salva(sessione, dati: ChecklistNuovaIn) -> Checklist:
 @solo_admin
 async def disattiva(codice: str):
     sessione = db()
-    versioni = (await sessione.scalars(select(Checklist).where(Checklist.codice == codice))).all()
+    versioni = (
+        await sessione.scalars(
+            select(Checklist).where(Checklist.ente_id == ente_id(), Checklist.codice == codice)
+        )
+    ).all()
     if not versioni:
         raise ErroreApi(HTTPStatus.NOT_FOUND)
     for cl in versioni:

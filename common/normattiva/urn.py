@@ -47,7 +47,8 @@ ABBREVIAZIONI: dict[str, str] = {
 }
 
 # Norme inserite manualmente (regolamenti interni, leggi regionali, altre fonti non
-# presenti su Normattiva): URN "urn:nir:locale:<tipo>:<data>;<numero>", mai inviate a
+# presenti su Normattiva): URN "urn:nir:locale.<ente>:<tipo>:<data>;<numero>" (il codice
+# dell'ente distingue i regolamenti di enti diversi con gli stessi estremi), mai inviate a
 # Normattiva. Tipo URN -> descrizione.
 AUTORITA_LOCALE = "locale"
 TIPI_MANUALI: dict[str, str] = {
@@ -64,7 +65,11 @@ TIPI_MANUALI: dict[str, str] = {
 
 def e_manuale(urn: str) -> bool:
     """True per le norme inserite manualmente (da non cercare su Normattiva)."""
-    return urn.startswith(f"urn:nir:{AUTORITA_LOCALE}:")
+    return urn.startswith((f"urn:nir:{AUTORITA_LOCALE}:", f"urn:nir:{AUTORITA_LOCALE}."))
+
+
+def autorita_locale(autorita: str) -> bool:
+    return autorita == AUTORITA_LOCALE or autorita.startswith(f"{AUTORITA_LOCALE}.")
 
 
 _SUFFISSI = "bis|ter|quater|quinquies|sexies|septies|octies|novies|decies"
@@ -90,7 +95,7 @@ _FORME_EQUIVALENTI = {
 }
 
 _URN_RE = re.compile(
-    r"^urn:nir:(?P<autorita>[a-z.]+):(?P<denominazione>[a-z.]+):"
+    r"^urn:nir:(?P<autorita>[a-z0-9.]+):(?P<denominazione>[a-z.]+):"
     r"(?P<data>\d{4}(?:-\d{2}-\d{2})?);(?P<numero>[\w-]+)"
     r"(?::(?P<allegato>\d+))?"
     r"(?:~art(?P<articolo>[\w-]+))?"
@@ -133,14 +138,15 @@ class Urn:
         )
 
     @classmethod
-    def manuale(cls, tipo: str, data: date, numero: str) -> Urn:
-        """URN di una norma inserita manualmente; il numero diventa un identificativo."""
+    def manuale(cls, tipo: str, data: date, numero: str, ente: str) -> Urn:
+        """URN di una norma inserita manualmente dall'ente (codice); il numero diventa un
+        identificativo."""
         if tipo not in TIPI_MANUALI:
             raise ValueError(f"Tipo di norma non supportato: {tipo!r}")
         identificativo = re.sub(r"[^\w-]+", "-", numero.strip().lower()).strip("-_")
         if not identificativo:
             raise ValueError("Numero non valido")
-        return cls(AUTORITA_LOCALE, tipo, data.isoformat(), identificativo)
+        return cls(f"{AUTORITA_LOCALE}.{ente}", tipo, data.isoformat(), identificativo)
 
     @classmethod
     def da_metadati(cls, atto: dict) -> Urn | None:

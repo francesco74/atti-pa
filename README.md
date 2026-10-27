@@ -21,8 +21,11 @@ Principi:
   cita norme a memoria.
 - **L'IA propone, la persona decide**: gli esiti automatici sono proposte che il controllore
   conferma o modifica con motivazione.
-- **Accesso con Active Directory**: login pass-through via LDAPS, ruoli dai gruppi AD,
-  nessuna password salvata. Ogni redattore vede solo le proprie bozze.
+- **Più enti, accesso per ente**: ogni ente (Provincia, Comune, Greenlees...) ha utenti,
+  configurazione e dati propri e si raggiunge dal suo dominio (es.
+  `attipa.provincia.lucca.it`). Si accede con l'Active Directory dell'ente (LDAPS, ruoli
+  dai gruppi, password mai salvata) e/o con utenti dell'applicazione. Ogni redattore vede
+  solo le proprie bozze.
 
 ## Componenti
 
@@ -186,11 +189,15 @@ specificità e checklist si modificano senza scrivere YAML:
   modello (*Proponi come testo del modello*); chi gestisce i modelli la trova sul capoverso
   e la applica alla bozza o la respinge.
 
-| Ruolo | Gruppo AD (default) | Cosa può fare |
+| Ruolo | Gruppo AD proposto | Cosa può fare |
 |---|---|---|
-| Gestore dei modelli | `ATTI-PA-Gestori-Modelli` (`LDAP_GRUPPO_GESTORI_MODELLI`) | modifica modelli, specificità e checklist in bozza, gestisce le proposte |
-| Amministratore | gruppo amministratori | tutto, compresa la pubblicazione e i pacchetti |
-| Redattore | gruppo redattori | propone modifiche ai capoversi |
+| Gestore dei modelli | `ATTI-PA-Gestori-Modelli` | modifica modelli, specificità e checklist in bozza, gestisce le proposte |
+| Amministratore dell'ente | `ATTI-PA-Admin` | tutto nell'ente, compresi pubblicazione, pacchetti, accesso e utenti |
+| Redattore | `ATTI-PA-Redattori` | propone modifiche ai capoversi |
+
+I gruppi si impostano per ente in Amministrazione → Accesso; agli utenti dell'app i ruoli
+li assegna l'amministratore dell'ente. L'**amministratore dell'installazione** crea gli
+enti, ne indica domini e moduli e il primo amministratore (voce *Enti*).
 
 Da riga di comando:
 
@@ -208,10 +215,11 @@ python deploy/pacchetto.py esporta FILE.zip      # esporta la configurazione del
 docker compose up --build
 ```
 
-Apre l'applicazione su http://localhost:8080 in modalità uso personale (senza Active
-Directory). Il sistema parte vuoto: per avere i modelli standard crea lo zip
-(`python deploy/pacchetto.py crea`) e caricalo in Amministrazione → Pacchetti, oppure
-importalo da riga di comando (`python deploy/pacchetto.py importa pacchetto/`). L'LLM predefinito è Ollama sul computer (`ollama serve`, modello
+Apre l'applicazione su http://localhost:8080 in modalità uso personale (senza login): un
+ente "locale" e un utente con tutti i ruoli, creati al primo accesso. Il sistema parte
+vuoto: per avere i modelli standard crea lo zip (`python deploy/pacchetto.py crea`) e
+caricalo in Amministrazione → Pacchetti, oppure importalo da riga di comando
+(`python deploy/pacchetto.py importa locale pacchetto/`). L'LLM predefinito è Ollama sul computer (`ollama serve`, modello
 `mistral-small`); per usare un altro provider:
 
 ```bash
@@ -315,21 +323,33 @@ frontend e costruisce tutte le immagini senza pubblicarle.
    `rook-ceph-block`): al primo avvio crea da solo database, utente e schema
    (`deploy/k8s/sql/`).
 3. Creare i segreti (vedi `deploy/k8s/secret.example.yaml`): `atti-pa-secret`,
-   `mysql-secret`, `rabbitmq-secret`, `atti-pa-registry` (credenziali per scaricare le immagini dal registry
-   interno), la ConfigMap `ldap-ca` con il certificato della CA di Active Directory e il
-   Secret TLS `attipa-tls-secret`. I file con i valori reali non vanno versionati (`.gitignore`
-   esclude `deploy/k8s/secret.yaml` e `deploy/k8s/*-secret.yaml`).
-4. Adattare `deploy/k8s/configmap.yaml` (LDAP, gruppi AD, indirizzo dell'LLM, livello dei log)
-   e l'host dell'Ingress.
+   `mysql-secret`, `rabbitmq-secret`, `atti-pa-registry` (credenziali per scaricare le
+   immagini dal registry interno) e un Secret TLS per ogni dominio (es. `attipa-tls-secret`).
+   I file con i valori reali non vanno versionati (`.gitignore` esclude
+   `deploy/k8s/secret.yaml` e `deploy/k8s/*-secret.yaml`).
+4. Adattare `deploy/k8s/configmap.yaml` (indirizzo dell'LLM, livello dei log) e gli host
+   dell'Ingress (uno per dominio di ente, con il suo certificato).
 5. `kubectl apply -k deploy/k8s`
-6. Accedere come amministratore e, in Amministrazione → Pacchetti, caricare il pacchetto
-   standard `atti-pa-modelli-<versione>.zip` (creato con `python deploy/pacchetto.py crea`).
+6. Creare l'amministratore dell'installazione, il primo ente con i suoi domini e il suo
+   primo amministratore:
+   ```bash
+   kubectl -n attipa exec -it deploy/api -- python enti.py installazione amministratore
+   kubectl -n attipa exec -it deploy/api -- python enti.py crea provincialucca \
+       "Provincia di Lucca" attipa.provincia.lucca.it attiamministrativi.provincia.lucca.it
+   kubectl -n attipa exec -it deploy/api -- python enti.py amministratore provincialucca admin
+   ```
+   Gli altri enti si creano anche dall'app (voce *Enti*, con l'amministratore
+   dell'installazione).
+7. L'amministratore dell'ente accede dal dominio dell'ente e configura Active Directory e
+   utenti (Amministrazione → Accesso, Utenti), poi in Amministrazione → Pacchetti carica il
+   pacchetto standard `atti-pa-modelli-<versione>.zip` (creato con
+   `python deploy/pacchetto.py crea`).
 
 Le modifiche successive allo schema si distribuiscono come nuovi file in `deploy/k8s/sql/`
 (`0002_...sql`), da eseguire in ordine sul database prima di aggiornare le immagini:
 
 ```bash
-kubectl -n atti-pa exec -i mysql-0 -- sh -c 'mysql -uatti_pa -p"$MYSQL_PASSWORD" atti_pa' \
+kubectl -n attipa exec -i mysql-0 -- sh -c 'mysql -uatti_pa -p"$MYSQL_PASSWORD" atti_pa' \
   < deploy/k8s/sql/0002_....sql
 ```
 

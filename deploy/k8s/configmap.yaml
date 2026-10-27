@@ -16,19 +16,11 @@ data:
   NORMATTIVA_TIMEOUT: "30"
   NORMATTIVA_TENTATIVI: "3"
 
-  # Active Directory
+  # Accesso. Enti, domini, Active Directory (URL, dominio, certificato della CA, gruppi) e
+  # utenti locali sono nel database, per ente: si gestiscono dall'app o con deploy/enti.py
   AUTH_ENABLED: "true"
-  LDAP_URL: "ldaps://dc.ente.local"
-  LDAP_DOMINIO: "ente.local"
-  LDAP_BASE_DN: "DC=ente,DC=local"
-  LDAP_CA_CERT: "/etc/atti-pa/ldap/ca.pem"
-  LDAP_TIMEOUT: "10"
-  # "false" solo per prove o certificati autofirmati in rete fidata (rischio man-in-the-middle)
-  LDAP_VERIFICA_CERTIFICATO: "true"
-  LDAP_GRUPPO_REDATTORI: "ATTI-PA-Redattori"
-  LDAP_GRUPPO_CONTROLLORI: "ATTI-PA-Controllori"
-  LDAP_GRUPPO_GESTORI_MODELLI: "ATTI-PA-Gestori-Modelli"
-  LDAP_GRUPPO_ADMIN: "ATTI-PA-Admin"
+  LOGIN_TENTATIVI: "5"           # tentativi falliti tollerati per utente...
+  LOGIN_FINESTRA_MINUTI: "15"    # ...in questa finestra
   JWT_SCADENZA_MINUTI: "480"
   COOKIE_SECURE: "true"
   CORS_ORIGINI: "[]"   # app e API sullo stesso host: CORS non serve

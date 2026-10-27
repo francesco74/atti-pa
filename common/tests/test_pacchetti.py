@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from common.configurazione import leggi_checklist
-from common.models import Base, Checklist, ModelloAtto, TipologiaAtto
+from common.models import Base, Checklist, Ente, ModelloAtto, TipologiaAtto
 from common.pacchetti import (
     MANTIENI_BASE,
     PacchettoNonValido,
@@ -32,6 +32,7 @@ from common.pacchetti import (
 )
 
 PACCHETTO = Path(__file__).resolve().parents[2] / "pacchetto"
+ENTE = "ente-di-prova"
 
 
 def _con_versione(file: dict[str, str], versione: str) -> dict[str, str]:
@@ -51,6 +52,9 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
         self.motore = create_async_engine("sqlite+aiosqlite://")
         async with self.motore.begin() as c:
             await c.run_sync(Base.metadata.create_all)
+        async with AsyncSession(self.motore) as db:
+            db.add(Ente(id=ENTE, codice="prova", nome="Ente di prova", moduli_json=[], dati_json={}))
+            await db.commit()
         self.file = da_cartella(PACCHETTO)
 
     async def asyncTearDown(self):
@@ -59,7 +63,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
     async def _iniziale(self):
         """Il sistema parte vuoto: il pacchetto standard si importa come tutti gli altri."""
         async with AsyncSession(self.motore, expire_on_commit=False) as db:
-            r = await importa(db, leggi_pacchetto(self.file))
+            r = await importa(db, ENTE, leggi_pacchetto(self.file))
             await db.commit()
         self.assertEqual(r.errori, [])
         self.assertEqual(r.avvisi, [])
@@ -68,7 +72,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
     async def test_primo_pacchetto_sul_database_vuoto(self):
         pacchetto = leggi_pacchetto(self.file)
         async with AsyncSession(self.motore) as db:
-            voci = await analizza(db, pacchetto)
+            voci = await analizza(db, ENTE, pacchetto)
         self.assertTrue(voci)
         self.assertEqual({v.stato for v in voci}, {"NUOVO"})
         r = await self._iniziale()
@@ -81,19 +85,19 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
     async def test_stesso_pacchetto_tutto_invariato(self):
         await self._iniziale()
         async with AsyncSession(self.motore) as db:
-            voci = await analizza(db, leggi_pacchetto(self.file))
+            voci = await analizza(db, ENTE, leggi_pacchetto(self.file))
             self.assertEqual({v.stato for v in voci}, {"INVARIATO"})
 
     async def test_tre_vie(self):
         await self._iniziale()
         async with AsyncSession(self.motore) as db:
             # l'ente modifica la scheda CAM nell'app
-            cam = await versione_attiva(db, "checklist", "SCHEDA_CAM")
+            cam = await versione_attiva(db, ENTE, "checklist", "SCHEDA_CAM")
             dati = leggi_checklist(json.dumps({
                 "codice": cam.codice, "titolo": "CAM dell'ente", "tipologia_atto": "DETERMINA",
                 "modulo": "CAM", "elementi": [{"titolo": "Unico", "regola": "Regola"}],
             }))  # fmt: skip
-            await salva_checklist(db, dati, MANTIENI_BASE)
+            await salva_checklist(db, ENTE, dati, MANTIENI_BASE)
             await db.commit()
 
             # nuovo standard: cambiano la scheda CAM (modificata anche dall'ente) e la scheda
@@ -102,62 +106,62 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
             nuovo = _cambia_checklist(nuovo, "scheda_cam.json", "CAM nuova versione standard")
             nuovo = _cambia_checklist(nuovo, "scheda_sia.json", "SIA nuova versione standard")
             p = leggi_pacchetto(nuovo)
-            stati = {v.chiave: v.stato for v in await analizza(db, p)}
+            stati = {v.chiave: v.stato for v in await analizza(db, ENTE, p)}
             self.assertEqual(stati["checklist:SCHEDA_CAM"], "CONFLITTO")
             self.assertEqual(stati["checklist:SCHEDA_SIA"], "AGGIORNABILE")
             self.assertEqual(stati["checklist:SCHEDA_DETERMINE"], "INVARIATO")
 
-            r = await importa(db, p)  # azioni proposte: conflitto mantenuto, SIA aggiornata
+            r = await importa(db, ENTE, p)  # azioni proposte: conflitto mantenuto, SIA aggiornata
             await db.commit()
             self.assertIn("checklist:SCHEDA_SIA", r.applicati)
             self.assertIn("checklist:SCHEDA_CAM", r.mantenuti)
-            sia = await versione_attiva(db, "checklist", "SCHEDA_SIA")
+            sia = await versione_attiva(db, ENTE, "checklist", "SCHEDA_SIA")
             self.assertEqual(sia.titolo, "SIA nuova versione standard")
             self.assertEqual(sia.pacchetto, "Modelli standard Atti PA 2026.2")
-            cam = await versione_attiva(db, "checklist", "SCHEDA_CAM")
+            cam = await versione_attiva(db, ENTE, "checklist", "SCHEDA_CAM")
             self.assertEqual(cam.titolo, "CAM dell'ente")
             # il nuovo standard è il riferimento: reimportarlo non segnala più il conflitto
-            stati = {v.chiave: v.stato for v in await analizza(db, p)}
+            stati = {v.chiave: v.stato for v in await analizza(db, ENTE, p)}
             self.assertEqual(stati["checklist:SCHEDA_CAM"], "INVARIATO")
 
     async def test_conflitto_sostituito_e_rimosso_dallo_standard(self):
         await self._iniziale()
         async with AsyncSession(self.motore) as db:
-            cam = await versione_attiva(db, "checklist", "SCHEDA_CAM")
+            cam = await versione_attiva(db, ENTE, "checklist", "SCHEDA_CAM")
             dati = leggi_checklist(json.dumps({
                 "codice": cam.codice, "titolo": "CAM dell'ente", "tipologia_atto": "DETERMINA",
                 "modulo": "CAM", "elementi": [{"titolo": "Unico", "regola": "Regola"}],
             }))  # fmt: skip
-            await salva_checklist(db, dati, MANTIENI_BASE)
+            await salva_checklist(db, ENTE, dati, MANTIENI_BASE)
             await db.commit()
             nuovo = _cambia_checklist(_con_versione(self.file, "2026.2"), "scheda_cam.json", "X")
             del nuovo["checklist/scheda_utenze.json"]
             p = leggi_pacchetto(nuovo)
-            stati = {v.chiave: v.stato for v in await analizza(db, p)}
+            stati = {v.chiave: v.stato for v in await analizza(db, ENTE, p)}
             self.assertEqual(stati["checklist:SCHEDA_UTENZE"], "RIMOSSO")
             r = await importa(
-                db, p, {"checklist:SCHEDA_CAM": "applica", "checklist:SCHEDA_UTENZE": "disattiva"}
+                db, ENTE, p, {"checklist:SCHEDA_CAM": "applica", "checklist:SCHEDA_UTENZE": "disattiva"}
             )
             await db.commit()
-            self.assertEqual((await versione_attiva(db, "checklist", "SCHEDA_CAM")).titolo, "X")
-            self.assertIsNone(await versione_attiva(db, "checklist", "SCHEDA_UTENZE"))
+            self.assertEqual((await versione_attiva(db, ENTE, "checklist", "SCHEDA_CAM")).titolo, "X")
+            self.assertIsNone(await versione_attiva(db, ENTE, "checklist", "SCHEDA_UTENZE"))
             self.assertIn("checklist SCHEDA_UTENZE", " ".join(r.disattivati).replace(":", " "))
 
     async def test_specificita_cambiata_ricompone_i_modelli(self):
         await self._iniziale()
         async with AsyncSession(self.motore) as db:
-            prima = (await versione_attiva(db, "modello", "DD_AFFIDAMENTO_DIRETTO_SF")).versione
+            prima = (await versione_attiva(db, ENTE, "modello", "DD_AFFIDAMENTO_DIRETTO_SF")).versione
             regola = yaml.safe_load(self.file["modelli/regole/cam.yaml"])
             regola["etichetta"] = "CAM (nuova etichetta)"
             nuovo = {
                 **_con_versione(self.file, "2026.2"),
                 "modelli/regole/cam.yaml": yaml.safe_dump(regola, allow_unicode=True),
             }
-            r = await importa(db, leggi_pacchetto(nuovo))
+            r = await importa(db, ENTE, leggi_pacchetto(nuovo))
             await db.commit()
             self.assertEqual(r.errori, [])
             self.assertIn("modulo:CAM", r.applicati)
-            dopo = await versione_attiva(db, "modello", "DD_AFFIDAMENTO_DIRETTO_SF")
+            dopo = await versione_attiva(db, ENTE, "modello", "DD_AFFIDAMENTO_DIRETTO_SF")
             self.assertEqual(dopo.versione, prima + 1)
             etichette = {
                 q["opzioni"]["cam"]
@@ -171,12 +175,12 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
     async def test_esporta_e_reimporta(self):
         await self._iniziale()
         async with AsyncSession(self.motore) as db:
-            file = await esporta(db, "Ente", "1")
+            file = await esporta(db, ENTE, "Ente", "1")
             p = leggi_pacchetto(da_zip(in_zip(file)))
             self.assertEqual(len(p.di_tipo("modello")), 4)
             self.assertEqual(len(p.di_tipo("checklist")), 12)
             # l'esportazione ha gli stessi contenuti: nulla da aggiornare
-            stati = {v.stato for v in await analizza(db, p)}
+            stati = {v.stato for v in await analizza(db, ENTE, p)}
             self.assertEqual(stati, {"INVARIATO"})
 
 

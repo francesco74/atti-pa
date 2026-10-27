@@ -149,20 +149,26 @@ def _campi_usati(testi: list[str]) -> set[str]:
 # --- controllo ---------------------------------------------------------------------------------
 
 
-async def _modelli_attivi(db: AsyncSession) -> list[ModelloAtto]:
+async def _modelli_attivi(db: AsyncSession, ente_id: str) -> list[ModelloAtto]:
     return list(
         (
             await db.scalars(
                 select(ModelloAtto)
-                .where(ModelloAtto.attivo.is_(True))
+                .where(ModelloAtto.ente_id == ente_id, ModelloAtto.attivo.is_(True))
                 .options(undefer(ModelloAtto.sorgente))
             )
         ).all()
     )
 
 
-async def _checklist_attive(db: AsyncSession) -> list[Checklist]:
-    return list((await db.scalars(select(Checklist).where(Checklist.attiva.is_(True)))).all())
+async def _checklist_attive(db: AsyncSession, ente_id: str) -> list[Checklist]:
+    return list(
+        (
+            await db.scalars(
+                select(Checklist).where(Checklist.ente_id == ente_id, Checklist.attiva.is_(True))
+            )
+        ).all()
+    )
 
 
 def _avvisi_collegamenti(schede: list[Checklist], ids: set[str]) -> list[str]:
@@ -178,7 +184,9 @@ def _avvisi_collegamenti(schede: list[Checklist], ids: set[str]) -> list[str]:
     return avvisi
 
 
-async def controlla(db: AsyncSession, tipo: Tipo, codice: str, definizione: dict) -> dict:
+async def controlla(
+    db: AsyncSession, ente_id: str, tipo: Tipo, codice: str, definizione: dict
+) -> dict:
     """{"errori": [...], "avvisi": [...]}: gli errori impediscono la pubblicazione."""
     errori: list[str] = []
     avvisi: list[str] = []
@@ -190,8 +198,8 @@ async def controlla(db: AsyncSession, tipo: Tipo, codice: str, definizione: dict
         return {"errori": errori + e.errori, "avvisi": []}
     except ValueError as e:
         return {"errori": errori + [str(e)], "avvisi": []}
-    schede = await _checklist_attive(db)
-    moduli = await moduli_attivi(db)
+    schede = await _checklist_attive(db, ente_id)
+    moduli = await moduli_attivi(db, ente_id)
 
     if tipo in ("modello", "checklist"):
         tipologia = definizione.get("tipologia_atto")
@@ -229,7 +237,7 @@ async def controlla(db: AsyncSession, tipo: Tipo, codice: str, definizione: dict
     elif tipo == "modulo":
         nuovo = ModuloRegole.model_validate(definizione)
         altri = [m for c, (m, _) in moduli.items() if c != codice]
-        attivi = {m.codice: m for m in await _modelli_attivi(db)}
+        attivi = {m.codice: m for m in await _modelli_attivi(db, ente_id)}
         for codice_modello in nuovo.modelli:
             m = attivi.get(codice_modello)
             if m is None:
@@ -248,7 +256,7 @@ async def controlla(db: AsyncSession, tipo: Tipo, codice: str, definizione: dict
         modello, modulo = definizione.get("modello"), definizione.get("modulo")
         disponibili: set[str] | None = None
         if modello:
-            m = next((x for x in await _modelli_attivi(db) if x.codice == modello), None)
+            m = next((x for x in await _modelli_attivi(db, ente_id) if x.codice == modello), None)
             if m is None:
                 avvisi.append(f"Il modello {modello} non esiste o non è attivo")
             else:
@@ -312,6 +320,7 @@ def _riepilogo(composto: Modello, risposte: dict, evidenzia: set[str]) -> dict:
 
 async def anteprima(
     db: AsyncSession,
+    ente_id: str,
     tipo: Tipo,
     definizione: dict,
     risposte: dict[str, Any],
@@ -319,7 +328,7 @@ async def anteprima(
 ) -> dict:
     """Anteprima di un modello (composto con le specificità attive) o di una specificità
     (composta in un modello a cui si applica, con la caratteristica scelta)."""
-    moduli = await moduli_attivi(db)
+    moduli = await moduli_attivi(db, ente_id)
     try:
         if tipo == "modello":
             base = Modello.model_validate(definizione)
@@ -327,7 +336,7 @@ async def anteprima(
             return _riepilogo(composto, risposte, set())
         nuovo = ModuloRegole.model_validate(definizione)
         codice_modello = modello or (nuovo.modelli[0] if nuovo.modelli else None)
-        m = next((x for x in await _modelli_attivi(db) if x.codice == codice_modello), None)
+        m = next((x for x in await _modelli_attivi(db, ente_id) if x.codice == codice_modello), None)
         if m is None:
             raise ValueError(f"Modello {codice_modello} non disponibile per l'anteprima")
         base = Modello.model_validate(yaml.safe_load(m.sorgente))

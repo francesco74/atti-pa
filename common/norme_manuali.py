@@ -195,7 +195,16 @@ async def ricostruisci_versioni(db: AsyncSession, urn_atto: str) -> int:
     return create
 
 
-async def norme_manuali(db: AsyncSession) -> list[NormaAtto]:
+async def norme_manuali(db: AsyncSession, ente_id: str | None) -> list[NormaAtto]:
+    """Norme inserite manualmente dall'ente (nessuna se l'ente non è indicato)."""
+    if ente_id is None:
+        return []
     return list(
-        (await db.scalars(select(NormaAtto).where(NormaAtto.fonte == FonteNorma.MANUALE))).all()
+        (
+            await db.scalars(
+                select(NormaAtto).where(
+                    NormaAtto.fonte == FonteNorma.MANUALE, NormaAtto.ente_id == ente_id
+                )
+            )
+        ).all()
     )

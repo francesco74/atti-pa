@@ -1,13 +1,14 @@
-"""Autenticazione pass-through su Active Directory.
+"""Autenticazione pass-through sull'Active Directory dell'ente.
 
-La password non viene mai salvata: si tenta un BIND con le credenziali dell'utente e,
-se riesce, si leggono gli attributi anagrafici e i gruppi con la stessa connessione.
+La configurazione è per ente (Ente.ldap_json, modificabile dall'amministratore dell'ente):
+più enti dell'installazione possono avere domini AD diversi. La password non viene mai
+salvata: si tenta un BIND con le credenziali dell'utente e, se riesce, si leggono gli
+attributi anagrafici e i gruppi con la stessa connessione.
 """
 
 from __future__ import annotations
 
 import logging
-import os
 import re
 import ssl
 from dataclasses import dataclass, field
@@ -16,8 +17,8 @@ from ldap3 import NONE, SIMPLE, Connection, Server, Tls
 from ldap3.core.exceptions import LDAPException
 from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import parse_dn
+from pydantic import BaseModel, Field, field_validator
 
-from common.config import Settings
 from common.models import Ruolo
 
 log = logging.getLogger("atti_api.auth")
@@ -26,6 +27,46 @@ log = logging.getLogger("atti_api.auth")
 _USERNAME = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 _ATTRIBUTI = ["sAMAccountName", "displayName", "mail", "department", "memberOf"]
+
+GRUPPI_PREDEFINITI = {
+    Ruolo.REDATTORE: "ATTI-PA-Redattori",
+    Ruolo.CONTROLLORE: "ATTI-PA-Controllori",
+    Ruolo.GESTORE_MODELLI: "ATTI-PA-Gestori-Modelli",
+    Ruolo.ADMIN: "ATTI-PA-Admin",
+}
+
+
+class ConfigLdap(BaseModel):
+    """Active Directory di un ente."""
+
+    url: str = Field(pattern=r"^ldaps?://\S+$")  # es. ldaps://dc.ente.local
+    dominio: str = Field(min_length=1)  # per il bind con UPN: utente@dominio
+    base_dn: str = Field(min_length=1)  # es. DC=ente,DC=local
+    # certificato della CA che ha firmato quello del domain controller (PEM); vuoto = CA di
+    # sistema
+    ca_pem: str | None = None
+    # Disattivarla solo per prove o con certificati autofirmati in una rete fidata: le
+    # password viaggiano cifrate ma senza garanzia di parlare con il vero domain controller
+    verifica_certificato: bool = True
+    timeout: int = Field(default=10, ge=1, le=60)  # il login è interattivo
+    # ruolo applicativo -> gruppo AD (CN o DN completo)
+    gruppi: dict[str, str] = Field(default_factory=lambda: dict(GRUPPI_PREDEFINITI))
+
+    @field_validator("gruppi")
+    @classmethod
+    def _ruoli_noti(cls, v: dict[str, str]) -> dict[str, str]:
+        sconosciuti = set(v) - set(Ruolo.TUTTI)
+        if sconosciuti:
+            raise ValueError(f"Ruoli sconosciuti: {', '.join(sorted(sconosciuti))}")
+        return {r: g.strip() for r, g in v.items() if g and g.strip()}
+
+    @field_validator("ca_pem")
+    @classmethod
+    def _pem(cls, v: str | None) -> str | None:
+        v = (v or "").strip()
+        if v and "BEGIN CERTIFICATE" not in v:
+            raise ValueError("Il certificato della CA deve essere in formato PEM")
+        return v or None
 
 
 @dataclass
@@ -53,11 +94,9 @@ def _cn(dn: str) -> str | None:
     return None
 
 
-def ruoli_da_gruppi(gruppi: list[str], settings: Settings) -> list[str]:
-    """Converte i gruppi AD (DN da memberOf) nei ruoli applicativi.
-
-    Nella configurazione un gruppo può essere indicato col solo CN o con il DN completo.
-    """
+def ruoli_da_gruppi(gruppi: list[str], mappa: dict[str, str]) -> list[str]:
+    """Converte i gruppi AD (DN da memberOf) nei ruoli applicativi secondo la mappa
+    ruolo -> gruppo dell'ente. Un gruppo si indica col solo CN o con il DN completo."""
     dn_utente = {g.lower() for g in gruppi}
     cn_utente = {c.lower() for g in gruppi if (c := _cn(g))}
 
@@ -67,57 +106,39 @@ def ruoli_da_gruppi(gruppi: list[str], settings: Settings) -> list[str]:
             return False
         return gruppo in dn_utente if "=" in gruppo else gruppo in cn_utente
 
-    mappa = {
-        Ruolo.REDATTORE: settings.ldap_gruppo_redattori,
-        Ruolo.CONTROLLORE: settings.ldap_gruppo_controllori,
-        Ruolo.GESTORE_MODELLI: settings.ldap_gruppo_gestori_modelli,
-        Ruolo.ADMIN: settings.ldap_gruppo_admin,
-    }
-    return [ruolo for ruolo, gruppo in mappa.items() if appartiene(gruppo)]
+    return [ruolo for ruolo in Ruolo.TUTTI if appartiene(mappa.get(ruolo, ""))]
 
 
 class LdapAuthenticator:
-    def __init__(self, settings: Settings):
-        self.settings = settings
-        if (
-            settings.auth_enabled
-            and settings.ldap_url.lower().startswith("ldaps://")
-            and not settings.ldap_verifica_certificato
-        ):
+    def __init__(self, config: ConfigLdap):
+        self.config = config
+        if config.url.lower().startswith("ldaps://") and not config.verifica_certificato:
             log.warning(
-                "Verifica del certificato LDAPS disattivata (LDAP_VERIFICA_CERTIFICATO=false): "
-                "non è garantito che %s sia il vero domain controller",
-                settings.ldap_url,
+                "Verifica del certificato LDAPS disattivata per %s: non è garantito che sia "
+                "il vero domain controller",
+                config.url,
             )
 
     def _server(self) -> Server:
-        s = self.settings
-        usa_ssl = s.ldap_url.lower().startswith("ldaps://")
+        c = self.config
+        usa_ssl = c.url.lower().startswith("ldaps://")
         tls = None
-        if usa_ssl and not s.ldap_verifica_certificato:
+        if usa_ssl and not c.verifica_certificato:
             tls = Tls(validate=ssl.CERT_NONE)
         elif usa_ssl:
-            # CA dell'ente se montata (ConfigMap ldap-ca), altrimenti quelle di sistema
-            ca = s.ldap_ca_cert if s.ldap_ca_cert and os.path.isfile(s.ldap_ca_cert) else None
-            tls = Tls(validate=ssl.CERT_REQUIRED, ca_certs_file=ca)
-        return Server(
-            s.ldap_url, use_ssl=usa_ssl, tls=tls, get_info=NONE, connect_timeout=s.ldap_timeout
-        )
+            # CA dell'ente se indicata, altrimenti quelle di sistema
+            tls = Tls(validate=ssl.CERT_REQUIRED, ca_certs_data=c.ca_pem)
+        return Server(c.url, use_ssl=usa_ssl, tls=tls, get_info=NONE, connect_timeout=c.timeout)
 
     def _bind(self, username: str, password: str) -> Connection | None:
-        log.debug(
-            "Bind LDAP su %s come %s@%s",
-            self.settings.ldap_url,
-            username,
-            self.settings.ldap_dominio,
-        )
+        log.debug("Bind LDAP su %s come %s@%s", self.config.url, username, self.config.dominio)
         conn = Connection(
             self._server(),
-            user=f"{username}@{self.settings.ldap_dominio}",
+            user=f"{username}@{self.config.dominio}",
             password=password,
             authentication=SIMPLE,
             read_only=True,
-            receive_timeout=self.settings.ldap_timeout,
+            receive_timeout=self.config.timeout,
             raise_exceptions=False,
         )
         if conn.bind():
@@ -135,7 +156,7 @@ class LdapAuthenticator:
         try:
             conn = self._bind(username, password)
         except LDAPException:
-            log.exception("Errore di connessione al server LDAP")
+            log.exception("Errore di connessione al server LDAP %s", self.config.url)
             raise
         if conn is None:
             log.info("Login fallito per %s", username)
@@ -145,12 +166,10 @@ class LdapAuthenticator:
                 "(&(objectCategory=person)(objectClass=user)"
                 f"(sAMAccountName={escape_filter_chars(username)}))"
             )
-            conn.search(self.settings.ldap_base_dn, filtro, attributes=_ATTRIBUTI, size_limit=1)
+            conn.search(self.config.base_dn, filtro, attributes=_ATTRIBUTI, size_limit=1)
             if not conn.entries:
                 log.warning(
-                    "Bind riuscito ma utente %s non trovato in %s",
-                    username,
-                    self.settings.ldap_base_dn,
+                    "Bind riuscito ma utente %s non trovato in %s", username, self.config.base_dn
                 )
                 return UtenteAD(username=username.lower())
             attr = conn.entries[0].entry_attributes_as_dict

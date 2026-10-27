@@ -18,6 +18,8 @@ RUN pip install -r api/requirements.txt && rm -rf /deps
 WORKDIR /app
 COPY common/ /app/common/
 COPY api/src/ /app/
+# creazione di enti e amministratori: kubectl exec deploy/api -- python enti.py ...
+COPY deploy/enti.py /app/enti.py
 ENV PYTHONPATH=/app
 
 RUN useradd --system --uid 10001 app \

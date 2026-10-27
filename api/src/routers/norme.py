@@ -8,7 +8,7 @@ from flask import Blueprint
 from pydantic import BaseModel, model_validator
 from sqlalchemy import or_, select
 
-from deps import audit, autenticato, db, impostazioni, risorse, solo_admin, utente
+from deps import audit, autenticato, db, ente, ente_id, impostazioni, risorse, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, corpo, nessun_contenuto, out, parametri
 from common.libreria import articolo_alla_data, assicura_atto, scarica_testo, trova_partizione
@@ -21,7 +21,7 @@ from common.normattiva import (
     Urn,
 )
 from common.normattiva.citazioni import citazione_riferimento
-from common.normattiva.urn import e_manuale
+from common.normattiva.urn import AUTORITA_LOCALE, e_manuale
 
 bp = Blueprint("norme", __name__, url_prefix="/api/v1")
 
@@ -41,10 +41,14 @@ def _errore_normattiva(e: Exception) -> ErroreApi:
 
 
 def _urn(valore: str) -> Urn:
+    """URN richiesta: le norme manuali sono visibili solo all'ente che le ha inserite."""
     try:
-        return Urn.parse(valore)
+        u = Urn.parse(valore)
     except ValueError as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
+    if e_manuale(u.atto) and u.autorita != f"{AUTORITA_LOCALE}.{ente().codice}":
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Norma non trovata")
+    return u
 
 
 # --- Tipologie -----------------------------------------------------------------------
@@ -104,7 +108,11 @@ class FiltroTesto(BaseModel):
 @autenticato()
 async def elenco_norme():
     q = parametri(FiltroTesto).q
-    query = select(NormaAtto).order_by(NormaAtto.data_provvedimento.desc())
+    query = (
+        select(NormaAtto)
+        .where(or_(NormaAtto.ente_id.is_(None), NormaAtto.ente_id == ente_id()))
+        .order_by(NormaAtto.data_provvedimento.desc())
+    )
     if q:
         filtro = f"%{q}%"
         query = query.where(or_(NormaAtto.citazione.like(filtro), NormaAtto.titolo.like(filtro)))
@@ -274,7 +282,10 @@ async def elenco_riferimenti():
     filtro = parametri(FiltroRiferimenti)
     query = (
         select(Riferimento)
-        .where(or_(Riferimento.owner_id.is_(None), Riferimento.owner_id == utente().id))
+        .where(
+            Riferimento.ente_id == ente_id(),
+            or_(Riferimento.owner_id.is_(None), Riferimento.owner_id == utente().id),
+        )
         .order_by(Riferimento.urn_atto, Riferimento.articolo)
     )
     if filtro.q:
@@ -292,7 +303,7 @@ async def elenco_riferimenti():
 async def crea_riferimento():
     dati = corpo(RiferimentoIn)
     user = utente()
-    if dati.condiviso and not user.ha_ruolo(Ruolo.ADMIN):
+    if dati.condiviso and not (user.installazione or user.ha_ruolo(Ruolo.ADMIN)):
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Solo un ADMIN può condividere riferimenti")
     urn = _urn(dati.urn_atto)
     oggi = datetime.now(impostazioni().tz).date()
@@ -312,6 +323,7 @@ async def crea_riferimento():
             "Comma o lettera non presenti nel testo vigente dell'articolo",
         )
     rif = Riferimento(
+        ente_id=ente_id(),
         urn_atto=urn.atto,
         articolo=dati.articolo,
         comma=dati.comma,
@@ -341,10 +353,10 @@ async def elimina_riferimento(rif_id: str):
     sessione = db()
     user = utente()
     rif = await sessione.get(Riferimento, rif_id)
-    if rif is None:
+    if rif is None or rif.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND)
     proprio = rif.owner_id == user.id
-    if not proprio and not user.ha_ruolo(Ruolo.ADMIN):
+    if not proprio and not (user.installazione or user.ha_ruolo(Ruolo.ADMIN)):
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Riferimento non modificabile")
     await sessione.delete(rif)
     audit(sessione, user, "riferimento", rif_id, "ELIMINATO")

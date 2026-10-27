@@ -24,7 +24,7 @@ sys.path[:0] = [str(RADICE), str(RADICE / "api" / "src")]
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
 from common.config import Settings  # noqa: E402
-from common.models import Base  # noqa: E402
+from common.models import Base, Ente, Modulo  # noqa: E402
 from common.pacchetti import da_cartella, importa, leggi_pacchetto  # noqa: E402
 
 
@@ -42,7 +42,11 @@ class EditorApi(unittest.TestCase):
             async with motore.begin() as c:
                 await c.run_sync(Base.metadata.create_all)
             async with AsyncSession(motore) as db:
-                await importa(db, leggi_pacchetto(da_cartella(RADICE / "pacchetto")))
+                # ente dell'uso senza login (AUTH_ENABLED=false): codice "locale"
+                ente = Ente(codice="locale", nome="Ente", moduli_json=list(Modulo.TUTTI), dati_json={})
+                db.add(ente)
+                await db.flush()
+                await importa(db, ente.id, leggi_pacchetto(da_cartella(RADICE / "pacchetto")))
                 await db.commit()
             await motore.dispose()
 

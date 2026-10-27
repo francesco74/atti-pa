@@ -10,9 +10,13 @@ COOKIE = "atti_pa_token"
 
 
 def crea_token(user: User, settings: Settings) -> str:
+    """Token della sessione: l'ente vi è scritto, così i dati non dipendono dal dominio della
+    richiesta; la versione permette di revocare le sessioni (cambio password, disattivazione)."""
     ora = datetime.now(UTC)
     payload = {
         "sub": user.id,
+        "ente": user.ente_id,
+        "tv": user.token_version or 0,
         "username": user.username,
         "ruoli": user.ruoli,
         "iat": ora,

@@ -140,14 +140,26 @@ def impronta_checklist(dati: ChecklistNuovaIn) -> str:
 # --- coerenza --------------------------------------------------------------------------------
 
 
-async def controlla_coerenza(db: AsyncSession) -> list[str]:
+async def controlla_coerenza(db: AsyncSession, ente_id: str) -> list[str]:
     """Ogni tipologia con modelli ha la sua scheda generica, ogni modello e ogni specificità
     la propria; ogni scheda di modello o di specificità rimanda a qualcosa che esiste."""
-    modelli = (await db.scalars(select(ModelloAtto).where(ModelloAtto.attivo.is_(True)))).all()
-    moduli = (
-        await db.scalars(select(ModuloDiRegole).where(ModuloDiRegole.attivo.is_(True)))
+    modelli = (
+        await db.scalars(
+            select(ModelloAtto).where(ModelloAtto.ente_id == ente_id, ModelloAtto.attivo.is_(True))
+        )
     ).all()
-    schede = (await db.scalars(select(Checklist).where(Checklist.attiva.is_(True)))).all()
+    moduli = (
+        await db.scalars(
+            select(ModuloDiRegole).where(
+                ModuloDiRegole.ente_id == ente_id, ModuloDiRegole.attivo.is_(True)
+            )
+        )
+    ).all()
+    schede = (
+        await db.scalars(
+            select(Checklist).where(Checklist.ente_id == ente_id, Checklist.attiva.is_(True))
+        )
+    ).all()
     generiche = {c.tipologia_atto for c in schede if not c.modello and not c.modulo}
     di_modello = {c.modello for c in schede if c.modello}
     di_modulo = {c.modulo for c in schede if c.modulo}

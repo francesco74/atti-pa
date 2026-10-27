@@ -219,6 +219,7 @@ class Worker:
                     verifica.data_riferimento,
                     schede,
                     self.settings,
+                    ente_id=verifica.ente_id,
                 )
                 verifica.esito_riferimenti = risultato.esito_riferimenti()
                 verifica.esito_automatico = risultato.checklist

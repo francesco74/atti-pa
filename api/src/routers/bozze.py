@@ -21,7 +21,7 @@ from composizione import (
     documento_odt_con_omissis,
     valuta,
 )
-from deps import audit, db, impostazioni, redattore, risorse, utente
+from deps import audit, db, ente_id, impostazioni, redattore, risorse, utente
 from documenti import DocumentiError
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common.dati_personali import DatiPersonaliNonDisponibili, StatoDatiPersonali
@@ -82,7 +82,7 @@ def _sintesi(b: Bozza) -> dict:
 
 async def _bozza_propria(sessione, bozza_id: str) -> Bozza:
     bozza = await sessione.get(Bozza, bozza_id)
-    if bozza is None or bozza.owner_id != utente().id:
+    if bozza is None or bozza.owner_id != utente().id or bozza.ente_id != ente_id():
         # stessa risposta per inesistente e altrui: non si rivela l'esistenza di atti di altri
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Bozza non trovata")
     return bozza
@@ -133,7 +133,11 @@ def _riferimenti(dati: list[RiferimentoBozza]) -> list[dict]:
 @redattore
 async def elenco():
     q = parametri(FiltroBozze).q
-    query = select(Bozza).where(Bozza.owner_id == utente().id).order_by(Bozza.updated_at.desc())
+    query = (
+        select(Bozza)
+        .where(Bozza.ente_id == ente_id(), Bozza.owner_id == utente().id)
+        .order_by(Bozza.updated_at.desc())
+    )
     if q:
         query = query.where(Bozza.oggetto.like(f"%{q}%"))
     return [_sintesi(b) for b in (await db().scalars(query)).unique().all()]
@@ -145,9 +149,10 @@ async def crea():
     dati = corpo(BozzaNuova)
     sessione = db()
     modello = await sessione.get(ModelloAtto, dati.modello_id)
-    if modello is None or not modello.attivo:
+    if modello is None or not modello.attivo or modello.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Modello di atto inesistente o non attivo")
     bozza = Bozza(
+        ente_id=ente_id(),
         owner_id=utente().id,
         modello_id=modello.id,
         modello=modello,
@@ -244,7 +249,9 @@ async def controllo_rapido(bozza_id: str):
         "campi_obbligatori_mancanti": mancanti,
         "blocchi": riepilogo["blocchi"],
         "segnaposto": segnaposto_non_compilati(testo),
-        "riferimenti": await verifica_riferimenti(sessione, risorse().normattiva, testo, giorno),
+        "riferimenti": await verifica_riferimenti(
+            sessione, risorse().normattiva, testo, giorno, ente_id()
+        ),
         # i dati personali li rileva il modello: nella verifica completa, non qui
         "dati_personali": [],
         "dati_personali_stato": StatoDatiPersonali.NON_VALUTATI,
@@ -271,7 +278,7 @@ async def documento(bozza_id: str):
     sessione = db()
     bozza = await _bozza_propria(sessione, bozza_id)
     valutazione = await valuta(sessione, bozza, utente())
-    carta = await carta_intestata(sessione)
+    carta = await carta_intestata(sessione, bozza.ente_id)
     try:
         odt = (
             await documento_odt_con_omissis(

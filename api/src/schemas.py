@@ -16,3 +16,5 @@ class UtenteOut(Schema):
     decreto_incarico: str | None
     ruoli: list[str]
     ultimo_accesso: datetime | None = None
+    origine: str = "LDAP"
+    ente_id: str | None = None

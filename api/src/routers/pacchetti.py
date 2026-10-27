@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import undefer
 
-from deps import audit, db, impostazioni, solo_admin, utente
+from deps import audit, db, ente_id, impostazioni, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto, out
 from common.models import PacchettoImportato
@@ -51,7 +51,9 @@ class DecisioniIn(BaseModel):
 @solo_admin
 async def elenco():
     righe = await db().scalars(
-        select(PacchettoImportato).order_by(PacchettoImportato.created_at.desc())
+        select(PacchettoImportato)
+        .where(PacchettoImportato.ente_id == ente_id())
+        .order_by(PacchettoImportato.created_at.desc())
     )
     return out(PacchettoOut, righe.all())
 
@@ -70,8 +72,9 @@ async def carica():
     except PacchettoNonValido as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
     sessione = db()
-    voci = await analizza(sessione, pacchetto)
+    voci = await analizza(sessione, ente_id(), pacchetto)
     riga = PacchettoImportato(
+        ente_id=ente_id(),
         nome=pacchetto.manifesto.nome,
         versione=pacchetto.manifesto.versione,
         descrizione=pacchetto.manifesto.descrizione,
@@ -97,7 +100,7 @@ async def importa_pacchetto(pacchetto_id: str):
     sessione = db()
     riga = await sessione.scalar(
         select(PacchettoImportato)
-        .where(PacchettoImportato.id == pacchetto_id)
+        .where(PacchettoImportato.id == pacchetto_id, PacchettoImportato.ente_id == ente_id())
         .options(undefer(PacchettoImportato.contenuto))
     )
     if riga is None:
@@ -108,7 +111,7 @@ async def importa_pacchetto(pacchetto_id: str):
         pacchetto = leggi_pacchetto(da_zip(riga.contenuto))
     except PacchettoNonValido as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
-    resoconto = await importa(sessione, pacchetto, dati.decisioni, utente().id)
+    resoconto = await importa(sessione, ente_id(), pacchetto, dati.decisioni, utente().id)
     riga.stato = "IMPORTATO"
     riga.resoconto_json = resoconto.come_dict()
     riga.importato_il = func.now()
@@ -127,7 +130,7 @@ async def importa_pacchetto(pacchetto_id: str):
 async def annulla(pacchetto_id: str):
     sessione = db()
     riga = await sessione.get(PacchettoImportato, pacchetto_id)
-    if riga is None:
+    if riga is None or riga.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Pacchetto non trovato")
     if riga.stato == "ANALIZZATO":
         riga.stato = "ANNULLATO"
@@ -141,6 +144,6 @@ async def annulla(pacchetto_id: str):
 async def esporta_configurazione():
     """Tutti i modelli, le specificità e le checklist attivi, come pacchetto zip."""
     oggi = datetime.now(impostazioni().tz)
-    file = await esporta(db(), "Configurazione dell'ente", oggi.strftime("%Y-%m-%d.%H%M"))
+    file = await esporta(db(), ente_id(), "Configurazione dell'ente", oggi.strftime("%Y-%m-%d.%H%M"))
     nome = f"atti-pa-configurazione-{oggi:%Y%m%d-%H%M}.zip"
     return allegato(in_zip(file), "application/zip", nome)

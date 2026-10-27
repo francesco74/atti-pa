@@ -52,6 +52,7 @@ jobs:
         run: |
           python test_editor_api.py
           python test_verbale_api.py
+          python test_multi_ente_api.py
       - name: Pacchetto standard
         run: |
           python deploy/pacchetto.py prova

@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import undefer
 
-from deps import audit, db, gestore_modelli, redattore, solo_admin, utente
+from deps import audit, db, ente_id, gestore_modelli, redattore, solo_admin, utente
 from schemas import Schema
 from web import ErroreApi, corpo, nessun_contenuto, out, parametri
 from common.configurazione import ChecklistNuovaIn, checklist_in
@@ -75,7 +75,9 @@ def _classe(tipo: Tipo):
 async def _bozza(sessione, tipo: Tipo, codice: str) -> BozzaConfigurazione | None:
     return await sessione.scalar(
         select(BozzaConfigurazione).where(
-            BozzaConfigurazione.tipo == tipo, BozzaConfigurazione.codice == codice
+            BozzaConfigurazione.ente_id == ente_id(),
+            BozzaConfigurazione.tipo == tipo,
+            BozzaConfigurazione.codice == codice,
         )
     )
 
@@ -141,13 +143,17 @@ async def elenco():
     sessione = db()
     bozze = {
         (b.tipo, b.codice): b
-        for b in (await sessione.scalars(select(BozzaConfigurazione))).all()
+        for b in (
+            await sessione.scalars(
+                select(BozzaConfigurazione).where(BozzaConfigurazione.ente_id == ente_id())
+            )
+        ).all()
     }
     proposte = dict(
         (
             await sessione.execute(
                 select(PropostaModello.modello, func.count())
-                .where(PropostaModello.stato == "APERTA")
+                .where(PropostaModello.ente_id == ente_id(), PropostaModello.stato == "APERTA")
                 .group_by(PropostaModello.modello)
             )
         ).all()
@@ -173,7 +179,11 @@ async def elenco():
 
     async def ultime(classe, attivo, ordine):
         """Per ogni codice la versione attiva o, se disattivato, l'ultima."""
-        righe = (await sessione.scalars(select(classe).order_by(classe.versione.desc()))).all()
+        righe = (
+            await sessione.scalars(
+                select(classe).where(classe.ente_id == ente_id()).order_by(classe.versione.desc())
+            )
+        ).all()
         scelte: dict = {}
         for r in righe:
             if r.codice not in scelte or (getattr(r, attivo) and not getattr(scelte[r.codice], attivo)):
@@ -227,7 +237,7 @@ async def _contesto(sessione, tipo: Tipo) -> dict:
     for m in (
         await sessione.scalars(
             select(ModelloAtto)
-            .where(ModelloAtto.attivo.is_(True))
+            .where(ModelloAtto.ente_id == ente_id(), ModelloAtto.attivo.is_(True))
             .options(undefer(ModelloAtto.sorgente))
         )
     ).all():
@@ -252,7 +262,11 @@ async def _contesto(sessione, tipo: Tipo) -> dict:
             "capoversi": capoversi_del_modulo(m.definizione_json or {}),
         }
         for m in (
-            await sessione.scalars(select(ModuloDiRegole).where(ModuloDiRegole.attivo.is_(True)))
+            await sessione.scalars(
+                select(ModuloDiRegole).where(
+                    ModuloDiRegole.ente_id == ente_id(), ModuloDiRegole.attivo.is_(True)
+                )
+            )
         ).all()
     ]
     return {"tipologie": tipologie, "modelli": modelli, "moduli": moduli}
@@ -264,11 +278,11 @@ async def dettaglio(tipo: str, codice: str):
     """Versione pubblicata, bozza in corso, standard di riferimento e contesto dell'editor."""
     tipo = _tipo(tipo)
     sessione = db()
-    attivo = await versione_attiva(sessione, tipo, codice)
+    attivo = await versione_attiva(sessione, ente_id(), tipo, codice)
     bozza = await _bozza(sessione, tipo, codice)
     stato = _stato(attivo, bozza)
     if attivo is None:
-        attivo = await ultima_versione(sessione, tipo, codice)  # disattivato: l'ultima
+        attivo = await ultima_versione(sessione, ente_id(), tipo, codice)  # disattivato: l'ultima
     if attivo is None and bozza is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
     standard = None
@@ -340,7 +354,7 @@ async def salva_bozza(tipo: str, codice: str):
     sessione = db()
     bozza = await _bozza_mia(sessione, tipo, codice)
     bozza.definizione_json = dati.definizione
-    esito = await controlla(sessione, tipo, codice, dati.definizione)
+    esito = await controlla(sessione, ente_id(), tipo, codice, dati.definizione)
     await sessione.commit()
     return esito
 
@@ -357,13 +371,14 @@ async def prendi_in_carico(tipo: str, codice: str):
     if bozza is not None:
         await _bozza_mia(sessione, tipo, codice)  # già mia, oppure in carico ad altri: 409
         return nessun_contenuto()
-    attivo = await versione_attiva(sessione, tipo, codice)
+    attivo = await versione_attiva(sessione, ente_id(), tipo, codice)
     if attivo is None:
-        if await ultima_versione(sessione, tipo, codice) is not None:
+        if await ultima_versione(sessione, ente_id(), tipo, codice) is not None:
             raise ErroreApi(HTTPStatus.CONFLICT, "L'oggetto è disattivato: riattivalo prima")
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
     sessione.add(
         BozzaConfigurazione(
+            ente_id=ente_id(),
             tipo=tipo,
             codice=codice,
             versione_partenza=attivo.versione,
@@ -398,12 +413,20 @@ async def _dipendenze(sessione, tipo: Tipo, codice: str) -> list[str]:
     if tipo in ("modello", "modulo"):
         campo = Checklist.modello if tipo == "modello" else Checklist.modulo
         for c in (
-            await sessione.scalars(select(Checklist).where(Checklist.attiva.is_(True), campo == codice))
+            await sessione.scalars(
+                select(Checklist).where(
+                    Checklist.ente_id == ente_id(), Checklist.attiva.is_(True), campo == codice
+                )
+            )
         ).all():
             avvisi.append(f"La checklist {c.codice} ({c.titolo}) resta attiva: valuta di disattivarla")
     if tipo == "modello":
         for m in (
-            await sessione.scalars(select(ModuloDiRegole).where(ModuloDiRegole.attivo.is_(True)))
+            await sessione.scalars(
+                select(ModuloDiRegole).where(
+                    ModuloDiRegole.ente_id == ente_id(), ModuloDiRegole.attivo.is_(True)
+                )
+            )
         ).all():
             if codice in ((m.definizione_json or {}).get("modelli") or []):
                 avvisi.append(f"La specificità {m.codice} ({m.etichetta}) indica ancora questo modello")
@@ -421,7 +444,7 @@ async def disattiva(tipo: str, codice: str):
         raise ErroreApi(
             HTTPStatus.CONFLICT, "L'oggetto è in redazione: pubblica o scarta prima la bozza"
         )
-    attivo = await versione_attiva(sessione, tipo, codice)
+    attivo = await versione_attiva(sessione, ente_id(), tipo, codice)
     if attivo is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato o già disattivato")
     if tipo == "checklist":
@@ -431,7 +454,7 @@ async def disattiva(tipo: str, codice: str):
     avvisi = await _dipendenze(sessione, tipo, codice)
     if tipo == "modulo":
         await sessione.flush()
-        avvisi += await ricomponi_modelli(sessione, utente().id)
+        avvisi += await ricomponi_modelli(sessione, ente_id(), utente().id)
     audit(sessione, utente(), tipo, attivo.id, "DISATTIVATA", {"codice": codice})
     await sessione.commit()
     return {"avvisi": avvisi}
@@ -443,9 +466,9 @@ async def riattiva(tipo: str, codice: str):
     """Torna in uso l'ultima versione."""
     tipo = _tipo(tipo)
     sessione = db()
-    if await versione_attiva(sessione, tipo, codice) is not None:
+    if await versione_attiva(sessione, ente_id(), tipo, codice) is not None:
         raise ErroreApi(HTTPStatus.CONFLICT, "L'oggetto è già abilitato")
-    ultima = await ultima_versione(sessione, tipo, codice)
+    ultima = await ultima_versione(sessione, ente_id(), tipo, codice)
     if ultima is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto non trovato")
     if tipo == "checklist":
@@ -455,7 +478,7 @@ async def riattiva(tipo: str, codice: str):
     avvisi = []
     if tipo == "modulo":
         await sessione.flush()
-        avvisi = await ricomponi_modelli(sessione, utente().id)
+        avvisi = await ricomponi_modelli(sessione, ente_id(), utente().id)
     audit(sessione, utente(), tipo, ultima.id, "RIATTIVATA", {"codice": codice})
     await sessione.commit()
     return {"versione": ultima.versione, "avvisi": avvisi}
@@ -468,11 +491,11 @@ async def nuovo(tipo: str):
     tipo = _tipo(tipo)
     dati = corpo(NuovoIn)
     sessione = db()
-    esiste = await ultima_versione(sessione, tipo, dati.codice)
+    esiste = await ultima_versione(sessione, ente_id(), tipo, dati.codice)
     if esiste or await _bozza(sessione, tipo, dati.codice):
         raise ErroreApi(HTTPStatus.CONFLICT, "Codice già usato (anche da un oggetto disattivato)")
     if dati.copia_da:
-        origine = await versione_attiva(sessione, tipo, dati.copia_da)
+        origine = await versione_attiva(sessione, ente_id(), tipo, dati.copia_da)
         if origine is None:
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Oggetto da copiare non trovato")
         definizione = await _definizione_pubblicata(sessione, tipo, origine)
@@ -481,6 +504,7 @@ async def nuovo(tipo: str):
     definizione["codice"] = dati.codice
     sessione.add(
         BozzaConfigurazione(
+            ente_id=ente_id(),
             tipo=tipo, codice=dati.codice, definizione_json=definizione, autore_id=utente().id
         )
     )
@@ -540,7 +564,7 @@ async def scarta_bozza(tipo: str, codice: str):
 @gestore_modelli
 async def controlla_definizione(tipo: str, codice: str):
     tipo = _tipo(tipo)
-    return await controlla(db(), tipo, codice, corpo(DefinizioneIn).definizione)
+    return await controlla(db(), ente_id(), tipo, codice, corpo(DefinizioneIn).definizione)
 
 
 @bp.post("/configurazione/<tipo>/<codice>/anteprima")
@@ -553,7 +577,7 @@ async def anteprima_definizione(tipo: str, codice: str):
         )
     dati = corpo(AnteprimaIn)
     try:
-        return await anteprima(db(), tipo, dati.definizione, dati.risposte, dati.modello)
+        return await anteprima(db(), ente_id(), tipo, dati.definizione, dati.risposte, dati.modello)
     except ModelloNonValido as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "; ".join(e.errori[:5])) from e
     except ValueError as e:
@@ -567,7 +591,7 @@ async def confronta_definizione(tipo: str, codice: str):
     tipo = _tipo(tipo)
     dati = corpo(ConfrontoIn)
     sessione = db()
-    attivo = await versione_attiva(sessione, tipo, codice)
+    attivo = await versione_attiva(sessione, ente_id(), tipo, codice)
     prima = None
     if attivo is not None:
         if dati.con == "pubblicata":
@@ -608,13 +632,13 @@ async def pubblica(tipo: str, codice: str):
     bozza = await _bozza(sessione, tipo, codice)
     if bozza is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Nessuna bozza da pubblicare")
-    esito = await controlla(sessione, tipo, codice, bozza.definizione_json)
+    esito = await controlla(sessione, ente_id(), tipo, codice, bozza.definizione_json)
     if esito["errori"]:
         raise ErroreApi(
             HTTPStatus.UNPROCESSABLE_ENTITY,
             "La bozza contiene errori: " + "; ".join(esito["errori"][:5]),
         )
-    attivo = await versione_attiva(sessione, tipo, codice)
+    attivo = await versione_attiva(sessione, ente_id(), tipo, codice)
     partenza = bozza.versione_partenza
     if attivo is not None and partenza and attivo.versione != partenza:
         raise ErroreApi(
@@ -627,13 +651,13 @@ async def pubblica(tipo: str, codice: str):
     user = utente()
     try:
         if tipo == "modello":
-            nuovo_obj = await salva_modello(sessione, sorgente, base, user.id)
+            nuovo_obj = await salva_modello(sessione, ente_id(), sorgente, base, user.id)
         elif tipo == "modulo":
-            nuovo_obj = await salva_modulo(sessione, sorgente, base, user.id)
-            esito["avvisi"] += await ricomponi_modelli(sessione, user.id)
+            nuovo_obj = await salva_modulo(sessione, ente_id(), sorgente, base, user.id)
+            esito["avvisi"] += await ricomponi_modelli(sessione, ente_id(), user.id)
         else:
             nuovo_obj = await salva_checklist(
-                sessione, ChecklistNuovaIn.model_validate(bozza.definizione_json), base, user.id
+                sessione, ente_id(), ChecklistNuovaIn.model_validate(bozza.definizione_json), base, user.id
             )
     except (ModelloNonValido, ValueError) as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
@@ -662,7 +686,9 @@ async def storico(tipo: str, codice: str):
     classe = _classe(tipo)
     versioni = (
         await sessione.scalars(
-            select(classe).where(classe.codice == codice).order_by(classe.versione.desc())
+            select(classe)
+            .where(classe.ente_id == ente_id(), classe.codice == codice)
+            .order_by(classe.versione.desc())
         )
     ).all()
     autori = {}
@@ -727,7 +753,7 @@ async def proponi():
     """Chi scrive un atto propone la modifica di un capoverso del modello."""
     dati = corpo(PropostaIn)
     sessione = db()
-    p = PropostaModello(**dati.model_dump(), autore_id=utente().id)
+    p = PropostaModello(**dati.model_dump(), ente_id=ente_id(), autore_id=utente().id)
     sessione.add(p)
     await sessione.flush()
     audit(
@@ -743,7 +769,11 @@ async def proponi():
 @gestore_modelli
 async def elenco_proposte():
     filtro = parametri(FiltroProposte)
-    query = select(PropostaModello).order_by(PropostaModello.created_at.desc())
+    query = (
+        select(PropostaModello)
+        .where(PropostaModello.ente_id == ente_id())
+        .order_by(PropostaModello.created_at.desc())
+    )
     if filtro.modello:
         query = query.where(PropostaModello.modello == filtro.modello)
     if filtro.stato:
@@ -768,7 +798,7 @@ async def gestisci_proposta(proposta_id: str):
     dati = corpo(GestioneIn)
     sessione = db()
     p = await sessione.get(PropostaModello, proposta_id)
-    if p is None:
+    if p is None or p.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Proposta non trovata")
     p.stato = dati.stato
     p.nota_gestione = dati.nota

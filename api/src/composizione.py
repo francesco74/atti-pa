@@ -19,7 +19,7 @@ from common.dati_personali import (
     trova_dati_personali,
 )
 from common.llm import LlmClient
-from common.models import Bozza, ImpostazioniEnte, ModelloAtto, User
+from common.models import Bozza, Ente, ModelloAtto, User
 from common.modelli import DatiBozza, ModelloCompilato, Valutazione, leggi_modello
 from common.odt import compila, nuovo_odt
 
@@ -41,13 +41,9 @@ def modello_compilato(modello: ModelloAtto) -> ModelloCompilato:
     return _COMPILATI[modello.id]
 
 
-async def impostazioni_ente(db) -> ImpostazioniEnte:
-    impostazioni = await db.get(ImpostazioniEnte, 1)
-    if impostazioni is None:
-        impostazioni = ImpostazioniEnte(id=1, dati_json={})
-        db.add(impostazioni)
-        await db.flush()
-    return impostazioni
+async def impostazioni_ente(db, ente_id: str) -> Ente:
+    """Ente con i suoi dati (campi con fonte "ente" dei modelli)."""
+    return await db.get(Ente, ente_id)
 
 
 def profilo(user: User | None) -> dict[str, str | None]:
@@ -64,7 +60,7 @@ def profilo(user: User | None) -> dict[str, str | None]:
 
 async def valuta(db, bozza: Bozza, owner: User | None = None) -> Valutazione:
     owner = owner or await db.get(User, bozza.owner_id)
-    ente = await impostazioni_ente(db)
+    ente = await impostazioni_ente(db, bozza.ente_id)
     personalizzazioni = bozza.personalizzazioni_json or {}
     dati = DatiBozza(
         risposte=bozza.risposte_json or {},
@@ -100,14 +96,12 @@ def data_riferimento(bozza: Bozza, oggi: date) -> date:
     return bozza.data_adozione_prevista or oggi
 
 
-async def carta_intestata(db) -> bytes:
-    impostazioni = await db.scalar(
-        select(ImpostazioniEnte)
-        .where(ImpostazioniEnte.id == 1)
-        .options(undefer(ImpostazioniEnte.carta_intestata))
+async def carta_intestata(db, ente_id: str) -> bytes:
+    ente = await db.scalar(
+        select(Ente).where(Ente.id == ente_id).options(undefer(Ente.carta_intestata))
     )
-    if impostazioni is not None and impostazioni.carta_intestata:
-        return impostazioni.carta_intestata
+    if ente is not None and ente.carta_intestata:
+        return ente.carta_intestata
     return CARTA_PREDEFINITA
 
 

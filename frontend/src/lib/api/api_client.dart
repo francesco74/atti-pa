@@ -133,10 +133,16 @@ class ApiClient {
 
   // --- Autenticazione ---------------------------------------------------------------
 
-  Future<Map<String, dynamic>> login(String username, String password) async {
+  /// Ente del dominio e modi di accesso (locale, Active Directory), senza autenticazione.
+  Future<Map<String, dynamic>> enteDelDominio() async =>
+      await get('/api/v1/auth/ente') as Map<String, dynamic>;
+
+  /// modo: "ldap" (account di dominio) o "locale" (utente dell'app); null = predefinito.
+  Future<Map<String, dynamic>> login(String username, String password, {String? modo}) async {
     final risposta = await post('/api/v1/auth/login', {
       'username': username,
       'password': password,
+      'modo': ?modo,
     }) as Map<String, dynamic>;
     return risposta['utente'] as Map<String, dynamic>;
   }
