@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../util/download.dart';
@@ -8,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../stato/auth_state.dart';
 import 'ente_accesso.dart';
 import 'pacchetti.dart';
+import 'profilo_ente.dart';
+import '../../util/scelta_file.dart';
 
 /// Da dove viene un modello o una checklist: dal pacchetto standard (eventualmente
 /// modificato dall'ente) oppure creato dall'ente.
@@ -17,8 +18,8 @@ String provenienza(Map<String, dynamic> o) => o['pacchetto'] == null
         ? 'standard (${o['pacchetto']})'
         : 'standard modificato dall\'ente';
 
-/// Amministrazione dell'ente: accesso e utenti sempre; dati, pacchetti e aggiornamenti
-/// delle norme se l'ente usa la redazione degli atti.
+/// Amministrazione dell'ente: profilo, accesso e utenti sempre; dati per gli atti, pacchetti
+/// e aggiornamenti delle norme se l'ente usa la redazione degli atti.
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
 
@@ -26,10 +27,11 @@ class AdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final redazione = context.read<AuthState>().utente?.modulo('redazione') ?? false;
     final schede = <(Tab, Widget)>[
+      const (Tab(icon: Icon(Icons.badge_outlined), text: 'Profilo dell\'ente'), ProfiloEntePage()),
       const (Tab(icon: Icon(Icons.login), text: 'Accesso'), AccessoEntePage()),
       const (Tab(icon: Icon(Icons.people_outline), text: 'Utenti'), UtentiEntePage()),
       if (redazione) ...const [
-        (Tab(icon: Icon(Icons.apartment), text: 'Dati dell\'ente'), _ModelliEnte()),
+        (Tab(icon: Icon(Icons.apartment), text: 'Dati per gli atti'), _ModelliEnte()),
         (Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'), PacchettiPage()),
         (Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'), _Aggiornamenti()),
       ],
@@ -104,14 +106,14 @@ class _ModelliEnteState extends State<_ModelliEnte> {
   }
 
   Future<void> _caricaCarta() async {
-    final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: ['odt']);
+    final file = await scegliFile(['odt']);
     if (file == null || !mounted) return;
     try {
       await apiDi(context).postMultipart(
         '/api/v1/ente/carta-intestata',
         campi: {},
         campoFile: 'file',
-        bytes: await file.readAsBytes(),
+        bytes: file.bytes,
         nomeFile: file.name,
       );
       if (mounted) mostraMessaggio(context, 'Carta intestata caricata');

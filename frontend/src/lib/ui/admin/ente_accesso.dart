@@ -6,6 +6,7 @@ const _etichetteRuoli = {
   'REDATTORE': 'Redattore',
   'CONTROLLORE': 'Controllore',
   'GESTORE_MODELLI': 'Gestore dei modelli',
+  'TRASPARENZA': 'Operatore della trasparenza',
   'ADMIN': 'Amministratore dell\'ente',
 };
 
@@ -297,7 +298,9 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
                       obscureText: true,
                       decoration: const InputDecoration(
                         labelText: 'Password iniziale',
-                        helperText: 'Almeno 10 caratteri, con lettere e numeri o simboli',
+                        helperText: 'Almeno 10 caratteri, con lettere e numeri o simboli. '
+                            'L\'utente la cambierà al primo accesso.',
+                        helperMaxLines: 2,
                       ),
                     ),
                   const SizedBox(height: 12),
@@ -366,7 +369,11 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
         content: TextField(
           controller: password,
           obscureText: true,
-          decoration: const InputDecoration(helperText: 'Almeno 10 caratteri; le sessioni aperte dell\'utente si chiudono'),
+          decoration: const InputDecoration(
+            helperText: 'Almeno 10 caratteri. Le sessioni aperte dell\'utente si chiudono e al '
+                'prossimo accesso dovrà sceglierne una propria.',
+            helperMaxLines: 2,
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),

@@ -1,0 +1,208 @@
+# Schema di pubblicazione art. 14 d.lgs. 33/2013 (titolari di incarichi politici,
+# di amministrazione, di direzione o di governo e titolari di incarichi dirigenziali).
+# Fonte: Allegato 1 alla delibera ANAC n. 497/2025.
+
+id: ART_14
+articolo: art. 14
+titolo: Titolari di incarichi politici, di amministrazione, di direzione o di governo e titolari di incarichi dirigenziali
+fonte:
+  delibera: "497/2025"
+  allegato: 1
+
+ambito: autodichiarazione
+ambito_soggettivo: |
+  Soggetti di cui all'art. 2-bis, co. 1 (pubbliche amministrazioni e Autorità amministrative indipendenti) e co. 2
+  (enti pubblici economici, ordini professionali, società in controllo pubblico, associazioni, fondazioni ed enti di
+  diritto privato in controllo pubblico). Per i piccoli comuni ANAC ha previsto semplificazioni (delibere 241/2017 e
+  537/2020). Gli incarichi di amministrazione, direzione o governo a titolo gratuito sono esclusi.
+
+documento:
+  titolo: Personale (Art. 14 d.lgs. 33/2013)
+  sottotitolo: Titolari di incarichi politici, di amministrazione, di direzione o di governo e Dirigenti
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti l'organizzazione e il personale (art. 14 d.lgs.
+    n. 33/2013), si riportano di seguito i dati identificativi, i compensi e le dichiarazioni relative a:
+
+parametri:
+  - id: tipo_soggetto
+    etichetta: Tipologia di titolare
+    opzioni:
+      - valore: POLITICO
+        etichetta: Titolare di incarico politico (es. Sindaco, Assessore, Consigliere)
+        nota: Tutti gli obblighi dell'art. 14, co. 1 sono attivi. La dichiarazione ex art. 20 d.lgs. 39/2013 non è dovuta.
+      - valore: AMMINISTRAZIONE
+        etichetta: Titolare di incarico/carica di amministrazione, direzione o governo (non a titolo gratuito)
+        nota: Tutti gli obblighi dell'art. 14 sono attivi (co. 1-bis). Se l'incarico è a titolo gratuito, l'art. 14 non si applica.
+      - valore: DIRIGENTE_VERTICE
+        etichetta: Dirigente - incarico ex art. 19, co. 3 e 4, d.lgs. 165/2001 (vertice)
+        nota: Tutti gli obblighi dell'art. 14 sono attivi, compresi gli emolumenti complessivi (co. 1-ter).
+      - valore: DIRIGENTE_ALTRO
+        etichetta: Dirigente - incarico diverso da art. 19, co. 3 e 4
+        nota: >-
+          Nelle more del regolamento previsto dall'art. 1, co. 7, d.l. 162/2019, gli obblighi dell'art. 14 sono sospesi,
+          ad eccezione del co. 1-ter (emolumenti complessivi). Resta dovuta la dichiarazione ex art. 20, co. 3, d.lgs. 39/2013.
+      - valore: EQ_CON_DELEGHE
+        etichetta: Elevata qualificazione (EQ) con deleghe o che svolge funzioni dirigenziali
+        nota: >-
+          Nelle more del regolamento previsto dall'art. 1, co. 7, d.l. 162/2019, tutti gli obblighi dell'art. 14 sono
+          sospesi. Resta dovuta la dichiarazione ex art. 20, co. 3, d.lgs. 39/2013.
+      - valore: EQ_SENZA_DELEGHE
+        etichetta: Elevata qualificazione (EQ) senza deleghe e non facente funzioni dirigenziali
+        nota: >-
+          L'art. 14 si applicherebbe solo al curriculum (co. 1-quinquies), ma anche questo obbligo è sospeso nelle more
+          del regolamento previsto dall'art. 1, co. 7, d.l. 162/2019.
+
+_pieno: &pieno {tipo_soggetto: [POLITICO, AMMINISTRAZIONE, DIRIGENTE_VERTICE]}
+_periodo_compenso: &periodo_compenso
+  - {id: tipologia, etichetta: Tipologia, descrizione: Descrizione della carica o dell'incarico, tipo: testo, max_lunghezza: 256, obbligatorio: true}
+  - {id: data_inizio, etichetta: Data inizio, tipo: data, obbligatorio: true}
+  - {id: data_fine, etichetta: Data fine, tipo: data}
+  - {id: compenso, etichetta: Compenso al lordo degli oneri fiscali e contributivi, tipo: importo, obbligatorio: true}
+
+sezioni:
+  - id: SCHEDA
+    titolo: Scheda del titolare dell'incarico
+    collocazione: Personale -> Titolari di incarichi politici, di amministrazione, di direzione o di governo / Titolari di incarichi dirigenziali
+    aggiornamento: tempestivo
+    norme: ["Art. 14, d.lgs. n. 33/2013", "Art. 20, c. 3, d.lgs. n. 39/2013", "Art. 1, c. 7, d.l. n. 162/2019"]
+    ripetibile: false
+    layout: scheda
+    nota: >-
+      Pubblicazione entro 3 mesi dall'elezione, dalla nomina o dal conferimento dell'incarico, e per i tre anni
+      successivi alla cessazione (salvo i dati patrimoniali, pubblicati fino alla cessazione).
+    campi:
+      - {id: nominativo, etichetta: Nominativo, descrizione: Nome e cognome del titolare, tipo: testo, max_lunghezza: 256, obbligatorio: true}
+      - {id: carica, etichetta: Incarico / carica, descrizione: "es. Sindaco, Dirigente Settore Finanze", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+      # Dati identificativi (lett. a e b)
+      - {id: atto_nomina_estremi, etichetta: Atto di nomina o proclamazione - estremi, descrizione: "Dati essenziali, es. n. di protocollo", tipo: testo, max_lunghezza: 256, obbligatorio: true, visibile_se: *pieno}
+      - {id: atto_nomina_data, etichetta: Atto di nomina o proclamazione - data, tipo: data, obbligatorio: true, visibile_se: *pieno}
+      - {id: atto_nomina_link, etichetta: Atto di nomina o proclamazione - link, tipo: url, max_lunghezza: 256, obbligatorio: true, visibile_se: *pieno}
+      - {id: durata, etichetta: "Durata del mandato o dell'incarico (AA,MM)", descrizione: "Anni e mesi, es. 05,00", tipo: decimale, decimali: 2, obbligatorio: true, visibile_se: *pieno}
+      - {id: cv_link, etichetta: Curriculum vitae, descrizione: Link al documento pubblicato nel sito istituzionale, tipo: url, max_lunghezza: 256, obbligatorio: true, visibile_se: *pieno}
+      # Compensi e viaggi (lett. c)
+      - id: compensi
+        etichetta: Compensi di qualsiasi natura connessi all'assunzione della carica/incarico
+        tipo: elenco
+        etichetta_elemento: Periodo
+        visibile_se: *pieno
+        campi:
+          - {id: dal, etichetta: Dal, tipo: data, obbligatorio: true}
+          - {id: al, etichetta: Al, tipo: data, obbligatorio: true}
+          - {id: importo, etichetta: Importo lordo nel periodo, tipo: importo, obbligatorio: true}
+      - id: viaggi
+        etichetta: Importi di viaggi di servizio e missioni pagati con fondi pubblici
+        descrizione: Da pubblicare ogni anno su base semestrale
+        tipo: elenco
+        etichetta_elemento: Anno
+        visibile_se: *pieno
+        campi:
+          - {id: anno, etichetta: Anno, tipo: anno, obbligatorio: true}
+          - {id: semestre_i, etichetta: Importo I semestre, tipo: importo, obbligatorio: true}
+          - {id: semestre_ii, etichetta: Importo II semestre, tipo: importo}
+          - {id: totale, etichetta: Totale annuale, tipo: importo}
+      # Altre cariche e incarichi (lett. d ed e)
+      - {id: cariche, etichetta: Cariche presso enti pubblici e privati e relativo compenso, tipo: elenco, etichetta_elemento: Carica, visibile_se: *pieno, campi: *periodo_compenso}
+      - {id: incarichi, etichetta: Incarichi con oneri a carico della finanza pubblica e relativo compenso, tipo: elenco, etichetta_elemento: Incarico, visibile_se: *pieno, campi: *periodo_compenso}
+      # Inconferibilità e incompatibilità
+      - id: dichiarazione_art20
+        etichetta: Dichiarazione di insussistenza di cause di inconferibilità e incompatibilità (art. 20, co. 3, d.lgs. 39/2013)
+        descrizione: All'atto del conferimento e annualmente per l'incompatibilità
+        tipo: url
+        max_lunghezza: 256
+        obbligatorio: true
+        visibile_se: {tipo_soggetto: [AMMINISTRAZIONE, DIRIGENTE_VERTICE, DIRIGENTE_ALTRO, EQ_CON_DELEGHE]}
+      # Dichiarazioni patrimoniali e reddituali (lett. f)
+      - {id: dichiarazione_patrimoniale, etichetta: Dichiarazione patrimoniale, descrizione: Link al documento firmato o al PDF, tipo: url, max_lunghezza: 256, obbligatorio: true, visibile_se: *pieno}
+      - {id: variazione_patrimoniale, etichetta: Variazioni della dichiarazione patrimoniale, descrizione: Da compilare ogni anno dopo la prima, tipo: url, max_lunghezza: 256, visibile_se: *pieno}
+      - id: dichiarazioni_reddituali
+        etichetta: Dichiarazioni reddituali
+        descrizione: Da replicare per ogni anno
+        tipo: elenco
+        etichetta_elemento: Anno
+        obbligatorio: true
+        visibile_se: *pieno
+        campi:
+          - {id: anno, etichetta: Anno, tipo: anno, obbligatorio: true}
+          - {id: link, etichetta: Link alla dichiarazione dei redditi o al quadro riepilogativo, tipo: url, max_lunghezza: 256, obbligatorio: true}
+      - {id: mancato_consenso_data, etichetta: Data della dichiarazione del titolare sul mancato consenso di coniuge e parenti entro il secondo grado, tipo: data, visibile_se: *pieno}
+      # Emolumenti complessivi (co. 1-ter)
+      - id: emolumenti
+        etichetta: Emolumenti complessivi percepiti a carico della finanza pubblica (co. 1-ter)
+        descrizione: Aggiornamento annuale, non oltre il 30 marzo
+        tipo: elenco
+        etichetta_elemento: Anno
+        obbligatorio: true
+        visibile_se: {tipo_soggetto: [DIRIGENTE_VERTICE, DIRIGENTE_ALTRO]}
+        campi:
+          - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+          - {id: importo, etichetta: Importo complessivo a carico della finanza pubblica, tipo: importo, obbligatorio: true}
+
+note_audit: |
+  TEMPISTICA (regole specifiche):
+  - Dati identificativi, CV, compensi, cariche e incarichi: entro 3 mesi dall'elezione, nomina o conferimento; segnala
+    se la differenza tra _ADOPTION_DATE_ e _PUB_DATE_ supera i 90 giorni.
+  - Importi di viaggi e missioni: aggiornamento semestrale (Semestre I, Semestre II, totale annuale).
+  - Emolumenti complessivi (co. 1-ter): annuale, non oltre il 30 marzo.
+  - Dichiarazioni reddituali: entro 3 mesi e poi annualmente; variazioni patrimoniali: annuali.
+  DURATA DELLA PUBBLICAZIONE E TITOLARI CESSATI (art. 14, co. 2; tabella "Cessati dall'incarico" dello schema):
+  - Stabilisci dal documento se il titolare è cessato e la data di cessazione del mandato o dell'incarico, e
+    confrontala con la data dell'analisi (_DATA_ANALISI_). Se la cessazione non risulta, considera il titolare in
+    carica e non applicare i controlli seguenti; se risulta ma la data non è determinabile, il controllo è "Non
+    valutabile".
+  - Restano pubblicati per TRE ANNI dalla cessazione: dati identificativi e atto di nomina, CV, compensi, cariche
+    presso enti pubblici e privati, incarichi con oneri a carico della finanza pubblica, dichiarazioni ex art. 20
+    d.lgs. 39/2013, dichiarazioni reddituali degli anni precedenti; si aggiungono la dichiarazione reddituale
+    dell'anno della cessazione e la dichiarazione della variazione patrimoniale resa entro tre mesi dalla cessazione.
+    La loro rimozione prima dei tre anni è un rilievo.
+  - Vanno RIMOSSE alla cessazione: la prima dichiarazione patrimoniale del titolare, le variazioni patrimoniali rese
+    durante l'incarico (sostituite da quella di cessazione), le dichiarazioni patrimoniali e reddituali e le
+    variazioni del coniuge non separato e dei parenti entro il secondo grado. Se sono ancora pubblicate dopo la
+    cessazione è un rilievo grave.
+  - OLTRE TRE ANNI dalla cessazione la pubblicazione non è più consentita: se i dati sono ancora pubblicati l'esito è
+    "Negativo". Vanno rimossi dalla sezione e restano accessibili solo con l'accesso civico (art. 14, co. 2, e art. 5
+    d.lgs. 33/2013); mantenerli online contrasta con il principio di limitazione della conservazione (art. 5, par. 1,
+    lett. e), Reg. UE 2016/679).
+  CONIUGE E PARENTI:
+  - Le dichiarazioni di coniuge non separato e parenti entro il secondo grado si pubblicano se vi consentono; in caso
+    contrario va data evidenza del mancato consenso (data della dichiarazione del titolare).
+  FORMATI (previsti dallo schema 497/2025):
+  - Durata del mandato nel formato AA,MM (es. 05,00); testi e URL entro 256 caratteri, non troncati.
+  RISERVATEZZA:
+  - Segnala dati personali eccedenti (codice fiscale, indirizzo di residenza, email o cellulari privati), anche nei CV
+    (§ 9.a Linee guida Garante Privacy, G.U. n. 134 del 12 giugno 2014).
+
+audit:
+  - id: ART_14_POL
+    titolo: titolari di incarichi politici
+    parametri: {tipo_soggetto: [POLITICO]}
+    note: |
+      - I titolari di incarichi politici NON sono tenuti alla dichiarazione ex art. 20 d.lgs. 39/2013.
+      - Sono compresi gli incarichi politici nei comuni e nelle forme associative di enti locali (comunità montane, unioni
+        di comuni, consorzi). Per i piccoli comuni valgono le semplificazioni ANAC (delibere 241/2017 e 537/2020).
+  - id: ART_14_AMM
+    titolo: titolari di incarichi o cariche di amministrazione, direzione o governo
+    parametri: {tipo_soggetto: [AMMINISTRAZIONE]}
+    note: |
+      - Verifica preliminare: se dal documento risulta che l'incarico è A TITOLO GRATUITO, l'art. 14 non si applica:
+        segnalalo e ferma l'analisi. Altrimenti il soggetto è tenuto a tutti gli obblighi dell'art. 14, co. 1.
+      - A differenza dei politici, questi soggetti SONO tenuti alla dichiarazione ex art. 20, co. 3, d.lgs. 39/2013 (al
+        conferimento e annualmente): la sua assenza è un rilievo.
+  - id: ART_14_DIR
+    titolo: titolari di incarichi dirigenziali
+    parametri: {tipo_soggetto: [DIRIGENTE_VERTICE, DIRIGENTE_ALTRO]}
+    note: |
+      - Stabilisci se il dirigente è di vertice (art. 19, co. 3 e 4, d.lgs. 165/2001) dal documento, da _NOTES_ o da
+        _AUTHORITY_FEATURES_. Se non è determinabile, dichiaralo e verifica solo gli obblighi comuni (emolumenti
+        complessivi e dichiarazione art. 20 d.lgs. 39/2013), segnalando che per un dirigente di vertice sarebbero dovuti
+        anche tutti gli altri dati.
+      - Per i dirigenti non di vertice l'assenza dei dati sospesi (atto di nomina, CV, compensi, viaggi, cariche,
+        incarichi, dichiarazioni patrimoniali e reddituali) NON è un rilievo; se pubblicati volontariamente, verificane
+        qualità e formato.
+  - id: ART_14_EQ
+    titolo: titolari di incarichi di elevata qualificazione (EQ)
+    parametri: {tipo_soggetto: [EQ_CON_DELEGHE, EQ_SENZA_DELEGHE]}
+    note: |
+      - Indica chiaramente che gli obblighi dell'art. 14 sono sospesi e che la valutazione dei dati eventualmente
+        pubblicati si basa sulla volontà di trasparenza dell'ente: se presenti, verificane qualità e formato.
+      - Per le EQ con deleghe verifica comunque la dichiarazione ex art. 20 d.lgs. 39/2013, che non è sospesa.
+      - Controlla che il CV, se pubblicato, sia depurato da dati personali eccedenti.

@@ -675,7 +675,7 @@ Chi fornisce il dato:
 | Valore | Significato |
 |---|---|
 | Chi scrive l'atto | il redattore lo compila |
-| Dati dell'ente | preso da Amministrazione → Dati dell'ente (es. nome del Comune) |
+| Dati dell'ente | preso da Amministrazione → Dati per gli atti (es. nome del Comune) |
 | Profilo dell'utente | preso dal profilo di chi scrive (es. settore, decreto di incarico) |
 | Assegnato alla registrazione | numero e data dell'atto, assegnati dopo; non si compila |
 

@@ -32,6 +32,7 @@ GRUPPI_PREDEFINITI = {
     Ruolo.REDATTORE: "ATTI-PA-Redattori",
     Ruolo.CONTROLLORE: "ATTI-PA-Controllori",
     Ruolo.GESTORE_MODELLI: "ATTI-PA-Gestori-Modelli",
+    Ruolo.TRASPARENZA: "ATTI-PA-Trasparenza",
     Ruolo.ADMIN: "ATTI-PA-Admin",
 }
 

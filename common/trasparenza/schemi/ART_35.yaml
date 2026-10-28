@@ -1,0 +1,128 @@
+# Schema di pubblicazione art. 35 d.lgs. 33/2013 (procedimenti amministrativi e
+# controlli sulle dichiarazioni sostitutive). Fonte: Allegato 11 alla delibera ANAC
+# n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_35
+articolo: art. 35
+titolo: Procedimenti amministrativi e controlli sulle dichiarazioni sostitutive
+fonte:
+  delibera: "495/2024"
+  allegato: 11
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni ex art. 1, co. 2, d.lgs. 165/2001 e Autorità amministrative indipendenti; enti pubblici
+  economici, società ed enti di diritto privato in controllo pubblico (art. 2-bis, co. 2) ed enti di cui all'art.
+  2-bis, co. 3, limitatamente ai procedimenti relativi all'attività amministrativa (procedimenti ai sensi della
+  l. 241/1990).
+
+documento:
+  titolo: Tipologie di procedimento e controlli sulle dichiarazioni sostitutive (Art. 35 d.lgs. 33/2013)
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti dall'art. 35 del d.lgs. n. 33/2013, concernenti i
+    procedimenti amministrativi e l'acquisizione d'ufficio dei dati, si riportano di seguito le informazioni e i
+    dati relativi a:
+
+_si_no: &si_no [SI, "NO"]
+
+sezioni:
+  - id: PROCEDIMENTI
+    titolo: Dati sul procedimento (per ciascuna tipologia di procedimento)
+    collocazione: Attività e procedimenti -> Tipologie di procedimento
+    aggiornamento: tempestivo
+    norme: ["Art. 35, c. 1, d.lgs. n. 33/2013", "L. 241/1990"]
+    etichetta_elemento: Procedimento
+    almeno_uno:
+      - [uff_resp_peo, uff_resp_pec]
+      - [uff_finale_peo, uff_finale_pec]
+      - [ist_peo, ist_pec]
+      - [servizio_online_link, servizio_online_tempi]
+      - [sost_peo, sost_pec]
+    campi:
+      - {id: tipologia, etichetta: Tipologia di procedimento, tipo: testo, obbligatorio: true}
+      - {id: denominazione, etichetta: Denominazione del procedimento, tipo: testo, obbligatorio: true}
+      - {id: descrizione, etichetta: Breve descrizione del procedimento, tipo: testo_lungo, obbligatorio: true}
+      - {id: riferimenti_normativi, etichetta: Riferimenti normativi utili, tipo: testo_lungo, obbligatorio: true}
+      - {id: unita_istruttoria, etichetta: Unità organizzativa responsabile dell'istruttoria, tipo: testo, obbligatorio: true}
+      # Ufficio responsabile del procedimento
+      - {id: uff_resp_denom, etichetta: Ufficio responsabile del procedimento, tipo: testo, obbligatorio: true}
+      - {id: uff_resp_tel, etichetta: Ufficio responsabile - recapito telefonico, tipo: telefono, obbligatorio: true}
+      - {id: uff_resp_peo, etichetta: Ufficio responsabile - PEO istituzionale, tipo: email}
+      - {id: uff_resp_pec, etichetta: Ufficio responsabile - PEC istituzionale, tipo: email}
+      # Ufficio competente all'adozione del provvedimento finale, ove diverso
+      - {id: ufficio_finale_diverso, etichetta: "L'ufficio competente all'adozione del provvedimento finale è diverso?", tipo: scelta, opzioni: *si_no, obbligatorio: true}
+      - {id: uff_finale_denom, etichetta: Ufficio competente all'adozione del provvedimento finale, tipo: testo, obbligatorio: true, visibile_se: {ufficio_finale_diverso: [SI]}}
+      - {id: uff_finale_resp, etichetta: Responsabile dell'ufficio competente, tipo: testo, obbligatorio: true, visibile_se: {ufficio_finale_diverso: [SI]}}
+      - {id: uff_finale_tel, etichetta: Ufficio competente - recapito telefonico, tipo: telefono, obbligatorio: true, visibile_se: {ufficio_finale_diverso: [SI]}}
+      - {id: uff_finale_peo, etichetta: Ufficio competente - PEO istituzionale, tipo: email, visibile_se: {ufficio_finale_diverso: [SI]}}
+      - {id: uff_finale_pec, etichetta: Ufficio competente - PEC istituzionale, tipo: email, visibile_se: {ufficio_finale_diverso: [SI]}}
+      # Procedimenti a istanza di parte
+      - {id: istanza_di_parte, etichetta: "Procedimento a istanza di parte?", tipo: scelta, opzioni: *si_no, obbligatorio: true}
+      - {id: ist_ufficio, etichetta: Ufficio cui rivolgersi per informazioni e istanze, tipo: testo, obbligatorio: true, visibile_se: {istanza_di_parte: [SI]}}
+      - {id: ist_indirizzo, etichetta: Indirizzo (sede istituzionale dell'ufficio), tipo: testo, obbligatorio: true, visibile_se: {istanza_di_parte: [SI]}}
+      - {id: ist_telefono, etichetta: Ufficio istanze - recapito telefonico, tipo: telefono, obbligatorio: true, visibile_se: {istanza_di_parte: [SI]}}
+      - {id: ist_peo, etichetta: Ufficio istanze - PEO istituzionale, tipo: email, visibile_se: {istanza_di_parte: [SI]}}
+      - {id: ist_pec, etichetta: Ufficio istanze - PEC istituzionale, tipo: email, visibile_se: {istanza_di_parte: [SI]}}
+      - {id: ist_modulistica, etichetta: Atti e modulistica, descrizione: "Link a atti, documenti, modulistica e fac-simile di autocertificazione", tipo: url, obbligatorio: true, visibile_se: {istanza_di_parte: [SI]}}
+      - id: orari
+        etichetta: Orari di apertura al pubblico
+        tipo: elenco
+        etichetta_elemento: Fascia oraria
+        obbligatorio: true
+        visibile_se: {istanza_di_parte: [SI]}
+        campi:
+          - {id: giorni, etichetta: Giorni, tipo: testo, obbligatorio: true}
+          - {id: ora_inizio, etichetta: Dalle ore, descrizione: "es. 09:00", tipo: testo, obbligatorio: true}
+          - {id: ora_fine, etichetta: Alle ore, descrizione: "es. 12:30", tipo: testo, obbligatorio: true}
+      # Informazioni, termini e tutele
+      - {id: modalita_info, etichetta: Modalità per ottenere informazioni sui procedimenti in corso, tipo: testo_lungo, obbligatorio: true}
+      - {id: termine_conclusione, etichetta: Termine di conclusione e altri termini rilevanti, descrizione: Termine finale e termini endoprocedimentali, tipo: testo, obbligatorio: true}
+      - {id: dichiarazione_sostitutiva, etichetta: Provvedimento sostituibile da dichiarazione dell'interessato, tipo: scelta, opzioni: *si_no, obbligatorio: true}
+      - {id: silenzio_assenso, etichetta: Silenzio assenso, tipo: scelta, opzioni: *si_no, obbligatorio: true}
+      - {id: strumenti_tutela, etichetta: Strumenti di tutela a favore dell'interessato e modi per attivarli, tipo: testo_lungo, obbligatorio: true}
+      - {id: servizio_online_link, etichetta: Link di accesso al servizio online, tipo: url}
+      - {id: servizio_online_tempi, etichetta: Tempi previsti per l'attivazione del servizio online, descrizione: Solo se il servizio online non è ancora disponibile, tipo: testo}
+      - {id: link_pagamenti, etichetta: Modalità per effettuare i pagamenti, descrizione: Link alla sezione con le informazioni sui pagamenti informatici (art. 36), tipo: url}
+      # Potere sostitutivo in caso di inerzia
+      - {id: sost_nominativo, etichetta: Titolare del potere sostitutivo, tipo: testo, obbligatorio: true}
+      - {id: sost_ufficio, etichetta: Ufficio di appartenenza del titolare del potere sostitutivo, tipo: testo, obbligatorio: true}
+      - {id: sost_qualifica, etichetta: Qualifica del titolare del potere sostitutivo, tipo: testo, obbligatorio: true}
+      - {id: sost_tel, etichetta: Potere sostitutivo - recapito telefonico, tipo: telefono, obbligatorio: true}
+      - {id: sost_peo, etichetta: Potere sostitutivo - PEO istituzionale, tipo: email}
+      - {id: sost_pec, etichetta: Potere sostitutivo - PEC istituzionale, tipo: email}
+      - {id: sost_attivazione, etichetta: Modalità per attivare il potere sostitutivo, tipo: testo_lungo, obbligatorio: true}
+
+  - id: DICHIARAZIONI
+    titolo: Ufficio responsabile dei controlli sulle dichiarazioni sostitutive e dell'acquisizione d'ufficio dei dati (art. 35, c. 3)
+    collocazione: Attività e procedimenti -> Dichiarazioni sostitutive e acquisizione d'ufficio dei dati
+    aggiornamento: tempestivo
+    norme: ["Art. 35, c. 3, d.lgs. n. 33/2013", "Artt. 43, 71 e 72, d.P.R. n. 445/2000"]
+    etichetta_elemento: Ufficio
+    nota: Obbligo previsto dalla norma (art. 35, c. 3); lo schema ANAC non predispone un modello di campi dedicato.
+    almeno_uno: [[peo, pec]]
+    campi:
+      - {id: ufficio, etichetta: Ufficio responsabile, tipo: testo, obbligatorio: true}
+      - {id: telefono, etichetta: Recapito telefonico istituzionale, tipo: telefono, obbligatorio: true}
+      - {id: peo, etichetta: PEO istituzionale, tipo: email}
+      - {id: pec, etichetta: PEC istituzionale, tipo: email}
+
+note_audit: |
+  CAMPI DISTINTI:
+  - Tipologia e denominazione del procedimento sono campi distinti; anche breve descrizione e riferimenti normativi
+    sono due campi distinti, entrambi obbligatori: la presenza dell'uno non supplisce all'assenza dell'altro.
+  - L'ufficio competente all'adozione del provvedimento finale va indicato solo se diverso dall'ufficio responsabile
+    del procedimento, con il nome del responsabile e i recapiti.
+  ISTANZE DI PARTE:
+  - Per ogni fascia oraria devono esserci giorno, ora di inizio e ora di fine: verifica presenza e coerenza (fine dopo
+    inizio) senza imporre un formato specifico dell'orario.
+  SERVIZIO ONLINE:
+  - È un obbligo distinto (art. 35, co. 1, lett. i), spesso trascurato: serve il link al servizio online oppure,
+    se non ancora disponibile, i tempi previsti per la sua attivazione.
+  POTERE SOSTITUTIVO:
+  - Servono nominativo, ufficio, qualifica, recapiti e modalità di attivazione: i recapiti sono obbligatori quanto
+    gli altri elementi.
+  MODULISTICA:
+  - L'amministrazione non può richiedere moduli e formulari non pubblicati (art. 35, co. 2).
+  FORMATO EMAIL:
+  - Un indirizzo email in formato non valido è "Parziale".

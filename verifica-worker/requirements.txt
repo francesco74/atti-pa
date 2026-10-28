@@ -1,3 +1,0 @@
-# Dipendenze dell'immagine verifica-worker: solo quelle della libreria comune.
-# Il codice viene da verifica-worker/src e common/src (vedi verifica-worker/Dockerfile).
--r ../common/requirements.txt

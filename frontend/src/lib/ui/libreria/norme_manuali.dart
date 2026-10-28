@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +8,7 @@ import '../../util/download.dart';
 import '../comuni.dart';
 import '../visualizzatore_pdf.dart';
 import 'libreria_page.dart' show ConsultaArticolo;
+import '../../util/scelta_file.dart';
 
 const _base = '/api/v1/norme-manuali';
 
@@ -266,8 +266,8 @@ class _NormeManualiState extends State<NormeManuali> {
 class _SceltaFile extends StatelessWidget {
   const _SceltaFile({required this.file, required this.suScelta});
 
-  final PlatformFile? file;
-  final ValueChanged<PlatformFile> suScelta;
+  final FileScelto? file;
+  final ValueChanged<FileScelto> suScelta;
 
   @override
   Widget build(BuildContext context) {
@@ -277,10 +277,7 @@ class _SceltaFile extends StatelessWidget {
       title: Text(file?.name ?? 'File del testo (PDF, ODT, DOCX o DOC)'),
       trailing: OutlinedButton(
         onPressed: () async {
-          final scelto = await FilePicker.pickFile(
-            type: FileType.custom,
-            allowedExtensions: ['pdf', 'odt', 'docx', 'doc'],
-          );
+          final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc']);
           if (scelto != null) suScelta(scelto);
         },
         child: Text(file == null ? 'Scegli' : 'Cambia'),
@@ -326,7 +323,7 @@ class _NuovaNormaState extends State<_NuovaNorma> {
   String _tipo = 'regolamento';
   DateTime? _data;
   DateTime? _vigenza;
-  PlatformFile? _file;
+  FileScelto? _file;
   bool _invio = false;
 
   @override
@@ -365,7 +362,7 @@ class _NuovaNormaState extends State<_NuovaNorma> {
           'vigenza_inizio': isoData(_vigenza!),
         },
         campoFile: 'file',
-        bytes: await _file!.readAsBytes(),
+        bytes: _file!.bytes,
         nomeFile: _file!.name,
       );
       if (mounted) Navigator.pop(context, true);
@@ -477,7 +474,7 @@ class _NuovoTesto extends StatefulWidget {
 
 class _NuovoTestoState extends State<_NuovoTesto> {
   DateTime? _vigenza;
-  PlatformFile? _file;
+  FileScelto? _file;
   bool _invio = false;
 
   Future<void> _salva() async {
@@ -487,7 +484,7 @@ class _NuovoTestoState extends State<_NuovoTesto> {
         '$_base/testi?urn=${Uri.encodeQueryComponent(widget.norma['urn'] as String)}',
         campi: {'vigenza_inizio': isoData(_vigenza!)},
         campoFile: 'file',
-        bytes: await _file!.readAsBytes(),
+        bytes: _file!.bytes,
         nomeFile: _file!.name,
       );
       if (mounted) Navigator.pop(context, true);

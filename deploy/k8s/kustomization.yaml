@@ -6,7 +6,7 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - api.yaml
-  - verifica-worker.yaml
+  - worker.yaml
   - converter.yaml
   - mysql.yaml
   - rabbitmq.yaml
@@ -35,8 +35,8 @@ images:
   - name: atti-pa/api
     newName: registry.intranet.provincia.lucca/atti.pa/api
     newTag: "0.1.0"
-  - name: atti-pa/verifica-worker
-    newName: registry.intranet.provincia.lucca/atti.pa/verifica-worker
+  - name: atti-pa/worker
+    newName: registry.intranet.provincia.lucca/atti.pa/worker
     newTag: "0.1.0"
   - name: atti-pa/converter
     newName: registry.intranet.provincia.lucca/atti.pa/converter

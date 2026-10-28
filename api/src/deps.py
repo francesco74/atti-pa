@@ -10,7 +10,6 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import current_app, g, request
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from auth.ldap import LdapAuthenticator
@@ -106,8 +105,8 @@ def dominio_richiesta() -> str:
 
 
 async def ente_richiesta() -> Ente | None:
-    """Ente del dominio della richiesta (o ENTE_PREDEFINITO per i domini non registrati, in
-    sviluppo). Serve prima dell'accesso: pagina di login, configurazione pubblica. Dopo
+    """Ente del dominio della richiesta (None se il dominio non è registrato o l'ente è
+    disattivato). Serve prima dell'accesso: pagina di login, configurazione pubblica. Dopo
     l'accesso i dati si filtrano per l'ente scritto nel token."""
     if "ente_dominio" in g:
         return g.ente_dominio
@@ -116,45 +115,16 @@ async def ente_richiesta() -> Ente | None:
     dominio = await sessione.get(EnteDominio, dominio_richiesta())
     if dominio is not None:
         ente = await sessione.get(Ente, dominio.ente_id)
-    elif impostazioni().ente_predefinito:
-        ente = await sessione.scalar(
-            select(Ente).where(Ente.codice == impostazioni().ente_predefinito)
-        )
     if ente is not None and not ente.attivo:
         ente = None
     g.ente_dominio = ente
     return ente
 
 
-async def _ente_e_utente_locale(sessione: AsyncSession) -> tuple[Ente, User]:
-    """Uso personale senza login (AUTH_ENABLED=false): l'ente predefinito (creato se manca)
-    e un utente locale con tutti i ruoli."""
-    codice = impostazioni().ente_predefinito or "locale"
-    ente = await sessione.scalar(select(Ente).where(Ente.codice == codice))
-    if ente is None:
-        ente = Ente(codice=codice, nome="Ente", moduli_json=list(Modulo.TUTTI), dati_json={})
-        sessione.add(ente)
-        await sessione.flush()
-    user = await sessione.scalar(
-        select(User).where(User.ente_id == ente.id, User.username == "locale")
-    )
-    if user is None:
-        user = User(
-            ente_id=ente.id, username="locale", nome_completo="Utente locale",
-            origine="LOCALE", ruoli=list(Ruolo.TUTTI),
-        )  # fmt: skip
-        sessione.add(user)
-    await sessione.commit()
-    return ente, user
-
-
 async def utente_corrente() -> User:
     """Utente della sessione; imposta g.ente (l'ente su cui lavora la richiesta)."""
     settings = impostazioni()
     sessione = db()
-    if not settings.auth_enabled:
-        g.ente, user = await _ente_e_utente_locale(sessione)
-        return user
     token = _token_richiesta()
     if not token:
         log.debug("%s: nessun token (cookie o Authorization)", request.path)
@@ -168,10 +138,6 @@ async def utente_corrente() -> User:
         log.debug("%s: utente %s inesistente, disattivato o sessione revocata", request.path, payload["sub"])
         raise _NON_AUTENTICATO
     ente_dominio = await ente_richiesta()
-    if user.installazione:
-        # l'amministratore dell'installazione lavora sull'ente del dominio (se c'è)
-        g.ente = ente_dominio
-        return user
     # il token vale solo sul dominio del suo ente: un Host falsificato non apre altri enti
     if ente_dominio is None or user.ente_id != ente_dominio.id or payload.get("ente") != user.ente_id:
         log.debug("%s: utente %s fuori dal dominio del suo ente", request.path, user.username)
@@ -196,16 +162,22 @@ def ente_id() -> str:
     return ente().id
 
 
+# viste ammesse finché l'utente non ha cambiato la password iniziale
+_CON_PASSWORD_DA_CAMBIARE = {"auth.me", "auth.cambia_password"}
+
+
 def autenticato(*ruoli: str, modulo: str | None = Modulo.REDAZIONE):
     """Decoratore: richiede un utente autenticato, se indicati uno dei ruoli (ADMIN è sempre
-    ammesso) e il modulo abilitato per l'ente. L'amministratore dell'installazione ha i
-    poteri dell'amministratore sull'ente del dominio."""
+    ammesso) e il modulo abilitato per l'ente. Con la password da cambiare l'utente può solo
+    leggere i propri dati e cambiarla."""
 
     def decoratore(vista):
         @wraps(vista)
         async def protetta(*args, **kwargs):
             user = await utente_corrente()
-            if ruoli and not (user.installazione or user.ha_ruolo(Ruolo.ADMIN, *ruoli)):
+            if user.cambio_password and request.endpoint not in _CON_PASSWORD_DA_CAMBIARE:
+                raise ErroreApi(HTTPStatus.FORBIDDEN, "Cambia la password prima di continuare")
+            if ruoli and not user.ha_ruolo(Ruolo.ADMIN, *ruoli):
                 log.debug("Utente %s senza i ruoli richiesti %s", user.username, ruoli)
                 raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione non consentita")
             if modulo is not None:
@@ -217,20 +189,6 @@ def autenticato(*ruoli: str, modulo: str | None = Modulo.REDAZIONE):
         return protetta
 
     return decoratore
-
-
-def installazione(vista):
-    """Decoratore: solo l'amministratore dell'installazione."""
-
-    @wraps(vista)
-    async def protetta(*args, **kwargs):
-        user = await utente_corrente()
-        if not user.installazione:
-            raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione riservata all'amministratore dell'installazione")
-        g.utente = user
-        return await vista(*args, **kwargs)
-
-    return protetta
 
 
 solo_admin = autenticato(Ruolo.ADMIN)

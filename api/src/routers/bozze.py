@@ -22,7 +22,7 @@ from composizione import (
     valuta,
 )
 from deps import audit, db, ente_id, impostazioni, redattore, risorse, utente
-from documenti import DocumentiError
+from common.documenti import DocumentiError
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common.dati_personali import DatiPersonaliNonDisponibili, StatoDatiPersonali
 from common.llm import LlmError, espandi_appunti

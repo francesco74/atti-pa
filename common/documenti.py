@@ -1,11 +1,12 @@
-"""Client del servizio interno di conversione documenti."""
+"""Client del servizio interno di conversione documenti (converter): conversione di formato
+con LibreOffice e testo in Markdown di un documento (PDF, ODT, DOCX, DOC, RTF)."""
 
 import logging
 import time
 
 import httpx
 
-log = logging.getLogger("atti_api.documenti")
+log = logging.getLogger("common.documenti")
 
 
 class DocumentiError(Exception):
@@ -37,3 +38,13 @@ class DocumentiClient:
             len(r.content),
         )
         return r.content
+
+    async def markdown(self, contenuto: bytes, nome_file: str) -> str:
+        """Testo del documento in Markdown (per l'LLM)."""
+        try:
+            r = await self._http.post("/markdown", files={"file": (nome_file, contenuto)})
+        except httpx.HTTPError as e:
+            raise DocumentiError(f"Servizio documenti non raggiungibile: {e}") from e
+        if r.status_code != 200:
+            raise DocumentiError(f"Testo di {nome_file} non estratto ({r.status_code}): {r.text[:200]}")
+        return r.json()["markdown"]

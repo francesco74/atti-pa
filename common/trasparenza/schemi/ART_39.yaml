@@ -1,0 +1,91 @@
+# Schema di pubblicazione art. 39 d.lgs. 33/2013 (pianificazione e governo del
+# territorio). Fonte: Allegato 13 alla delibera ANAC n. 495/2024 (versione
+# aggiornata al 10.06.2026).
+
+id: ART_39
+articolo: art. 39
+titolo: Pianificazione e governo del territorio
+fonte:
+  delibera: "495/2024"
+  allegato: 13
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Enti territoriali (Regioni, Città metropolitane, Province, Comuni, Comunità montane), loro consorzi e associazioni, e
+  altre amministrazioni procedenti i cui atti producono effetti di variante ai piani vigenti.
+
+documento:
+  titolo: Pianificazione e governo del territorio (Art. 39 d.lgs. 33/2013)
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti dall'art. 39 del d.lgs. n. 33/2013, si riportano di seguito
+    i dati, i riferimenti normativi e i documenti relativi agli atti di governo del territorio e/o ai procedimenti di
+    trasformazione urbanistica dell'ente:
+
+sezioni:
+  - id: PIANI
+    titolo: Piani ed eventuali varianti (atti di governo del territorio)
+    collocazione: Pianificazione e governo del territorio -> Piani ed eventuali varianti
+    aggiornamento: tempestivo
+    norme: ["Art. 39, c. 1, d.lgs. n. 33/2013", "Delibera ANAC 800/2021"]
+    etichetta_elemento: Atto
+    nota: >-
+      Solo atti definitivamente approvati (strumenti urbanistici generali e di attuazione, piani territoriali, di
+      coordinamento, paesistici, e varianti). La pubblicazione è condizione legale di efficacia; i piani restano
+      pubblicati finché producono effetti (non si applica il limite di 5 anni).
+    campi:
+      - {id: tipo_atto_oggetto, etichetta: Tipo di atto e oggetto, descrizione: "es. delibera di approvazione del PGT o della variante", tipo: testo_lungo, obbligatorio: true}
+      - {id: data_approvazione, etichetta: Data di approvazione definitiva, tipo: data, obbligatorio: true}
+      - {id: link_atto, etichetta: Link al documento pubblicato, tipo: url, obbligatorio: true}
+
+  - id: PROCEDIMENTI
+    titolo: Procedimenti finalizzati all'adozione di varianti e trasformazioni urbanistiche che assegnano diritti edificatori
+    collocazione: Pianificazione e governo del territorio -> Procedimenti di variante e trasformazione urbanistica
+    aggiornamento: tempestivo
+    norme: ["Art. 39, c. 2, d.lgs. n. 33/2013", "Delibera ANAC 800/2021"]
+    etichetta_elemento: Procedimento
+    layout: scheda
+    nota: >-
+      Varianti e proposte di trasformazione che comportano diritti edificatori (trasferimento di cubatura, perequazione,
+      compensazione e altre premialità edilizie). Tutta la documentazione dell'iter va pubblicata insieme, nella stessa
+      pagina o allo stesso link della delibera di approvazione definitiva, sin dalla presentazione delle proposte.
+    campi:
+      - {id: descrizione_variante, etichetta: Tipo di atto e oggetto, descrizione: "Luogo interessato, tipo di intervento, strumento di programmazione su cui si interviene", tipo: testo_lungo, obbligatorio: true}
+      - {id: identificativo_atto, etichetta: Delibera di adozione - numero, tipo: testo, obbligatorio: true}
+      - {id: data_approvazione_pubblicazione, etichetta: Delibera di adozione - data di approvazione definitiva e di pubblicazione, tipo: data, obbligatorio: true}
+      - {id: link_delibera_adozione, etichetta: Delibera di adozione - link al documento, tipo: url, obbligatorio: true}
+      - {id: link_avviso, etichetta: Avviso/invito a presentare proposte - link, tipo: url, obbligatorio: true}
+      - {id: modalita_presentazione, etichetta: Modalità di presentazione delle proposte, tipo: scelta, opzioni: [Trasmissione online (PEC), A mano e protocollata, Altro], obbligatorio: true}
+      - {id: termine_trasmissione, etichetta: Termine ultimo per la trasmissione delle proposte, tipo: data, obbligatorio: true}
+      - id: proposte
+        etichetta: Proposte ricevute
+        tipo: elenco
+        etichetta_elemento: Proposta
+        campi:
+          - {id: soggetto, etichetta: Soggetto proponente, tipo: scelta, opzioni: [Privato cittadino, Società, Impresa], obbligatorio: true}
+          - {id: oggetto, etichetta: Oggetto della proposta, descrizione: "Area, tipo di intervento e strumento urbanistico in variante", tipo: testo_lungo, obbligatorio: true}
+          - {id: link, etichetta: Link al documento della proposta, tipo: url, obbligatorio: true}
+      - {id: motivazione, etichetta: Delibera di approvazione definitiva - motivazione della scelta, tipo: testo_lungo}
+      - {id: link_delibera_definitiva, etichetta: Delibera di approvazione definitiva - link, tipo: url}
+      - id: atti_istruttori
+        etichetta: Altri eventuali atti istruttori
+        descrizione: "es. approfondimenti progettuali, stime e perizie, elaborati cartografici"
+        tipo: elenco
+        etichetta_elemento: Atto istruttorio
+        campi:
+          - {id: descrizione, etichetta: Descrizione dell'atto, tipo: testo, obbligatorio: true}
+          - {id: link, etichetta: Link al documento, tipo: url, obbligatorio: true}
+
+note_audit: |
+  PIANI ED EVENTUALI VARIANTI:
+  - Riguarda solo atti DEFINITIVAMENTE APPROVATI: se il documento è una bozza o una versione non definitiva, segnalalo.
+  - La pubblicazione è condizione legale di efficacia (art. 39, co. 3): la sua assenza incide sull'efficacia dell'atto.
+  - I piani restano pubblicati finché producono effetti (art. 8, co. 3): non trattare come anomalia la permanenza oltre 5 anni.
+  PROCEDIMENTI DI VARIANTE:
+  - L'obbligo decorre dalla presentazione delle proposte, non solo dalla delibera finale (delibera ANAC 800/2021).
+  - L'intero iter va pubblicato insieme, nella stessa pagina o allo stesso link della delibera di approvazione
+    definitiva: se i documenti sono dispersi, segnalalo come rilievo di comprensibilità, non come dato mancante.
+  - "Tipo di atto e oggetto" della variante è un campo distinto dai dettagli della delibera di adozione.
+  - La data della delibera di adozione deve comprendere data di approvazione definitiva e data di pubblicazione.
+  - Una modalità di presentazione o un soggetto proponente fuori dalle opzioni previste è "Parziale".
+  - La motivazione e il link della delibera di approvazione definitiva sono richiesti quando l'iter è concluso.

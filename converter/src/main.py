@@ -1,6 +1,6 @@
 """Servizio interno di conversione documenti con LibreOffice headless (Flask).
 
-Raggiungibile solo dall'API (NetworkPolicy). Ogni conversione usa un profilo LibreOffice
+Usato dall'API (e dal worker) nel namespace. Ogni conversione usa un profilo LibreOffice
 separato in una cartella temporanea, così più conversioni possono girare in parallelo.
 La configurazione arriva dalle variabili d'ambiente (vedi `Settings`).
 
@@ -24,20 +24,27 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from werkzeug.exceptions import HTTPException
 
+from markdown import ConversioneNonRiuscita, odt_in_markdown, pdf_in_markdown
+
 log = logging.getLogger("documenti")
 
-ESTENSIONI_AMMESSE = {".odt", ".docx", ".doc", ".rtf"}
+ESTENSIONI_AMMESSE = {".odt", ".docx", ".doc", ".rtf", ".html"}
+# L'HTML si apre come documento di Writer (non Writer/Web), così valgono gli stessi filtri
+# di esportazione degli altri documenti
+FILTRI_INGRESSO = {".html": "HTML (StarWriter)"}
 
 # Filtri di esportazione LibreOffice
 FILTRI = {
     "pdf": 'pdf:writer_pdf_Export:{"SelectPdfVersion":{"type":"long","value":"0"}}',
     "pdfa": 'pdf:writer_pdf_Export:{"SelectPdfVersion":{"type":"long","value":"2"}}',
     "odt": "odt",
+    "docx": "docx:MS Word 2007 XML",
 }
 MIME = {
     "pdf": "application/pdf",
     "pdfa": "application/pdf",
     "odt": "application/vnd.oasis.opendocument.text",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
 
 
@@ -132,6 +139,7 @@ class Convertitore:
                 "--headless",
                 "--norestore",
                 "--nolockcheck",
+                *([f"--infilter={FILTRI_INGRESSO[estensione]}"] if estensione in FILTRI_INGRESSO else []),
                 "--convert-to",
                 FILTRI[formato],
                 "--outdir",
@@ -171,6 +179,25 @@ class Convertitore:
             len(dati),
         )
         return dati
+
+
+ESTENSIONI_MARKDOWN = {".pdf", ".odt", ".docx", ".doc", ".rtf"}
+
+
+def converti_in_markdown(convertitore: Convertitore, contenuto: bytes, nome_file: str) -> str:
+    """Testo di un documento in Markdown: PDF e ODT direttamente, gli altri via ODT."""
+    estensione = Path(nome_file).suffix.lower()
+    if estensione == ".pdf":
+        return pdf_in_markdown(contenuto)
+    if estensione == ".odt":
+        return odt_in_markdown(contenuto)
+    if estensione in (".docx", ".doc", ".rtf"):
+        try:
+            odt = convertitore.converti(contenuto, estensione, "odt")
+        except ErroreConversione as e:
+            raise ConversioneNonRiuscita(e.messaggio) from e
+        return odt_in_markdown(odt)
+    raise ConversioneNonRiuscita(f"Formato non supportato: {estensione or 'sconosciuto'}")
 
 
 def create_app(settings: Settings | None = None) -> Flask:
@@ -214,6 +241,24 @@ def create_app(settings: Settings | None = None) -> Flask:
             raise ErroreConversione(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande")
         risultato = convertitore.converti(contenuto, estensione, formato)
         return app.response_class(risultato, mimetype=MIME[formato])
+
+    @app.post("/markdown")
+    def markdown_file():
+        """Testo del documento in Markdown (usato dal modulo trasparenza)."""
+        file = request.files.get("file")
+        if file is None:
+            raise ErroreConversione(HTTPStatus.UNPROCESSABLE_ENTITY, "File mancante")
+        if Path(file.filename or "").suffix.lower() not in ESTENSIONI_MARKDOWN:
+            raise ErroreConversione(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Formato non supportato")
+        limite = settings.upload_max_mb * 1024 * 1024
+        contenuto = file.read(limite + 1)
+        if len(contenuto) > limite:
+            raise ErroreConversione(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande")
+        try:
+            testo = converti_in_markdown(convertitore, contenuto, file.filename or "")
+        except ConversioneNonRiuscita as e:
+            raise ErroreConversione(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
+        return {"markdown": testo}
 
     log.info(
         "Servizio documenti: %s, %d conversioni parallele, timeout %d s, log %s",

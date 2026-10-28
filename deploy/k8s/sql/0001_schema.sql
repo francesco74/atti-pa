@@ -7,9 +7,9 @@
 -- In Kubernetes (mysql.yaml) e in docker compose MySQL lo esegue da solo alla prima
 -- inizializzazione, con il volume dei dati vuoto.
 --
--- Il database nasce senza enti, modelli, specificità e checklist: gli enti e
--- l'amministratore dell'installazione si creano con python deploy/enti.py; i modelli si
--- caricano per ente con il pacchetto standard (Amministrazione → Pacchetti).
+-- Il database nasce senza enti, modelli, specificità e checklist: gli enti (ciascuno con il
+-- suo utente admin) si creano con python deploy/enti.py; i modelli si caricano per ente con
+-- il pacchetto standard (Amministrazione → Pacchetti).
 
 -- ---------------------------------------------------------------------------
 -- Enti: ogni ente ha utenti, configurazione e dati propri e si riconosce dal dominio
@@ -21,10 +21,13 @@ CREATE TABLE enti (
     codice                VARCHAR(50) NOT NULL UNIQUE,
     nome                  VARCHAR(255) NOT NULL,
     attivo                BOOLEAN NOT NULL DEFAULT TRUE,
-    moduli_json           JSON NOT NULL,          -- moduli abilitati, es. ["redazione"]
+    moduli_json           JSON NOT NULL,          -- moduli abilitati, es. ["redazione", "trasparenza"]
     dati_json             JSON NOT NULL,
     carta_intestata_nome  VARCHAR(255),
     carta_intestata       LONGBLOB,
+    logo_mime             VARCHAR(50),            -- profilo dell'ente: logo nei documenti
+    logo                  LONGBLOB,
+    caratteristiche       TEXT,                   -- caratteristiche dell'amministrazione (contesto per l'LLM)
     accesso_locale        BOOLEAN NOT NULL DEFAULT TRUE,
     ldap_json             JSON,                   -- url, dominio, base_dn, ca_pem, gruppi...
     created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -39,20 +42,21 @@ CREATE TABLE enti_domini (
 
 -- ---------------------------------------------------------------------------
 -- Utenti di un ente: da Active Directory (al login, password mai salvata) o locali
--- (password con hash). L'amministratore dell'installazione non ha ente.
+-- (password con hash). Ogni ente nasce con l'utente locale admin (deploy/enti.py).
 -- ---------------------------------------------------------------------------
 CREATE TABLE users (
     id                CHAR(36) PRIMARY KEY,
-    ente_id           CHAR(36),
+    ente_id           CHAR(36) NOT NULL,
     username          VARCHAR(100) NOT NULL,
     origine           VARCHAR(10) NOT NULL DEFAULT 'LDAP',   -- LDAP, LOCALE
     password_hash     VARCHAR(255),
     token_version     INT NOT NULL DEFAULT 0,    -- cresce a ogni revoca delle sessioni
+    cambio_password   BOOLEAN NOT NULL DEFAULT FALSE,  -- password da cambiare al primo accesso
     nome_completo     VARCHAR(255),
     email             VARCHAR(255),
     ufficio           VARCHAR(255),
     decreto_incarico  VARCHAR(255),           -- precompila gli atti
-    ruoli             JSON NOT NULL,          -- REDATTORE, CONTROLLORE, GESTORE_MODELLI, ADMIN, INSTALLAZIONE
+    ruoli             JSON NOT NULL,          -- REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA, ADMIN
     attivo            BOOLEAN NOT NULL DEFAULT TRUE,
     ultimo_accesso    TIMESTAMP NULL,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -394,6 +398,48 @@ CREATE TABLE verifiche (
     FOREIGN KEY (richiesta_da) REFERENCES users(id),
     CHECK ((bozza_id IS NULL) <> (atto_controllato_id IS NULL)),
     FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- Modulo trasparenza: documenti salvati (schede, report di analisi, verbali), privati di
+-- chi li salva e visibili all'amministratore dell'ente
+-- ---------------------------------------------------------------------------
+CREATE TABLE trasparenza_documenti (
+    id           CHAR(36) PRIMARY KEY,
+    ente_id      CHAR(36) NOT NULL,
+    utente_id    CHAR(36) NOT NULL,
+    tipo         VARCHAR(10) NOT NULL,       -- SCHEDA, ANALISI, VERBALE
+    schema_id    VARCHAR(50),                -- es. ART_23
+    descrizione  VARCHAR(255) NOT NULL,
+    html         LONGTEXT NOT NULL,
+    esito        VARCHAR(40),                -- esito di validazione dei report di analisi
+    dati_schema  JSON,                       -- dati del form, per rigenerare la scheda
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY ix_utente (ente_id, utente_id, updated_at),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Analisi ed estrazioni eseguite dal worker (coda "trasparenza")
+CREATE TABLE trasparenza_lavori (
+    id             CHAR(36) PRIMARY KEY,
+    ente_id        CHAR(36) NOT NULL,
+    utente_id      CHAR(36) NOT NULL,
+    tipo           VARCHAR(10) NOT NULL,        -- ANALISI, ESTRAZIONE
+    stato          VARCHAR(20) NOT NULL DEFAULT 'IN_CODA',  -- IN_CODA, IN_CORSO, COMPLETATA, ERRORE
+    richiesta      JSON NOT NULL,               -- controllo/schema, url, opzioni, file nell'archivio, note
+    risultato      JSON,                        -- {"html"} o {"dati", "avvisi"}
+    errore         TEXT,
+    modello_llm    VARCHAR(100),
+    tentativi      INT NOT NULL DEFAULT 0,
+    worker         VARCHAR(100),
+    avviato_il     TIMESTAMP NULL,
+    completato_il  TIMESTAMP NULL,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY ix_stato (stato, created_at),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------

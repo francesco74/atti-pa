@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../util/download.dart';
 import '../comuni.dart';
+import '../../util/scelta_file.dart';
 
 /// Pacchetti di modelli, specificità e checklist: il database comanda. Si carica un
 /// pacchetto (zip), si guarda cosa cambia rispetto all'ente oggetto per oggetto, si decide
@@ -59,7 +59,7 @@ class _PacchettiPageState extends State<PacchettiPage> {
   }
 
   Future<void> _caricaPacchetto() async {
-    final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: ['zip']);
+    final file = await scegliFile(['zip']);
     if (file == null || !mounted) return;
     setState(() => _inCorso = true);
     try {
@@ -67,7 +67,7 @@ class _PacchettiPageState extends State<PacchettiPage> {
         '/api/v1/pacchetti',
         campi: {},
         campoFile: 'file',
-        bytes: await file.readAsBytes(),
+        bytes: file.bytes,
         nomeFile: file.name,
       ) as Map<String, dynamic>;
       setState(() {

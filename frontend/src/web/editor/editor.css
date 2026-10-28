@@ -1,0 +1,50 @@
+/* L'editor occupa tutto l'iframe: la barra in alto, sotto il documento che scorre. */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Roboto, Arial, sans-serif;
+}
+
+.note-editor.note-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.note-editor .note-toolbar {
+  flex: none;
+}
+
+.note-editor.barra-nascosta .note-toolbar {
+  display: none;
+}
+
+.note-editor .note-editing-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.note-editor .note-editable,
+.note-editor .note-codable {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.note-editor .note-statusbar {
+  display: none;
+}
+
+.note-editable table {
+  border: 1px solid #5a5a5a !important;
+}
+
+.note-editable td,
+.note-editable th {
+  border: 1px solid #5a5a5a !important;
+}

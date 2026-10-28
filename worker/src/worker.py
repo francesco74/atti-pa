@@ -3,7 +3,8 @@
 - coda "convertiti": il converter ha trasformato in Markdown il file di un atto; il
   worker salva il testo e avvia la verifica (o registra l'errore di conversione). Lo
   stesso per il testo di una norma inserita manualmente, che resta da confermare;
-- coda "verifica": rianalisi di un atto o verifica di una bozza.
+- coda "verifica": rianalisi di un atto o verifica di una bozza;
+- coda "trasparenza": analisi ed estrazioni del modulo trasparenza (trasparenza.py).
 
 Lo stato resta nel database: la presa in carico usa SELECT ... FOR UPDATE SKIP LOCKED,
 quindi un messaggio duplicato o più repliche del worker non elaborano due volte la stessa
@@ -41,8 +42,9 @@ from common.models import (
 )
 from common.normattiva import NormattivaClient
 from common.verifica import analizza
+from trasparenza import LavoriTrasparenza
 
-log = logging.getLogger("verifica_worker")
+log = logging.getLogger("worker")
 
 
 def _ora() -> datetime:
@@ -58,6 +60,7 @@ class Worker:
         settings: Settings,
         coda: Coda,
         heartbeat: Path | None = None,
+        documenti=None,
     ):
         self.sessionmaker = sessionmaker
         self.normattiva = normattiva
@@ -71,6 +74,7 @@ class Worker:
         self._in_lavorazione = asyncio.Lock()
         self._reinviati: dict[str, datetime] = {}
         self._ritardati: set[asyncio.Task] = set()  # nuovi tentativi in attesa
+        self.trasparenza = LavoriTrasparenza(sessionmaker, llm, documenti, settings)
 
     def ferma(self) -> None:
         self._stop.set()
@@ -150,6 +154,27 @@ class Worker:
     async def _ripubblica(self, verifica_id: str, attesa: int) -> None:
         await asyncio.sleep(attesa)
         await self.coda.pubblica(coda.VERIFICA, {"verifica_id": verifica_id})
+
+    async def gestisci_trasparenza(self, dati: dict[str, Any]) -> None:
+        """Analisi o estrazione del modulo trasparenza (una alla volta, come le verifiche)."""
+        lavoro_id = dati["lavoro_id"]
+        async with self._in_lavorazione:
+            if not await self.trasparenza.prendi_in_carico(lavoro_id):
+                return
+            battito = asyncio.create_task(self._battito_continuo())
+            try:
+                attesa = await self.trasparenza.elabora(lavoro_id)
+            finally:
+                battito.cancel()
+        if attesa is not None:
+            log.info("Nuovo tentativo del lavoro %s tra %d s", lavoro_id, attesa)
+            task = asyncio.create_task(self._ripubblica_lavoro(lavoro_id, attesa))
+            self._ritardati.add(task)
+            task.add_done_callback(self._ritardati.discard)
+
+    async def _ripubblica_lavoro(self, lavoro_id: str, attesa: int) -> None:
+        await asyncio.sleep(attesa)
+        await self.coda.pubblica(coda.TRASPARENZA, {"lavoro_id": lavoro_id})
 
     # --- verifica --------------------------------------------------------------------------
 
@@ -288,7 +313,8 @@ class Worker:
         return True
 
     async def reinvia_fermi(self) -> int:
-        """Reinvia sulle code i lavori fermi: conversioni (atti e norme manuali) e verifiche."""
+        """Reinvia sulle code i lavori fermi: conversioni (atti e norme manuali), verifiche e
+        lavori della trasparenza."""
         attesa = timedelta(minutes=self.settings.worker_reinvio_minuti)
         adesso = _ora()
         reinviati = 0
@@ -337,12 +363,18 @@ class Worker:
             elif self._da_reinviare(f"verifica:{verifica.id}", adesso, attesa):
                 await self.coda.pubblica(coda.VERIFICA, {"verifica_id": verifica.id})
                 reinviati += 1
+        for lavoro_id in await self.trasparenza.fermi(attesa):
+            if self._da_reinviare(f"trasparenza:{lavoro_id}", adesso, attesa):
+                await self.coda.pubblica(coda.TRASPARENZA, {"lavoro_id": lavoro_id})
+                reinviati += 1
         return reinviati
 
     async def manutenzione(self) -> None:
         try:
             if recuperate := await self.recupera_bloccate():
                 log.warning("%d verifiche bloccate rimesse in coda", recuperate)
+            if recuperati := await self.trasparenza.recupera_bloccati():
+                log.warning("%d lavori della trasparenza bloccati rimessi in coda", recuperati)
             if reinviati := await self.reinvia_fermi():
                 log.warning("%d lavori fermi reinviati sulle code", reinviati)
         except Exception:
@@ -355,11 +387,13 @@ class Worker:
         await self.coda.connetti(attendi=True)
         await self.coda.consuma(coda.CONVERTITI, self.gestisci_convertito)
         await self.coda.consuma(coda.VERIFICA, self.gestisci_verifica)
+        await self.coda.consuma(coda.TRASPARENZA, self.gestisci_trasparenza)
         log.info(
-            "Worker %s avviato: code %s e %s, modello %s",
+            "Worker %s avviato: code %s, %s e %s, modello %s",
             self.nome,
             self.coda.nome(coda.CONVERTITI),
             self.coda.nome(coda.VERIFICA),
+            self.coda.nome(coda.TRASPARENZA),
             self.llm.modello if self.llm else "nessuno",
         )
         ultima_manutenzione = datetime.min

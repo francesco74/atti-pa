@@ -1,0 +1,239 @@
+# Schema di pubblicazione art. 41 d.lgs. 33/2013 (trasparenza del Servizio
+# Sanitario Nazionale). Fonte: Allegato 5 alla delibera ANAC n. 497/2025.
+
+id: ART_41
+articolo: art. 41
+titolo: Trasparenza del Servizio Sanitario Nazionale
+categoria: Servizio sanitario nazionale
+fonte:
+  delibera: "497/2025"
+  allegato: 5
+
+ambito: autodichiarazione
+ambito_soggettivo: |
+  Amministrazioni ed enti del SSN e dei servizi sanitari regionali, comprese le aziende sanitarie territoriali e
+  ospedaliere, le agenzie e gli altri enti e organismi pubblici che svolgono attività di programmazione e fornitura
+  dei servizi sanitari. Procedure e incarichi di dirigenza sanitaria: aziende sanitarie ed ospedaliere. Strutture
+  sanitarie private accreditate: Regioni e Aziende sanitarie (per gli accordi o i contratti stipulati).
+
+documento:
+  titolo: Trasparenza del Servizio Sanitario Nazionale (Art. 41 d.lgs. 33/2013)
+  sottotitolo: Dati e informazioni degli enti del SSN
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza del servizio sanitario nazionale (art. 41 d.lgs. n. 33/2013),
+    si riportano di seguito i dati e le informazioni pubblicati da:
+
+_incarichi_dirigenza: &incarichi_dirigenza
+  - Direttore generale
+  - Direttore sanitario
+  - Direttore amministrativo
+  - Responsabile di dipartimento
+  - Responsabile di struttura semplice
+  - Responsabile di struttura complessa
+  - Direttore dei Servizi Socio-Sanitari
+
+sezioni:
+  - id: PAGAMENTI_SSN
+    titolo: Dati sui pagamenti del SSN (art. 41, co. 1-bis)
+    collocazione: Pagamenti dell'amministrazione -> Dati sui pagamenti del SSN
+    aggiornamento: trimestrale
+    norme: ["Art. 41, c. 1-bis, d.lgs. n. 33/2013"]
+    ripetibile: false
+    layout: scheda
+    nota: >-
+      Dati riepilogativi in forma sintetica e aggregata, da pubblicare in formato editabile e scaricabile.
+      Per i beneficiari persone fisiche non va pubblicato il nominativo ("Soggetto privato" o "omissis").
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - id: righe
+        etichetta: Spese e pagamenti
+        tipo: elenco
+        etichetta_elemento: Riga
+        obbligatorio: true
+        campi:
+          - {id: trimestre, etichetta: Trimestre, tipo: scelta, opzioni: [I, II, III, IV], obbligatorio: true}
+          - id: tipologia
+            etichetta: Macrocategoria - Tipologia spesa
+            descrizione: "Lavoro: lavori di ristrutturazione straordinari, manutenzione ordinaria e riparazioni di immobili; Bene: acquisto di beni (prodotti farmaceutici, dispositivi medici, vaccini); Servizio: acquisti di servizi, assicurazioni, spese legali, manutenzioni di impianti e macchinari, consulenze"
+            tipo: scelta
+            opzioni: [Lavoro, Bene, Servizio]
+            obbligatorio: true
+          - {id: importo, etichetta: Importo pagato nel trimestre di riferimento, tipo: importo, obbligatorio: true}
+          - {id: beneficiario, etichetta: Beneficiario, descrizione: "Per le persone fisiche: Soggetto privato o omissis", tipo: testo, obbligatorio: true}
+
+  - id: LISTE_ATTESA
+    titolo: Liste di attesa (art. 41, co. 6)
+    collocazione: Servizi erogati -> Liste di attesa
+    aggiornamento: tempestivo
+    norme: ["Art. 41, c. 6, d.lgs. n. 33/2013"]
+    ripetibile: false
+    layout: scheda
+    nota: >-
+      Se i dati sono pubblicati su portali di regioni e province autonome conformi alle Linee di indirizzo del
+      Ministero della Salute del 15.12.2022, l'obbligo può essere assolto con un link a tali portali.
+    almeno_uno: [[link_portale, ambulatoriali, ricoveri]]
+    campi:
+      - {id: link_portale, etichetta: Link al portale regionale delle liste di attesa, tipo: url}
+      - {id: criteri_formazione, etichetta: Criteri di formazione delle liste di attesa, tipo: testo_lungo}
+      - id: ambulatoriali
+        etichetta: Prestazioni ambulatoriali
+        tipo: elenco
+        etichetta_elemento: Prestazione
+        campi:
+          - id: macrocategoria
+            etichetta: Macrocategoria
+            tipo: scelta
+            opzioni:
+              - prestazioni ambulatoriali
+              - prestazioni inserite in PDTA (area cardiovascolare e oncologica)
+            obbligatorio: true
+          - {id: prestazione, etichetta: Prestazione, tipo: testo, obbligatorio: true}
+          - id: classe
+            etichetta: Classe di priorità
+            tipo: scelta
+            opzioni:
+              - U (entro 72 ore)
+              - B (entro 10 giorni)
+              - D (entro 30 giorni visite / 60 giorni accertamenti)
+              - P (entro 120 giorni)
+            obbligatorio: true
+          - {id: ambito_garanzia, etichetta: Ambito di garanzia, descrizione: Individuato nel piano attuativo aziendale, tipo: testo, obbligatorio: true}
+          - {id: tempo_massimo, etichetta: Tempo di attesa massimo (giorni), tipo: decimale, obbligatorio: true}
+          - {id: tempo_medio, etichetta: Tempo medio effettivo - mediana (giorni), tipo: decimale, obbligatorio: true}
+      - id: ricoveri
+        etichetta: Ricoveri
+        tipo: elenco
+        etichetta_elemento: Ricovero
+        campi:
+          - {id: prestazione, etichetta: Prestazione / intervento, tipo: testo, obbligatorio: true}
+          - id: classe
+            etichetta: Classe di priorità
+            tipo: scelta
+            opzioni:
+              - A (entro 30 giorni)
+              - B (entro 60 giorni)
+              - C (entro 180 giorni)
+              - D (senza attesa massima definita, entro 12 mesi)
+            obbligatorio: true
+          - {id: ambito_garanzia, etichetta: Ambito di garanzia, tipo: testo, obbligatorio: true}
+          - {id: numero_ricoveri, etichetta: Numero interventi/ricoveri, tipo: numero, obbligatorio: true}
+          - {id: tempo_medio, etichetta: Tempo medio effettivo - mediana (giorni), tipo: decimale, obbligatorio: true}
+
+  - id: BILANCI_CERTIFICATI
+    titolo: Bilanci certificati (art. 41, co. 6)
+    collocazione: Bilanci -> Bilanci certificati
+    aggiornamento: tempestivo
+    norme: ["Art. 41, c. 6, d.lgs. n. 33/2013"]
+    ripetibile: false
+    nota: Link al documento o ai dati pubblicati ai sensi dell'art. 29, in formato editabile e scaricabile.
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - {id: url_preventivo, etichetta: Bilancio preventivo certificato, tipo: url, obbligatorio: true}
+      - {id: url_consuntivo, etichetta: Bilancio consuntivo certificato, tipo: url, obbligatorio: true}
+
+  - id: ASPETTI_QUALITATIVI
+    titolo: Aspetti qualitativi e quantitativi dei servizi erogati e sull'attività medica svolta (art. 41, co. 6)
+    collocazione: Servizi erogati -> Aspetti qualitativi e quantitativi dei servizi erogati e sull'attività medica svolta
+    aggiornamento: tempestivo
+    norme: ["Art. 41, c. 6, d.lgs. n. 33/2013"]
+    ripetibile: false
+    almeno_uno: [[testo, link]]
+    campi:
+      - {id: testo, etichetta: Dati sugli aspetti qualitativi e quantitativi, tipo: testo_lungo}
+      - {id: link, etichetta: Link al documento pubblicato, tipo: url}
+
+  - id: PROCEDURE_DIRIGENZA
+    titolo: Procedure di conferimento degli incarichi di dirigenza sanitaria (art. 41, co. 2 e art. 19)
+    collocazione: Bandi di concorso -> Dati sulle procedure di conferimento degli incarichi di dirigenza sanitaria
+    aggiornamento: tempestivo
+    norme: ["Art. 41, c. 2, d.lgs. n. 33/2013", "Art. 19, d.lgs. n. 33/2013"]
+    etichetta_elemento: Procedura
+    nota: "Soggetti tenuti: aziende sanitarie ed ospedaliere."
+    almeno_uno: [[criteri_testo, criteri_link]]
+    campi:
+      - {id: stato, etichetta: Stato, tipo: scelta, opzioni: [In corso, Concluso], obbligatorio: true}
+      - {id: incarico, etichetta: Tipo di incarico da conferire, tipo: scelta, opzioni: *incarichi_dirigenza, obbligatorio: true}
+      - {id: denominazione, etichetta: Denominazione, descrizione: Oggetto della procedura selettiva, tipo: testo, obbligatorio: true}
+      - {id: denominazione_link, etichetta: Link al documento della procedura, tipo: url}
+      - {id: commissione_nominativi, etichetta: Composizione della Commissione, descrizione: "Nominativi, ove la pubblicazione sia prevista dalla normativa nazionale", tipo: testo_lungo}
+      - {id: commissione_link, etichetta: Link al documento sulla Commissione, tipo: url}
+      - {id: criteri_testo, etichetta: Criteri di valutazione della Commissione, tipo: testo_lungo}
+      - {id: criteri_link, etichetta: Link al documento dei criteri di valutazione, descrizione: In formato aperto, tipo: url}
+      - {id: avviso_link, etichetta: Avviso di selezione, tipo: url, obbligatorio: true}
+
+  - id: INCARICHI_DIRIGENZA
+    titolo: Incarichi di dirigenza sanitaria (art. 41, co. 2 e 3 e art. 14)
+    collocazione: Personale -> Titolari di incarichi dirigenziali (dirigenza sanitaria)
+    aggiornamento: tempestivo
+    norme: ["Art. 41, c. 2 e 3, d.lgs. n. 33/2013", "Art. 14, d.lgs. n. 33/2013", "Delibera ANAC n. 241/2017"]
+    etichetta_elemento: Incarico
+    nota: >-
+      Per i dirigenti sanitari di cui all'art. 41, co. 2, l'applicazione degli obblighi dell'art. 14 - eccetto il
+      co. 1-ter (emolumenti complessivi) - è sospesa nelle more del regolamento di cui all'art. 1, co. 7, d.l. 162/2019.
+      Per i contenuti dell'obbligo si rinvia allo schema dell'art. 14.
+    campi:
+      - {id: incarico, etichetta: Incarico, tipo: scelta, opzioni: *incarichi_dirigenza, obbligatorio: true}
+      - {id: nominativo, etichetta: Nominativo, tipo: testo, obbligatorio: true}
+      - {id: anno_emolumenti, etichetta: Anno degli emolumenti (co. 1-ter), tipo: anno, obbligatorio: true}
+      - {id: importo_emolumenti, etichetta: Emolumenti complessivi a carico della finanza pubblica, tipo: importo, obbligatorio: true}
+      - {id: link_dati, etichetta: Link ai dati pubblicati ex art. 14, tipo: url}
+
+  - id: STRUTTURE_ACCREDITATE
+    titolo: Strutture sanitarie private accreditate (art. 41, co. 4)
+    collocazione: Strutture sanitarie private accreditate
+    aggiornamento: annuale
+    norme: ["Art. 41, c. 4, d.lgs. n. 33/2013"]
+    ripetibile: false
+    layout: scheda
+    nota: "Elenco aggiornato annualmente. Soggetti tenuti: Regioni e Aziende sanitarie (per gli accordi o i contratti stipulati)."
+    almeno_uno: [[strutture, accordi]]
+    campi:
+      - id: strutture
+        etichetta: Strutture sanitarie private accreditate
+        tipo: elenco
+        etichetta_elemento: Struttura
+        campi:
+          - {id: denominazione, etichetta: Denominazione della struttura, tipo: testo, obbligatorio: true}
+          - {id: sede, etichetta: Sede operativa (indirizzo e Comune), tipo: testo, obbligatorio: true}
+          - id: tipologia_servizio
+            etichetta: Tipologia di servizio in accreditamento
+            descrizione: Dato facoltativo
+            tipo: scelta
+            opzioni: [Assistenza ambulatoriale, Assistenza ospedaliera, Assistenza territoriale, Altro]
+          - {id: tipologia_altro, etichetta: Altra tipologia di servizio, tipo: testo, obbligatorio: true, visibile_se: {tipologia_servizio: [Altro]}}
+          - {id: durata_dal, etichetta: Accreditamento dal, tipo: data, obbligatorio: true}
+          - {id: durata_al, etichetta: Accreditamento al, tipo: data, obbligatorio: true}
+          - {id: provv_numero, etichetta: Numero del provvedimento di accreditamento, tipo: testo, obbligatorio: true}
+          - {id: provv_data, etichetta: Data del provvedimento di accreditamento, tipo: data, obbligatorio: true}
+      - id: accordi
+        etichetta: Accordi con le strutture
+        tipo: elenco
+        etichetta_elemento: Accordo
+        campi:
+          - {id: tipo, etichetta: Nuovo accordo o rinnovo, tipo: scelta, opzioni: [Nuovo accordo, Rinnovo accordo precedente], obbligatorio: true}
+          - {id: parti, etichetta: Parti dell'accordo, tipo: testo, obbligatorio: true}
+          - {id: oggetto, etichetta: Oggetto, tipo: testo, obbligatorio: true}
+          - {id: data_pubblicazione, etichetta: Data di pubblicazione, tipo: data, obbligatorio: true}
+          - {id: durata, etichetta: Durata dell'accordo (anni/mesi), descrizione: "es. 2,06", tipo: decimale, obbligatorio: true}
+          - {id: link, etichetta: Link al documento, tipo: url, obbligatorio: true}
+
+note_audit: |
+  PAGAMENTI DEL SSN:
+  - Un nominativo di persona fisica in chiaro tra i beneficiari è "Negativo" (va sostituito con "Soggetto privato"
+    o "omissis"). Un file non editabile (es. PDF scansionato) viola il requisito del formato editabile: "Parziale".
+  LISTE DI ATTESA:
+  - Se è presente il link a un portale regionale conforme alle Linee di indirizzo del 15.12.2022, verifica solo il link.
+  - Segnala come "Parziale" un tempo medio effettivo superiore al tempo massimo della classe di priorità,
+    evidenziandolo come criticità sostanziale.
+  - La norma richiede anche i criteri di formazione delle liste di attesa: se assenti, segnalalo.
+  ASPETTI QUALITATIVI E QUANTITATIVI:
+  - Verifica che il contenuto riguardi sia aspetti qualitativi sia quantitativi: se ne manca uno, "Parziale".
+  INCARICHI DI DIRIGENZA SANITARIA:
+  - L'assenza dei dati dell'art. 14 sospesi NON è un rilievo; l'assenza degli emolumenti complessivi (anno e importo)
+    È un rilievo.
+  - Dati reddituali e patrimoniali (lett. f): per la delibera ANAC 586/2019, come incisa dalla sentenza TAR Lazio
+    n. 12288/2020, NON si applicano ai dirigenti medici direttori di struttura complessa: non segnalarne l'assenza.
+  STRUTTURE ACCREDITATE:
+  - La tipologia di servizio in accreditamento è facoltativa: la sua assenza NON è un rilievo.
+  RISERVATEZZA:
+  - Nessun dato personale o sanitario eccedente; in particolare nessun dato idoneo a rivelare lo stato di salute.

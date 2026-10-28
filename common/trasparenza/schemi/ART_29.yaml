@@ -1,0 +1,205 @@
+# Schema di pubblicazione art. 29 d.lgs. 33/2013 (bilancio preventivo e consuntivo).
+# Fonte: Allegato 9 alla delibera ANAC n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_29
+articolo: art. 29
+titolo: Bilancio preventivo e consuntivo
+fonte:
+  delibera: "495/2024"
+  allegato: 9
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Soggetti che NON trasmettono i propri dati di bilancio alla Banca Dati delle Amministrazioni Pubbliche (BDAP) e che
+  quindi non possono adempiere pubblicando il solo collegamento (art. 8, co. 3, d.l. 19/2026, conv. L. 50/2026).
+  Lo schema si differenzia per regime contabile: P.A. in contabilità finanziaria; P.A. e società in contabilità
+  economico-patrimoniale; ordini e collegi professionali (delibera ANAC 777/2021); enti privati in contabilità
+  semplificata.
+
+documento:
+  titolo: Bilancio Preventivo e Consuntivo (Art. 29 d.lgs. 33/2013)
+  sottotitolo: Dati concernenti il bilancio preventivo e il conto consuntivo in forma sintetica
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti il bilancio (art. 29 d.lgs. n. 33/2013), si riportano di
+    seguito i dati, i riferimenti e i documenti contabili, con i valori espressi in euro, relativi a:
+
+adempimento_alternativo:
+  etichetta: L'ente trasmette i propri dati di bilancio alla BDAP
+  descrizione: >-
+    Art. 8, co. 3, d.l. 19/2026 (conv. L. 50/2026): l'obbligo è assolto pubblicando il collegamento alla banca dati
+    BDAP (o alle altre banche dati nazionali dell'Allegato B al d.lgs. 33/2013).
+  etichetta_link: Collegamento alla banca dati BDAP
+  testo_documento: >-
+    L'ente trasmette i propri dati di bilancio alla Banca Dati delle Amministrazioni Pubbliche (BDAP) e assolve
+    l'obbligo di cui all'art. 29 d.lgs. 33/2013 mediante il collegamento ipertestuale alla banca dati (art. 8, co. 3,
+    d.l. 19/2026, convertito dalla L. 50/2026).
+  nota_audit: |
+    VERIFICA PRELIMINARE - ESONERO EX ART. 8, CO. 3, D.L. 19/2026 (CONV. L. 50/2026):
+    - Se dal documento o da _AUTHORITY_FEATURES_ risulta che l'ente trasmette i dati di bilancio alla BDAP (o alle
+      altre banche dati nazionali dell'Allegato B), l'obbligo è assolto con il solo collegamento ipertestuale: verifica
+      SOLO la presenza di un link valido e NON applicare la checklist di dettaglio.
+
+parametri:
+  - id: regime
+    etichetta: Regime contabile dell'ente
+    opzioni:
+      - {valore: FINANZIARIA, etichetta: P.A. in contabilità finanziaria}
+      - {valore: ECONOMICA, etichetta: P.A. o società in contabilità economico-patrimoniale}
+      - valore: ORDINI
+        etichetta: Ordine o collegio professionale
+        nota: Basta la sintesi dei dati sulle entrate e sulle spese oppure il link alla Relazione del Tesoriere.
+      - {valore: SEMPLIFICATA, etichetta: Ente privato in contabilità semplificata}
+  - id: tipo_bilancio
+    etichetta: Tipo di documento
+    opzioni:
+      - {valore: PREVENTIVO, etichetta: Bilancio preventivo / budget}
+      - {valore: CONSUNTIVO, etichetta: Conto consuntivo}
+
+_campi:
+  - &anno {id: anno, etichetta: Anno, tipo: anno, obbligatorio: true}
+  - &piano_indicatori {id: url_indicatori, gruppo: Piano degli indicatori, etichetta: Link al Piano degli indicatori e risultati attesi di bilancio, tipo: url, obbligatorio: true}
+
+sezioni:
+  - id: PREVENTIVO_FINANZIARIA
+    titolo: P.A. in contabilità finanziaria - bilancio preventivo
+    collocazione: Bilanci -> Bilancio preventivo e consuntivo
+    aggiornamento: tempestivo
+    norme: ["Art. 29, d.lgs. n. 33/2013"]
+    visibile_se: {regime: [FINANZIARIA], tipo_bilancio: [PREVENTIVO]}
+    ripetibile: false
+    layout: scheda
+    nota: &nota_na >-
+      Si indicano solo i valori di sintesi esposti negli schemi di bilancio previsti dal regolamento dell'ente: i valori
+      non previsti non vanno indicati (dicitura "n/a").
+    campi:
+      - *anno
+      - {id: url_bilancio, etichetta: Preventivo completo di allegati, descrizione: Link alla sezione o al documento, tipo: url, obbligatorio: true}
+      - {id: entrate_correnti, gruppo: Risultato finanziario, etichetta: Entrate correnti previste, tipo: importo}
+      - {id: uscite_correnti, gruppo: Risultato finanziario, etichetta: Uscite correnti previste, tipo: importo}
+      - {id: saldo_corrente, gruppo: Risultato finanziario, etichetta: Avanzo/disavanzo/pareggio di parte corrente previsto, tipo: importo}
+      - {id: entrate_totali, gruppo: Risultato finanziario, etichetta: Entrate totali previste, tipo: importo}
+      - {id: uscite_totali, gruppo: Risultato finanziario, etichetta: Uscite totali previste, tipo: importo}
+      - {id: saldo_totale, gruppo: Risultato finanziario, etichetta: Avanzo/disavanzo/pareggio totale previsto, tipo: importo}
+      - {id: cassa_crediti, gruppo: Indice di liquidità a breve, etichetta: Cassa + crediti previsti, tipo: importo}
+      - {id: debiti, gruppo: Indice di liquidità a breve, etichetta: Debiti previsti, tipo: importo}
+      - {id: saldo_liquidita, gruppo: Indice di liquidità a breve, etichetta: Avanzo/disavanzo/pareggio (indice di liquidità a breve) previsto, tipo: importo}
+      - {id: entrate_riscosse, gruppo: Risultato di cassa, etichetta: Entrate riscosse previste, tipo: importo}
+      - {id: uscite_pagate, gruppo: Risultato di cassa, etichetta: Uscite pagate previste, tipo: importo}
+      - {id: saldo_cassa, gruppo: Risultato di cassa, etichetta: Avanzo/disavanzo/pareggio di cassa previsto, tipo: importo}
+      - {id: valore_produzione, gruppo: Conto economico, etichetta: Valore della produzione (A) previsto, tipo: importo}
+      - {id: costi_produzione, gruppo: Conto economico, etichetta: Costi della produzione (B) previsti, tipo: importo}
+      - {id: differenza_ab, gruppo: Conto economico, etichetta: Differenza A-B prevista, tipo: importo}
+      - {id: componenti_positivi, gruppo: Conto economico, etichetta: Componenti positivi di reddito previsti, tipo: importo}
+      - {id: componenti_negativi, gruppo: Conto economico, etichetta: Componenti negativi di reddito previsti, tipo: importo}
+      - {id: utile_perdita, gruppo: Conto economico, etichetta: Utile/perdita/pareggio d'esercizio previsto, tipo: importo}
+      - *piano_indicatori
+
+  - id: CONSUNTIVO
+    titolo: P.A. e società - bilancio consuntivo
+    collocazione: Bilanci -> Bilancio preventivo e consuntivo
+    aggiornamento: tempestivo
+    norme: ["Art. 29, d.lgs. n. 33/2013"]
+    visibile_se: {regime: [FINANZIARIA, ECONOMICA], tipo_bilancio: [CONSUNTIVO]}
+    ripetibile: false
+    layout: scheda
+    nota: *nota_na
+    campi:
+      - *anno
+      - {id: url_bilancio, etichetta: Conto consuntivo completo di allegati, descrizione: Link alla sezione o al documento, tipo: url, obbligatorio: true}
+      - {id: entrate_correnti, gruppo: Risultato finanziario, etichetta: Entrate correnti, tipo: importo}
+      - {id: uscite_correnti, gruppo: Risultato finanziario, etichetta: Uscite correnti, tipo: importo}
+      - {id: saldo_corrente, gruppo: Risultato finanziario, etichetta: Differenza (risultato finanziario di parte corrente), tipo: importo}
+      - {id: entrate_totali, gruppo: Risultato finanziario, etichetta: Entrate totali, tipo: importo}
+      - {id: uscite_totali, gruppo: Risultato finanziario, etichetta: Uscite totali, tipo: importo}
+      - {id: saldo_totale, gruppo: Risultato finanziario, etichetta: Differenza (risultato finanziario totale), tipo: importo}
+      - {id: cassa_crediti, gruppo: Indice di liquidità a breve, etichetta: Cassa + crediti, tipo: importo}
+      - {id: debiti, gruppo: Indice di liquidità a breve, etichetta: Debiti, tipo: importo}
+      - {id: saldo_liquidita, gruppo: Indice di liquidità a breve, etichetta: Avanzo/disavanzo/pareggio (indice di liquidità a breve), tipo: importo}
+      - {id: entrate_riscosse, gruppo: Risultato di cassa, etichetta: Entrate riscosse, tipo: importo}
+      - {id: uscite_pagate, gruppo: Risultato di cassa, etichetta: Uscite pagate, tipo: importo}
+      - {id: saldo_cassa, gruppo: Risultato di cassa, etichetta: Avanzo/disavanzo/pareggio di cassa, tipo: importo}
+      - {id: valore_produzione, gruppo: Conto economico, etichetta: Valore della produzione (A), tipo: importo}
+      - {id: costi_produzione, gruppo: Conto economico, etichetta: Costi della produzione (B), tipo: importo}
+      - {id: differenza_ab, gruppo: Conto economico, etichetta: Differenza A-B, tipo: importo}
+      - {id: componenti_positivi, gruppo: Conto economico, etichetta: Componenti positivi di reddito, tipo: importo}
+      - {id: componenti_negativi, gruppo: Conto economico, etichetta: Componenti negativi di reddito, tipo: importo}
+      - {id: utile_perdita, gruppo: Conto economico, etichetta: Utile/perdita/pareggio d'esercizio, tipo: importo}
+      - {id: totale_attivo, gruppo: Stato patrimoniale, etichetta: Totale attivo, tipo: importo}
+      - {id: totale_passivo, gruppo: Stato patrimoniale, etichetta: Totale passivo, tipo: importo}
+      - {id: patrimonio_netto, gruppo: Stato patrimoniale, etichetta: Valore patrimonio netto, tipo: importo}
+      - {id: contributi_pubblici, gruppo: Contribuzione pubblica, etichetta: Contributi pubblici, tipo: importo}
+      - {id: contributi_totali, gruppo: Contribuzione pubblica, etichetta: Contributi totali, tipo: importo}
+      - {id: percentuale_contribuzione, gruppo: Contribuzione pubblica, etichetta: Percentuale di contribuzione pubblica, tipo: percentuale}
+      - *piano_indicatori
+
+  - id: BUDGET
+    titolo: P.A. in contabilità economico-patrimoniale e società - budget
+    collocazione: Bilanci -> Bilancio preventivo e consuntivo
+    aggiornamento: tempestivo
+    norme: ["Art. 29, d.lgs. n. 33/2013"]
+    visibile_se: {regime: [ECONOMICA], tipo_bilancio: [PREVENTIVO]}
+    ripetibile: false
+    layout: scheda
+    nota: *nota_na
+    campi:
+      - *anno
+      - {id: url_bilancio, etichetta: Budget completo di allegati, tipo: url, obbligatorio: true}
+      - {id: valore_produzione, gruppo: Conto economico, etichetta: Valore della produzione (A) previsto, tipo: importo}
+      - {id: costi_produzione, gruppo: Conto economico, etichetta: Costi della produzione (B) previsti, tipo: importo}
+      - {id: differenza_ab, gruppo: Conto economico, etichetta: Differenza A-B prevista, tipo: importo}
+      - {id: componenti_positivi, gruppo: Conto economico, etichetta: Componenti positivi di reddito previsti, tipo: importo}
+      - {id: componenti_negativi, gruppo: Conto economico, etichetta: Componenti negativi di reddito previsti, tipo: importo}
+      - {id: utile_perdita, gruppo: Conto economico, etichetta: Utile/perdita/pareggio d'esercizio previsto, tipo: importo}
+      - {id: flussi_entrata, gruppo: Flussi di tesoreria, etichetta: Flussi finanziari in entrata previsti, tipo: importo}
+      - {id: flussi_uscita, gruppo: Flussi di tesoreria, etichetta: Flussi finanziari in uscita previsti, tipo: importo}
+      - {id: saldo_tesoreria, gruppo: Flussi di tesoreria, etichetta: Saldo finale presunto di tesoreria, tipo: importo}
+      - {id: investimenti, gruppo: Investimenti, etichetta: Investimenti previsti, tipo: importo}
+      - {id: dismissioni, gruppo: Investimenti, etichetta: Dismissioni previste, tipo: importo}
+      - {id: saldo_investimenti, gruppo: Investimenti, etichetta: Saldo finale presunto degli investimenti, tipo: importo}
+      - *piano_indicatori
+
+  - id: ORDINI
+    titolo: Ordini e collegi professionali - bilancio preventivo e consuntivo
+    collocazione: Bilanci -> Bilancio preventivo e consuntivo
+    aggiornamento: tempestivo
+    norme: ["Art. 29, d.lgs. n. 33/2013", "Delibera ANAC 777/2021"]
+    visibile_se: {regime: [ORDINI]}
+    ripetibile: false
+    almeno_uno: [[sintesi_testo, url_relazione]]
+    campi:
+      - *anno
+      - {id: sintesi_testo, etichetta: Sintesi dei dati sulle entrate e sulle spese, tipo: testo_lungo}
+      - {id: url_relazione, etichetta: Link alla Relazione del Tesoriere o al sito dove è pubblicata, tipo: url}
+
+  - id: SEMPLIFICATA
+    titolo: Enti privati in contabilità semplificata - budget e conto consuntivo
+    collocazione: Bilanci -> Bilancio preventivo e consuntivo
+    aggiornamento: tempestivo
+    norme: ["Art. 29, d.lgs. n. 33/2013"]
+    visibile_se: {regime: [SEMPLIFICATA]}
+    ripetibile: false
+    campi:
+      - *anno
+      - {id: url_bilancio, etichetta: Budget o conto consuntivo completo di allegati, tipo: url, obbligatorio: true}
+      - {id: entrate, etichetta: Entrate (previste o effettive), tipo: importo, obbligatorio: true}
+      - {id: uscite, etichetta: Uscite (previste o effettive), tipo: importo, obbligatorio: true}
+      - {id: saldo, etichetta: Avanzo/disavanzo/pareggio, tipo: importo, obbligatorio: true}
+
+note_audit: |
+  TEMPESTIVITÀ (regola specifica):
+  - I documenti e gli allegati del bilancio vanno pubblicati entro 30 giorni dall'adozione: "Positivo" fino a 30
+    giorni tra _ADOPTION_DATE_ e _PUB_DATE_, "Negativo" oltre.
+  PREVENTIVO E CONSUNTIVO:
+  - Distingui sempre preventivo e consuntivo: i campi non sono identici. Il consuntivo ha uno schema UNICO per P.A. e
+    società, qualunque sia il regime contabile, con in più risultato patrimoniale e quota di contribuzione pubblica.
+  - La percentuale di contribuzione pubblica va espressa come percentuale, non come importo.
+  VALORI DI SINTESI:
+  - Si indicano solo i valori presenti negli schemi di bilancio previsti dal regolamento dell'ente: un valore assente è
+    ammesso solo se lo schema dell'ente non lo prevede (es. enti in contabilità finanziaria senza conto economico, che
+    riportano la dicitura "n/a"). Altrimenti l'assenza è "Negativo".
+  - Per ordini e collegi basta la sintesi testuale o il link alla Relazione del Tesoriere: non esigere voci decimali né
+    il Piano degli indicatori. Neanche gli enti in contabilità semplificata hanno l'obbligo del Piano degli indicatori.
+  FORMATO:
+  - Dati in formato aperto e riutilizzabile, esposti in forma sintetica, aggregata e semplificata, anche con
+    rappresentazioni grafiche.

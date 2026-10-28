@@ -1,0 +1,92 @@
+# Schema di pubblicazione art. 15-bis d.lgs. 33/2013 (incarichi conferiti
+# nelle società controllate). Fonte: Allegato 2 alla delibera ANAC n. 497/2025.
+
+id: ART_15_BIS
+articolo: art. 15-bis
+titolo: Incarichi di collaborazione, consulenza e professionali nelle società controllate
+categoria: Consulenti e collaboratori
+fonte:
+  delibera: "497/2025"
+  allegato: 2
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Società a controllo pubblico e società in regime di amministrazione straordinaria (ESCLUSE le società emittenti
+  strumenti finanziari quotati nei mercati regolamentati e le loro controllate), enti di diritto privato in controllo
+  pubblico, enti pubblici economici (cfr. delibera ANAC n. 1134/2017, All. 1). L'art. 15-bis NON si applica alle
+  pubbliche amministrazioni di cui all'art. 2-bis, co. 1.
+
+documento:
+  titolo: Consulenti e collaboratori (Art. 15-bis d.lgs. 33/2013)
+  sottotitolo: Titolari di incarichi di collaborazione o consulenza
+  introduzione: >-
+    In ottemperanza agli obblighi di pubblicazione concernenti gli incarichi conferiti nelle società controllate
+    (art. 15-bis d.lgs. n. 33/2013), si riportano di seguito i dati sugli incarichi di collaborazione, consulenza e
+    professionali conferiti da:
+
+adempimento_alternativo:
+  etichetta: L'ente trasmette i dati sugli incarichi alla banca dati PerlaPA
+  descrizione: >-
+    Lo schema precisa che questi soggetti assolvono l'art. 15-bis laddove non trasmettano i dati sugli incarichi
+    di consulenza alla banca dati PerlaPA del Dipartimento della Funzione Pubblica.
+  etichetta_link: Collegamento alla banca dati PerlaPA
+  testo_documento: >-
+    I dati sugli incarichi di collaborazione e consulenza sono trasmessi alla banca dati PerlaPA del Dipartimento
+    della Funzione Pubblica e sono consultabili al seguente collegamento.
+  nota_audit: |
+    PERLAPA:
+    - I soggetti tenuti assolvono l'art. 15-bis laddove NON trasmettano i dati sugli incarichi alla banca dati PerlaPA
+      del DFP. Se dal documento risulta la trasmissione a PerlaPA con un collegamento alla banca dati, l'esito è
+      "Positivo" e la checklist NON si applica.
+
+sezioni:
+  - id: INCARICHI
+    titolo: Incarichi di collaborazione, consulenza, professionali
+    collocazione: Società trasparente / Amministrazione trasparente -> Consulenti e collaboratori -> Titolari di incarichi di collaborazione o consulenza
+    aggiornamento: tempestivo
+    norme: ["Art. 15-bis, co. 1, d.lgs. n. 33/2013"]
+    ripetibile: false
+    layout: scheda
+    nota: >-
+      Da pubblicare in formato tabellare, raggruppati per annualità, entro 30 giorni dal conferimento e per i due anni
+      successivi alla cessazione. Per gli incarichi con compenso la pubblicazione è condizione di efficacia del
+      pagamento (art. 15-bis, co. 2).
+    campi:
+      - id: anno
+        etichetta: Annualità di riferimento
+        tipo: anno
+        obbligatorio: true
+      - id: incarichi
+        etichetta: Incarichi
+        tipo: elenco
+        etichetta_elemento: Incarico
+        obbligatorio: true
+        campi:
+          - {id: nominativo, etichetta: Nominativo, descrizione: "Nome e cognome del consulente, collaboratore, professionista", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: atto_numero, etichetta: Estremi dell'atto di conferimento - numero, tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: atto_tipologia, etichetta: Estremi dell'atto di conferimento - tipologia, descrizione: "es. Determina", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: atto_data, etichetta: Estremi dell'atto di conferimento - data, tipo: data, obbligatorio: true}
+          - {id: oggetto, etichetta: Oggetto della prestazione, descrizione: "Attività oggetto di consulenza e collaborazione", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: ragione, etichetta: Ragione dell'incarico, descrizione: "Ragioni che hanno condotto la società/ente al conferimento", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: durata_dal, etichetta: Durata - dal, tipo: data, obbligatorio: true}
+          - {id: durata_al, etichetta: Durata - al, tipo: data, obbligatorio: true}
+          - {id: cv_link, etichetta: Curriculum vitae, descrizione: "Link al CV pubblicato nel sito istituzionale", tipo: url, max_lunghezza: 256, obbligatorio: true}
+          - {id: compenso, etichetta: Compenso, descrizione: "Al lordo di oneri sociali e fiscali a carico del collaboratore e consulente", tipo: importo, obbligatorio: true}
+          - {id: componenti_variabili, etichetta: Componenti variabili o legate alla valutazione del risultato, tipo: testo, max_lunghezza: 256}
+          - {id: tipo_procedura, etichetta: Tipo di procedura seguita per la selezione del contraente, descrizione: "es. per titoli, per esami, per titoli e colloquio", tipo: testo, max_lunghezza: 256, obbligatorio: true}
+          - {id: numero_partecipanti, etichetta: Numero di partecipanti alla procedura, tipo: numero, obbligatorio: true}
+
+note_audit: |
+  TEMPESTIVITÀ (regola specifica, prevale su quella generale):
+  - Le informazioni vanno pubblicate ENTRO 30 GIORNI dal conferimento e mantenute per i due anni successivi alla
+    cessazione. Confronta _ADOPTION_DATE_ (data di conferimento) e _PUB_DATE_: "Positivo" se l'intervallo è di
+    30 giorni o meno, "Negativo" se superiore. Se una delle due date manca, segnalalo.
+  CONDIZIONE DI EFFICACIA (art. 15-bis, co. 2):
+  - Per gli incarichi con compenso la pubblicazione è condizione di efficacia del pagamento; in caso di omessa o
+    parziale pubblicazione, il responsabile della pubblicazione e chi ha effettuato il pagamento sono soggetti a una
+    sanzione pari alla somma corrisposta. Se rilevi incompletezze su incarichi retribuiti, evidenzia questa conseguenza.
+  COMPENSI:
+  - Se esistono componenti variabili o legate alla valutazione del risultato e non sono evidenziate, l'esito è "Parziale".
+  CURRICULUM:
+  - Il CV deve rispettare il § 9.a delle Linee guida del Garante Privacy (G.U. n. 134 del 12 giugno 2014): segnala dati
+    personali eccedenti (recapiti personali, codice fiscale, dati sensibili).

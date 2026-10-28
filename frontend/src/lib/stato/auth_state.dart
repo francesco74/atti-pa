@@ -23,8 +23,8 @@ class Utente {
         decretoIncarico = j['decreto_incarico'] as String?,
         ruoli = List<String>.from(j['ruoli'] as List),
         origine = (j['origine'] as String?) ?? 'LDAP',
-        installazione = j['installazione'] == true,
-        ente = j['ente'] == null ? null : EnteUtente.daJson(Map<String, dynamic>.from(j['ente'] as Map));
+        cambioPassword = j['cambio_password'] == true,
+        ente = EnteUtente.daJson(Map<String, dynamic>.from(j['ente'] as Map));
 
   final String id;
   final String username;
@@ -33,19 +33,19 @@ class Utente {
   final String? decretoIncarico;
   final List<String> ruoli;
   final String origine; // LDAP, LOCALE
-  final bool installazione; // amministratore dell'installazione (gestisce gli enti)
-  final EnteUtente? ente;
+  final bool cambioPassword; // password iniziale: va cambiata prima di usare l'app
+  final EnteUtente ente;
 
   bool get locale => origine == 'LOCALE';
 
   /// Modulo abilitato per l'ente (es. "redazione").
-  bool modulo(String nome) => ente?.moduli.contains(nome) ?? false;
+  bool modulo(String nome) => ente.moduli.contains(nome);
 
-  // l'amministratore dell'installazione ha i poteri dell'amministratore sull'ente del dominio
-  bool get isAdmin => installazione ? ente != null : ruoli.contains('ADMIN');
+  bool get isAdmin => ruoli.contains('ADMIN');
   bool get isRedattore => isAdmin || ruoli.contains('REDATTORE');
   bool get isControllore => isAdmin || ruoli.contains('CONTROLLORE');
   bool get isGestoreModelli => isAdmin || ruoli.contains('GESTORE_MODELLI');
+  bool get isTrasparenza => isAdmin || ruoli.contains('TRASPARENZA');
 }
 
 enum StatoAuth { verifica, anonimo, autenticato }

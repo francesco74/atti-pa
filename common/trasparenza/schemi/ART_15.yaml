@@ -1,0 +1,172 @@
+# Scheda per l'art. 15 d.lgs. 33/2013 (titolari di incarichi di collaborazione
+# o consulenza).
+#
+# ATTENZIONE: per questo obbligo ANAC NON ha approvato uno schema di
+# pubblicazione ai sensi dell'art. 48 (non rientra nelle delibere 495/2024,
+# 481/2025 e 497/2025). I dati della scheda sono ricavati direttamente dalla
+# norma e dall'elenco degli obblighi allegato alla delibera ANAC 1310/2016;
+# struttura, ordine e formato dei campi sono una scelta di questa applicazione.
+# Documento generato e prompt di audit lo dichiarano esplicitamente
+# (fonte di tipo "normativa").
+#
+# Non è previsto l'adempimento tramite collegamento alla banca dati PerlaPA
+# (art. 9-bis e Allegato B): da valutare sul testo vigente prima di
+# aggiungerlo come adempimento_alternativo.
+
+id: ART_15
+articolo: art. 15
+titolo: Titolari di incarichi di collaborazione o consulenza
+categoria: Consulenti e collaboratori
+fonte:
+  tipo: normativa
+  norme:
+    - "Art. 15, d.lgs. n. 33/2013"
+    - "Art. 53, co. 14, d.lgs. n. 165/2001"
+    - "Allegato 1 alla delibera ANAC n. 1310/2016 (elenco degli obblighi di pubblicazione)"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni di cui all'art. 2-bis, co. 1 (amministrazioni di cui all'art. 1, co. 2, d.lgs. 165/2001 e
+  Autorità amministrative indipendenti). Per i soggetti di cui all'art. 2-bis, co. 2, l'obbligo si applica in quanto
+  compatibile; per le società e gli enti di diritto privato in controllo pubblico gli incarichi sono disciplinati
+  dall'art. 15-bis.
+
+documento:
+  titolo: Consulenti e collaboratori (Art. 15 d.lgs. 33/2013)
+  sottotitolo: Titolari di incarichi di collaborazione o consulenza
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti i titolari di incarichi di collaborazione o consulenza
+    (art. 15 d.lgs. n. 33/2013 e art. 53, co. 14, d.lgs. n. 165/2001), si riportano di seguito i dati relativi a:
+
+sezioni:
+  - id: INCARICHI
+    titolo: Titolari di incarichi di collaborazione o consulenza
+    collocazione: Consulenti e collaboratori -> Titolari di incarichi di collaborazione o consulenza
+    aggiornamento: tempestivo
+    norme: ["Art. 15, co. 1, 2 e 4, d.lgs. n. 33/2013", "Art. 53, co. 14, d.lgs. n. 165/2001"]
+    ripetibile: true
+    etichetta_elemento: Incarico
+    nota: >-
+      I dati vanno pubblicati entro tre mesi dal conferimento e mantenuti per i tre anni successivi alla cessazione
+      dell'incarico (art. 15, co. 4). Per gli incarichi con compenso la pubblicazione è condizione di efficacia
+      dell'atto e di liquidazione dei compensi (art. 15, co. 2).
+    almeno_uno: [[data_fine, durata]]
+    campi:
+      - id: soggetto
+        gruppo: Incarico
+        etichetta: Soggetto incaricato
+        descrizione: Nome e cognome, o denominazione, del soggetto percettore
+        tipo: testo
+        obbligatorio: true
+      - id: tipologia
+        etichetta: Tipologia di incarico
+        tipo: scelta
+        opzioni: [Collaborazione, Consulenza]
+        obbligatorio: true
+      - id: oggetto
+        etichetta: Oggetto e ragione dell'incarico
+        tipo: testo_lungo
+        obbligatorio: true
+      - id: data_inizio
+        etichetta: Data di inizio
+        tipo: data
+        obbligatorio: true
+      - id: data_fine
+        etichetta: Data di fine
+        tipo: data
+      - id: durata
+        etichetta: Durata
+        descrizione: Da indicare se l'incarico non ha una data di fine (es. 12 mesi dalla stipula)
+        tipo: testo
+
+      - id: atto_estremi
+        gruppo: Atto di conferimento
+        etichetta: Estremi dell'atto di conferimento
+        descrizione: Tipo, numero e data dell'atto (es. Determinazione n. 123 del 15/03/2026)
+        tipo: testo
+        obbligatorio: true
+      - id: atto_link
+        etichetta: Link all'atto di conferimento
+        tipo: url
+
+      - id: compenso_previsto
+        gruppo: Compensi
+        etichetta: Compenso previsto
+        descrizione: Importo lordo; 0,00 per gli incarichi a titolo gratuito
+        tipo: importo
+        obbligatorio: true
+      - id: compenso_erogato
+        etichetta: Compenso erogato
+        descrizione: Ammontare effettivamente erogato, da aggiornare durante l'incarico
+        tipo: importo
+      - id: componenti_variabili
+        etichetta: Componenti variabili o legate alla valutazione del risultato
+        tipo: testo
+
+      - id: cv_link
+        gruppo: Curriculum, incarichi e attività professionali
+        etichetta: Link al curriculum vitae
+        tipo: url
+        obbligatorio: true
+      - id: altri_incarichi
+        etichetta: Incarichi, cariche e attività professionali
+        descrizione: >-
+          Incarichi o cariche in enti di diritto privato regolati o finanziati dalla P.A. e attività professionali
+          (art. 15, co. 1, lett. c). Se non ce ne sono, pubblicare la dichiarazione di assenza nel campo successivo.
+        tipo: elenco
+        etichetta_elemento: Incarico, carica o attività
+        campi:
+          - id: tipo
+            etichetta: Tipo
+            tipo: scelta
+            opzioni:
+              - Incarico in ente di diritto privato regolato o finanziato dalla P.A.
+              - Carica in ente di diritto privato regolato o finanziato dalla P.A.
+              - Attività professionale
+            obbligatorio: true
+          - id: descrizione
+            etichetta: Ente e descrizione
+            tipo: testo
+            obbligatorio: true
+      - id: dichiarazione_altri_incarichi
+        etichetta: Link alla dichiarazione su incarichi, cariche e attività professionali
+        descrizione: Dichiarazione del soggetto incaricato, anche di assenza
+        tipo: url
+
+      - id: attestazione_conflitto
+        gruppo: Conflitto di interessi
+        etichetta: Link all'attestazione di insussistenza di conflitti di interesse
+        descrizione: >-
+          Attestazione dell'avvenuta verifica dell'insussistenza di situazioni, anche potenziali, di conflitto di
+          interesse (art. 53, co. 14, d.lgs. 165/2001)
+        tipo: url
+        obbligatorio: true
+
+note_audit: |
+  TEMPESTIVITÀ (regola specifica, art. 15, co. 4):
+  - I dati vanno pubblicati entro TRE MESI dal conferimento dell'incarico: considera _ADOPTION_DATE_ come data dell'atto
+    di conferimento; "Positivo" se _PUB_DATE_ è entro tre mesi, "Negativo" oltre.
+  - I dati devono restare pubblicati per i tre anni successivi alla cessazione dell'incarico.
+  DURATA MASSIMA DELLA PUBBLICAZIONE (art. 15, co. 4):
+  - Se dal documento risulta la fine dell'incarico, confrontala con la data dell'analisi (_DATA_ANALISI_). Oltre tre
+    anni dalla cessazione i dati non sono più oggetto di pubblicazione obbligatoria: se il curriculum, i compensi o
+    altri dati personali sono ancora pubblicati l'esito è "Negativo". Vanno rimossi dalla sezione e restano
+    accessibili con l'accesso civico (art. 5 d.lgs. 33/2013); mantenerli online contrasta con il principio di
+    limitazione della conservazione (art. 5, par. 1, lett. e), Reg. UE 2016/679).
+  - Se la fine dell'incarico non è determinabile, il controllo è "Non valutabile".
+  CONDIZIONE DI EFFICACIA (art. 15, co. 2):
+  - Per gli incarichi con compenso, la pubblicazione degli estremi dell'atto di conferimento, completi del soggetto
+    percettore, della ragione dell'incarico e dell'ammontare erogato, è condizione di efficacia dell'atto e di
+    liquidazione dei compensi: l'assenza di uno di questi elementi è un rilievo grave (in caso di pagamento senza
+    pubblicazione si applica la responsabilità prevista dall'art. 15, co. 3).
+  INCARICHI, CARICHE E ATTIVITÀ PROFESSIONALI (art. 15, co. 1, lett. c):
+  - Il dato deve risultare da un elenco oppure da una dichiarazione del soggetto, anche di assenza: se mancano entrambi
+    l'esito è "Negativo".
+  CURRICULUM E RISERVATEZZA:
+  - Il curriculum va pubblicato senza dati personali eccedenti (recapiti personali, codice fiscale, firma autografa,
+    dati sulla salute o altri dati particolari): la loro presenza è un rilievo (Linee guida del Garante per la
+    protezione dei dati personali, provv. n. 243/2014).
+  DISTINZIONE DA ALTRE FATTISPECIE:
+  - Gli incarichi conferiti da società ed enti di diritto privato in controllo pubblico rientrano nell'art. 15-bis; gli
+    incarichi conferiti o autorizzati ai propri dipendenti nell'art. 18; i titolari di incarichi dirigenziali nell'art.
+    14. Se il documento riguarda una di queste fattispecie, segnalalo invece di applicare la checklist.

@@ -1,0 +1,108 @@
+# Schema di pubblicazione art. 33 d.lgs. 33/2013 (tempi di pagamento).
+# Fonte: Allegato 4 alla delibera ANAC n. 497/2025.
+
+id: ART_33
+articolo: art. 33
+titolo: Tempi di pagamento dell'amministrazione
+fonte:
+  delibera: "497/2025"
+  allegato: 4
+
+ambito: autodichiarazione
+ambito_soggettivo: |
+  Soggetti di cui all'art. 2-bis, co. 1 (pubbliche amministrazioni di cui all'art. 1, co. 2, d.lgs. 165/2001) e co. 2
+  (enti pubblici economici, ordini professionali, società in controllo pubblico, associazioni, fondazioni ed enti di
+  diritto privato comunque denominati in controllo pubblico).
+
+documento:
+  titolo: Tempi di pagamento dell'amministrazione (Art. 33 d.lgs. 33/2013)
+  sottotitolo: Indicatori di tempestività dei pagamenti e ammontare dei debiti
+  introduzione: >-
+    In ottemperanza agli obblighi di pubblicazione concernenti i tempi di pagamento dell'amministrazione
+    (art. 33 d.lgs. n. 33/2013), si riportano di seguito i dati calcolati sulla base di tutte le fatture pagate
+    dall'ente, includendo tutti gli uffici, relativi a:
+
+_anno: &anno
+  id: anno
+  etichetta: Anno di riferimento
+  tipo: anno
+  obbligatorio: true
+
+# Regole dell'indicatore, comuni alle sezioni annuale e trimestrale.
+_nota_indicatore: &nota_indicatore |
+  INDICATORE DI TEMPESTIVITÀ:
+  - È la somma, per ciascuna fattura, dei giorni effettivi (compresi i festivi) tra la data di scadenza e la data di
+    pagamento, moltiplicata per l'importo dovuto, rapportata alla somma degli importi pagati nel periodo (circolare
+    MEF n. 3/2015, § 5). Un valore negativo indica pagamenti mediamente in anticipo, positivo in ritardo.
+  - Sono esclusi dal calcolo i periodi in cui la somma era inesigibile perché oggetto di contestazione o contenzioso.
+  - La disciplina riguarda i contratti con soggetti che svolgono attività d'impresa, compresi lavoratori autonomi e
+    liberi professionisti.
+
+sezioni:
+  - id: ANNUALE
+    titolo: Indicatore annuale di tempestività dei pagamenti
+    collocazione: Pagamenti dell'amministrazione -> Indicatore di tempestività dei pagamenti
+    aggiornamento: annuale
+    norme: ["Art. 33, co. 1, d.lgs. n. 33/2013"]
+    etichetta_elemento: Anno
+    note_audit: *nota_indicatore
+    campi:
+      - *anno
+      - id: valore
+        etichetta: Valore dell'indicatore
+        descrizione: Valore dell'indicatore per anno di riferimento (negativo se i pagamenti avvengono mediamente in anticipo)
+        tipo: decimale
+        decimali: 2
+        obbligatorio: true
+
+  - id: TRIMESTRALE
+    titolo: Indicatore trimestrale di tempestività dei pagamenti
+    collocazione: Pagamenti dell'amministrazione -> Indicatore di tempestività dei pagamenti
+    aggiornamento: trimestrale
+    norme: ["Art. 33, co. 1, d.lgs. n. 33/2013"]
+    etichetta_elemento: Trimestre
+    note_audit: *nota_indicatore
+    campi:
+      - *anno
+      - id: trimestre
+        etichetta: Trimestre
+        tipo: scelta
+        opzioni: ["1", "2", "3", "4"]
+        obbligatorio: true
+      - id: valore
+        etichetta: Valore dell'indicatore
+        descrizione: Valore dell'indicatore per trimestre di riferimento
+        tipo: decimale
+        decimali: 2
+        obbligatorio: true
+
+  - id: DEBITI
+    titolo: Ammontare complessivo dei debiti e numero delle imprese creditrici
+    collocazione: Pagamenti dell'amministrazione -> Ammontare complessivo dei debiti
+    aggiornamento: annuale
+    norme: ["Art. 33, co. 1, d.lgs. n. 33/2013"]
+    etichetta_elemento: Anno
+    nota: >-
+      Nell'ammontare complessivo dei debiti rientrano tutti i tipi di debito, esclusi i debiti oggetto di procedure
+      concorsuali aperte a carico del debitore e i pagamenti a titolo di risarcimento del danno (circolare MEF-RGS
+      n. 3 del 14/01/2015).
+    note_audit: |
+      AMMONTARE DEI DEBITI:
+      - Sono esclusi i debiti oggetto di procedure concorsuali aperte a carico del debitore e i pagamenti a titolo di
+        risarcimento del danno (anche se effettuati da un assicuratore): se risultano inclusi, l'esito è "Parziale".
+      - Importo e numero delle imprese creditrici vanno sempre indicati insieme: se manca uno dei due, l'esito è
+        "Negativo".
+    campi:
+      - *anno
+      - id: importo
+        etichetta: Ammontare complessivo dei debiti
+        tipo: importo
+        obbligatorio: true
+      - id: numero_imprese
+        etichetta: Numero delle imprese creditrici
+        tipo: numero
+        obbligatorio: true
+
+note_audit: |
+  RISERVATEZZA:
+  - Per i beneficiari persone fisiche non devono comparire nomi o cognomi.

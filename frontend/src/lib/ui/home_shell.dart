@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:provider/provider.dart';
 
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
-import 'admin/enti_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
 import 'bozze/bozze_page.dart';
 import 'controllo/controlli_page.dart';
 import 'libreria/libreria_page.dart';
+import 'trasparenza/result_manager.dart';
+import 'trasparenza/trasparenza_page.dart';
 
 class _Voce {
   const _Voce(this.etichetta, this.icona, this.pagina);
@@ -33,23 +35,40 @@ class _HomeShellState extends State<HomeShell> {
   /// Cambia a ogni selezione del menu: la pagina viene ricreata e ricarica i dati.
   int _generazione = 0;
 
-  void _seleziona(int i) => setState(() {
-        _indice = i;
-        _generazione++;
-      });
+  Future<void> _seleziona(int i) async {
+    if (!await _puoiLasciare()) return;
+    setState(() {
+      _indice = i;
+      _generazione++;
+    });
+  }
+
+  /// La pagina della trasparenza può avere un documento non salvato nell'editor: quelli già
+  /// salvati si aggiornano da soli, per gli altri si chiede conferma.
+  Future<bool> _puoiLasciare() async {
+    await ResultManager.salvaModifiche?.call();
+    if (!(ResultManager.modificheNonSalvate?.call() ?? false) || !mounted) return true;
+    return conferma(
+      context,
+      'Modifiche non salvate',
+      'Il documento aperto nei risultati della trasparenza non è salvato: lasciando la pagina andrà perso.',
+    );
+  }
 
   List<_Voce> get _voci {
     final u = widget.utente;
     final redazione = u.modulo('redazione'); // redazione e controllo degli atti
+    final trasparenza = u.modulo('trasparenza'); // verifica di Amministrazione Trasparente
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
-      if (redazione) const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
+      if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
+        const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
       if (redazione && u.isControllore) const _Voce('Controllo atti', Icons.fact_check, ControlliPage()),
       if (redazione && u.isGestoreModelli)
         const _Voce('Modelli e checklist', Icons.architecture, ConfigurazionePage()),
+      if (trasparenza && u.isTrasparenza) const _Voce('Trasparenza', Icons.visibility_outlined, TrasparenzaPage()),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (u.installazione) const _Voce('Enti', Icons.domain, EntiPage()),
-      if (!redazione && !u.isAdmin && !u.installazione)
+      if (!redazione && !trasparenza && !u.isAdmin)
         const _Voce('Benvenuto', Icons.home, _NessunModulo()),
     ];
   }
@@ -169,19 +188,37 @@ class _HomeShellState extends State<HomeShell> {
     final menuUtente = PopupMenuButton<String>(
       tooltip: widget.utente.nomeCompleto,
       icon: CircleAvatar(child: Text(_iniziale(widget.utente.nomeCompleto))),
+      // PointerInterceptor: il menu può aprirsi sopra l'editor della trasparenza (un
+      // iframe), che altrimenti riceverebbe i clic
       itemBuilder: (_) => [
         PopupMenuItem(
           enabled: false,
-          child: Text('${widget.utente.nomeCompleto}\n${widget.utente.ruoli.join(', ')}'
-              '${widget.utente.ente != null ? '\n${widget.utente.ente!.nome}' : ''}'
-              '${widget.utente.ufficio != null ? '\n${widget.utente.ufficio}' : ''}'),
+          child: PointerInterceptor(
+            child: Text('${widget.utente.nomeCompleto}\n${widget.utente.ruoli.join(', ')}'
+                '\n${widget.utente.ente.nome}'
+                '${widget.utente.ufficio != null ? '\n${widget.utente.ufficio}' : ''}'),
+          ),
         ),
-        if (widget.utente.ente != null) const PopupMenuItem(value: 'profilo', child: Text('Il mio profilo')),
-        if (widget.utente.locale) const PopupMenuItem(value: 'password', child: Text('Cambia la password')),
-        const PopupMenuItem(value: 'esci', child: Text('Esci')),
+        for (final (valore, testo) in [
+          ('profilo', 'Il mio profilo'),
+          if (widget.utente.locale) ('password', 'Cambia la password'),
+          ('esci', 'Esci'),
+        ])
+          PopupMenuItem(
+            value: valore,
+            padding: EdgeInsets.zero,
+            child: PointerInterceptor(
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.centerLeft,
+                child: Text(testo),
+              ),
+            ),
+          ),
       ],
-      onSelected: (v) {
-        if (v == 'esci') context.read<AuthState>().logout();
+      onSelected: (v) async {
+        if (v == 'esci' && await _puoiLasciare() && context.mounted) context.read<AuthState>().logout();
         if (v == 'profilo') _profilo();
         if (v == 'password') _cambiaPassword();
       },

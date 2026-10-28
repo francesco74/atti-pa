@@ -1,0 +1,132 @@
+# Schema di pubblicazione artt. 26 e 27 d.lgs. 33/2013 (sovvenzioni, contributi,
+# sussidi e vantaggi economici). Fonte: Allegato 8 alla delibera ANAC n. 495/2024
+# (versione aggiornata al 10.06.2026).
+
+id: ART_26_27
+articolo: artt. 26 e 27
+titolo: Sovvenzioni, contributi, sussidi, vantaggi economici
+fonte:
+  delibera: "495/2024"
+  allegato: 8
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni di cui all'art. 1, co. 2, d.lgs. 165/2001; soggetti di cui all'art. 2-bis, co. 2 (enti
+  pubblici economici, ordini professionali, società in controllo pubblico, associazioni, fondazioni ed enti di diritto
+  privato in controllo pubblico) e co. 3. Pubblica l'amministrazione effettivamente competente a decidere
+  sull'attribuzione e ad adottare il provvedimento concessorio.
+
+documento:
+  titolo: Sovvenzioni, contributi, sussidi, vantaggi economici (Artt. 26 e 27 d.lgs. 33/2013)
+  sottotitolo: Atti di concessione, criteri e modalità di attribuzione
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti per la concessione di sovvenzioni, contributi, sussidi ed
+    ausili finanziari e per l'attribuzione di vantaggi economici di qualunque genere (artt. 26 e 27 del d.lgs.
+    n. 33/2013), si riportano di seguito le informazioni e i dati relativi a:
+
+_atto: &campi_atto
+  - {id: numero, etichetta: Numero identificativo dell'atto, tipo: testo, obbligatorio: true}
+  - {id: anno, etichetta: Anno di pubblicazione dell'atto, tipo: anno, obbligatorio: true}
+  - {id: link, etichetta: Link, tipo: url, obbligatorio: true}
+
+sezioni:
+  - id: CRITERI
+    titolo: Criteri e modalità (art. 26, c. 1)
+    collocazione: Sovvenzioni, contributi, sussidi, vantaggi economici -> Criteri e modalità
+    aggiornamento: tempestivo
+    norme: ["Art. 26, c. 1, d.lgs. n. 33/2013", "Delibera ANAC 468/2021"]
+    etichetta_elemento: Tipologia di procedura
+    nota: Per ogni tipologia di procedura (es. assegnazione di borse di studio, sovvenzioni).
+    campi:
+      - {id: tipologia_procedura, etichetta: Tipologia di procedura, descrizione: "es. borse di studio, sovvenzioni", tipo: testo, obbligatorio: true}
+      - id: atti_normativi
+        etichetta: Atti normativi (leggi e regolamenti)
+        descrizione: Link al sito dove l'atto è pubblicato (possibile rinvio a Normattiva)
+        tipo: elenco
+        etichetta_elemento: Atto normativo
+        obbligatorio: true
+        campi: *campi_atto
+      - id: atti_amministrativi
+        etichetta: Atti di carattere amministrativo generale adottati in attuazione (es. bandi e avvisi)
+        descrizione: Link ad altra sezione del sito, o ad altro sito, in cui gli atti sono pubblicati
+        tipo: elenco
+        etichetta_elemento: Atto amministrativo
+        campi: *campi_atto
+
+  - id: CONCESSIONI
+    titolo: Atti di concessione dei sussidi, contributi, sovvenzioni o vantaggi economici comunque denominati
+    collocazione: Sovvenzioni, contributi, sussidi, vantaggi economici -> Atti di concessione
+    aggiornamento: tempestivo
+    norme: ["Art. 26, c. 2, d.lgs. n. 33/2013", "Art. 27, c. 1, d.lgs. n. 33/2013", "Delibera ANAC 468/2021"]
+    etichetta_elemento: Atto di concessione
+    nota: >-
+      Solo atti che dispongono vantaggi economici quantificabili, oltre 1.000 euro per anno solare per beneficiario.
+      La pubblicazione è condizione legale di efficacia dell'atto. Esclusi gli atti contabili di impegno e liquidazione.
+    campi:
+      - {id: numero, etichetta: Numero identificativo del provvedimento, tipo: testo, obbligatorio: true}
+      - {id: anno, etichetta: Anno di pubblicazione del provvedimento, tipo: anno, obbligatorio: true}
+      - {id: beneficiario, etichetta: Beneficiario, descrizione: "Persona giuridica: nominativo e CF/P.IVA di 11 cifre; persona fisica: nominativo o, per tutela della riservatezza, Soggetto privato", tipo: testo, obbligatorio: true}
+      - {id: importo, etichetta: Importo corrisposto (liquidato), tipo: importo, obbligatorio: true}
+      - {id: norma_base, etichetta: Norma o titolo a base dell'attribuzione, descrizione: Testo o link ai dati pubblicati ex art. 26 co. 1, tipo: testo, obbligatorio: true}
+      - {id: resp_nominativo, etichetta: Responsabile del procedimento - nominativo, tipo: testo, obbligatorio: true}
+      - {id: resp_qualifica, etichetta: Responsabile del procedimento - qualifica, tipo: testo, obbligatorio: true}
+      - {id: resp_ufficio, etichetta: Responsabile del procedimento - ufficio, tipo: testo, obbligatorio: true}
+      - {id: resp_telefono, etichetta: Recapito telefonico dell'ufficio, descrizione: "Numero istituzionale o link alla sotto-sezione dove è pubblicato (es. artt. 13 e 35)", tipo: testo, obbligatorio: true}
+      - {id: resp_peo, etichetta: PEO dell'ufficio, descrizione: Indirizzo o link alla sotto-sezione dove è pubblicato, tipo: testo, obbligatorio: true}
+      - {id: resp_pec, etichetta: PEC dell'ufficio, descrizione: Indirizzo o link alla sotto-sezione dove è pubblicato, tipo: testo, obbligatorio: true}
+      - {id: modalita_individuazione, etichetta: Modalità seguita per l'individuazione del beneficiario, descrizione: "Requisiti, punteggi e modalità di presentazione dell'istanza, o link all'avviso", tipo: testo_lungo, obbligatorio: true}
+      - {id: link_progetto, etichetta: Link al progetto selezionato e al curriculum del soggetto incaricato, descrizione: Solo per vantaggi connessi alla presentazione di progetti, tipo: url}
+
+  - id: CONCESSIONI_RNA
+    titolo: Atti di concessione - collegamento al Registro Nazionale degli Aiuti
+    collocazione: Sovvenzioni, contributi, sussidi, vantaggi economici -> Atti di concessione
+    aggiornamento: tempestivo
+    norme: ["Art. 26, c. 2, d.lgs. n. 33/2013", "Delibera ANAC 468/2021 (nota 6)"]
+    ripetibile: false
+    nota: >-
+      Se i dati sono già presenti nel Registro Nazionale degli Aiuti, la pubblicazione degli atti di concessione può
+      essere sostituita dal collegamento ipertestuale al Registro.
+    # Stessa sezione ANAC di CONCESSIONI: un unico controllo nell'analisi IA.
+    controllo: CONCESSIONI
+    campi:
+      - {id: link_rna, etichetta: Collegamento al Registro Nazionale degli Aiuti, tipo: url, obbligatorio: true}
+
+  - id: REVOCHE
+    titolo: Atto di modifica o revoca della concessione
+    collocazione: Sovvenzioni, contributi, sussidi, vantaggi economici -> Atti di concessione
+    aggiornamento: tempestivo
+    norme: ["Delibera ANAC 468/2021"]
+    etichetta_elemento: Atto
+    nota: >-
+      Pubblicazione non obbligatoria ma raccomandata da ANAC, insieme (stessa pagina) al provvedimento di concessione
+      a cui la modifica o revoca si riferisce. Non pubblicare i dati personali risultanti dal provvedimento.
+    campi:
+      - {id: numero, etichetta: Numero identificativo dell'atto, tipo: testo, obbligatorio: true}
+      - {id: anno, etichetta: Anno di pubblicazione del provvedimento, tipo: anno, obbligatorio: true}
+      - {id: motivazione, etichetta: Motivazione della modifica/revoca, tipo: testo_lungo, obbligatorio: true}
+
+note_audit: |
+  APPLICABILITÀ (verifica iniziale):
+  - L'obbligo sussiste SOLO per concessioni superiori a 1.000 euro nell'anno solare per lo stesso beneficiario: sotto
+    soglia l'esito è "Non Applicabile". Estrai il valore numerico tenendo conto del formato italiano prima di confrontare.
+  - Sono oggetto di pubblicazione solo gli atti che dispongono vantaggi direttamente quantificabili in termini economici.
+    Se il documento è un atto contabile di impegno o di liquidazione presentato come atto di concessione: "Negativo".
+  - È vietata la pubblicazione di dati identificativi di persone fisiche da cui si possano ricavare informazioni sullo
+    stato di salute o sul disagio economico-sociale: se presenti, "Negativo".
+  BENEFICIARIO:
+  - Per le persone giuridiche servono nominativo e CF/P.IVA a 11 cifre. Per le persone fisiche la regola è il
+    nominativo; "Soggetto privato" è ammesso SOLO in presenza di esigenze di riservatezza. Un nominativo pubblicato
+    senza rischi per la riservatezza è conforme.
+  - Se dal documento risulta che il beneficiario è controllato dallo stesso soggetto di altri beneficiari, verifica la
+    pubblicazione dei dati consolidati di gruppo; se il controllo non è deducibile, non presumerlo.
+  REGISTRO NAZIONALE DEGLI AIUTI:
+  - Se i dati sono già nel RNA, il solo collegamento al Registro sostituisce gli altri campi: non segnalarne l'assenza.
+  LINK AL PROGETTO:
+  - Obbligatorio solo se il vantaggio è connesso alla presentazione di progetti; altrimenti "Non Applicabile".
+  MODIFICHE E REVOCHE:
+  - Non sono un obbligo di legge ma una raccomandazione ANAC (delibera 468/2021): se assenti o imperfette, l'esito è
+    comunque "Positivo", con una nota che lo precisi e indichi il margine di miglioramento.
+  FORMATO (art. 27, co. 2):
+  - Ove verificabile, i dati degli atti di concessione dovrebbero essere in formato tabellare aperto, in un unico elenco
+    annuale per amministrazione; se non è verificabile dal documento, non presumere una violazione.

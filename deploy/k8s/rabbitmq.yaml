@@ -1,4 +1,4 @@
-# Code tra API, converter e verifica-worker (vedi common/coda.py).
+# Code tra API, converter e worker (vedi common/coda.py).
 # Credenziali e cookie Erlang nel Secret rabbitmq-secret (vedi secret.example.yaml).
 apiVersion: apps/v1
 kind: StatefulSet

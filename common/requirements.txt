@@ -19,3 +19,5 @@ anthropic==1.13.0
 aio-pika==10.1.1
 # modelli di atto (pacchetto/modelli/*.yaml)
 pyyaml==6.0.3
+# sanificazione dell'HTML dei documenti della trasparenza (common/trasparenza/sicurezza.py)
+nh3==0.3.7

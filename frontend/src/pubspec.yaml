@@ -17,6 +17,10 @@ dependencies:
   url_launcher: ^6.3.2
   # riquadro HTML (iframe) per mostrare il PDF dell'atto originale
   web: ^1.1.0
+  # modulo trasparenza (ripreso da PApuntozeroIA): clic sopra l'iframe dell'editor dei
+  # risultati (web/editor), date e importi in formato italiano
+  pointer_interceptor: ^0.10.1+2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -25,6 +29,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/trasparenza/  # normativa di riferimento
   # Font inclusi: la rete dell'ente può non raggiungere i CDN di Google
   fonts:
     - family: Roboto

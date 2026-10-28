@@ -11,7 +11,7 @@
 set -euo pipefail
 
 REGISTRY="${REGISTRY:-registry.intranet.provincia.lucca/atti.pa}"
-COMPONENTI=(api converter verifica-worker normattiva-sync frontend)
+COMPONENTI=(api converter worker normattiva-sync frontend)
 
 versione="${1:-}"
 if [[ -z "$versione" || "$versione" == -* ]]; then

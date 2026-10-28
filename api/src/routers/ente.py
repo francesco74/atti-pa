@@ -1,7 +1,9 @@
-"""Amministrazione dell'ente: modi di accesso (utenti locali, Active Directory) e utenti.
+"""Amministrazione dell'ente: profilo (logo, caratteristiche), modi di accesso (utenti
+locali, Active Directory) e utenti.
 
-Riservata all'amministratore dell'ente (ruolo ADMIN) e all'amministratore
-dell'installazione. I dati dell'ente e la carta intestata sono in routers/modelli.py.
+Riservata all'amministratore dell'ente (ruolo ADMIN). I dati dell'ente e la carta intestata
+sono in routers/modelli.py. Gli utenti locali creati qui, o con la password reimpostata,
+devono sceglierne una propria al primo accesso.
 """
 
 import asyncio
@@ -12,17 +14,91 @@ from flask import Blueprint
 from ldap3.core.exceptions import LDAPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
+from sqlalchemy.orm import undefer
 
 from auth import password as pw
 from auth.ldap import GRUPPI_PREDEFINITI, ConfigLdap, ruoli_da_gruppi
-from deps import amministratore_ente, audit, db, ente, risorse, utente
+from deps import amministratore_ente, audit, autenticato, db, ente, risorse, utente
 from schemas import UtenteOut
-from web import ErroreApi, corpo
+from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto
 from common.models import Ente, OrigineUtente, Ruolo, User
 
 log = logging.getLogger("atti_api.ente")
 
 bp = Blueprint("ente", __name__, url_prefix="/api/v1/ente")
+
+
+# --- profilo -------------------------------------------------------------------------------
+
+LOGO_MAX_BYTE = 2 * 1024 * 1024
+# solo immagini raster: un SVG può contenere script
+_FIRME_LOGO = {b"\x89PNG\r\n\x1a\n": "image/png", b"\xff\xd8\xff": "image/jpeg"}
+
+
+class ProfiloIn(BaseModel):
+    caratteristiche: str | None = Field(default=None, max_length=10_000)
+
+
+def _profilo(e: Ente) -> dict:
+    return {"nome": e.nome, "caratteristiche": e.caratteristiche, "logo": e.logo_mime is not None}
+
+
+@bp.get("/profilo")
+@autenticato(modulo=None)
+async def profilo():
+    """Nome, caratteristiche dell'amministrazione e presenza del logo (per tutti i moduli)."""
+    return _profilo(await db().get(Ente, ente().id))
+
+
+@bp.put("/profilo")
+@amministratore_ente
+async def aggiorna_profilo():
+    dati = corpo(ProfiloIn)
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    e.caratteristiche = (dati.caratteristiche or "").strip() or None
+    audit(sessione, utente(), "ente", e.id, "PROFILO")
+    await sessione.commit()
+    return _profilo(e)
+
+
+@bp.get("/logo")
+@autenticato(modulo=None)
+async def logo():
+    e = await db().scalar(select(Ente).where(Ente.id == ente().id).options(undefer(Ente.logo)))
+    if e is None or not e.logo:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Logo non caricato")
+    estensione = "png" if e.logo_mime == "image/png" else "jpg"
+    return allegato(e.logo, e.logo_mime, f"logo.{estensione}", in_linea=True)
+
+
+@bp.post("/logo")
+@amministratore_ente
+async def carica_logo():
+    """Logo dell'ente (PNG o JPEG), usato nei documenti generati dai moduli."""
+    contenuto = file_caricato().read(LOGO_MAX_BYTE + 1)
+    if len(contenuto) > LOGO_MAX_BYTE:
+        raise ErroreApi(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "Logo troppo grande (massimo 2 MB)")
+    mime = next((m for firma, m in _FIRME_LOGO.items() if contenuto.startswith(firma)), None)
+    if mime is None:
+        raise ErroreApi(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Il logo deve essere un'immagine PNG o JPEG")
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    e.logo, e.logo_mime = contenuto, mime
+    audit(sessione, utente(), "ente", e.id, "LOGO")
+    await sessione.commit()
+    return _profilo(e)
+
+
+@bp.delete("/logo")
+@amministratore_ente
+async def elimina_logo():
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    e.logo = e.logo_mime = None
+    audit(sessione, utente(), "ente", e.id, "LOGO_RIMOSSO")
+    await sessione.commit()
+    return nessun_contenuto()
 
 
 # --- accesso -------------------------------------------------------------------------------
@@ -163,8 +239,8 @@ async def crea_utente():
         raise ErroreApi(HTTPStatus.CONFLICT, "Nome utente già usato")
     u = User(
         ente_id=e.id, username=username, origine=OrigineUtente.LOCALE,
-        password_hash=pw.calcola(dati.password), nome_completo=dati.nome_completo,
-        email=dati.email, ruoli=dati.ruoli,
+        password_hash=pw.calcola(dati.password), cambio_password=True,
+        nome_completo=dati.nome_completo, email=dati.email, ruoli=dati.ruoli,
     )  # fmt: skip
     sessione.add(u)
     await sessione.flush()
@@ -212,6 +288,7 @@ async def reimposta_password(utente_id: str):
     if u.origine != OrigineUtente.LOCALE:
         raise ErroreApi(HTTPStatus.BAD_REQUEST, "La password di dominio si cambia in Active Directory")
     u.password_hash = pw.calcola(dati.password)
+    u.cambio_password = u.id != utente().id
     u.token_version = (u.token_version or 0) + 1
     audit(sessione, utente(), "utente", u.id, "PASSWORD_REIMPOSTATA")
     await sessione.commit()

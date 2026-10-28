@@ -11,7 +11,9 @@ import logging
 import time
 from http import HTTPStatus
 
-from routers import auth, bozze, checklists, controllo, ente, enti, modelli, norme, norme_manuali
+from routers import (
+    auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, trasparenza,
+)  # fmt: skip
 from flask import g, request
 from flask_cors import CORS
 from sqlalchemy import text
@@ -22,7 +24,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from auth.ldap import LdapAuthenticator
 from ciclo import CicloAsync
 from deps import Risorse, chiudi_db
-from documenti import DocumentiClient
+from common.documenti import DocumentiClient
 from routers import editor, pacchetti, verifiche
 from web import AttiFlask, ErroreApi
 from common.config import Settings, get_settings
@@ -57,11 +59,8 @@ def create_app(
     if settings is None:
         configura_da_ambiente()
         settings = get_settings()
-    if settings.auth_enabled and len(settings.jwt_secret) < 32:
-        raise RuntimeError(
-            "Con AUTH_ENABLED=true serve JWT_SECRET di almeno 32 caratteri "
-            "(es. openssl rand -hex 32)"
-        )
+    if len(settings.jwt_secret) < 32:
+        raise RuntimeError("Serve JWT_SECRET di almeno 32 caratteri (es. openssl rand -hex 32)")
 
     app = AttiFlask("atti_api", ciclo=ciclo)
     # margine di 1 MB per gli altri campi del form multipart
@@ -166,14 +165,13 @@ def create_app(
         return {"status": "ok"}
 
     for modulo in (
-        auth, ente, enti, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
-        verifiche, controllo,
+        auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
+        verifiche, controllo, trasparenza,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 
     log.info(
-        "API avviata: autenticazione %s, LLM %s (%s), documenti %s, log %s",
-        "per ente (locale/Active Directory)" if settings.auth_enabled else "disattivata",
+        "API avviata: LLM %s (%s), documenti %s, log %s",
         llm.modello,
         llm.provider,
         settings.documenti_url,

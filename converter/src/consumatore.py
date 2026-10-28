@@ -6,7 +6,7 @@ Riceve da `<prefisso>.conversione` {"percorso", "nome_file"} più gli identifica
 lavoro ("atto_id" e "verifica_id" per un atto da controllare, "testo_norma_id" per il testo
 di una norma inserita manualmente), legge il file dall'archivio (ARCHIVIO_DIR, percorso
 relativo), lo converte e pubblica su `<prefisso>.convertiti` gli stessi identificativi con
-"markdown" ed "errore". Non accede al database: lo stato lo aggiorna il verifica-worker.
+"markdown" ed "errore". Non accede al database: lo stato lo aggiorna il worker.
 Formato dei messaggi: common/coda.py.
 """
 
@@ -20,28 +20,13 @@ from pathlib import Path, PurePosixPath
 
 import aio_pika
 
-from main import Convertitore, ErroreConversione, Settings, configura_logging
-from markdown import ConversioneNonRiuscita, odt_in_markdown, pdf_in_markdown
+from main import Convertitore, Settings, configura_logging, converti_in_markdown
+from markdown import ConversioneNonRiuscita
 
 log = logging.getLogger("converter.consumatore")
 
 CONVERSIONE = "conversione"
 CONVERTITI = "convertiti"
-
-
-def converti_in_markdown(convertitore: Convertitore, contenuto: bytes, nome_file: str) -> str:
-    estensione = Path(nome_file).suffix.lower()
-    if estensione == ".pdf":
-        return pdf_in_markdown(contenuto)
-    if estensione == ".odt":
-        return odt_in_markdown(contenuto)
-    if estensione in (".docx", ".doc", ".rtf"):
-        try:
-            odt = convertitore.converti(contenuto, estensione, "odt")
-        except ErroreConversione as e:
-            raise ConversioneNonRiuscita(e.messaggio) from e
-        return odt_in_markdown(odt)
-    raise ConversioneNonRiuscita(f"Formato non supportato: {estensione or 'sconosciuto'}")
 
 
 def leggi_file(archivio_dir: str, percorso: str) -> bytes:

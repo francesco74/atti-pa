@@ -1,8 +1,7 @@
 """Accesso: utenti locali o Active Directory dell'ente del dominio, sessione in cookie.
 
 L'ente si ricava dal dominio della richiesta solo qui (e per la configurazione pubblica):
-dopo l'accesso è scritto nel token. L'amministratore dell'installazione (utente locale
-senza ente) accede da qualunque dominio.
+dopo l'accesso è scritto nel token. Da un dominio che non è di un ente non si accede.
 """
 
 import asyncio
@@ -53,7 +52,7 @@ async def ente_pubblico():
     """Ente del dominio e modi di accesso, per la pagina di login (senza autenticazione)."""
     ente = await ente_richiesta()
     if ente is None:
-        return {"ente": None, "dominio": dominio_richiesta(), "accesso_locale": True, "accesso_ldap": False}
+        return {"ente": None, "dominio": dominio_richiesta(), "accesso_locale": False, "accesso_ldap": False}
     ldap = config_ldap(ente)
     return {
         "ente": {"codice": ente.codice, "nome": ente.nome},
@@ -71,7 +70,7 @@ class LoginIn(BaseModel):
     modo: Literal["ldap", "locale"] | None = None
 
 
-async def _troppi_tentativi(sessione, ente: Ente | None, username: str) -> bool:
+async def _troppi_tentativi(sessione, ente: Ente, username: str) -> bool:
     s = impostazioni()
     # ora del database, la stessa con cui sono registrati i tentativi
     adesso = await sessione.scalar(select(func.now(type_=DateTime)))
@@ -81,17 +80,17 @@ async def _troppi_tentativi(sessione, ente: Ente | None, username: str) -> bool:
             AuditLog.entita == "login",
             AuditLog.azione == "FALLITO",
             AuditLog.entita_id == username.lower(),
-            AuditLog.ente_id == (ente.id if ente else None),
+            AuditLog.ente_id == ente.id,
             AuditLog.created_at >= dal,
         )
     )
     return (falliti or 0) >= s.login_tentativi
 
 
-async def _fallito(sessione, ente: Ente | None, username: str, motivo: str) -> None:
+async def _fallito(sessione, ente: Ente, username: str, motivo: str) -> None:
     sessione.add(
         AuditLog(
-            ente_id=ente.id if ente else None,
+            ente_id=ente.id,
             entita="login",
             entita_id=username.lower(),
             azione="FALLITO",
@@ -139,41 +138,38 @@ async def _login_ldap(sessione, ente: Ente, config: ConfigLdap, dati: LoginIn) -
     return user
 
 
-async def _login_locale(sessione, ente: Ente | None, dati: LoginIn) -> User | None:
-    username = dati.username.strip().lower()
-    candidati = []
-    if ente is not None and ente.accesso_locale:
-        candidati.append(User.ente_id == ente.id)
-    candidati.append(User.ente_id.is_(None))  # amministratore dell'installazione
-    for condizione in candidati:
-        user = await sessione.scalar(
-            select(User).where(condizione, User.username == username, User.origine == OrigineUtente.LOCALE)
+async def _login_locale(sessione, ente: Ente, dati: LoginIn) -> User | None:
+    if not ente.accesso_locale:
+        return None
+    user = await sessione.scalar(
+        select(User).where(
+            User.ente_id == ente.id,
+            User.username == dati.username.strip().lower(),
+            User.origine == OrigineUtente.LOCALE,
         )
-        if user is None:
-            continue
-        ok, da_rigenerare = pw.verifica(user.password_hash, dati.password)
-        if not ok:
-            return None
-        if not user.attivo:
-            raise ErroreApi(HTTPStatus.FORBIDDEN, "Utente disattivato")
-        if da_rigenerare:  # hash di rag o PApuntozeroIA: si porta al formato attuale
-            user.password_hash = pw.calcola(dati.password)
-        return user
-    return None
+    )
+    if user is None:
+        return None
+    ok, da_rigenerare = pw.verifica(user.password_hash, dati.password)
+    if not ok:
+        return None
+    if not user.attivo:
+        raise ErroreApi(HTTPStatus.FORBIDDEN, "Utente disattivato")
+    if da_rigenerare:  # hash di rag o PApuntozeroIA: si porta al formato attuale
+        user.password_hash = pw.calcola(dati.password)
+    return user
 
 
-def dati_utente(user: User, ente: Ente | None) -> dict:
+def dati_utente(user: User, ente: Ente) -> dict:
     """Utente con l'ente su cui lavora e i moduli abilitati (per il menu dell'app)."""
     return {
         **UtenteOut.model_validate(user).model_dump(mode="json"),
-        "installazione": user.installazione,
-        "ente": None
-        if ente is None
-        else {"id": ente.id, "codice": ente.codice, "nome": ente.nome, "moduli": ente.moduli_json or []},
+        "cambio_password": user.cambio_password,
+        "ente": {"id": ente.id, "codice": ente.codice, "nome": ente.nome, "moduli": ente.moduli_json or []},
     }
 
 
-def _risposta_con_sessione(user: User, ente: Ente | None, stato=HTTPStatus.OK):
+def _risposta_con_sessione(user: User, ente: Ente, stato=HTTPStatus.OK):
     settings = impostazioni()
     token = crea_token(user, settings)
     risposta = jsonify(token=token, scadenza_minuti=settings.jwt_scadenza_minuti, utente=dati_utente(user, ente))
@@ -193,10 +189,10 @@ def _risposta_con_sessione(user: User, ente: Ente | None, stato=HTTPStatus.OK):
 @bp.post("/login")
 async def login():
     dati = corpo(LoginIn)
-    if not impostazioni().auth_enabled:
-        raise ErroreApi(HTTPStatus.BAD_REQUEST, "Autenticazione disattivata")
     sessione = db()
     ente = await ente_richiesta()
+    if ente is None:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Questo indirizzo non è associato a un ente")
     if await _troppi_tentativi(sessione, ente, dati.username):
         raise ErroreApi(
             HTTPStatus.TOO_MANY_REQUESTS,
@@ -205,7 +201,7 @@ async def login():
     config = config_ldap(ente)
     usa_ldap = dati.modo == "ldap" or (dati.modo is None and config is not None)
     if usa_ldap:
-        if ente is None or config is None:
+        if config is None:
             raise ErroreApi(HTTPStatus.BAD_REQUEST, "Accesso con Active Directory non configurato")
         user = await _login_ldap(sessione, ente, config, dati)
     else:
@@ -213,13 +209,11 @@ async def login():
     if user is None:
         await _fallito(sessione, ente, dati.username, "credenziali")
         raise ErroreApi(HTTPStatus.UNAUTHORIZED, "Credenziali non valide")
-    if not user.installazione and (ente is None or user.ente_id != ente.id):
-        raise ErroreApi(HTTPStatus.UNAUTHORIZED, "Credenziali non valide")
     user.ultimo_accesso = datetime.now()
     await sessione.flush()
     audit(sessione, user, "utente", user.id, "LOGIN", {"modo": "ldap" if usa_ldap else "locale"})
     await sessione.commit()
-    log.info("Accesso di %s (%s) con ruoli %s", user.username, ente.codice if ente else "installazione", ", ".join(user.ruoli or []))
+    log.info("Accesso di %s (%s) con ruoli %s", user.username, ente.codice, ", ".join(user.ruoli or []))
     return _risposta_con_sessione(user, ente)
 
 
@@ -233,7 +227,7 @@ def logout():
 @bp.get("/me")
 @autenticato(modulo=None)
 async def me():
-    return dati_utente(utente(), g.get("ente"))
+    return dati_utente(utente(), g.ente)
 
 
 class ProfiloIn(BaseModel):
@@ -256,7 +250,7 @@ async def profilo():
         {"ufficio": user.ufficio, "decreto_incarico": user.decreto_incarico},
     )  # fmt: skip
     await sessione.commit()
-    return dati_utente(user, g.get("ente"))
+    return dati_utente(user, g.ente)
 
 
 class PasswordIn(BaseModel):
@@ -267,7 +261,8 @@ class PasswordIn(BaseModel):
 @bp.put("/password")
 @autenticato(modulo=None)
 async def cambia_password():
-    """Cambio della propria password (solo utenti locali): le altre sessioni si chiudono."""
+    """Cambio della propria password (solo utenti locali): le altre sessioni si chiudono.
+    È l'unica operazione ammessa con la password iniziale ancora da cambiare."""
     dati = corpo(PasswordIn)
     sessione = db()
     user = await sessione.merge(utente())
@@ -278,8 +273,11 @@ async def cambia_password():
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Password attuale non corretta")
     if errore := pw.controlla_nuova(dati.nuova):
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, errore)
+    if dati.nuova == dati.attuale:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "La nuova password deve essere diversa")
     user.password_hash = pw.calcola(dati.nuova)
+    user.cambio_password = False
     user.token_version = (user.token_version or 0) + 1
     audit(sessione, user, "utente", user.id, "PASSWORD")
     await sessione.commit()
-    return _risposta_con_sessione(user, g.get("ente"))
+    return _risposta_con_sessione(user, g.ente)

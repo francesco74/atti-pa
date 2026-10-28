@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor del documento</title>
+  <!-- Editor dei documenti della trasparenza, mostrato dall'app in un iframe. Nessuno
+       script inline: nginx serve questa cartella con una policy propria (script-src 'self'). -->
+  <link rel="stylesheet" href="vendor/summernote-lite.min.css">
+  <link rel="stylesheet" href="editor.css">
+  <script src="vendor/jquery.min.js"></script>
+  <script src="vendor/summernote-lite.min.js"></script>
+  <script src="vendor/summernote-it-IT.min.js"></script>
+</head>
+<body>
+  <div id="editor"></div>
+  <script src="editor.js"></script>
+</body>
+</html>

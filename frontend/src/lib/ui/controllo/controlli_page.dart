@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../comuni.dart';
 import 'atto_page.dart';
+import '../../util/scelta_file.dart';
 
 /// Elenco dei controlli: ogni controllo è un atto con il suo audit.
 class ControlliPage extends StatefulWidget {
@@ -44,7 +44,7 @@ class _ControlliPageState extends State<ControlliPage> {
     }
     if (!mounted) return;
     final titolo = TextEditingController();
-    PlatformFile? file;
+    FileScelto? file;
     DateTime? data;
     // le schede applicate sono le stesse della redazione: generica della tipologia, del
     // modello a cui l'atto corrisponde, delle specificità scelte
@@ -91,10 +91,7 @@ class _ControlliPageState extends State<ControlliPage> {
                     ),
                     trailing: TextButton(
                       onPressed: () async {
-                        final scelto = await FilePicker.pickFile(
-                          type: FileType.custom,
-                          allowedExtensions: ['pdf', 'odt', 'docx', 'doc'],
-                        );
+                        final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc']);
                         if (scelto != null) aggiorna(() => file = scelto);
                       },
                       child: Text(file == null ? 'Scegli' : 'Cambia'),
@@ -215,7 +212,7 @@ class _ControlliPageState extends State<ControlliPage> {
     );
     try {
       if (ok != true || file == null || data == null || !mounted) return;
-      final bytes = await file!.readAsBytes();
+      final bytes = file!.bytes;
       if (!mounted) return;
       final controllo =
           await api.postMultipart(

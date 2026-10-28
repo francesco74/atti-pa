@@ -1,0 +1,106 @@
+# Schema di pubblicazione art. 20 d.lgs. 33/2013 (valutazione della performance e
+# distribuzione dei premi al personale). Fonte: Allegato 6 alla delibera ANAC
+# n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_20
+articolo: art. 20
+titolo: Valutazione della performance e distribuzione dei premi al personale
+fonte:
+  delibera: "495/2024"
+  allegato: 6
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni ex art. 1, co. 2, d.lgs. 165/2001 e Autorità amministrative indipendenti (obbligo pieno);
+  enti pubblici economici, società ed enti di diritto privato in controllo pubblico (art. 2-bis, co. 2) limitatamente
+  ai criteri di distribuzione dei premi e all'ammontare aggregato dei premi effettivamente distribuiti. L'art. 20 non
+  si applica agli ordini e collegi professionali (delibera ANAC 777/2021).
+
+documento:
+  titolo: Performance e Premi al Personale (Art. 20 d.lgs. 33/2013)
+  sottotitolo: Dati relativi all'ammontare complessivo dei premi e criteri di distribuzione
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti i dati sui premi collegati alla performance (art. 20,
+    c. 1 e c. 2, d.lgs. n. 33/2013), si riportano di seguito i dati, in forma aggregata, relativi a:
+
+parametri:
+  - id: tipo_ente
+    etichetta: Tipologia di ente
+    opzioni:
+      - {valore: PA, etichetta: Pubblica amministrazione o Autorità amministrativa indipendente}
+      - valore: SOCIETA
+        etichetta: "Ente pubblico economico, società o ente di diritto privato in controllo pubblico"
+        nota: >-
+          Per questi enti l'obbligo è limitato ai criteri di distribuzione dei premi al personale e all'ammontare
+          aggregato dei premi effettivamente distribuiti.
+
+_solo_pa: &solo_pa {tipo_ente: [PA]}
+_criteri: &criteri
+  id: criteri
+  etichetta: Criteri utilizzati per la misurazione e valutazione
+  descrizione: "Testo (set minimo di dati) oppure link al documento sui sistemi di misurazione e valutazione richiamato nella sezione Performance del PIAO"
+  tipo: testo_lungo
+  obbligatorio: true
+
+sezioni:
+  - id: AMMONTARE
+    titolo: Ammontare complessivo dei premi stanziati e distribuiti collegati alla performance
+    collocazione: Performance -> Ammontare complessivo dei premi
+    aggiornamento: tempestivo
+    norme: ["Art. 20, c. 1, d.lgs. n. 33/2013"]
+    etichetta_elemento: Anno
+    nota: Tempestivo, non appena è disponibile il dato sullo stanziato e, per l'erogato, il dato sul liquidato.
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - {id: premi_stanziati, etichetta: Ammontare premi stanziati, tipo: importo, obbligatorio: true, visibile_se: *solo_pa}
+      - {id: premi_erogati, etichetta: Ammontare premi erogati (effettivamente distribuiti), tipo: importo, obbligatorio: true}
+
+  - id: DIRIGENTI
+    titolo: Criteri di assegnazione del trattamento accessorio e grado di differenziazione - Personale dirigenziale
+    collocazione: Performance -> Dati relativi ai premi
+    aggiornamento: tempestivo
+    norme: ["Art. 20, c. 2, d.lgs. n. 33/2013"]
+    etichetta_elemento: Anno
+    layout: scheda
+    nota: Dati da pubblicare in forma aggregata e da replicare annualmente.
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - *criteri
+      - {id: premio_stanziato, etichetta: Premio complessivo annuale stanziato, tipo: importo, obbligatorio: true, visibile_se: *solo_pa}
+      - {id: premio_erogato, etichetta: Premio complessivo annuale erogato, tipo: importo, obbligatorio: true}
+      - {id: premio_medio, etichetta: Premio mediamente percepito, tipo: importo, obbligatorio: true, visibile_se: *solo_pa}
+      - {id: grado_differenziazione, etichetta: Grado di differenziazione nell'utilizzo della premialità, descrizione: "Percentuale dell'importo erogato ai dirigenti sul totale dei premi erogati a tutto il personale", tipo: percentuale, obbligatorio: true, visibile_se: *solo_pa}
+
+  - id: NON_DIRIGENTI
+    titolo: Criteri di assegnazione del trattamento accessorio e grado di differenziazione - Personale non dirigenziale
+    collocazione: Performance -> Dati relativi ai premi
+    aggiornamento: tempestivo
+    norme: ["Art. 20, c. 2, d.lgs. n. 33/2013"]
+    etichetta_elemento: Anno
+    layout: scheda
+    nota: Dati da pubblicare in forma aggregata e da replicare annualmente (ove previsti dai CCNL).
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - *criteri
+      - {id: premio_stanziato, etichetta: Premio complessivo annuale stanziato, tipo: importo, obbligatorio: true, visibile_se: *solo_pa}
+      - {id: premio_erogato, etichetta: Premio complessivo annuale erogato, tipo: importo, obbligatorio: true}
+      - {id: premio_medio, etichetta: Premio mediamente percepito, tipo: importo, obbligatorio: true, visibile_se: *solo_pa}
+      - {id: grado_differenziazione, etichetta: Grado di differenziazione nell'utilizzo della premialità, descrizione: "Percentuale dell'importo erogato al personale non dirigenziale sul totale dei premi erogati a tutto il personale", tipo: percentuale, obbligatorio: true, visibile_se: *solo_pa}
+
+note_audit: |
+  ESCLUSIONI:
+  - Per gli ordini e collegi professionali l'art. 20 non si applica: esito "Non Applicabile", mai "Negativo".
+  - Per enti pubblici economici, società ed enti in controllo pubblico sono dovuti solo i criteri e l'ammontare dei
+    premi effettivamente distribuiti: gli altri campi sono "Non Applicabile".
+  TEMPESTIVITÀ (soglia operativa interna, non prevista dalla norma):
+  - "Positivo" fino a 30 giorni tra _ADOPTION_DATE_ e _PUB_DATE_, "Parziale" tra 31 e 60, "Negativo" oltre 60.
+    Per l'ammontare complessivo, stanziato ed erogato hanno tempistiche distinte: se è disponibile una sola data,
+    applicala a entrambi e segnalalo come limite dell'analisi.
+  CRITERI DI MISURAZIONE E VALUTAZIONE:
+  - L'obbligo è assolto sia con un testo descrittivo sia con il link al documento sui sistemi di misurazione e
+    valutazione richiamato nel PIAO: "Negativo" solo se mancano entrambi. Un testo oltre 2.000 caratteri è "Parziale"
+    (indicazione di scarsa sintesi, non violazione normativa).
+  AGGREGAZIONE:
+  - I dati vanno pubblicati in forma aggregata e replicati per ogni anno: dati riferibili a singoli dipendenti sono una
+    criticità di riservatezza ("Parziale").

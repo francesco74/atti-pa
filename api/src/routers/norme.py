@@ -303,7 +303,7 @@ async def elenco_riferimenti():
 async def crea_riferimento():
     dati = corpo(RiferimentoIn)
     user = utente()
-    if dati.condiviso and not (user.installazione or user.ha_ruolo(Ruolo.ADMIN)):
+    if dati.condiviso and not user.ha_ruolo(Ruolo.ADMIN):
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Solo un ADMIN può condividere riferimenti")
     urn = _urn(dati.urn_atto)
     oggi = datetime.now(impostazioni().tz).date()
@@ -356,7 +356,7 @@ async def elimina_riferimento(rif_id: str):
     if rif is None or rif.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND)
     proprio = rif.owner_id == user.id
-    if not proprio and not (user.installazione or user.ha_ruolo(Ruolo.ADMIN)):
+    if not proprio and not user.ha_ruolo(Ruolo.ADMIN):
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Riferimento non modificabile")
     await sessione.delete(rif)
     audit(sessione, user, "riferimento", rif_id, "ELIMINATO")

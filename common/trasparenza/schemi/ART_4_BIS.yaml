@@ -1,0 +1,125 @@
+# Schema di pubblicazione art. 4-bis d.lgs. 33/2013 (dati sui pagamenti).
+# Fonte: Allegato 1 alla delibera ANAC n. 495/2024, come modificato dalla
+# delibera n. 481/2025 (versione aggiornata al 10.06.2026).
+
+id: ART_4_BIS
+articolo: art. 4-bis
+titolo: Trasparenza nell'utilizzo delle risorse pubbliche - Dati sui pagamenti
+fonte:
+  delibera: "495/2024"
+  modificata_da: "481/2025"
+  allegato: 1
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Soggetti i cui dati sui pagamenti NON sono inseriti nella banca dati che alimenta il sito "Soldi pubblici"
+  (art. 8, co. 2, d.l. 19/2026, convertito dalla L. 50/2026). Gli altri adempiono con il solo collegamento al sito.
+
+documento:
+  titolo: Pagamenti dell'amministrazione (Art. 4-bis d.lgs. 33/2013)
+  sottotitolo: Dati sui pagamenti
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza sull'utilizzo delle risorse pubbliche (art. 4-bis, co. 2,
+    d.lgs. n. 33/2013), si riportano di seguito i dati sui pagamenti, consultabili per tipologia di spesa,
+    ambito temporale e beneficiari, di:
+
+adempimento_alternativo:
+  etichetta: I dati sui pagamenti dell'ente sono già inseriti in "Soldi pubblici"
+  descrizione: >-
+    Art. 8, co. 2, d.l. 19/2026 (conv. L. 50/2026): l'obbligo è assolto pubblicando il collegamento al sito
+    "Soldi pubblici".
+  etichetta_link: Collegamento al sito "Soldi pubblici"
+  testo_documento: >-
+    I dati sui pagamenti dell'ente sono inseriti nella banca dati che alimenta il sito "Soldi pubblici": l'obbligo
+    di cui all'art. 4-bis d.lgs. 33/2013 è assolto mediante il collegamento al predetto sito (art. 8, co. 2,
+    d.l. 19/2026, convertito dalla L. 50/2026).
+  nota_audit: |
+    VERIFICA PRELIMINARE - ESONERO EX ART. 8, CO. 2, D.L. 19/2026 (CONV. L. 50/2026):
+    - I soggetti i cui dati sui pagamenti sono già nella banca dati che alimenta "Soldi pubblici" (es. enti che
+      trasmettono a SIOPE) adempiono pubblicando in "Amministrazione trasparente" il solo collegamento al sito.
+    - Se dal documento, da _AUTHORITY_FEATURES_ o da _NOTES_ risulta che l'ente è presente in "Soldi pubblici",
+      verifica SOLO la presenza di un collegamento valido: se c'è, l'esito è "Positivo" e la checklist NON si applica.
+      Se il documento contiene comunque la tabella di dettaglio, non è un errore.
+    - Se non è possibile stabilirlo, applica la checklist e segnala nell'analisi che per gli enti presenti in
+      "Soldi pubblici" sarebbe sufficiente il collegamento.
+
+sezioni:
+  - id: PAGAMENTI
+    titolo: Dati sui pagamenti
+    collocazione: Pagamenti dell'amministrazione -> Dati sui pagamenti
+    aggiornamento: trimestrale
+    norme: ["Art. 4-bis, c. 2, d.lgs. n. 33/2013"]
+    ripetibile: false
+    layout: scheda
+    campi:
+      - id: anno
+        etichetta: Ambito temporale di riferimento - anno
+        tipo: anno
+        obbligatorio: true
+      - id: trimestre
+        etichetta: Ambito temporale di riferimento - trimestre
+        tipo: scelta
+        opzioni: ["1", "2", "3", "4"]
+        obbligatorio: true
+      - id: pagamenti
+        etichetta: Pagamenti
+        tipo: elenco
+        etichetta_elemento: Pagamento
+        obbligatorio: true
+        campi:
+          - id: categoria
+            etichetta: Categoria di spesa
+            tipo: scelta
+            opzioni: [uscite correnti, uscite in conto capitale]
+            obbligatorio: true
+          - id: tipologia
+            etichetta: Tipologia di spesa
+            tipo: scelta
+            opzioni_da: categoria
+            opzioni_per:
+              uscite correnti:
+                - Acquisto di beni e di servizi
+                - Contributi in conto esercizio
+                - Interessi passivi
+                - Altre spese per attività finanziarie
+                - Altre spese correnti
+              uscite in conto capitale:
+                - Investimenti in beni materiali
+                - Investimenti in beni immateriali
+                - Investimenti in attività finanziarie
+                - Contributi in conto capitale
+                - Altre spese in conto capitale
+            obbligatorio: true
+          - id: importo
+            etichetta: Importo
+            descrizione: Importo del singolo pagamento per il trimestre di riferimento per singolo beneficiario
+            tipo: importo
+            obbligatorio: true
+          - id: beneficiario
+            etichetta: Beneficiario
+            descrizione: Per le persone fisiche (CF a 16 cifre) basta la dicitura "Persona fisica"
+            tipo: scelta
+            opzioni: [Persona fisica, Altro soggetto pubblico e privato, Soggetto estero]
+            obbligatorio: true
+
+note_audit: |
+  TEMPESTIVITÀ:
+  - Se dal documento risultano anno/trimestre di riferimento e la data di pubblicazione (_PUB_DATE_), segnala come
+    "Parziale" una pubblicazione avvenuta oltre la fine del trimestre successivo a quello di riferimento.
+  BENEFICIARI E RISERVATEZZA:
+  - "Persona fisica" per tutti i soggetti con codice fiscale a 16 cifre: non devono comparire nomi, cognomi o altri
+    dati identificativi (in caso contrario l'esito è "Negativo").
+  - "Altro soggetto pubblico e privato" per persone giuridiche, società ed enti (CF/P.IVA a 11 cifre).
+  - "Soggetto estero" per persone fisiche, giuridiche e non giuridiche dei Paesi esteri.
+  PIANO DEI CONTI:
+  - Se presenti i codici del piano dei conti finanziario (Allegato 6.1 d.lgs. 118/2011, es. U.1.03...), verifica che
+    corrispondano alla tipologia di spesa secondo il prospetto di riconciliazione dello schema: U.1.03 acquisto di
+    beni e servizi; U.1.04 contributi in conto esercizio; U.1.07 interessi passivi; U.1.08 altre spese per attività
+    finanziarie; U.1.10 altre spese correnti; U.2.02.01/02/04/05 investimenti in beni materiali; U.2.02.03/06
+    investimenti in beni immateriali; U.3.01 investimenti in attività finanziarie; U.2.03 contributi in conto
+    capitale; U.2.05 altre spese in conto capitale.
+  SPESE DI PERSONALE:
+  - Per le spese in materia di personale si applicano gli artt. da 15 a 20 (art. 4-bis, co. 3): segnala come
+    "Parziale" stipendi o altre voci retributive del personale. NON segnalare i contributi: lo schema prevede le
+    tipologie "Contributi in conto esercizio" e "Contributi in conto capitale".

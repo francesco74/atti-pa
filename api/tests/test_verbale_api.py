@@ -20,11 +20,13 @@ sys.path[:0] = [str(RADICE), str(RADICE / "api" / "src")]
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
+from auth import password as pw  # noqa: E402
 from common.config import Settings  # noqa: E402
 from common.models import (  # noqa: E402
     AttoControllato,
     Base,
     Ente,
+    EnteDominio,
     Modulo,
     Ruolo,
     SessioneControllo,
@@ -70,6 +72,9 @@ def _testo_odt(contenuto: bytes) -> str:
         return z.read("content.xml").decode()
 
 
+PASSWORD = "Password-di-prova-1"
+
+
 class VerbaleApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -92,9 +97,9 @@ class VerbaleApi(unittest.TestCase):
                 await db.flush()
                 user = User(
                     ente_id=ente.id, username="locale", nome_completo="Utente locale",
-                    origine="LOCALE", ruoli=list(Ruolo.TUTTI),
+                    origine="LOCALE", ruoli=list(Ruolo.TUTTI), password_hash=pw.calcola(PASSWORD),
                 )  # fmt: skip
-                db.add(user)
+                db.add_all([user, EnteDominio(dominio="localhost", ente_id=ente.id)])
                 await db.flush()
                 controllo = SessioneControllo(
                     ente_id=ente.id, titolo="Controllo primo semestre", creata_da=user.id
@@ -122,10 +127,12 @@ class VerbaleApi(unittest.TestCase):
 
         asyncio.run(dati())
         settings = Settings(
-            _env_file=None, database_url=url, auth_enabled=False, llm_provider="ollama",
-            llm_model="prova", archivio_dir=cls.cartella.name,
+            _env_file=None, database_url=url, jwt_secret="x" * 40, cookie_secure=False,
+            llm_provider="ollama", llm_model="prova", archivio_dir=cls.cartella.name,
         )  # fmt: skip
         cls.c = create_app(settings).test_client()
+        r = cls.c.post("/api/v1/auth/login", json={"username": "locale", "password": PASSWORD})
+        assert r.status_code == 200, r.get_data(as_text=True)
 
     @classmethod
     def tearDownClass(cls):

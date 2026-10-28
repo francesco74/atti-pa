@@ -1,4 +1,4 @@
-"""Verifiche asincrone di bozze e atti controllati (eseguite dal verifica-worker)."""
+"""Verifiche asincrone di bozze e atti controllati (eseguite dal worker)."""
 
 import re
 from datetime import date, datetime
@@ -22,7 +22,7 @@ from deps import (
     risorse,
     utente,
 )
-from documenti import DocumentiError
+from common.documenti import DocumentiError
 from schemas import Schema
 from verbale import DatiVerbale, verbale_odt
 from web import ErroreApi, allegato, corpo, out, parametri
@@ -113,7 +113,7 @@ async def _autorizza(sessione, verifica: Verifica, user: User) -> None:
         bozza = await sessione.get(Bozza, verifica.bozza_id)
         if bozza is None or bozza.owner_id != user.id:
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
-    elif not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
+    elif not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Verifica non trovata")
 
 
@@ -160,7 +160,7 @@ async def richiedi():
             sessione, user, data_riferimento(bozza, oggi), schede, bozza_id=bozza.id
         )
     else:
-        if not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
+        if not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
             raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione non consentita")
         atto = await sessione.get(AttoControllato, dati.atto_controllato_id)
         if atto is None or atto.ente_id != ente_id():
@@ -210,7 +210,7 @@ async def elenco():
             raise ErroreApi(HTTPStatus.NOT_FOUND, "Bozza non trovata")
         query = query.where(Verifica.bozza_id == filtro.bozza_id)
     else:
-        if not (user.installazione or user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN)):
+        if not user.ha_ruolo(Ruolo.CONTROLLORE, Ruolo.ADMIN):
             raise ErroreApi(HTTPStatus.FORBIDDEN, "Operazione non consentita")
         query = query.where(Verifica.atto_controllato_id == filtro.atto_controllato_id)
     return out(VerificaOut, (await sessione.scalars(query)).all())

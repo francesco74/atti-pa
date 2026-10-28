@@ -1,0 +1,89 @@
+# Schema di pubblicazione art. 23 d.lgs. 33/2013 (provvedimenti amministrativi).
+# Fonte: Allegato 7 alla delibera ANAC n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_23
+articolo: art. 23
+titolo: Provvedimenti amministrativi di organi di indirizzo politico e dirigenti
+fonte:
+  delibera: "495/2024"
+  allegato: 7
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni ed enti tenuti alla pubblicazione degli elenchi dei provvedimenti adottati dagli organi di
+  indirizzo politico e dai dirigenti, con particolare riferimento ai provvedimenti di scelta del contraente e agli
+  accordi con soggetti privati o altre amministrazioni (artt. 11 e 15 l. 241/1990).
+
+documento:
+  titolo: Provvedimenti amministrativi di organi di indirizzo politico e dirigenti (Art. 23 d.lgs. 33/2013)
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti dall'art. 23 del d.lgs. n. 33/2013 concernenti i
+    provvedimenti amministrativi adottati dagli organi di indirizzo politico e dai dirigenti, si riportano di seguito
+    le informazioni e i dati relativi a:
+
+_campi_comuni:
+  - &data {id: data, etichetta: Data, descrizione: Data del provvedimento, tipo: data, obbligatorio: true}
+  - &numero {id: numero, etichetta: Numero, tipo: testo, obbligatorio: true}
+  - &denominazione {id: denominazione, etichetta: Denominazione, descrizione: "es. Delibera, Decisione, Determinazione, Ordinanza", tipo: testo, obbligatorio: true}
+  - &oggetto {id: oggetto, etichetta: Oggetto, descrizione: "Oggetto del provvedimento, con eventuali dati personali omissati", tipo: testo_lungo, obbligatorio: true}
+  - &link_provvedimento {id: link_provvedimento, etichetta: Provvedimento adottato, descrizione: "Link al documento (facoltativo), omissato dei dati personali", tipo: url}
+  - &allegati
+    id: allegati
+    etichetta: Allegati (ove previsti)
+    descrizione: Pubblicazione facoltativa; i documenti devono essere omissati dei dati personali
+    tipo: elenco
+    etichetta_elemento: Allegato
+    campi:
+      - {id: link, etichetta: Link al documento allegato, tipo: url, obbligatorio: true}
+
+sezioni:
+  - id: POLITICI
+    titolo: Elenco dei provvedimenti adottati dagli organi di indirizzo politico
+    collocazione: Provvedimenti -> Elenco dei provvedimenti adottati dagli organi di indirizzo politico
+    aggiornamento: semestrale
+    norme: ["Art. 23, c. 1, lett. d), d.lgs. n. 33/2013", "Artt. 11 e 15, l. 241/1990"]
+    etichetta_elemento: Provvedimento
+    campi:
+      - *data
+      - *numero
+      - *denominazione
+      - *oggetto
+      - {id: ufficio_struttura, etichetta: Ufficio/struttura responsabile, descrizione: "Ufficio, dipartimento, struttura dell'organo di indirizzo politico che ha firmato l'atto", tipo: testo, obbligatorio: true}
+      - *link_provvedimento
+      - *allegati
+
+  - id: DIRIGENTI
+    titolo: Elenco dei provvedimenti adottati dai dirigenti
+    collocazione: Provvedimenti -> Elenco dei provvedimenti adottati dai dirigenti
+    aggiornamento: semestrale
+    norme: ["Art. 23, c. 1, lett. d), d.lgs. n. 33/2013", "Art. 37, d.lgs. n. 33/2013", "Artt. 11 e 15, l. 241/1990", "Art. 28, d.lgs. n. 36/2023"]
+    etichetta_elemento: Provvedimento
+    campi:
+      - *data
+      - *numero
+      - *denominazione
+      - *oggetto
+      - {id: ufficio_struttura, etichetta: Ufficio/struttura responsabile, descrizione: "Ufficio, dipartimento, struttura il cui dirigente amministrativo ha firmato l'atto", tipo: testo, obbligatorio: true}
+      - *link_provvedimento
+      - {id: link_bandi_gara, etichetta: Link alla sotto-sezione "Bandi di gara e contratti", descrizione: Per i provvedimenti di scelta del contraente, tipo: url}
+      - *allegati
+
+note_audit: |
+  AMBITO OGGETTIVO:
+  - Le lettere a) e c) dell'art. 23, co. 1, sono state soppresse dal d.lgs. 97/2016: non richiedere contenuti relativi.
+  - Rilevano in particolare i provvedimenti di scelta del contraente e gli accordi con soggetti privati o altre PPAA
+    (artt. 11 e 15 l. 241/1990), inclusi accordi sostitutivi/integrativi, protocolli d'intesa e convenzioni, anche
+    senza corresponsione di denaro. L'elenco può contenere atti di organi politici e di dirigenti: la checklist è la stessa.
+  CADENZA:
+  - L'elenco si aggiorna ogni SEI MESI. Se il documento non permette di valutare la cadenza nel tempo, limitati alla
+    coerenza tra _ADOPTION_DATE_ e _PUB_DATE_.
+  LINK FACOLTATIVI:
+  - L'obbligo riguarda l'elenco: il link al provvedimento e agli allegati è FACOLTATIVO e la sua assenza non è un
+    rilievo. Se il documento collegato è disponibile, verifica che sia omissato dei dati personali.
+  RINVIO A "BANDI DI GARA E CONTRATTI":
+  - Per i provvedimenti di scelta del contraente (aggiudicazioni, affidamenti, esiti di gara), indipendentemente da chi
+    li firma, e per gli accordi che nella sostanza sono contratti, l'obbligo si assolve con il link alla sotto-sezione
+    "Bandi di gara e contratti" (art. 37 d.lgs. 33/2013, art. 28 d.lgs. 36/2023): se manca, segnalalo come rilievo.
+  RISERVATEZZA:
+  - Nell'oggetto non devono comparire dati personali in chiaro: i riferimenti a persone fisiche vanno omissati.

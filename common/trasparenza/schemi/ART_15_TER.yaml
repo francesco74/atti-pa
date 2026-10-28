@@ -1,0 +1,101 @@
+# Schema di pubblicazione art. 15-ter d.lgs. 33/2013 (amministratori ed esperti
+# nominati da organi giurisdizionali o amministrativi).
+# Fonte: Allegato 3 alla delibera ANAC n. 497/2025.
+
+id: ART_15_TER
+articolo: art. 15-ter
+titolo: Amministratori ed esperti nominati da organi giurisdizionali o amministrativi
+fonte:
+  delibera: "497/2025"
+  allegato: 3
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  La norma ha un ambito di applicazione estremamente circoscritto: Ministero della Giustizia, Agenzia nazionale per
+  l'amministrazione e la destinazione dei beni sequestrati e confiscati alla criminalità organizzata (ANBSC),
+  Prefetture. Per qualsiasi altro ente l'esito è "Non Applicabile".
+
+documento:
+  titolo: Consulenti e collaboratori (Art. 15-ter d.lgs. 33/2013)
+  sottotitolo: Amministratori ed esperti nominati da organi giurisdizionali o amministrativi
+  introduzione: >-
+    In ottemperanza agli obblighi di pubblicazione concernenti gli amministratori e gli esperti nominati da organi
+    giurisdizionali o amministrativi (art. 15-ter d.lgs. n. 33/2013), si riportano di seguito i dati pubblicati da:
+
+sezioni:
+  - id: AMM_GIUDIZIARI
+    gruppo: Ministero della Giustizia
+    titolo: Amministratori giudiziari di cui all'art. 1 del d.lgs. n. 14/2010
+    collocazione: Consulenti e collaboratori -> Amministratori ed esperti
+    aggiornamento: tempestivo
+    norme: ["Art. 15-ter, co. 1 e 3, d.lgs. n. 33/2013"]
+    ripetibile: false
+    nota: >-
+      L'Albo contiene i nominativi degli amministratori giudiziari che hanno ricevuto incarichi dagli organi
+      giurisdizionali e, per ciascuno, i dati dell'art. 15-ter, co. 1.
+    campi:
+      - id: link_albo
+        etichetta: Link all'Albo degli amministratori giudiziari
+        descrizione: Albo dove sono pubblicati i dati ex art. 15-ter, co. 1, d.lgs. 33/2013 per ogni amministratore giudiziario
+        tipo: url
+        obbligatorio: true
+
+  - id: GESTORI_CRISI
+    gruppo: Ministero della Giustizia
+    titolo: Gestori della crisi di impresa di cui all'art. 125, co. 4, del d.lgs. n. 14/2019
+    collocazione: Consulenti e collaboratori -> Amministratori ed esperti
+    aggiornamento: tempestivo
+    norme: ["Art. 15-ter, co. 1 e 3, d.lgs. n. 33/2013"]
+    ripetibile: false
+    nota: >-
+      Il Registro nazionale (che ha sostituito quello dell'art. 28, co. 4, R.D. 267/1942) contiene i dati di ogni
+      incarico di curatore, commissario giudiziale e liquidatore giudiziale.
+    campi:
+      - id: link_registro
+        etichetta: Link al Registro Nazionale ex art. 125, co. 4, d.lgs. n. 14/2019
+        tipo: url
+        obbligatorio: true
+
+  - id: ANBSC
+    gruppo: ANBSC
+    titolo: Tecnici e altri soggetti qualificati e coadiutori ANBSC
+    collocazione: Consulenti e collaboratori -> Amministratori ed esperti
+    aggiornamento: tempestivo
+    norme: ["Art. 15-ter, co. 2, d.lgs. n. 33/2013", "Art. 38, co. 3, d.lgs. n. 159/2011"]
+    etichetta_elemento: Incarico
+    campi:
+      - {id: nominativo, etichetta: Nominativo, descrizione: Nome e cognome, tipo: testo, max_lunghezza: 256, obbligatorio: true}
+      - {id: compenso, etichetta: Compensi liquidati, tipo: importo, obbligatorio: true}
+
+  - id: PREFETTURE
+    gruppo: Prefetture
+    titolo: Titolari di incarichi di amministratori e esperti ex art. 32, d.l. n. 90/2014
+    collocazione: Consulenti e collaboratori -> Amministratori ed esperti ex art. 32, d.l. n. 90/2014
+    aggiornamento: tempestivo
+    norme: ["Art. 15-ter, co. 4, d.lgs. n. 33/2013"]
+    etichetta_elemento: Incarico
+    nota: >-
+      Commissari straordinari ed esperti con funzioni di amministrazione, sostegno e monitoraggio dell'impresa
+      nell'ambito della prevenzione della corruzione, nominati ai sensi dell'art. 32 del d.l. n. 90/2014.
+    campi:
+      - {id: anno, etichetta: Annualità, tipo: anno, obbligatorio: true}
+      - id: tipologia_incarico
+        etichetta: Tipologia di incarico
+        tipo: scelta
+        opzioni:
+          - Commissario straordinario, ex art. 32, co. 2, d.l. n. 90/2014
+          - Esperto ex art. 32, co. 8, d.l. n. 90/2014
+        obbligatorio: true
+      - {id: nominativo, etichetta: Nominativo del soggetto incaricato, tipo: testo, max_lunghezza: 256, obbligatorio: true}
+      - {id: provv_nomina, etichetta: Provvedimento di nomina, descrizione: "Pubblicazione del provvedimento (PDF) o link al provvedimento", tipo: url, obbligatorio: true}
+      - {id: provv_compensi, etichetta: Provvedimento di quantificazione dei compensi, descrizione: "Pubblicazione del provvedimento (PDF) o link al provvedimento", tipo: url, obbligatorio: true}
+
+note_audit: |
+  SOGGETTO TENUTO PER SEZIONE:
+  - Amministratori giudiziari e gestori della crisi di impresa: Ministero della Giustizia (sotto-sezione
+    "Amministratori ed esperti" di "Consulenti e collaboratori").
+  - Tecnici, soggetti qualificati e coadiutori: ANBSC.
+  - Amministratori ed esperti ex art. 32 d.l. 90/2014: Prefetture.
+  Se la sezione identificata non corrisponde al tipo di ente indicato in _AUTHORITY_FEATURES_, segnalalo.
+  RISERVATEZZA:
+  - I provvedimenti pubblicati non devono contenere dati personali eccedenti rispetto alle finalità di trasparenza.

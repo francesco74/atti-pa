@@ -1,0 +1,163 @@
+# Schema di pubblicazione art. 31 d.lgs. 33/2013
+# Fonte: Allegato 3 alla delibera ANAC n. 495/2024, come modificato dalla
+# delibera n. 481/2025 (versione aggiornata al 10.06.2026).
+#
+# Questo file è l'unica fonte dello schema: da qui derivano il form di
+# generazione, la validazione dei dati, il documento generato e il prompt
+# di audit.
+
+id: ART_31
+articolo: art. 31
+titolo: Controlli sull'organizzazione e sull'attività dell'amministrazione
+fonte:
+  delibera: "495/2024"
+  modificata_da: "481/2025"
+  allegato: 3
+  versione: "10.06.2026"
+
+# non_applicabile: lo schema prevede solo la precisazione "L'obbligo di
+# pubblicazione non è applicabile all'amministrazione".
+# autodichiarazione: l'ente si dichiara tenuto / tenuto parzialmente / non tenuto.
+ambito: non_applicabile
+ambito_soggettivo: |
+  Soggetti di cui all'art. 2-bis, co. 1 (pubbliche amministrazioni di cui all'art. 1, co. 2, d.lgs. 165/2001 e
+  Autorità amministrative indipendenti), co. 2 (enti pubblici economici, ordini professionali, società in controllo
+  pubblico, associazioni, fondazioni ed enti di diritto privato in controllo pubblico) e co. 3 (società partecipate
+  ed enti di diritto privato non in controllo).
+
+documento:
+  titolo: Controlli e Rilievi sull'Amministrazione (Art. 31 d.lgs. 33/2013)
+  sottotitolo: Organismi di Valutazione, Revisione e Corte dei Conti
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti i controlli e i rilievi sull'amministrazione
+    (art. 31 d.lgs. n. 33/2013), si riportano di seguito i dati, le relazioni e i documenti relativi a:
+
+# Campi comuni a tutti i documenti di OIV e organi di revisione.
+_campi_documento: &campi_documento
+  - id: data_pubblicazione
+    etichetta: Data di pubblicazione
+    descrizione: Data di pubblicazione del documento
+    tipo: data
+    obbligatorio: true
+  - id: documento
+    etichetta: Link al documento
+    descrizione: Link al documento pubblicato nel sito istituzionale
+    tipo: url
+    obbligatorio: true
+
+# Controlli di qualità sui singoli documenti di questa sotto-sezione, comuni a
+# tutti i controlli dell'analisi IA (uno per sezione).
+_nota_controllo_documento: &nota_controllo_documento |
+  - Il documento da analizzare può essere l'atto stesso (relazione, documento, rilievo) oppure la pagina che lo
+    pubblica: in entrambi i casi verifica che sia integro, completo e conforme all'originale, senza alterarne la sostanza.
+  - TEMPESTIVITÀ (soglia operativa di audit, non prevista dalla norma): pubblicazione entro 7 giorni dall'adozione.
+    Se _ADOPTION_DATE_ o _PUB_DATE_ non sono disponibili, l'esito della tempestività è "Non valutabile".
+  - ANONIMIZZAZIONE: i dati personali eventualmente presenti (nomi di persone fisiche non necessari, firme autografe
+    leggibili, recapiti diretti) devono essere resi anonimi prima della pubblicazione: la loro presenza è un rilievo.
+  - LIVELLO OPEN DATA - clausola di salvaguardia: se il formato è PDF, DOCX o ODT, considera il controllo sul formato
+    superato positivamente con questa motivazione: "Il documento analizzato, anche se in formato _FILE_EXTENSION_ e
+    quindi non rientrante pienamente tra quelli dichiarati 'leggibili meccanicamente' da AGID (in base alle linee guida
+    sugli open data), vista anche la tipologia di dato pubblicato ed il fatto che rientrano comunque tra i formati aperti
+    per i documenti di primo livello, si considera il controllo positivo".
+
+_nota_oiv: &nota_oiv |
+  - Il documento deve contenere dati identificativi chiari dell'atto (numero, data, oggetto).
+
+_nota_revisori: &nota_revisori |
+  - Verifica che la relazione sia riferita correttamente all'anno di bilancio dichiarato e che non ci siano
+    contraddizioni con l'oggetto indicato in _NOTES_.
+
+_nota_corte: &nota_corte |
+  - Il rilievo deve essere classificato per oggetto esclusivamente come "Organizzazione", "Attività" o "Entrambe".
+
+sezioni:
+  - id: OIV_VALIDAZIONE
+    gruppo: OIV o organismo analogo
+    titolo: Documento dell'OIV di validazione della Relazione sulla Performance
+    collocazione: Controlli e rilievi sull'amministrazione -> Organismi indipendenti di valutazione, nuclei di valutazione o altri organismi con funzioni analoghe
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013", "Art. 14, co. 4, lett. c), d.lgs. n. 150/2009"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_oiv]
+    campi: *campi_documento
+
+  - id: OIV_FUNZIONAMENTO
+    gruppo: OIV o organismo analogo
+    titolo: Relazione dell'OIV sul funzionamento complessivo del Sistema di valutazione, trasparenza e integrità dei controlli interni
+    collocazione: Controlli e rilievi sull'amministrazione -> Organismi indipendenti di valutazione, nuclei di valutazione o altri organismi con funzioni analoghe
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013", "Art. 14, co. 4, lett. a), d.lgs. n. 150/2009"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_oiv]
+    campi: *campi_documento
+
+  - id: OIV_ALTRI_ATTI
+    gruppo: OIV o organismo analogo
+    titolo: Altri atti degli organismi indipendenti di valutazione, nuclei di valutazione o altri organismi con funzioni analoghe (se adottati)
+    collocazione: Controlli e rilievi sull'amministrazione -> Organismi indipendenti di valutazione, nuclei di valutazione o altri organismi con funzioni analoghe
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_oiv]
+    campi: *campi_documento
+
+  - id: REV_PREVISIONE
+    gruppo: Organi di revisione
+    titolo: Relazioni degli organi di revisione amministrativa e contabile al bilancio di previsione o budget e alle relative variazioni
+    collocazione: Controlli e rilievi sull'amministrazione -> Organi di revisione amministrativa e contabile
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_revisori]
+    campi: *campi_documento
+
+  - id: REV_CONSUNTIVO
+    gruppo: Organi di revisione
+    titolo: Relazioni degli organi di revisione amministrativa e contabile al conto consuntivo o al bilancio di esercizio
+    collocazione: Controlli e rilievi sull'amministrazione -> Organi di revisione amministrativa e contabile
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_revisori]
+    campi: *campi_documento
+
+  - id: CORTE_CONTI
+    gruppo: Organi di controllo
+    titolo: Rilievi della Corte dei conti riguardanti l'organizzazione e l'attività delle amministrazioni stesse e dei loro uffici
+    collocazione: Controlli e rilievi sull'amministrazione -> Corte dei Conti
+    aggiornamento: tempestivo
+    norme: ["Art. 31, d.lgs. n. 33/2013"]
+    ripetibile: true
+    note_audit: [*nota_controllo_documento, *nota_corte]
+    campi:
+      - id: data_pubblicazione
+        etichetta: Data di pubblicazione
+        descrizione: Data di pubblicazione del rilievo della Corte dei Conti
+        tipo: data
+        obbligatorio: true
+      - id: oggetto
+        etichetta: Oggetto del rilievo
+        descrizione: Atto oggetto del rilievo
+        tipo: scelta
+        opzioni: [Organizzazione, Attività, Entrambe]
+        obbligatorio: true
+      - id: documento
+        etichetta: Link al documento
+        descrizione: Link al documento sui rilievi della Corte dei Conti
+        tipo: url
+        obbligatorio: true
+
+# Regole che non si esprimono come campi: entrano nel prompt di audit così
+# come sono scritte, prima della checklist dei campi.
+note_audit: |
+  ATTESTAZIONI OIV (caso particolare, non coperto da uno schema di campi):
+  - Se il documento è un'ATTESTAZIONE OIV sull'assolvimento degli obblighi di pubblicazione (diversa dagli "atti OIV"
+    delle sezioni sopra), ANAC non ha predisposto uno schema di campi. Verifica ESCLUSIVAMENTE che sia presente
+    ALMENO uno tra: a) un collegamento ipertestuale all'applicativo ANAC per l'acquisizione delle attestazioni OIV,
+    OPPURE b) la pubblicazione del documento digitalizzato dell'attestazione stessa. Se presente uno dei due, l'esito è
+    Positivo e la checklist dei campi NON si applica.
+  PRIVACY DEI DOCUMENTI OIV:
+  - Gli atti degli OIV vanno pubblicati indicando in forma anonima i dati personali eventualmente presenti
+    (art. 31, co. 1). Segnala come anomalia grave nomi o dati personali in chiaro.
+  RILIEVI DELLA CORTE DEI CONTI:
+  - Vanno pubblicati tutti i rilievi, anche se non recepiti dall'amministrazione.

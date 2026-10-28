@@ -18,7 +18,6 @@ data:
 
   # Accesso. Enti, domini, Active Directory (URL, dominio, certificato della CA, gruppi) e
   # utenti locali sono nel database, per ente: si gestiscono dall'app o con deploy/enti.py
-  AUTH_ENABLED: "true"
   LOGIN_TENTATIVI: "5"           # tentativi falliti tollerati per utente...
   LOGIN_FINESTRA_MINUTI: "15"    # ...in questa finestra
   JWT_SCADENZA_MINUTI: "480"
@@ -62,7 +61,7 @@ data:
 
   # Code RabbitMQ (l'URL con le credenziali è nel Secret: RABBITMQ_URL)
   RABBITMQ_PREFISSO: "atti-pa"
-  # Archivio dei file originali (volume archivio-atti, condiviso tra API e converter)
+  # Archivio dei file originali (volume archivio-atti, condiviso tra API, converter e worker)
   ARCHIVIO_DIR: "/var/lib/atti-pa/archivio"
   UPLOAD_MAX_MB: "20"
 

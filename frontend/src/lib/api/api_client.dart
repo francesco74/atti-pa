@@ -121,8 +121,33 @@ class ApiClient {
     return _decodifica(risposta);
   }
 
+  /// Multipart con più file nello stesso campo (es. i documenti di un'analisi).
+  Future<dynamic> postMultipartFiles(
+    String percorso, {
+    required Map<String, String> campi,
+    required String campoFile,
+    required List<(String, Uint8List)> files,
+  }) async {
+    final richiesta = http.MultipartRequest('POST', uri(percorso))
+      ..headers.addAll(_intestazioni(json: false))
+      ..fields.addAll(campi)
+      ..files.addAll([for (final (nome, bytes) in files) http.MultipartFile.fromBytes(campoFile, bytes, filename: nome)]);
+    final risposta = await http.Response.fromStream(await _http.send(richiesta));
+    return _decodifica(risposta);
+  }
+
+  /// POST JSON che restituisce un file (es. esportazione in PDF o DOCX).
+  Future<Uint8List> postBytes(String percorso, Object corpo) async {
+    final r = await _http.post(uri(percorso), headers: _intestazioni(), body: jsonEncode(corpo));
+    return _byte(r);
+  }
+
   Future<Uint8List> getBytes(String percorso, {Map<String, String>? query}) async {
     final r = await _http.get(uri(percorso, query), headers: _intestazioni(json: false));
+    return _byte(r);
+  }
+
+  Uint8List _byte(http.Response r) {
     _registra(r);
     if (r.statusCode >= 400) {
       if (r.statusCode == 401) suNonAutenticato?.call();

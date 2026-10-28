@@ -104,13 +104,16 @@ class _LoginPageState extends State<LoginPage> {
                             textAlign: TextAlign.center,
                             style: tema.textTheme.titleMedium,
                           )
-                        else if (_ente != null)
+                        else if (_ente != null) ...[
+                          const SizedBox(height: 16),
                           Text(
-                            'Questo indirizzo (${_ente!['dominio']}) non è associato a un ente: accesso '
-                            'riservato all\'amministratore dell\'installazione',
+                            'Questo indirizzo (${_ente!['dominio']}) non è associato a un ente. '
+                            'Usa l\'indirizzo del tuo ente.',
                             textAlign: TextAlign.center,
-                            style: tema.textTheme.bodySmall,
+                            style: tema.textTheme.bodyMedium,
                           ),
+                        ],
+                        if (_ente == null || ente != null) ...[
                         const SizedBox(height: 16),
                         if (ldap && locale)
                           SegmentedButton<String>(
@@ -168,6 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                                 )
                               : const Text('Accedi'),
                         ),
+                        ],
                       ],
                     ),
                   ),

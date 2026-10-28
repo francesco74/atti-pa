@@ -93,18 +93,16 @@ class Settings(BaseSettings):
     # ~60.000 caratteri ≈ 17.000 token: con le norme nel prompt resta in un contesto di 32k
     llm_max_caratteri_atto: int = 60_000
 
-    # Autenticazione. Gli enti, i loro domini e i modi di accesso (utenti locali, Active
-    # Directory) sono nel database: si gestiscono dall'app o con deploy/enti.py.
-    # AUTH_ENABLED=false: uso personale senza login, con un utente locale con tutti i ruoli.
-    auth_enabled: bool = True
-    # Ente usato quando il dominio della richiesta non è registrato (sviluppo, localhost);
-    # vuoto in produzione: un dominio sconosciuto non apre alcun ente
-    ente_predefinito: str | None = None
+    # Autenticazione. Gli enti e i loro domini si gestiscono con deploy/enti.py; i modi di
+    # accesso (utenti locali, Active Directory) li configura l'amministratore di ogni ente.
+    # Password iniziale dell'utente admin di ogni nuovo ente (e di quello reimpostato con
+    # enti.py reimposta): va cambiata al primo accesso. La usa solo enti.py.
+    password_iniziale: str = ""
     # Tentativi di accesso falliti tollerati per utente e indirizzo nella finestra (minuti)
     login_tentativi: int = 5
     login_finestra_minuti: int = 15
 
-    # Nessun segreto predefinito: con AUTH_ENABLED=true l'API non parte senza JWT_SECRET
+    # Nessun segreto predefinito: l'API non parte senza JWT_SECRET
     jwt_secret: str = ""
     jwt_scadenza_minuti: int = 480  # una giornata lavorativa
     cookie_secure: bool = True

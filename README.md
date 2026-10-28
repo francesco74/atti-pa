@@ -36,12 +36,12 @@ radice del repository (`docker build -f <componente>/Dockerfile .`).
 
 | Cartella           | In Kubernetes                | Ruolo |
 | ------------------ | ---------------------------- | ----- |
-| `api/`             | Deployment + Service         | API REST Flask (gunicorn): autenticazione, libreria, redazione, controllo; salva i file caricati nell'archivio |
-| `converter/`       | Deployment + Service interno | LibreOffice: servizio HTTP per i PDF/PDF-A delle bozze e consumatore della coda di conversione degli atti in Markdown |
-| `verifica-worker/` | Deployment                   | Verifiche dalle code: riferimenti e loro coerenza, dati personali, checklist con LLM |
+| `api/`             | Deployment + Service         | API REST Flask (gunicorn): autenticazione, libreria, redazione, controllo, trasparenza; salva i file caricati nell'archivio |
+| `converter/`       | Deployment + Service interno | LibreOffice: servizio HTTP (PDF/PDF-A/DOCX, testo in Markdown) e consumatore della coda di conversione degli atti in Markdown |
+| `worker/`          | Deployment                   | Lavori dalle code: verifiche degli atti (riferimenti, dati personali, checklist con LLM) e analisi/estrazioni della trasparenza (con Chromium per le pagine web) |
 | `normattiva-sync/` | **CronJob** notturno         | Aggiorna i testi normativi modificati su Normattiva |
 | `frontend/`        | Deployment + Service         | App Flutter Web servita da nginx |
-| `common/`          | — (libreria)                 | Codice condiviso: modelli, code, archivio, client Normattiva, verifica, LLM, prompt |
+| `common/`          | — (libreria)                 | Codice condiviso: modelli, code, archivio, client Normattiva, verifica, LLM, prompt; `common/trasparenza/` (schemi ANAC, analisi) |
 | —                  | StatefulSet                  | RabbitMQ: code tra API, converter e worker |
 | —                  | StatefulSet                  | MySQL 8: database (schema in `deploy/k8s/sql/`, creato al primo avvio) |
 | `deploy/`          | —                            | Manifest Kubernetes (kustomize), schema SQL, script del pacchetto e di manutenzione |
@@ -57,7 +57,7 @@ radice del repository (`docker build -f <componente>/Dockerfile .`).
                        archivio file┤     │
                                     │  RabbitMQ ── conversione ──> converter (file -> Markdown)
                                     │     │   <── convertiti ────────┘
-                                    │     └──── convertiti, verifica ──> verifica-worker ── LLM
+                                    │     └──── convertiti, verifica ──> worker ── LLM
                                     │                                      │
      normattiva-sync (CronJob) ──── MySQL ─────────────────────────────────┤
               └──────────── Normattiva ────────────────────────────────────┘
@@ -196,8 +196,21 @@ specificità e checklist si modificano senza scrivere YAML:
 | Redattore | `ATTI-PA-Redattori` | propone modifiche ai capoversi |
 
 I gruppi si impostano per ente in Amministrazione → Accesso; agli utenti dell'app i ruoli
-li assegna l'amministratore dell'ente. L'**amministratore dell'installazione** crea gli
-enti, ne indica domini e moduli e il primo amministratore (voce *Enti*).
+li assegna l'amministratore dell'ente. Gli **enti** (nome, domini, moduli attivi) si
+gestiscono solo da riga di comando con `deploy/enti.py`, nel container dell'API: ogni ente
+nasce con l'utente `admin`, con la password iniziale `PASSWORD_INIZIALE` da cambiare al
+primo accesso; se la dimentica, `enti.py reimposta CODICE` lo riporta a quella iniziale.
+
+```bash
+python enti.py elenco                                   # enti, domini, moduli, accesso
+python enti.py mostra CODICE                            # dettaglio, stato di admin
+python enti.py crea CODICE "Nome" DOMINIO... [--moduli redazione]
+python enti.py rinomina CODICE "Nome"
+python enti.py domini CODICE DOMINIO...                 # sostituisce i domini
+python enti.py moduli CODICE redazione,...              # sostituisce i moduli attivi
+python enti.py disattiva CODICE / attiva CODICE
+python enti.py reimposta CODICE                         # admin con la password iniziale
+```
 
 Da riga di comando:
 
@@ -211,16 +224,23 @@ python deploy/pacchetto.py esporta FILE.zip      # esporta la configurazione del
 
 ## Prova in locale
 
+Come in produzione: login sempre attivo e ogni ente raggiunto dal suo dominio. In locale i
+domini sono del tipo `provincia.localhost`, che il browser risolve da solo.
+
 ```bash
 docker compose up --build
+docker compose exec api python enti.py crea provincia "Provincia di Lucca" provincia.localhost
+docker compose exec api python enti.py crea comunelucca "Comune di Lucca" comunelucca.localhost
 ```
 
-Apre l'applicazione su http://localhost:8080 in modalità uso personale (senza login): un
-ente "locale" e un utente con tutti i ruoli, creati al primo accesso. Il sistema parte
-vuoto: per avere i modelli standard crea lo zip (`python deploy/pacchetto.py crea`) e
-caricalo in Amministrazione → Pacchetti, oppure importalo da riga di comando
-(`python deploy/pacchetto.py importa locale pacchetto/`). L'LLM predefinito è Ollama sul computer (`ollama serve`, modello
-`mistral-small`); per usare un altro provider:
+Poi si apre http://provincia.localhost:8080 e si accede come `admin` con la password
+iniziale (`Cambiami-subito-1`, o `PASSWORD_INIZIALE` del `.env`): l'app chiede subito di
+cambiarla, poi l'amministratore configura l'ente (Amministrazione). Il database si consulta
+con phpMyAdmin su http://localhost:8081; per ripartire da zero: `docker compose down -v`.
+
+Il sistema parte vuoto: per avere i modelli standard crea lo zip (`python deploy/pacchetto.py
+crea`) e caricalo in Amministrazione → Pacchetti. L'LLM predefinito è Ollama sul computer
+(`ollama serve`, modello `mistral-small`); per usare un altro provider:
 
 ```bash
 LLM_PROVIDER=anthropic LLM_API_KEY=sk-ant-... docker compose up     # Claude
@@ -273,10 +293,10 @@ predefiniti con lo stesso nome.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e "./common[dev]" -e "./api[dev]" -e "./normattiva-sync[dev]" \
-  -e "./verifica-worker[dev]" -e "./db-migrate[dev]" -e "./documenti[dev]"
+  -e "./worker[dev]" -e "./db-migrate[dev]" -e "./documenti[dev]"
 
 # test (SQLite in memoria; con TEST_DATABASE_URL anche su MySQL migrato)
-for c in common api normattiva-sync verifica-worker db-migrate documenti; do (cd $c && pytest -q); done
+for c in common api normattiva-sync worker db-migrate documenti; do (cd $c && pytest -q); done
 ruff check . && ruff format --check .
 ```
 
@@ -330,18 +350,17 @@ frontend e costruisce tutte le immagini senza pubblicarle.
 4. Adattare `deploy/k8s/configmap.yaml` (indirizzo dell'LLM, livello dei log) e gli host
    dell'Ingress (uno per dominio di ente, con il suo certificato).
 5. `kubectl apply -k deploy/k8s`
-6. Creare l'amministratore dell'installazione, il primo ente con i suoi domini e il suo
-   primo amministratore:
+6. Creare il primo ente con i suoi domini (nasce con l'utente `admin` e la password
+   `PASSWORD_INIZIALE` del secret):
    ```bash
-   kubectl -n attipa exec -it deploy/api -- python enti.py installazione amministratore
    kubectl -n attipa exec -it deploy/api -- python enti.py crea provincialucca \
-       "Provincia di Lucca" attipa.provincia.lucca.it attiamministrativi.provincia.lucca.it
-   kubectl -n attipa exec -it deploy/api -- python enti.py amministratore provincialucca admin
+       "Provincia di Lucca" attipa.provincia.lucca.it
    ```
-   Gli altri enti si creano anche dall'app (voce *Enti*, con l'amministratore
-   dell'installazione).
-7. L'amministratore dell'ente accede dal dominio dell'ente e configura Active Directory e
-   utenti (Amministrazione → Accesso, Utenti), poi in Amministrazione → Pacchetti carica il
+   Allo stesso modo gli altri enti; per ognuno servono anche il record DNS, l'host
+   nell'Ingress e il certificato.
+7. L'`admin` accede dal dominio dell'ente, cambia subito la password (l'app non permette
+   altro finché non lo fa) e configura Active Directory e utenti (Amministrazione → Accesso,
+   Utenti), poi in Amministrazione → Pacchetti carica il
    pacchetto standard `atti-pa-modelli-<versione>.zip` (creato con
    `python deploy/pacchetto.py crea`).
 

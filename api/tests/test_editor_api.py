@@ -1,8 +1,8 @@
 """Editor di modelli, specificità e checklist via HTTP: dettaglio, bozza, controllo,
 anteprima, confronto, pubblicazione, proposte; pacchetti: esportazione e analisi.
 
-L'API gira con l'autenticazione disattivata (utente locale con tutti i ruoli) su un
-database SQLite temporaneo in cui è importato il pacchetto standard (pacchetto/). Non usa .env,
+L'API gira su un database SQLite temporaneo con un ente raggiunto da localhost, in cui è
+importato il pacchetto standard (pacchetto/), e un utente con tutti i ruoli. Non usa .env,
 Normattiva né il modello linguistico.
     cd api/src && python -m unittest discover -s ../tests -t ..
 """
@@ -23,9 +23,13 @@ sys.path[:0] = [str(RADICE), str(RADICE / "api" / "src")]
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
+from auth import password as pw  # noqa: E402
 from common.config import Settings  # noqa: E402
-from common.models import Base, Ente, Modulo  # noqa: E402
+from common.models import Base, Ente, EnteDominio, Modulo, Ruolo, User  # noqa: E402
 from common.pacchetti import da_cartella, importa, leggi_pacchetto  # noqa: E402
+
+
+PASSWORD = "Password-di-prova-1"
 
 
 class EditorApi(unittest.TestCase):
@@ -42,10 +46,14 @@ class EditorApi(unittest.TestCase):
             async with motore.begin() as c:
                 await c.run_sync(Base.metadata.create_all)
             async with AsyncSession(motore) as db:
-                # ente dell'uso senza login (AUTH_ENABLED=false): codice "locale"
                 ente = Ente(codice="locale", nome="Ente", moduli_json=list(Modulo.TUTTI), dati_json={})
                 db.add(ente)
                 await db.flush()
+                db.add_all([
+                    EnteDominio(dominio="localhost", ente_id=ente.id),
+                    User(ente_id=ente.id, username="prova", origine="LOCALE",
+                         password_hash=pw.calcola(PASSWORD), ruoli=list(Ruolo.TUTTI)),
+                ])  # fmt: skip
                 await importa(db, ente.id, leggi_pacchetto(da_cartella(RADICE / "pacchetto")))
                 await db.commit()
             await motore.dispose()
@@ -54,13 +62,16 @@ class EditorApi(unittest.TestCase):
         settings = Settings(
             _env_file=None,
             database_url=url,
-            auth_enabled=False,
+            jwt_secret="x" * 40,
+            cookie_secure=False,
             llm_provider="ollama",
             llm_model="prova",
             archivio_dir=cls.cartella.name,
         )
         cls.app = create_app(settings)
         cls.c = cls.app.test_client()
+        r = cls.c.post("/api/v1/auth/login", json={"username": "prova", "password": PASSWORD})
+        assert r.status_code == 200, r.get_data(as_text=True)
 
     @classmethod
     def tearDownClass(cls):

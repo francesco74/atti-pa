@@ -31,7 +31,7 @@ from deps import (
     utente,
 )
 from deps import db as sessione_db
-from documenti import DocumentiError
+from common.documenti import DocumentiError
 from schemas import Schema
 from web import ErroreApi, allegato, corpo, file_caricato, modulo, nessun_contenuto, parametri
 from common import archivio, coda

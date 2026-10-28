@@ -1,13 +1,15 @@
-"""Installazione multi ente con l'accesso attivo: l'ente si riconosce dal dominio prima del
-login e dal token dopo; utenti locali e Active Directory (simulata) per ente; dati separati;
-revoca delle sessioni; blocco dopo troppi tentativi; hash delle password di rag e
-PApuntozeroIA accettati e rigenerati.
+"""Installazione multi ente: l'ente si riconosce dal dominio prima del login e dal token
+dopo; utenti locali e Active Directory (simulata) per ente; dati separati; revoca delle
+sessioni; blocco dopo troppi tentativi; hash delle password di rag e PApuntozeroIA accettati
+e rigenerati; enti creati con deploy/enti.py, con l'admin che deve cambiare la password.
     cd api/tests && python test_multi_ente_api.py
 """
 
 from __future__ import annotations
 
 import asyncio
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -82,8 +84,6 @@ class MultiEnte(unittest.TestCase):
                     User(ente_id=a.id, username="trasparenza", origine="LOCALE",
                          password_hash=bcrypt.hashpw(PASSWORD.encode(), bcrypt.gensalt()).decode(),
                          ruoli=[Ruolo.REDATTORE]),
-                    User(ente_id=None, username="root", origine="LOCALE",
-                         password_hash=pw.calcola(PASSWORD), ruoli=[Ruolo.INSTALLAZIONE]),
                 ])  # fmt: skip
                 await importa(db, a.id, leggi_pacchetto(da_cartella(RADICE / "pacchetto")))
                 await db.commit()
@@ -189,30 +189,75 @@ class MultiEnte(unittest.TestCase):
             self._login(A, "bersaglio", "sbagliata", atteso=401)
         self._login(A, "bersaglio", "sbagliata", atteso=429)
 
-    def test_installazione_crea_ente_e_amministratore(self):
-        c, dati = self._login(SCONOSCIUTO, "root")
-        self.assertTrue(dati["utente"]["installazione"])
-        r = c.post("/api/v1/enti", base_url=SCONOSCIUTO, json={
-            "codice": "greenlees", "nome": "Archivio Greenlees",
-            "domini": ["greenlees.example.it"], "moduli": [],
-        })  # fmt: skip
-        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
-        ente = r.get_json()
-        r = c.post(f"/api/v1/enti/{ente['id']}/amministratori", base_url=SCONOSCIUTO,
-                   json={"username": "capo", "password": PASSWORD})  # fmt: skip
-        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
-        g, dati = self._login("http://greenlees.example.it", "capo")
+    def _enti(self, *argomenti, esito=0):
+        r = subprocess.run(
+            [sys.executable, str(RADICE / "deploy" / "enti.py"), *argomenti],
+            env={**os.environ, "DATABASE_URL": self.url, "PASSWORD_INIZIALE": "Iniziale-di-prova-1"},
+            capture_output=True, text=True, cwd=self.cartella.name,
+        )  # fmt: skip
+        self.assertEqual(r.returncode, esito, r.stderr)
+        return r.stdout
+
+    def _cambia(self, c, base, attuale, nuova, atteso=200):
+        r = c.put("/api/v1/auth/password", base_url=base, json={"attuale": attuale, "nuova": nuova})
+        self.assertEqual(r.status_code, atteso, r.get_data(as_text=True))
+
+    def test_ente_da_riga_di_comando_e_primo_accesso(self):
+        g = "http://greenlees.example.it"
+        self._enti("crea", "greenlees", "Archivio Greenlees", "greenlees.example.it", "--moduli", "")
+        self._enti("crea", "doppio", "Doppio", "greenlees.example.it", esito=1)  # dominio già usato
+        self.assertIn("password da cambiare", self._enti("mostra", "greenlees"))
+        c, dati = self._login(g, "admin", "Iniziale-di-prova-1")
+        self.assertTrue(dati["utente"]["cambio_password"])
         self.assertEqual(dati["utente"]["ente"]["moduli"], [])
+        # finché non cambia la password può solo cambiarla
+        self.assertEqual(c.get("/api/v1/ente/utenti", base_url=g).status_code, 403)
+        self.assertEqual(c.get("/api/v1/auth/me", base_url=g).status_code, 200)
+        self._cambia(c, g, "Iniziale-di-prova-1", "Iniziale-di-prova-1", atteso=422)
+        self._cambia(c, g, "Iniziale-di-prova-1", PASSWORD)
+        self.assertEqual(c.get("/api/v1/ente/utenti", base_url=g).status_code, 200)
         # senza il modulo redazione i modelli non si vedono, l'amministrazione sì
-        self.assertEqual(g.get("/api/v1/modelli", base_url="http://greenlees.example.it").status_code, 403)
-        self.assertEqual(g.get("/api/v1/ente/utenti", base_url="http://greenlees.example.it").status_code, 200)
-        # un dominio già usato non si assegna a un altro ente
-        r = c.post("/api/v1/enti", base_url=SCONOSCIUTO,
-                   json={"codice": "doppio", "nome": "Doppio", "domini": ["greenlees.example.it"]})  # fmt: skip
-        self.assertEqual(r.status_code, 409)
-        # gli altri non gestiscono gli enti
+        self.assertEqual(c.get("/api/v1/modelli", base_url=g).status_code, 403)
+        self._enti("moduli", "greenlees", "redazione")
+        self.assertEqual(c.get("/api/v1/modelli", base_url=g).status_code, 200)
+        # password dimenticata: torna quella iniziale e le sessioni si chiudono
+        self._enti("reimposta", "greenlees")
+        self.assertEqual(c.get("/api/v1/auth/me", base_url=g).status_code, 401)
+        _, dati = self._login(g, "admin", "Iniziale-di-prova-1")
+        self.assertTrue(dati["utente"]["cambio_password"])
+        # ente disattivato: il dominio non apre più nulla
+        self._enti("disattiva", "greenlees")
+        self._login(g, "admin", "Iniziale-di-prova-1", atteso=404)
+        self._enti("attiva", "greenlees")
+        self.assertIn("greenlees", self._enti("elenco"))
+        self._enti("reimposta", "inesistente", esito=1)
+
+    def test_dominio_senza_ente(self):
+        self._login(SCONOSCIUTO, "admin", atteso=404)
         a, _ = self._login(A, "admin")
-        self.assertEqual(a.get("/api/v1/enti", base_url=A).status_code, 403)
+        self.assertEqual(a.get("/api/v1/enti", base_url=A).status_code, 404)  # nessuna API degli enti
+
+    def test_profilo_e_logo(self):
+        import io
+
+        c, _ = self._login(A, "admin")
+        r = c.put("/api/v1/ente/profilo", base_url=A, json={"caratteristiche": " Provincia, 380.000 abitanti "})
+        self.assertEqual(r.get_json()["caratteristiche"], "Provincia, 380.000 abitanti")
+        png = b"\x89PNG\r\n\x1a\n" + b"0" * 100
+        carica = lambda dati, nome: c.post(  # noqa: E731
+            "/api/v1/ente/logo", base_url=A, data={"file": (io.BytesIO(dati), nome)},
+            content_type="multipart/form-data",
+        )  # fmt: skip
+        self.assertEqual(carica(b"<svg onload=alert(1)>", "logo.svg").status_code, 415)
+        self.assertTrue(carica(png, "logo.png").get_json()["logo"])
+        r = c.get("/api/v1/ente/logo", base_url=A)
+        self.assertEqual((r.status_code, r.mimetype, r.data), (200, "image/png", png))
+        # gli altri utenti leggono il profilo ma non lo modificano
+        a, _ = self._login(A, "revisore")
+        self.assertTrue(a.get("/api/v1/ente/profilo", base_url=A).get_json()["logo"])
+        self.assertEqual(a.put("/api/v1/ente/profilo", base_url=A, json={}).status_code, 403)
+        self.assertEqual(c.delete("/api/v1/ente/logo", base_url=A).status_code, 204)
+        self.assertEqual(c.get("/api/v1/ente/logo", base_url=A).status_code, 404)
 
     def test_utenti_locali_dell_ente(self):
         c, _ = self._login(A, "admin")
@@ -227,11 +272,13 @@ class MultiEnte(unittest.TestCase):
         })  # fmt: skip
         self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
         nuovo = r.get_json()
-        self._login(A, "nuovo")
+        n, dati = self._login(A, "nuovo")
+        self.assertTrue(dati["utente"]["cambio_password"])  # password scelta dall'amministratore
+        self._cambia(n, A, PASSWORD, "Scelta-da-me-3")
         r = c.put(f"/api/v1/ente/utenti/{nuovo['id']}", base_url=A,
                   json={"ruoli": ["CONTROLLORE"], "attivo": False})  # fmt: skip
         self.assertEqual(r.status_code, 200)
-        self._login(A, "nuovo", atteso=403)  # utente disattivato
+        self._login(A, "nuovo", "Scelta-da-me-3", atteso=403)  # utente disattivato
 
 
 if __name__ == "__main__":

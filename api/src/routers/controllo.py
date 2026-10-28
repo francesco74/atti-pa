@@ -29,7 +29,7 @@ from deps import (
     risorse,
     utente,
 )
-from documenti import DocumentiError
+from common.documenti import DocumentiError
 from deps import db as sessione_db
 from routers.verifiche import accoda, schede_applicabili
 from schemas import Schema

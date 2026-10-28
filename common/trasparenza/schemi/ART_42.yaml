@@ -1,0 +1,66 @@
+# Schema di pubblicazione art. 42 d.lgs. 33/2013 (interventi straordinari e di
+# emergenza). Fonte: Allegato 14 alla delibera ANAC n. 495/2024 (agg. 10.06.2026).
+
+id: ART_42
+articolo: art. 42
+titolo: Interventi straordinari e di emergenza
+fonte:
+  delibera: "495/2024"
+  allegato: 14
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Soggetti di cui all'art. 2-bis, co. 1 (pubbliche amministrazioni ex art. 1, co. 2, d.lgs. 165/2001), nei limiti in
+  cui adottino provvedimenti contingibili e urgenti o di carattere straordinario, comprese le amministrazioni
+  commissariali e straordinarie costituite in base alla legge 225/1992 o a provvedimenti legislativi di urgenza.
+  Non si estende a società partecipate o enti di diritto privato in controllo pubblico.
+
+documento:
+  titolo: Interventi straordinari e di emergenza (Art. 42 d.lgs. 33/2013)
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza (art. 42 d.lgs. n. 33/2013), si pubblicano di seguito i
+    provvedimenti contingibili e urgenti e in generale i provvedimenti di carattere straordinario adottati in caso
+    di calamità naturali o di altre emergenze relativi a:
+
+sezioni:
+  - id: PROVVEDIMENTI
+    titolo: Dati sui provvedimenti d'emergenza
+    collocazione: Interventi straordinari e di emergenza
+    aggiornamento: tempestivo
+    norme: ["Art. 42, c. 1, lett. a), b) e c), d.lgs. n. 33/2013"]
+    etichetta_elemento: Provvedimento
+    nota: >-
+      Provvedimenti contingibili e urgenti e, in generale, provvedimenti di carattere straordinario in caso di calamità
+      naturali o di altre emergenze.
+    campi:
+      - {id: normativa_adozione, etichetta: Normativa che ne legittima l'adozione, descrizione: "es. art. 50, co. 7-bis, d.lgs. 267/2000 per ordinanza sindacale", tipo: testo, obbligatorio: true}
+      - {id: soggetto_proponente, etichetta: Soggetto proponente, descrizione: "es. sindaco, commissario straordinario", tipo: testo, obbligatorio: true}
+      - {id: soggetto_adottante, etichetta: Soggetto che adotta il provvedimento, descrizione: Solo se diverso dal soggetto proponente, tipo: testo}
+      - {id: tipologia_provvedimento, etichetta: Tipologia del provvedimento, descrizione: "es. ordinanza, decreto", tipo: testo, obbligatorio: true}
+      - {id: oggetto_provvedimento, etichetta: Oggetto del provvedimento, tipo: testo_lungo, obbligatorio: true}
+      - {id: numero_rep, etichetta: Numero/rep., descrizione: Identificativo interno dell'atto, tipo: testo, obbligatorio: true}
+      - {id: data_adozione, etichetta: Data di adozione, tipo: data, obbligatorio: true}
+      - {id: norme_derogate, etichetta: Norme eventualmente derogate, descrizione: Discipline a cui si deroga (spesso richiamate nei VISTI), tipo: testo_lungo}
+      - {id: motivi_deroga, etichetta: Motivi della deroga, descrizione: "es. sicurezza urbana, incolumità pubblica, motivi igienico-sanitari, decoro urbano", tipo: testo_lungo}
+      - {id: link_provvedimento, etichetta: Provvedimento, descrizione: Link al documento pubblicato, tipo: url, obbligatorio: true}
+      - {id: termine_iniziale, etichetta: Termine iniziale per l'esercizio dei poteri straordinari, tipo: data, obbligatorio: true}
+      - {id: termine_finale, etichetta: Termine finale (anche stimato), tipo: data, obbligatorio: true}
+      - {id: proroga_termine, etichetta: Proroga del termine, descrizione: Dato facoltativo, tipo: data}
+      - {id: costi_previsti, etichetta: Costi previsti degli interventi, descrizione: Da indicare tempestivamente, tipo: importo, obbligatorio: true}
+      - {id: costi_effettivi, etichetta: Costi effettivi sostenuti dall'amministrazione, descrizione: Da indicare appena disponibili, tipo: importo}
+
+note_audit: |
+  PLAUSIBILITÀ NORMATIVA:
+  - Valuta se le norme citate in "Normativa che ne legittima l'adozione" e "Norme eventualmente derogate" sono
+    pertinenti al contesto delle emergenze (es. protezione civile, ordinanze contingibili e urgenti ex TUEL) e coerenti
+    con l'oggetto. L'ente può citare ordinanze, decreti commissariali o leggi regionali che non conosci: se la
+    citazione ha sintassi e logica coerenti con l'ordinamento, considerala valida. Segnala "Negativo" o "Parziale"
+    solo per norme palesemente inesistenti, fuori contesto o macroscopicamente errate.
+  CAMPI CONDIZIONATI:
+  - Il soggetto che adotta va indicato solo se diverso dal proponente.
+  - Le norme derogate sono obbligatorie solo se il provvedimento dispone una deroga; in tal caso i motivi della
+    deroga devono contenere una motivazione sensata e non vuota.
+  - La proroga del termine è facoltativa: la sua assenza non è mai un rilievo.
+  - I costi effettivi vanno indicati appena disponibili: se l'intervento è ancora in corso, la loro assenza NON è un
+    rilievo ma un dato da monitorare.

@@ -1,0 +1,195 @@
+# Schema di pubblicazione art. 12 d.lgs. 33/2013 (atti di carattere normativo e
+# amministrativo generale). Fonte: Allegato 5 alla delibera ANAC n. 495/2024
+# (versione aggiornata al 10.06.2026).
+
+id: ART_12
+articolo: art. 12
+titolo: Atti di carattere normativo e amministrativo generale
+fonte:
+  delibera: "495/2024"
+  allegato: 5
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Il contenuto dello schema si differenzia in base al soggetto: pubbliche amministrazioni e Autorità amministrative
+  indipendenti; ordini e collegi professionali nazionali; ordini e collegi professionali territoriali (delibera ANAC
+  777/2021); società ed enti di diritto privato in controllo pubblico ed enti pubblici economici (delibera ANAC
+  1134/2017, All. 1). Lo scadenzario degli obblighi amministrativi (co. 1-bis) riguarda solo le pubbliche
+  amministrazioni e le Autorità amministrative indipendenti.
+
+documento:
+  titolo: Disposizioni Generali (Art. 12 d.lgs. 33/2013)
+  sottotitolo: Atti di carattere normativo e amministrativo generale
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti le disposizioni generali (art. 12 d.lgs. n. 33/2013),
+    si riportano di seguito i dati, i riferimenti normativi e i documenti relativi a:
+
+parametri:
+  - id: tipo_ente
+    etichetta: Tipologia di ente
+    opzioni:
+      - {valore: PA, etichetta: Pubblica amministrazione o Autorità amministrativa indipendente}
+      - {valore: ORDINI_NAZ, etichetta: Ordine o collegio professionale nazionale}
+      - {valore: ORDINI_TERR, etichetta: Ordine o collegio professionale territoriale}
+      - {valore: SOCIETA, etichetta: "Società o ente di diritto privato in controllo pubblico, ente pubblico economico"}
+
+_data: &data {id: data, etichetta: Data, tipo: data, obbligatorio: true}
+_link: &link {id: link, etichetta: Link, tipo: url, obbligatorio: true}
+
+sezioni:
+  - id: RIF_NORM
+    titolo: Riferimenti normativi su istituzione, organizzazione e attività
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA, ORDINI_NAZ, SOCIETA]}
+    etichetta_elemento: Riferimento normativo
+    nota: Riferimenti normativi con i relativi link alle norme di legge statale pubblicate nella banca dati "Normattiva".
+    campi:
+      - {id: riferimento, etichetta: Riferimento normativo, tipo: testo, obbligatorio: true}
+      - {id: link, etichetta: Link alla norma su Normattiva, tipo: url, obbligatorio: true}
+
+  - id: ATTI_GEN
+    titolo: Atti generali
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA, ORDINI_NAZ]}
+    etichetta_elemento: Atto
+    nota: >-
+      Atti adottati dall'amministrazione che dispongono in generale sull'organizzazione, sulle funzioni, sugli
+      obiettivi, sui procedimenti, ovvero nei quali si determina l'interpretazione di norme giuridiche.
+    campi:
+      - id: tipo_atto
+        etichetta: Tipo di atto
+        tipo: scelta
+        opzioni: [Direttiva, Circolare (di maggiore rilievo per l'amministrazione/ente), Programma, Istruzione, Decreto, Determinazione, Nota, Provvedimento, Altro]
+        obbligatorio: true
+      - {id: denominazione, etichetta: Denominazione dell'atto, tipo: testo, obbligatorio: true}
+      - *data
+      - *link
+
+  - id: ATTI_GEN_SOC
+    titolo: Atti generali
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [SOCIETA]}
+    etichetta_elemento: Atto
+    nota: >-
+      Per "Altro" si intende ogni atto, anche adottato dall'amministrazione controllante, che dispone in generale
+      sull'organizzazione, sulle funzioni, sugli obiettivi e sui procedimenti (es. atto costitutivo, statuto, atti di
+      indirizzo dell'amministrazione controllante).
+    # Stessa sezione ANAC di ATTI_GEN: un unico controllo nell'analisi IA.
+    controllo: ATTI_GEN
+    campi:
+      - id: tipo_atto
+        etichetta: Tipo di atto
+        tipo: scelta
+        opzioni: [Direttiva, Atto di indirizzo, Circolare (di maggiore rilievo per l'ente), Programma, Istruzione, Altro]
+        obbligatorio: true
+      - {id: denominazione, etichetta: Denominazione dell'atto, tipo: testo, obbligatorio: true}
+      - *data
+      - *link
+
+  - id: CODICI
+    titolo: Codice disciplinare, codice di condotta, codice di comportamento ed etico, codice deontologico
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    etichetta_elemento: Codice
+    nota: >-
+      PA e società: codice disciplinare e codice di condotta. Ordini nazionali: codice di comportamento e codice etico.
+      Ordini territoriali: codice disciplinare, codice di condotta e codice deontologico della categoria.
+    campi:
+      - {id: data_adozione, etichetta: Data di adozione, tipo: data, obbligatorio: true}
+      - {id: link, etichetta: Link al documento, tipo: url, obbligatorio: true}
+
+  - id: DOC_PROG
+    titolo: Documenti di programmazione strategico-gestionale
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA, SOCIETA]}
+    etichetta_elemento: Documento
+    campi:
+      - {id: tipo_atto, etichetta: Tipo di atto, tipo: scelta, opzioni: [Direttiva, Documento di programmazione, Obiettivo strategico], obbligatorio: true}
+      - {id: denominazione, etichetta: Denominazione dell'atto, tipo: testo, obbligatorio: true}
+      - *data
+      - *link
+
+  - id: ATTI_OIV
+    titolo: Atti degli organismi indipendenti di valutazione
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA]}
+    etichetta_elemento: Atto
+    campi:
+      - id: link
+        etichetta: Link
+        descrizione: Link al documento o alla sotto-sezione "Organismi indipendenti di valutazione" (art. 31) dove gli atti sono pubblicati
+        tipo: url
+        obbligatorio: true
+
+  - id: STATUTI
+    titolo: Statuti e leggi regionali che regolano le funzioni, l'organizzazione e lo svolgimento delle attività
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 2, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA]}
+    etichetta_elemento: Atto
+    campi:
+      - {id: tipo_atto, etichetta: Tipo di atto, tipo: scelta, opzioni: [Statuto, Legge regionale, Atto organizzativo (anche di natura regolamentare)], obbligatorio: true}
+      - {id: numero, etichetta: Numero, descrizione: Identificativo interno dell'atto, tipo: testo, obbligatorio: true}
+      - *data
+      - {id: link, etichetta: Link ai testi ufficiali aggiornati, tipo: url, obbligatorio: true}
+
+  - id: STATUTI_ORDINI
+    titolo: Statuti o altro atto organizzativo anche di natura regolamentare; leggi regionali
+    collocazione: Disposizioni generali -> Atti generali
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 2, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [ORDINI_NAZ, ORDINI_TERR]}
+    etichetta_elemento: Atto
+    # Stessa sezione ANAC di STATUTI: un unico controllo nell'analisi IA.
+    controllo: STATUTI
+    campi:
+      - {id: tipo_atto, etichetta: Tipo di atto, tipo: scelta, opzioni: [Statuto, Altro atto organizzativo anche di natura regolamentare o leggi regionali], obbligatorio: true}
+      - {id: numero, etichetta: Numero, descrizione: Identificativo interno dell'atto, tipo: testo, obbligatorio: true}
+      - *data
+      - {id: link, etichetta: Link ai testi ufficiali aggiornati, tipo: url, obbligatorio: true}
+
+  - id: SCADENZARIO
+    titolo: Scadenzario dei nuovi obblighi amministrativi (co. 1-bis)
+    collocazione: Disposizioni generali -> Oneri informativi per cittadini e imprese
+    aggiornamento: tempestivo
+    norme: ["Art. 12, c. 1-bis, d.lgs. n. 33/2013", "DPCM 8 novembre 2013"]
+    visibile_se: {tipo_ente: [PA]}
+    etichetta_elemento: Obbligo
+    campi:
+      - {id: destinatario, etichetta: Destinatario dell'obbligo, tipo: scelta, opzioni: [Cittadino, Impresa, Entrambi], obbligatorio: true}
+      - {id: data_efficacia, etichetta: Data di efficacia dell'obbligo, tipo: data, obbligatorio: true}
+      - {id: denominazione, etichetta: Denominazione dell'obbligo amministrativo, tipo: testo, obbligatorio: true}
+      - {id: descrizione, etichetta: Descrizione sintetica dell'obbligo, tipo: testo_lungo, obbligatorio: true}
+      - {id: riferimento, etichetta: Riferimento normativo, tipo: testo, obbligatorio: true}
+      - {id: link, etichetta: Link alla sezione del sito dedicata al servizio, tipo: url, obbligatorio: true}
+
+note_audit: |
+  TEMPESTIVITÀ (soglia operativa interna, non prevista dalla norma):
+  - Considera "Positivo" un intervallo tra _ADOPTION_DATE_ e _PUB_DATE_ fino a 30 giorni, "Parziale" tra 31 e 60
+    giorni, "Negativo" oltre 60 giorni. Precisa nell'analisi che si tratta di una soglia operativa.
+  SEZIONI NON PERTINENTI:
+  - Se una sezione non è pertinente al tipo di ente, l'esito è "Non Applicabile" ("L'obbligo di pubblicazione non è
+    applicabile all'amministrazione"), mai "Negativo".
+  ATTI GENERALI:
+  - Un tipo di atto fuori dall'elenco del soggetto pertinente è "Parziale": verifica comunque che il contenuto sia
+    coerente con la definizione di atto che dispone in generale su organizzazione, funzioni, obiettivi, procedimenti o
+    ne interpreta le norme. Si tratta degli atti adottati dalla singola amministrazione, non da altre.
+  RIFERIMENTI NORMATIVI:
+  - Ogni norma che regola istituzione, organizzazione e attività dell'ente va riportata: se ne compare una sola mentre
+    il testo ne cita altre, l'esito è "Parziale".
+  SCADENZARIO:
+  - L'inosservanza dell'obbligo comporta le sanzioni ex art. 46 d.lgs. 33/2013: se lo scadenzario è del tutto assente
+    per una PA, segnalalo come criticità rilevante nell'analisi descrittiva.

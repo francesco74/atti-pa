@@ -228,7 +228,7 @@ class LlmClient:
         sistema: str,
         messaggi: list[dict],
         *,
-        formato: type[BaseModel] | None,
+        formato: type[BaseModel] | dict | None,
         redazione: bool,
     ) -> str:
         raise NotImplementedError
@@ -238,7 +238,7 @@ class LlmClient:
         sistema: str,
         messaggi: list[dict],
         *,
-        formato: type[BaseModel] | None,
+        formato: type[BaseModel] | dict | None,
         redazione: bool,
     ) -> str:
         log.debug(
@@ -313,6 +313,35 @@ class LlmClient:
             testo_prompt("dati_personali_sistema"), prompt, DatiTrovati, interattiva=interattiva
         )
 
+    async def genera(self, sistema: str, testo: str) -> str:
+        """Testo libero lungo (es. report di un'analisi), nel worker: timeout pieno."""
+        return await self._chiama(sistema, [{"role": "user", "content": testo}], formato=None, redazione=False)
+
+    async def dati_json(self, sistema: str, testo: str, schema: dict) -> dict:
+        """Risposta JSON conforme a uno schema costruito al momento (JSON Schema); se non è
+        un oggetto JSON valido si riprova una volta. La conformità ai dettagli dello schema
+        la verifica chi chiama."""
+        messaggi = [{"role": "user", "content": testo}]
+        for tentativo in (1, 2):
+            contenuto = await self._chiama(sistema, messaggi, formato=schema, redazione=False)
+            try:
+                testo_json = contenuto.strip()
+                if testo_json.startswith("```"):
+                    testo_json = testo_json.strip("`").removeprefix("json").strip()
+                dati = json.loads(testo_json[testo_json.find("{") : testo_json.rfind("}") + 1])
+                if isinstance(dati, dict):
+                    return dati
+                raise ValueError("La risposta non è un oggetto JSON")
+            except ValueError as e:
+                if tentativo == 2:
+                    raise LlmError(f"Risposta del modello non valida: {e}") from e
+                log.warning("Risposta del modello non valida, nuovo tentativo: %s", e)
+                messaggi += [
+                    {"role": "assistant", "content": contenuto},
+                    {"role": "user", "content": testo_prompt("verifica_correzione")},
+                ]
+        raise AssertionError("non raggiungibile")
+
     async def scrivi(self, sistema: str, testo: str) -> str:
         """Testo libero (redazione): richiesta interattiva, con il suo timeout."""
         messaggi = [{"role": "user", "content": testo}]
@@ -350,7 +379,7 @@ class ClientCompatibileOpenAI(LlmClient):
         sistema: str,
         messaggi: list[dict],
         *,
-        formato: type[BaseModel] | None,
+        formato: type[BaseModel] | dict | None,
         redazione: bool,
     ) -> str:
         payload: dict = {
@@ -360,7 +389,12 @@ class ClientCompatibileOpenAI(LlmClient):
         temperatura = self.temperatura_redazione if redazione else self.temperatura
         if temperatura is not None:
             payload["temperature"] = temperatura
-        if formato is not None:
+        if isinstance(formato, dict):  # schema JSON costruito al momento (es. trasparenza)
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "risposta", "schema": formato},
+            }
+        elif formato is not None:
             payload["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {"name": formato.__name__, "schema": formato.model_json_schema()},
@@ -434,7 +468,7 @@ class ClientAnthropic(LlmClient):
         sistema: str,
         messaggi: list[dict],
         *,
-        formato: type[BaseModel] | None,
+        formato: type[BaseModel] | dict | None,
         redazione: bool,
     ) -> str:
         argomenti: dict = {
@@ -449,7 +483,13 @@ class ClientAnthropic(LlmClient):
             argomenti["betas"] = [BETA_FALLBACK]
             argomenti["fallbacks"] = "default"
         try:
-            if formato is not None:
+            if isinstance(formato, dict):  # schema JSON costruito al momento (es. trasparenza)
+                argomenti["output_config"] = {
+                    **argomenti["output_config"],
+                    "format": {"type": "json_schema", "schema": formato},
+                }
+                risposta = await self._client.beta.messages.create(**argomenti)
+            elif formato is not None:
                 risposta = await self._client.beta.messages.parse(
                     **argomenti, output_format=formato
                 )

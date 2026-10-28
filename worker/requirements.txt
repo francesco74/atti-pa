@@ -1,0 +1,8 @@
+# Dipendenze dell'immagine worker: quelle della libreria comune più quelle del modulo
+# trasparenza (fogli di calcolo, browser headless per le pagine caricate via JavaScript).
+# Il codice viene da worker/src e common/src (vedi worker/Dockerfile).
+-r ../common/requirements.txt
+openpyxl==3.1.5
+xlrd==2.0.2
+odfpy==1.4.1
+playwright==1.64.1

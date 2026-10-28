@@ -1,0 +1,104 @@
+# Schema di pubblicazione art. 32 d.lgs. 33/2013 (servizi erogati).
+# Fonte: Allegato 10 alla delibera ANAC n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_32
+articolo: art. 32
+titolo: Servizi erogati
+fonte:
+  delibera: "495/2024"
+  allegato: 10
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Pubbliche amministrazioni (art. 2-bis, co. 1) e, se gestori del servizio pubblico, i soggetti di cui all'art. 2-bis,
+  co. 2 (enti pubblici economici, ordini professionali, società in controllo pubblico, associazioni, fondazioni ed enti
+  di diritto privato in controllo pubblico) e co. 3.
+
+documento:
+  titolo: Servizi erogati (Art. 32 d.lgs. 33/2013)
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti dall'art. 32 del d.lgs. n. 33/2013 concernenti i servizi
+    erogati, si riportano di seguito le informazioni e i dati relativi a:
+
+sezioni:
+  - id: CARTA
+    titolo: Carta dei servizi e standard di qualità
+    collocazione: Servizi erogati -> Carta dei servizi e standard di qualità
+    aggiornamento: tempestivo
+    norme: ["Art. 32, c. 1, d.lgs. n. 33/2013", "Art. 25, d.lgs. n. 201/2022"]
+    ripetibile: false
+    nota: >-
+      Per i servizi pubblici locali la carta di servizio è corredata delle informazioni sulla composizione della
+      tariffa, sul livello effettivo di qualità dei servizi offerti, sul livello annuale degli investimenti effettuati e
+      sulla loro programmazione fino al termine dell'affidamento (art. 25 d.lgs. 201/2022).
+    campi:
+      - id: link
+        etichetta: Link alla carta dei servizi
+        descrizione: Carta dei servizi o documento che contiene i livelli minimi di qualità dei servizi pubblici
+        tipo: url
+        obbligatorio: true
+
+  - id: COSTI
+    titolo: Costi contabilizzati dei servizi pubblici
+    collocazione: Servizi erogati -> Costi contabilizzati
+    aggiornamento: annuale
+    norme: ["Art. 32, c. 2, lett. a), d.lgs. n. 33/2013", "Art. 10, c. 5, d.lgs. n. 33/2013"]
+    etichetta_elemento: Tipologia di servizio
+    nota: Da replicare per ogni tipologia di servizio erogato.
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - id: tipologia
+        etichetta: Tipologia di servizio
+        tipo: scelta
+        opzioni: [Asili nido, Assistenza disabili, Assistenza domiciliare, Assistenza minori, Biblioteche, Distribuzione di energia elettrica, Distribuzione di gas naturale, Farmacie, Illuminazione pubblica, Impianti sportivi, Manutenzione edifici, Manutenzione del verde pubblico, Musei, Parcheggi, Rifiuti, Riscossione tributi, Ristorazione scolastica, Servizi cimiteriali, Servizio idrico integrato, Servizi di manutenzione, Servizi sociali, Supporto amministrativo, Teatri, Trasporto pubblico locale, Varie tipologie, Altro]
+        obbligatorio: true
+      - {id: tipologia_altro, etichetta: Altra tipologia di servizio, tipo: testo, obbligatorio: true, visibile_se: {tipologia: [Altro]}}
+      - {id: totale_costi, etichetta: Ammontare totale dei costi, tipo: importo, obbligatorio: true}
+
+  - id: INDAGINI
+    titolo: Risultati delle indagini sulla soddisfazione degli utenti e statistiche di utilizzo dei servizi in rete
+    collocazione: Servizi erogati -> Servizi in rete
+    aggiornamento: annuale
+    norme: ["Art. 7, c. 3, d.lgs. n. 82/2005"]
+    etichetta_elemento: Servizio in rete
+    nota: Da replicare per ogni servizio in rete gestito dall'ente.
+    campi:
+      - {id: anno, etichetta: Anno di riferimento, tipo: anno, obbligatorio: true}
+      - {id: oggetto, etichetta: Esito delle indagini e statistiche di utilizzo, descrizione: "Esito/risultanze delle indagini sulla soddisfazione degli utenti e statistiche di utilizzo dei servizi in rete", tipo: testo_lungo, obbligatorio: true}
+
+  - id: CLASSACTION
+    titolo: Class action
+    collocazione: Servizi erogati -> Class action
+    aggiornamento: tempestivo
+    norme: ["Art. 1, c. 2, art. 4, c. 2 e 6, d.lgs. n. 198/2009"]
+    etichetta_elemento: Sentenza
+    campi:
+      - {id: oggetto, etichetta: Oggetto del ricorso/impugnativa, descrizione: Senza i nomi delle parti se persone fisiche, tipo: testo_lungo, obbligatorio: true}
+      - {id: n_sentenza, etichetta: Numero sentenza, tipo: testo, obbligatorio: true}
+      - {id: data_sentenza, etichetta: Data di pubblicazione/deposito della sentenza, tipo: data, obbligatorio: true}
+      - {id: link, etichetta: Link alla sentenza, tipo: url}
+      - {id: misure, etichetta: Misure adottate in ottemperanza alla sentenza, tipo: testo_lungo}
+
+note_audit: |
+  CARTA DEI SERVIZI:
+  - L'unico campo previsto è il link: NON richiedere un campo "Qualificazione soggetto", che lo schema aggiornato non
+    prevede più.
+  - Per i servizi pubblici locali (art. 25 d.lgs. 201/2022), se dal documento o da _AUTHORITY_FEATURES_ risulta che
+    l'ente li gestisce, la carta deve riportare anche composizione della tariffa, livello effettivo di qualità e livello
+    annuale degli investimenti con la programmazione fino al termine dell'affidamento: se non verificabili dal solo
+    link, segnala il punto come da approfondire (non necessariamente "Negativo").
+  COSTI CONTABILIZZATI:
+  - Serve solo il totale complessivo: NON richiedere scomposizioni (la lett. b del co. 2 è stata abrogata dal
+    d.lgs. 97/2016). Se da _AUTHORITY_FEATURES_ risultano più servizi erogati, verifica che ci sia una riga per ciascuno.
+  INDAGINI SUI SERVIZI IN RETE:
+  - Devono esserci sia l'esito delle indagini di soddisfazione sia le statistiche di utilizzo: se ne manca uno, "Parziale".
+  CLASS ACTION:
+  - Non devono comparire i nomi delle parti se persone fisiche (violazione della riservatezza).
+  SERVIZI PUBBLICI LOCALI DI RILEVANZA ECONOMICA:
+  - Per la documentazione su affidamento e gestione (relazione sulla scelta della modalità di gestione, motivazione
+    qualificata per gli affidamenti in house) ANAC rinvia al proprio servizio di pubblicazione dedicato: verifica solo
+    la presenza e la pertinenza del contenuto.
+  NON APPLICABILITÀ:
+  - Segnala una contraddizione se l'ente dichiara la non applicabilità ma pubblica comunque dati, o se da
+    _AUTHORITY_FEATURES_ risulta che eroga il servizio a cui la precisazione si riferisce.

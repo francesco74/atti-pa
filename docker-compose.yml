@@ -11,7 +11,8 @@
 x-comune: &comune
   environment: &ambiente
     DATABASE_URL: mysql+aiomysql://atti_pa:password@mysql:3306/atti_pa
-    AUTH_ENABLED: "false"
+    # password iniziale dell'admin degli enti creati con enti.py (da cambiare al primo accesso)
+    PASSWORD_INIZIALE: ${PASSWORD_INIZIALE:-Cambiami-subito-1}
     COOKIE_SECURE: "false"
     JWT_SECRET: sviluppo-locale-non-usare-in-produzione
     DOCUMENTI_URL: http://converter:8000
@@ -48,6 +49,18 @@ services:
       interval: 5s
       retries: 30
 
+  # Consultazione del database: http://localhost:8081 (accesso già fatto come root)
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+      UPLOAD_LIMIT: 64M
+    ports: ["8081:80"]
+    depends_on:
+      mysql: { condition: service_healthy }
+
   # Code tra API, converter e worker. Interfaccia di gestione: http://localhost:15673
   # (atti_pa / password); AMQP sulla 5673 per i componenti avviati fuori da compose
   rabbitmq:
@@ -77,9 +90,11 @@ services:
       mysql: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
 
-  verifica-worker:
+  worker:
     <<: *comune
-    build: { context: ., dockerfile: verifica-worker/Dockerfile }
+    build: { context: ., dockerfile: worker/Dockerfile }
+    volumes:
+      - archivio:/var/lib/atti-pa/archivio  # file caricati per le analisi della trasparenza
     depends_on:
       mysql: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
@@ -124,4 +139,4 @@ services:
 volumes:
   mysql:
   rabbitmq:
-  archivio:  # file originali degli atti, condiviso tra API e converter
+  archivio:  # file originali degli atti e caricati per la trasparenza (API, converter, worker)

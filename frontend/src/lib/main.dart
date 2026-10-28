@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'api/api_client.dart';
 import 'config.dart';
 import 'stato/auth_state.dart';
+import 'ui/cambio_password_page.dart';
 import 'ui/home_shell.dart';
 import 'ui/login_page.dart';
 
@@ -58,7 +59,8 @@ class _Radice extends StatelessWidget {
     return switch (auth.stato) {
       StatoAuth.verifica => const Scaffold(body: Center(child: CircularProgressIndicator())),
       StatoAuth.anonimo => const LoginPage(),
-      StatoAuth.autenticato => HomeShell(utente: auth.utente!),
+      StatoAuth.autenticato =>
+        auth.utente!.cambioPassword ? const CambioPasswordPage() : HomeShell(utente: auth.utente!),
     };
   }
 }

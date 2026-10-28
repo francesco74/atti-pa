@@ -6,9 +6,9 @@ Data: 27/10/2026, aggiornata il 28/10/2026.
 
 | Passo | Stato |
 |---|---|
-| 1. Nucleo multi ente in atti-pa | **fatto**: enti e domini, accesso locale e Active Directory per ente (configurazione nel database), amministratore dell'installazione, dati di atti-pa separati per ente, blocco dopo tentativi falliti, hash delle password di rag e PApuntozeroIA accettati, app con accesso per ente, menu per modulo, amministrazione di accesso, utenti ed enti. La riorganizzazione delle cartelle in `nucleo/` e `moduli/` è rinviata a quando arriva il secondo modulo. Permessi: per ora i ruoli di atti-pa più `INSTALLAZIONE`; il modello a permessi di rag si introduce con il modulo chat |
-| 2. Client LLM e converter unici | da fare |
-| 3. Modulo trasparenza | da fare |
+| 1. Nucleo multi ente in atti-pa | **fatto**: enti e domini, accesso locale e Active Directory per ente (configurazione nel database), enti gestiti solo da riga di comando (`deploy/enti.py`: domini, moduli, utente `admin` creato con l'ente e password iniziale da cambiare al primo accesso), login sempre attivo anche in locale (domini `*.localhost`), dati di atti-pa separati per ente, blocco dopo tentativi falliti, hash delle password di rag e PApuntozeroIA accettati, app con accesso per ente, menu per modulo, amministrazione di accesso e utenti dell'ente. La riorganizzazione delle cartelle in `nucleo/` e `moduli/` è rinviata a quando arriva il secondo modulo. Permessi: per ora i ruoli di atti-pa; il modello a permessi di rag si introduce con il modulo chat |
+| 2. Client LLM e converter unici | **fatto con la trasparenza**: client LLM comune con JSON a schema libero e testo lungo; converter con HTML → PDF/DOCX e testo in Markdown via HTTP; i PDF all'LLM come file restano da decidere con il modulo chat |
+| 3. Modulo trasparenza | **backend e app fatti** (vedi `trasparenza.md`): catalogo, schede, documenti, verbale, esportazione, analisi ed estrazioni nel worker; app con le schede Analisi, Schede e Risultati (riprese da PApuntozeroIA); resta la migrazione dei dati |
 | 4. Modulo chat | da fare |
 | 5. Modulo anticorruzione | in attesa del repository |
 
@@ -66,8 +66,9 @@ Un modulo è **attivabile a due livelli**:
 | `archivi_utenti` | archivi assegnati agli utenti riservati (ex `review_user_topics`) |
 
 Ogni tabella dei moduli riceve `ente_id`; ogni richiesta lavora sull'ente dell'utente
-(o, per la chat pubblica, sull'ente dell'archivio). Un **amministratore di installazione** crea
-gli enti; l'**amministratore di ente** gestisce utenti, accessi e configurazione del suo ente.
+(o, per la chat pubblica, sull'ente dell'archivio). Gli enti (domini e moduli attivi)
+si gestiscono con `deploy/enti.py` nel container, senza interfaccia web; l'**amministratore di
+ente** gestisce utenti, accessi e configurazione del suo ente.
 
 **Come si individua l'ente**: dall'host (ogni ente può avere il suo dominio, registrato in
 `enti`); se l'host è comune, la pagina di accesso chiede l'ente.
@@ -83,7 +84,7 @@ gli enti; l'**amministratore di ente** gestisce utenti, accessi e configurazione
 **Permessi**: si adotta il modello di rag (endpoint e app controllano **permessi**, mai nomi di
 ruolo; i ruoli sono insiemi di permessi), esteso a tutti i moduli:
 `redazione.*`, `controllo.*`, `modelli.*`, `chat.revisione.*`, `trasparenza.*`,
-`anticorruzione.*`, `ente.amministrazione`, `installazione.amministrazione`.
+`anticorruzione.*`, `ente.amministrazione`.
 
 ## 3. Catalogo comune
 
@@ -145,7 +146,7 @@ moduli/
   anticorruzione/  (in arrivo)
 servizi/
   api/             un'unica API: registra i blueprint dei moduli attivi
-  converter/  verifica-worker/  chat-worker/  ingest/  estrattore/  normattiva-sync/  navigatore/
+  converter/  worker/  chat-worker/  ingest/  estrattore/  normattiva-sync/  navigatore/
 frontend/          un'unica app Flutter (area personale + chat pubblica)
 pacchetto/         contenuti standard (modelli, checklist, schemi trasparenza, processi...)
 deploy/k8s/        base + un component kustomize per modulo

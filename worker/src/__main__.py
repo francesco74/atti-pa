@@ -1,4 +1,5 @@
-"""Avvio del worker di verifica: `python /app` (esegue questo file; `src` è piatto).
+"""Avvio del worker (verifiche degli atti e lavori della trasparenza): `python /app`
+(esegue questo file; `src` è piatto).
 
 Gestisce SIGTERM (arresto del pod): termina la verifica in corso e poi esce.
 Il file di heartbeat è usato dalla liveness probe di Kubernetes.
@@ -10,6 +11,7 @@ from pathlib import Path
 
 from common.coda import Coda
 from common.config import get_settings
+from common.documenti import DocumentiClient
 from common.db import crea_engine, crea_sessionmaker
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
@@ -27,6 +29,7 @@ async def main() -> None:
     )
     llm = crea_llm(settings)
     coda = Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso)
+    documenti = DocumentiClient(settings.documenti_url, timeout=settings.documenti_timeout)
     worker = Worker(
         crea_sessionmaker(engine),
         normattiva,
@@ -34,6 +37,7 @@ async def main() -> None:
         settings,
         coda,
         heartbeat=Path(settings.worker_heartbeat),
+        documenti=documenti,
     )
 
     loop = asyncio.get_running_loop()
@@ -43,6 +47,7 @@ async def main() -> None:
         await worker.esegui()
     finally:
         await coda.chiudi()
+        await documenti.close()
         await llm.close()
         await normattiva.close()
         await engine.dispose()

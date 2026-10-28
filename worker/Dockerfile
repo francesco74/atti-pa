@@ -1,5 +1,5 @@
 # Build dalla radice del repository:
-#   docker build -f verifica-worker/Dockerfile -t atti-pa/verifica-worker:0.1.0 .
+#   docker build -f worker/Dockerfile -t atti-pa/worker:0.1.0 .
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -11,13 +11,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Dipendenze dal requirements.txt del componente (include quelle di common)
 WORKDIR /deps
 COPY common/requirements.txt common/requirements.txt
-COPY verifica-worker/requirements.txt verifica-worker/requirements.txt
-RUN pip install -r verifica-worker/requirements.txt && rm -rf /deps
+COPY worker/requirements.txt worker/requirements.txt
+RUN pip install -r worker/requirements.txt && rm -rf /deps
+
+# Chromium per Playwright (pagine della trasparenza caricate via JavaScript), in una cartella
+# leggibile dall'utente non privilegiato; HOME in /tmp, l'unica scrivibile nel pod
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright HOME=/tmp
+RUN playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 
 # Codice: la libreria comune come pacchetto "common", il componente direttamente in /app
 WORKDIR /app
 COPY common/ /app/common/
-COPY verifica-worker/src/ /app/
+COPY worker/src/ /app/
 ENV PYTHONPATH=/app
 
 RUN useradd --system --uid 10001 app

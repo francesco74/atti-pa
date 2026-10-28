@@ -37,21 +37,25 @@ class Base(DeclarativeBase):
 
 class Ruolo:
     """Ruoli nell'ente. ADMIN amministra l'ente (pubblica i modelli, gestisce utenti e
-    accessi); INSTALLAZIONE è dell'amministratore dell'installazione, che crea gli enti."""
+    accessi). Gli enti si creano con deploy/enti.py, senza un utente dell'app."""
 
     REDATTORE = "REDATTORE"
     CONTROLLORE = "CONTROLLORE"
     GESTORE_MODELLI = "GESTORE_MODELLI"  # modifica modelli, specificità e checklist in bozza
     ADMIN = "ADMIN"  # amministratore dell'ente: pubblica le modifiche ai modelli
-    INSTALLAZIONE = "INSTALLAZIONE"
-    TUTTI = (REDATTORE, CONTROLLORE, GESTORE_MODELLI, ADMIN)
+    TRASPARENZA = "TRASPARENZA"  # modulo trasparenza: analisi, schede, verbali
+    TUTTI = (REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA, ADMIN)
 
 
 class Modulo:
-    """Moduli del sistema, abilitati per ente (Ente.moduli_json)."""
+    """Moduli del sistema, abilitati per ente (Ente.moduli_json, con deploy/enti.py)."""
 
     REDAZIONE = "redazione"  # redazione e controllo degli atti, modelli e checklist
-    TUTTI = (REDAZIONE,)
+    TRASPARENZA = "trasparenza"  # verifica e schede di Amministrazione Trasparente
+    TUTTI = (REDAZIONE, TRASPARENZA)
+
+
+UTENTE_ADMIN = "admin"  # amministratore creato con l'ente (deploy/enti.py)
 
 
 class OrigineUtente:
@@ -81,6 +85,11 @@ class Ente(Base):
     dati_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     carta_intestata_nome: Mapped[str | None] = mapped_column(String(255))
     carta_intestata: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
+    # profilo dell'ente, per tutti i moduli: logo (immagine) nei documenti generati e
+    # caratteristiche dell'amministrazione (testo libero dato all'LLM come contesto)
+    logo_mime: Mapped[str | None] = mapped_column(String(50))
+    logo: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
+    caratteristiche: Mapped[str | None] = mapped_column(Text)
     # accesso: utenti locali e/o Active Directory (url, dominio, base_dn, ca_pem,
     # verifica_certificato, timeout, gruppi {ruolo: gruppo})
     accesso_locale: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -104,19 +113,22 @@ class EnteDominio(Base):
 
 
 class User(Base):
-    """Utente di un ente (Active Directory o locale). L'amministratore dell'installazione
-    non ha ente (ente_id vuoto) e accede da qualunque dominio."""
+    """Utente di un ente (Active Directory o locale). Ogni ente nasce con l'utente locale
+    admin (UTENTE_ADMIN), con la password iniziale da cambiare al primo accesso."""
 
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("ente_id", "username", name="uq_utente_ente"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
-    ente_id: Mapped[str | None] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     username: Mapped[str] = mapped_column(String(100))
     origine: Mapped[str] = mapped_column(String(10), default=OrigineUtente.LDAP)
     password_hash: Mapped[str | None] = mapped_column(String(255))
     # cresce a ogni cambio di password o disattivazione: invalida le sessioni aperte
     token_version: Mapped[int] = mapped_column(Integer, default=0)
+    # password iniziale o scelta dall'amministratore: finché non la cambia, l'utente può solo
+    # cambiarla (deps.autenticato)
+    cambio_password: Mapped[bool] = mapped_column(Boolean, default=False)
     nome_completo: Mapped[str | None] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255))
     ufficio: Mapped[str | None] = mapped_column(String(255))
@@ -130,10 +142,6 @@ class User(Base):
 
     def ha_ruolo(self, *ruoli: str) -> bool:
         return any(r in (self.ruoli or []) for r in ruoli)
-
-    @property
-    def installazione(self) -> bool:
-        return self.ente_id is None and Ruolo.INSTALLAZIONE in (self.ruoli or [])
 
 
 class TipologiaAtto(Base):
@@ -501,6 +509,50 @@ class Verifica(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+
+class TrasparenzaDocumento(Base):
+    """Documento del modulo trasparenza (scheda, report di analisi, verbale): privato di chi
+    lo salva, visibile in lettura all'amministratore dell'ente."""
+
+    __tablename__ = "trasparenza_documenti"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(10))  # SCHEDA, ANALISI, VERBALE
+    schema_id: Mapped[str | None] = mapped_column(String(50))  # es. ART_23
+    descrizione: Mapped[str] = mapped_column(String(255))
+    html: Mapped[str] = mapped_column(TestoLungo, deferred=True)
+    esito: Mapped[str | None] = mapped_column(String(40))  # esito di validazione (analisi)
+    dati_schema: Mapped[dict[str, Any] | None] = mapped_column(JSON, deferred=True)  # form della scheda
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class TrasparenzaLavoro(Base):
+    """Analisi o estrazione del modulo trasparenza, eseguita dal worker (coda "trasparenza").
+    I file caricati stanno nell'archivio finché il lavoro non è concluso."""
+
+    __tablename__ = "trasparenza_lavori"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(10))  # ANALISI, ESTRAZIONE
+    stato: Mapped[str] = mapped_column(String(20), default=StatoVerifica.IN_CODA)  # come le verifiche
+    # controllo o schema, fonte (url, opzioni, file nell'archivio), note e date
+    richiesta: Mapped[dict[str, Any]] = mapped_column(JSON)
+    risultato: Mapped[dict[str, Any] | None] = mapped_column(JSON, deferred=True)
+    errore: Mapped[str | None] = mapped_column(Text)
+    modello_llm: Mapped[str | None] = mapped_column(String(100))
+    tentativi: Mapped[int] = mapped_column(Integer, default=0)
+    worker: Mapped[str | None] = mapped_column(String(100))
+    avviato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    completato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class AuditLog(Base):

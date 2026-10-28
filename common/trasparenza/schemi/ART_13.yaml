@@ -1,0 +1,146 @@
+# Schema di pubblicazione art. 13 d.lgs. 33/2013 (organizzazione).
+# Fonte: Allegato 2 alla delibera ANAC n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_13
+articolo: art. 13
+titolo: Obblighi di pubblicazione concernenti l'organizzazione
+fonte:
+  delibera: "495/2024"
+  allegato: 2
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Il contenuto dello schema si differenzia in base al soggetto: pubbliche amministrazioni ex art. 1, co. 2, d.lgs.
+  165/2001 e Autorità amministrative indipendenti (organi di indirizzo politico e organigramma); ordini e collegi
+  professionali nazionali e territoriali (organigramma e riferimenti istituzionali, delibera ANAC 777/2021); società ed
+  enti di diritto privato in controllo pubblico ed enti pubblici economici (organi di amministrazione e gestione,
+  delibera ANAC 1134/2017).
+
+documento:
+  titolo: Organizzazione (Art. 13 d.lgs. 33/2013)
+  sottotitolo: Articolazione degli uffici, organigramma e riferimenti istituzionali
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza concernenti l'organizzazione (art. 13 d.lgs. n. 33/2013), si
+    riportano di seguito i dati relativi a:
+
+parametri:
+  - id: tipo_ente
+    etichetta: Tipologia di ente
+    opzioni:
+      - {valore: PA, etichetta: Pubblica amministrazione o Autorità amministrativa indipendente}
+      - {valore: ORDINI, etichetta: Ordine o collegio professionale (nazionale o territoriale)}
+      - {valore: SOCIETA, etichetta: "Società o ente di diritto privato in controllo pubblico, ente pubblico economico"}
+
+_uffici_campi: &uffici_campi
+  - {id: livello, etichetta: Livello dell'ufficio, tipo: scelta, opzioni: [Dirigenziale, Non dirigenziale], obbligatorio: true}
+  - {id: denominazione, etichetta: Denominazione dell'ufficio, tipo: testo, obbligatorio: true}
+  - {id: competenze, etichetta: Competenze del singolo ufficio, tipo: testo_lungo, obbligatorio: true}
+  - {id: nominativo, etichetta: Nominativo del responsabile, descrizione: Nome e cognome del dirigente responsabile dell'ufficio o di altro responsabile, tipo: testo, obbligatorio: true}
+  - {id: qualifica, etichetta: Qualifica del responsabile, tipo: testo, obbligatorio: true}
+
+_contatti:
+  - &telefono {id: telefono, etichetta: Recapito telefonico istituzionale, tipo: telefono, obbligatorio: true}
+  - &peo {id: peo, etichetta: Casella di posta elettronica ordinaria (PEO) istituzionale, tipo: email, obbligatorio: true}
+  - &pec {id: pec, etichetta: Casella di posta elettronica certificata (PEC) istituzionale, tipo: email, obbligatorio: true}
+
+sezioni:
+  - id: ORGANI_POLITICI
+    titolo: Organi di indirizzo politico, con l'indicazione delle rispettive competenze
+    collocazione: Organizzazione -> Articolazione degli uffici
+    aggiornamento: tempestivo
+    norme: ["Art. 13, c. 1, lett. a), b) e d), d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA]}
+    etichetta_elemento: Organo
+    layout: scheda
+    nota: I riferimenti e contatti sono quelli della Segreteria/Ufficio di supporto dell'organo.
+    note_audit: |
+      - Se l'ente è una società o un ente in controllo pubblico, l'organo da verificare è quello di amministrazione e
+        gestione; se è un ordine o collegio professionale, la sezione non è prevista: segnala "non applicabile" e fermati.
+      - Per gli organi di indirizzo politico ci si attende almeno un ufficio per organo (quantomeno la Segreteria o
+        l'Ufficio di supporto, i cui recapiti sono i riferimenti dell'organo): l'assenza totale dell'articolazione è un
+        rilievo, salvo dichiarata incompatibilità con l'organizzazione dell'ente.
+    campi:
+      - {id: denominazione, etichetta: Tipo di incarico/carica, tipo: testo, obbligatorio: true}
+      - {id: competenze, etichetta: Competenze dell'organo, tipo: testo_lungo, obbligatorio: true}
+      - {id: uffici, etichetta: Articolazione degli uffici, tipo: elenco, etichetta_elemento: Ufficio, obbligatorio: true, campi: *uffici_campi}
+      - *telefono
+      - *peo
+      - *pec
+
+  - id: ORGANI_AMMINISTRAZIONE
+    titolo: Organi di amministrazione e gestione, con l'indicazione delle rispettive competenze
+    collocazione: Organizzazione -> Articolazione degli uffici
+    aggiornamento: tempestivo
+    norme: ["Art. 13, c. 1, lett. a), b) e d), d.lgs. n. 33/2013", "Delibera ANAC 1134/2017"]
+    visibile_se: {tipo_ente: [SOCIETA]}
+    etichetta_elemento: Organo
+    layout: scheda
+    nota: >-
+      L'articolazione degli uffici si compila solo se il titolare dell'incarico/carica è a capo di un ufficio (non, ad
+      esempio, per RSPP, RLS, RPD, RTD). I riferimenti e contatti sono quelli della Segreteria/Ufficio di supporto.
+    note_audit: |
+      - Se l'ente è una pubblica amministrazione, l'organo da verificare è quello di indirizzo politico; se è un ordine
+        o collegio professionale, la sezione non è prevista: segnala "non applicabile" e fermati.
+      - Se la carica non comporta la titolarità di un ufficio (RSPP, RLS, RPD, RTD), l'articolazione degli uffici non va
+        compilata: "Non Applicabile". Per un Amministratore delegato o un Direttore generale l'assenza dell'articolazione
+        è un indizio di incompletezza da segnalare come osservazione, non come non conformità.
+    campi:
+      - {id: denominazione, etichetta: Tipo di incarico/carica, tipo: testo, obbligatorio: true}
+      - {id: competenze, etichetta: Competenze dell'organo, tipo: testo_lungo, obbligatorio: true}
+      - {id: uffici, etichetta: Articolazione degli uffici (ove il titolare sia a capo di un ufficio), tipo: elenco, etichetta_elemento: Ufficio, campi: *uffici_campi}
+      - *telefono
+      - *peo
+      - *pec
+
+  - id: ORGANIGRAMMA
+    titolo: Organigramma o analoghe rappresentazioni grafiche
+    collocazione: Organizzazione -> Articolazione degli uffici (organigramma)
+    aggiornamento: tempestivo
+    norme: ["Art. 13, c. 1, lett. c), d.lgs. n. 33/2013"]
+    visibile_se: {tipo_ente: [PA, ORDINI]}
+    ripetibile: false
+    nota: >-
+      Illustrazione in forma semplificata dell'organizzazione. Dove previsto, dall'organigramma si devono poter recuperare
+      le informazioni di ciascun ufficio (titolare, competenze, riferimenti e contatti). Per gli ordini e collegi non
+      vanno pubblicate le competenze degli uffici, ma solo i nomi dei dirigenti o responsabili e i contatti.
+    note_audit: |
+      - L'organigramma deve essere un'illustrazione semplificata, riferita a tutti gli uffici dell'ente (comprese
+        strutture interne e uffici periferici), facilmente consultabile e coerente con le altre informazioni pubblicate.
+      - Dove previsto deve consentire di risalire ai dati di ciascun ufficio (titolare, competenze, contatti), salvo per
+        gli ordini e collegi, per i quali le competenze degli uffici non vanno riportate.
+    campi:
+      - {id: link, etichetta: Link all'organigramma o analoga rappresentazione grafica, tipo: url, obbligatorio: true}
+
+  - id: CONTATTI_ORDINI
+    titolo: Riferimenti istituzionali degli ordini e collegi professionali
+    collocazione: Organizzazione -> Telefono e posta elettronica
+    aggiornamento: tempestivo
+    norme: ["Art. 13, c. 1, lett. d), d.lgs. n. 33/2013", "Delibera ANAC 777/2021"]
+    visibile_se: {tipo_ente: [ORDINI]}
+    ripetibile: false
+    note_audit: |
+      - Il controllo riguarda SOLO recapito telefonico, PEO e PEC dell'ente. Organigramma, organi, articolazione degli
+        uffici, competenze, nominativi e qualifiche non sono oggetto di questo controllo e la loro assenza non è un rilievo.
+      - I recapiti istituzionali non discendono di norma da un atto datato: l'esito "Non valutabile" della tempestività
+        è l'ipotesi ordinaria.
+    campi:
+      - *telefono
+      - *peo
+      - *pec
+
+note_audit: |
+  TEMPESTIVITÀ (limite convenzionale di audit, non previsto dalla norma):
+  - Pubblicazione entro 7 giorni dall'adozione dell'atto. Se _ADOPTION_DATE_ o _PUB_DATE_ non sono disponibili o non
+    sono ricavabili, l'esito della tempestività è "Non valutabile": non concorre all'esito complessivo.
+  ORGANI:
+  - La tabella dell'organo non prevede i nominativi dei componenti: la loro assenza non è un rilievo.
+  - Le competenze dell'organo e quelle dei singoli uffici sono campi distinti, da verificare separatamente; devono
+    essere presenti e non generiche, senza limiti di caratteri.
+  - Per ogni organo e, al suo interno, per ogni ufficio, ripeti i controlli.
+  - Uffici e strutture non riconducibili ad alcun organo, e l'organigramma, non sono oggetto delle sezioni sugli organi.
+  - Se il documento non tratta l'oggetto del controllo, indica un unico esito "non pertinente" senza elencare i campi.
+  RECAPITI:
+  - I recapiti devono essere istituzionali: un recapito personale (casella privata, utenza mobile personale) è un
+    rilievo. Verifica che la PEC sia effettivamente una casella certificata e non una PEO indicata per errore.
+  - Ogni recapito va valutato singolarmente: l'assenza di uno solo è un rilievo circoscritto a quel dato.

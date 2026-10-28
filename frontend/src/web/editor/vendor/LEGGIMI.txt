@@ -1,0 +1,4 @@
+Librerie dell'editor, copiate senza modifiche dai pacchetti npm (licenza MIT):
+- jquery 3.7.1: dist/jquery.min.js
+- summernote 0.9.1: dist/summernote-lite.min.js, dist/summernote-lite.min.css,
+  dist/lang/summernote-it-IT.min.js, dist/font/

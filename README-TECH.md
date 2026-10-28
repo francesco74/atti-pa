@@ -7,11 +7,13 @@ Client web di atti-pa (Flutter Web, Flutter 3.38 o successivo). Il progetto Flut
 ```bash
 cd frontend/src
 flutter pub get
-flutter run -d chrome --dart-define=API_URL=http://localhost:8000 --dart-define=LOG_LEVEL=DEBUG
+flutter run -d chrome --web-hostname provincia.localhost \
+    --dart-define=API_URL=http://provincia.localhost:8000 --dart-define=LOG_LEVEL=DEBUG
 ```
 
-In sviluppo l'API va avviata con `CORS_ORIGINI='["http://localhost:PORTA"]'` e
-`COOKIE_SECURE=false`, oppure con `AUTH_ENABLED=false` per l'uso personale senza login.
+L'ente si riconosce dal dominio con cui si raggiunge l'API: in sviluppo si usa quello di un
+ente creato con `deploy/enti.py` (es. `provincia.localhost`). L'API va avviata con
+`COOKIE_SECURE=false` e con `CORS_ORIGINI` che ammette l'origine dell'app (`.env.example`).
 
 ## Configurazione
 
@@ -25,6 +27,8 @@ d'ambiente (script `config-app.sh`), quindi la stessa immagine vale per ogni amb
 
 Con `LOG_LEVEL=DEBUG` la console mostra ogni chiamata all'API con il codice di risposta.
 Se `API_URL` è su un'origine diversa, va aggiunta a `connect-src` nella CSP di `nginx.conf`.
+La cartella `/editor/` (editor dei documenti della trasparenza, aperto dall'app in un iframe)
+ha in `nginx.conf` una CSP propria: va mantenuta allineata nei due file `nginx*.conf`.
 
 In sviluppo con `flutter run` si usa `src/web/config.json`, oppure i valori passati con
 `--dart-define=API_URL=...` e `--dart-define=LOG_LEVEL=DEBUG` quando nel file sono vuoti.

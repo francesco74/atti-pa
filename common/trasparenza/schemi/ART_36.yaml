@@ -1,0 +1,114 @@
+# Schema di pubblicazione art. 36 d.lgs. 33/2013 (pagamenti informatici).
+# Fonte: Allegato 12 alla delibera ANAC n. 495/2024 (versione aggiornata al 10.06.2026).
+
+id: ART_36
+articolo: art. 36
+titolo: IBAN e pagamenti informatici
+fonte:
+  delibera: "495/2024"
+  allegato: 12
+  versione: "10.06.2026"
+
+ambito: non_applicabile
+ambito_soggettivo: |
+  Lo schema si articola in base all'obbligo di utilizzo della piattaforma PagoPA (art. 5 d.lgs. 82/2005, delibera ANAC
+  77/2022): utilizzo esclusivo (pubbliche amministrazioni, Autorità indipendenti, ordini professionali, enti pubblici
+  economici inseriti nel conto economico consolidato ISTAT), utilizzo non esclusivo (società soggette al d.lgs.
+  175/2016, escluse le quotate), soggetti non tenuti all'utilizzo di PagoPA.
+
+documento:
+  titolo: Pagamenti dell'Amministrazione (Art. 36 d.lgs. 33/2013)
+  sottotitolo: IBAN e Pagamenti informatici
+  introduzione: >-
+    In ottemperanza agli obblighi di trasparenza previsti dall'art. 36 del d.lgs. n. 33/2013 e all'art. 5 del
+    d.lgs. n. 82/2005 (CAD), si riportano di seguito i dati e le informazioni per l'effettuazione dei pagamenti
+    informatici relativi a:
+
+parametri:
+  - id: tipo_pagopa
+    etichetta: Posizione dell'ente rispetto a PagoPA
+    opzioni:
+      - valore: ESCLUSIVO
+        etichetta: Tenuto all'utilizzo esclusivo di PagoPA
+        nota: >-
+          Pubbliche amministrazioni, Autorità amministrative indipendenti, ordini professionali, enti pubblici economici
+          inseriti nel conto economico consolidato ISTAT. Oltre a PagoPA sono ammessi solo F24, SDD, altri servizi non
+          ancora integrati imposti dalla legge e pagamento per cassa presso il tesoriere.
+      - valore: NON_ESCLUSIVO
+        etichetta: Tenuto a PagoPA ma non in via esclusiva
+        nota: >-
+          Società soggette al d.lgs. 175/2016 (TUSP), escluse le quotate: devono aderire a PagoPA ma possono mantenere
+          in parallelo ogni altra modalità di pagamento.
+      - valore: SISTEMA_ALT
+        etichetta: Non tenuto all'utilizzo di PagoPA
+
+sezioni:
+  - id: PAGOPA
+    titolo: Pagamenti tramite PagoPA
+    collocazione: Pagamenti dell'amministrazione -> IBAN e pagamenti informatici
+    aggiornamento: tempestivo
+    norme: ["Art. 36, d.lgs. n. 33/2013", "Art. 5, c. 1, d.lgs. n. 82/2005"]
+    visibile_se: {tipo_pagopa: [ESCLUSIVO, NON_ESCLUSIVO]}
+    ripetibile: false
+    layout: scheda
+    almeno_uno: [[data_adesione, iban_provvisorio]]
+    campi:
+      - id: data_adesione
+        etichetta: Aderente alla piattaforma PagoPA dal
+        descrizione: 'Dicitura richiesta: "Aderente alla piattaforma PagoPA dal XX.XX.XXXX"'
+        tipo: data
+        separatore_data: "."
+      - {id: link_dove_pagare, etichetta: "Link alla sezione \"Dove pagare\" del sito PagoPA", tipo: url}
+      - id: iban_provvisorio
+        etichetta: IBAN del conto corrente per la gestione delle entrate (solo provvisorio)
+        descrizione: Ammesso solo temporaneamente, in attesa della completa integrazione centralizzata con PagoPA
+        tipo: iban
+        visibile_se: {tipo_pagopa: [ESCLUSIVO]}
+      - id: metodi
+        etichetta: Altri metodi di pagamento non integrati con PagoPA (laddove utilizzati)
+        tipo: elenco
+        etichetta_elemento: Metodo
+        campi:
+          - id: metodo
+            etichetta: Metodo di pagamento
+            tipo: scelta
+            opzioni:
+              - Delega unica F24 (modello F24) fino alla sua integrazione con PagoPA
+              - Sepa Direct Debit (SDD) fino alla sua integrazione con PagoPA
+              - Per cassa, presso il soggetto che svolge il servizio di tesoreria o di cassa
+              - Altri servizi di pagamento non ancora integrati con PagoPA
+            obbligatorio: true
+          - id: denominazione
+            etichetta: Denominazione dell'altro servizio
+            tipo: testo
+            obbligatorio: true
+            visibile_se: {metodo: [Altri servizi di pagamento non ancora integrati con PagoPA]}
+
+  - id: SISTEMA_ALTERNATIVO
+    titolo: Soggetti non tenuti all'utilizzo di PagoPA
+    collocazione: Pagamenti dell'amministrazione -> IBAN e pagamenti informatici
+    aggiornamento: tempestivo
+    norme: ["Art. 36, d.lgs. n. 33/2013"]
+    visibile_se: {tipo_pagopa: [SISTEMA_ALT]}
+    ripetibile: false
+    almeno_uno: [[iban, ccp]]
+    campi:
+      - {id: iban, etichetta: IBAN identificativo del conto di pagamento o di imputazione del versamento in Tesoreria, tipo: iban}
+      - {id: ccp, etichetta: Codice identificativo del conto corrente postale, tipo: testo}
+
+note_audit: |
+  UTILIZZO ESCLUSIVO DI PAGOPA:
+  - Serve la dicitura esatta "Aderente alla piattaforma PagoPA dal XX.XX.XXXX" (data GG.MM.AAAA) con il link alla
+    sezione "Dove pagare" del sito PagoPA.
+  - IN ALTERNATIVA e SOLO TEMPORANEAMENTE, in attesa dell'integrazione centralizzata, è ammesso l'IBAN del conto per la
+    gestione delle entrate.
+  - Oltre a PagoPA sono ammessi ESCLUSIVAMENTE: F24, SDD (fino alla loro integrazione), altri servizi non ancora
+    integrati e non sostituibili perché imposti dalla legge, pagamento per cassa presso il tesoriere. Un metodo diverso
+    è una VIOLAZIONE; per "altri servizi" la denominazione è obbligatoria.
+  UTILIZZO NON ESCLUSIVO (società TUSP, escluse le quotate):
+  - L'adesione a PagoPA (dicitura e link) è SEMPRE obbligatoria: non esiste l'alternativa provvisoria dell'IBAN. Un
+    documento con solo l'IBAN è un rilievo.
+  - I metodi aggiuntivi NON sono limitati ai quattro elencati: non sanzionare metodi ulteriori (es. carte, gateway privati).
+  SOGGETTI NON TENUTI A PAGOPA:
+  - Serve almeno uno tra IBAN identificativo del conto di pagamento (o di imputazione in Tesoreria) e codice del conto
+    corrente postale.
