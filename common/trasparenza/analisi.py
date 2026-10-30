@@ -1,6 +1,6 @@
 """Analisi e estrazione del modulo trasparenza, senza database: preparazione dei contenuti
 (pagina web, documento da URL, file caricati), prompt dell'analisi generato dallo schema o dal
-controllo scelto, chiamata all'LLM, pulizia del report. Le esegue il worker
+controllo scelto, chiamata all'LLM, report HTML composto dalla risposta JSON. Le esegue il worker
 (lavori della tabella trasparenza_lavori). Ripreso da PApuntozeroIA (app.py).
 
 I documenti arrivano all'LLM come testo: PDF e documenti di testo convertiti in Markdown dal
@@ -9,13 +9,14 @@ converter, fogli di calcolo come tabelle, CSV come sono, pagine web come HTML de
 
 from __future__ import annotations
 
+import html as html_lib
 import logging
-import re
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
+from pydantic import BaseModel, Field, ValidationError
 
 from . import fonti
 from .estrazione import MAX_TESTO, estrai, json_schema
@@ -27,37 +28,34 @@ log = logging.getLogger("common.trasparenza.analisi")
 ANALISI = "ANALISI"
 ESTRAZIONE = "ESTRAZIONE"
 
+# Il modello risponde con un JSON compatto (ReportAnalisi) e il report HTML lo compone il
+# server: i token generati sono il contenuto e non il markup, che con i modelli locali è la
+# parte lenta dell'analisi; badge e tabella sono sempre uguali e leggibili anche in PDF e Word.
 OUTPUT_RULES = """
-Genera ESCLUSIVAMENTE un documento HTML5 completo con CSS interno, non impostare dimensioni massime in larghezza e strutturato come segue:
-STILI IN LINEA: colori, sfondi e bordi dei badge (esiti, esito di validazione, livello Open Data) e delle celle delle
-tabelle vanno applicati con l'attributo style direttamente sull'elemento. Il report viene poi modificato in un editor e
-convertito in PDF o Word, che NON conservano il CSS interno: un badge con testo bianco e sfondo definito solo nel CSS
-interno diventerebbe invisibile. Il CSS interno resta per le impostazioni generali (font, margini, spaziature). Gli
-attributi class richiesti più avanti (es. class="esito-validazione") vanno comunque mantenuti.
+Rispondi ESCLUSIVAMENTE con l'oggetto JSON richiesto, senza HTML né Markdown, con questi campi:
 
-1. ANALISI DESCRITTIVA DEI RISULTATI:
-   - Fornisci un testo narrativo dettagliato che descriva l'esito globale dell'audit.
-   - Commenta la qualità dei dati rispetto ai requisiti delle Istruzioni operative ANAC (All. 4 alla delibera n. 495/2024, come modificato dalla delibera n. 481/2025), limitandoti a quelli verificabili dal documento: integrità, completezza (esattezza e accuratezza), tempestività, costante aggiornamento, semplicità di consultazione, comprensibilità, omogeneità, facile accessibilità e riutilizzabilità (formato aperto), conformità ai documenti originali, indicazione della provenienza (se il dato è una rielaborazione), riservatezza.
-   - Spiega eventuali criticità riscontrate nei formati, nella tempestività e nella completezza dei dati.
+1. "analisi": l'analisi descrittiva dei risultati, in paragrafi di testo semplice (uno per elemento):
+   - descrivi l'esito globale dell'audit;
+   - commenta la qualità dei dati rispetto ai requisiti delle Istruzioni operative ANAC (All. 4 alla delibera n. 495/2024, come modificato dalla delibera n. 481/2025), limitandoti a quelli verificabili dal documento: integrità, completezza (esattezza e accuratezza), tempestività, costante aggiornamento, semplicità di consultazione, comprensibilità, omogeneità, facile accessibilità e riutilizzabilità (formato aperto), conformità ai documenti originali, indicazione della provenienza (se il dato è una rielaborazione), riservatezza;
+   - spiega le criticità riscontrate nei formati, nella tempestività e nella completezza dei dati.
+   Sii sintetico: niente ripetizioni di quanto già riportato nei rilievi.
 
-2. SINTESI TECNICA, OPEN DATA ED ESITO DI VALIDAZIONE:
-   - Inserisci un badge colorato per l'esito globale ed un badge colorato per il Livello Open Data assegnato.
-   - Indica l'esito di validazione secondo il § 2 delle Istruzioni operative, scegliendo uno solo tra:
-     * "Pubblicabile" (nessuna difformità);
-     * "Pubblicabile provvisoriamente" (difformità lievi: il dato va sostituito non appena disponibili dati conformi);
-     * "Non pubblicabile" (difformità macroscopiche).
-     Motiva l'esito in una frase.
-   - Il badge dell'esito di validazione deve essere un unico elemento con class="esito-validazione" che contenga
-     SOLO il testo dell'esito (es. <span class="esito-validazione" style="...">Pubblicabile provvisoriamente</span>):
-     serve all'applicazione per classificare i documenti salvati.
+2. "rilievi": la tabella riepilogativa, una riga per ogni campo o controllo verificato, con:
+   - "campo": il campo o controllo;
+   - "valore_rilevato": il valore trovato nel documento (breve);
+   - "esito": uno tra "Positivo", "Negativo" (dato mancante o errore grave), "Parziale" (dato presente ma
+     formato errato o incompleto), "Non Applicabile", "Non valutabile";
+   - "nota_correttiva": cosa correggere (vuota se l'esito è positivo).
 
-3. TABELLA RIEPILOGATIVA FINALE:
-   - Crea una tabella con colonne: ["Campo", "Valore Rilevato", "Esito", "Nota Correttiva"].
-   - Usa solamente uno tra i seguenti Badge per gli Esiti:
-     * VERDE (#28a745) con etichetta "Positivo".
-     * ROSSO (#dc3545) con etichetta "Negativo (Dato mancante o errore grave)".
-     * ARANCIO (#ffc107) con etichetta "Parziale (Dato presente ma formato errato)".
-     * GRIGIO (#6c757d) con etichetta "Non Applicabile".
+3. "livello_open_data" (da 1 a 5) e "motivazione_open_data" (una frase).
+
+4. "esito_globale": uno tra "Conforme", "Parzialmente conforme", "Non conforme".
+
+5. "esito_validazione", secondo il § 2 delle Istruzioni operative, uno solo tra:
+   * "Pubblicabile" (nessuna difformità);
+   * "Pubblicabile provvisoriamente" (difformità lievi: il dato va sostituito non appena disponibili dati conformi);
+   * "Non pubblicabile" (difformità macroscopiche);
+   e "motivazione_validazione": la motivazione in una frase.
 """
 
 WEB_PARSING_RULES = """
@@ -149,15 +147,129 @@ def prompt_analisi(controllo: str, contesto: Contesto, *, estensione: str = "", 
     return prompt
 
 
-def pulisci_report(testo: str) -> str:
-    """Report HTML dell'LLM: senza delimitatori di codice, solo stili e corpo, sanificato."""
-    testo = re.sub(r"^\s*```[a-zA-Z]*\n", "", testo.strip())
-    testo = re.sub(r"\n```\s*$", "", testo.strip())
-    soup = BeautifulSoup(testo, "html.parser")
-    stili = "".join(str(s) for s in soup.find_all("style"))
-    corpo = soup.find("body")
-    html = stili + (corpo.decode_contents() if corpo else testo)
-    return f"<div class=\'compliance-section\'>{sanifica_html(html)}</div>"
+# --- report ----------------------------------------------------------------------------------
+
+EsitoRilievo = Literal["Positivo", "Negativo", "Parziale", "Non Applicabile", "Non valutabile"]
+EsitoGlobale = Literal["Conforme", "Parzialmente conforme", "Non conforme"]
+EsitoValidazione = Literal["Pubblicabile", "Pubblicabile provvisoriamente", "Non pubblicabile"]
+
+
+class Rilievo(BaseModel):
+    campo: str
+    valore_rilevato: str
+    esito: EsitoRilievo
+    nota_correttiva: str
+
+
+class ReportAnalisi(BaseModel):
+    """Risposta del modello. L'ordine dei campi è quello di generazione: prima l'analisi e i
+    rilievi, poi gli esiti che ne discendono."""
+
+    analisi: list[str]
+    rilievi: list[Rilievo]
+    livello_open_data: int = Field(ge=1, le=5)
+    motivazione_open_data: str
+    esito_globale: EsitoGlobale
+    esito_validazione: EsitoValidazione
+    motivazione_validazione: str
+
+
+def _testo(tipo: str = "string") -> dict:
+    return {"type": tipo}
+
+
+def _scelta(valori: tuple[str, ...]) -> dict:
+    return {"type": "string", "enum": list(valori)}
+
+
+# Schema della risposta (in stile Gemini, tradotto da json_schema come per l'estrazione)
+SCHEMA_REPORT = {
+    "type": "object",
+    "properties": {
+        "analisi": {"type": "array", "items": _testo()},
+        "rilievi": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "campo": _testo(),
+                    "valore_rilevato": _testo(),
+                    "esito": _scelta(EsitoRilievo.__args__),
+                    "nota_correttiva": _testo(),
+                },
+            },
+        },
+        "livello_open_data": {"type": "integer", "minimum": 1, "maximum": 5},
+        "motivazione_open_data": _testo(),
+        "esito_globale": _scelta(EsitoGlobale.__args__),
+        "esito_validazione": _scelta(EsitoValidazione.__args__),
+        "motivazione_validazione": _testo(),
+    },
+}
+
+_COLORI_RILIEVO = {
+    "Positivo": "#28a745",
+    "Negativo": "#dc3545",
+    "Parziale": "#ffc107",
+    "Non Applicabile": "#6c757d",
+    "Non valutabile": "#6c757d",
+}
+_COLORI_GLOBALE = {"Conforme": "#28a745", "Parzialmente conforme": "#ffc107", "Non conforme": "#dc3545"}
+_COLORI_VALIDAZIONE = {
+    "Pubblicabile": "#28a745",
+    "Pubblicabile provvisoriamente": "#ffc107",
+    "Non pubblicabile": "#dc3545",
+}
+_COLORE_OPEN_DATA = {1: "#dc3545", 2: "#fd7e14", 3: "#ffc107", 4: "#20c997", 5: "#28a745"}
+_TESTO_SCURO = {"#ffc107", "#20c997"}  # sfondi chiari: testo nero
+_CELLA = "border: 1px solid #999; padding: 6px; vertical-align: top;"
+
+
+def _badge(testo: str, colore: str, classe: str = "") -> str:
+    attributo = f' class="{classe}"' if classe else ""
+    testo_colore = "#000" if colore in _TESTO_SCURO else "#fff"
+    return (
+        f'<span{attributo} style="background-color: {colore}; color: {testo_colore}; padding: 2px 8px; '
+        f'border-radius: 4px; font-weight: bold;">{html_lib.escape(testo)}</span>'
+    )
+
+
+def componi_report(r: ReportAnalisi, titolo: str, fonte: str) -> str:
+    """Report HTML dell'analisi, con stili in linea (si modifica nell'editor e si esporta in
+    PDF o Word). L'esito di validazione sta nel badge con class="esito-validazione"."""
+    e = html_lib.escape
+    righe = "".join(
+        "<tr>"
+        f'<td style="{_CELLA}">{e(x.campo)}</td>'
+        f'<td style="{_CELLA}">{e(x.valore_rilevato)}</td>'
+        f'<td style="{_CELLA}">{_badge(x.esito, _COLORI_RILIEVO[x.esito])}</td>'
+        f'<td style="{_CELLA}">{e(x.nota_correttiva)}</td>'
+        "</tr>"
+        for x in r.rilievi
+    )
+    intestazione = "".join(
+        f'<th style="{_CELLA} background-color: #e9ecef;">{c}</th>'
+        for c in ("Campo", "Valore rilevato", "Esito", "Nota correttiva")
+    )
+    html = (
+        f"<h2>Analisi di conformità: {e(titolo)}</h2>"
+        f"<p><strong>Fonte:</strong> {e(fonte)}<br/>"
+        f"<strong>Data dell'analisi:</strong> {datetime.now():%d/%m/%Y}</p>"
+        "<h3>1. Analisi descrittiva dei risultati</h3>"
+        + "".join(f"<p>{e(paragrafo)}</p>" for paragrafo in r.analisi if paragrafo.strip())
+        + "<h3>2. Sintesi tecnica, Open Data ed esito di validazione</h3>"
+        f"<p><strong>Esito globale:</strong> {_badge(r.esito_globale, _COLORI_GLOBALE[r.esito_globale])}</p>"
+        f"<p><strong>Livello Open Data:</strong> "
+        f"{_badge(f'Livello {r.livello_open_data}', _COLORE_OPEN_DATA[r.livello_open_data])} "
+        f"{e(r.motivazione_open_data)}</p>"
+        f"<p><strong>Esito di validazione:</strong> "
+        f"{_badge(r.esito_validazione, _COLORI_VALIDAZIONE[r.esito_validazione], 'esito-validazione')} "
+        f"{e(r.motivazione_validazione)}</p>"
+        "<h3>3. Tabella riepilogativa</h3>"
+        '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">'
+        f"<tr>{intestazione}</tr>{righe}</table>"
+    )
+    return f"<div class='compliance-section'>{sanifica_html(html)}</div>"
 
 
 # --- contenuti -------------------------------------------------------------------------------
@@ -191,6 +303,7 @@ class Contenuti:
     parti: list[str]
     estensione: str = ""  # del file analizzato (livello Open Data)
     url: str = ""  # della pagina web analizzata
+    fonte: str = ""  # per il report: URL o nomi dei file
 
     @property
     def testo(self) -> str:
@@ -202,6 +315,7 @@ async def contenuti(
 ) -> Contenuti:
     """Pagina web (con PDF e link collegati), documento indicato da un URL o file caricati.
     `client`: client HTTP da usare (nei test)."""
+    fonte = url
     if url:
         est = fonti.estensione(urlparse(url).path)
         if est in fonti.ESTENSIONI:  # l'URL è direttamente un documento
@@ -215,11 +329,12 @@ async def contenuti(
                     parti.append(_intestato(f"DOCUMENTO PDF COLLEGATO: {nome}", await testo_file(File(nome, dati), documenti)))
                 except Exception as e:  # noqa: BLE001 - un allegato illeggibile non ferma l'analisi
                     log.warning("PDF collegato %s non convertito: %s", nome, e)
-            return Contenuti(parti, url=url)
+            return Contenuti(parti, url=url, fonte=fonte)
     if not files:
         raise AnalisiNonRiuscita("Indica una pagina web o carica dei documenti")
+    fonte = fonte or ", ".join(f.nome for f in files)
     if len(files) == 1:
-        return Contenuti([await testo_file(files[0], documenti)], estensione=files[0].estensione)
+        return Contenuti([await testo_file(files[0], documenti)], estensione=files[0].estensione, fonte=fonte)
     mappa = "\n".join(
         f"Documento [{i}]: {f.nome} | Note utente: {f.descrizione or 'nessuna'} | Estensione: {f.estensione.upper()}"
         for i, f in enumerate(files, start=1)
@@ -227,7 +342,7 @@ async def contenuti(
     parti = [_intestato("MAPPA DEI DOCUMENTI ALLEGATI ALL'AUDIT", mappa)]
     for f in files:
         parti.append(_intestato(f"DOCUMENTO {f.nome} (note: {f.descrizione or 'nessuna'})", await testo_file(f, documenti)))
-    return Contenuti(parti, estensione="Insieme di documenti misti")
+    return Contenuti(parti, estensione="Insieme di documenti misti", fonte=fonte)
 
 
 def _controlla_lunghezza(c: Contenuti) -> None:
@@ -245,7 +360,14 @@ async def analizza(controllo: str, c: Contenuti, contesto: Contesto, llm) -> dic
     _controlla_lunghezza(c)
     prompt = prompt_analisi(controllo, contesto, estensione=c.estensione, url=c.url)
     log.info("Analisi %s: %d caratteri di contenuto", controllo, len(c.testo))
-    return {"html": pulisci_report(await llm.genera(prompt, c.testo))}
+    risposta = await llm.dati_json(prompt, c.testo, json_schema(SCHEMA_REPORT))
+    try:
+        report = ReportAnalisi.model_validate(risposta)
+    except ValidationError as e:
+        raise AnalisiNonRiuscita(f"Il modello ha risposto in un formato non previsto: {e.error_count()} errori") from e
+    schema, variante = trova_prompt(controllo)
+    titolo = f"{schema.articolo[:1].upper()}{schema.articolo[1:]} - {variante.titolo if variante else schema.titolo}"
+    return {"html": componi_report(report, titolo, c.fonte or c.url)}
 
 
 async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm) -> dict:

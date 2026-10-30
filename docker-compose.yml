@@ -5,6 +5,9 @@
 # L'LLM non è incluso. Predefinito: Ollama sul computer (host.docker.internal:11434).
 # Altri provider: LLM_PROVIDER=openai|gemini|anthropic LLM_API_KEY=... docker compose up
 #
+# Container con nomi fissi (atti-pa-api, atti-pa-worker, atti-pa-mysql...), es.
+#   docker logs -f atti-pa-worker
+#
 # Log: LOG_LEVEL=DEBUG docker compose up   (DEBUG, INFO, WARNING, ERROR; vale anche per
 # la console del browser). Con LOG_SQL=true e LOG_LEVEL=DEBUG anche le query SQL.
 
@@ -32,6 +35,7 @@ x-comune: &comune
 
 services:
   mysql:
+    container_name: atti-pa-mysql
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -51,6 +55,7 @@ services:
 
   # Consultazione del database: http://localhost:8081 (accesso già fatto come root)
   phpmyadmin:
+    container_name: atti-pa-phpmyadmin
     image: phpmyadmin:5.2
     environment:
       PMA_HOST: mysql
@@ -64,6 +69,7 @@ services:
   # Code tra API, converter e worker. Interfaccia di gestione: http://localhost:15673
   # (atti_pa / password); AMQP sulla 5673 per i componenti avviati fuori da compose
   rabbitmq:
+    container_name: atti-pa-rabbitmq
     image: rabbitmq:4.0-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: atti_pa
@@ -81,6 +87,7 @@ services:
       retries: 30
 
   api:
+    container_name: atti-pa-api
     <<: *comune
     build: { context: ., dockerfile: api/Dockerfile }
     ports: ["8000:8000"]
@@ -91,6 +98,7 @@ services:
       rabbitmq: { condition: service_healthy }
 
   worker:
+    container_name: atti-pa-worker
     <<: *comune
     build: { context: ., dockerfile: worker/Dockerfile }
     volumes:
@@ -101,12 +109,14 @@ services:
 
   # Servizio HTTP di conversione (documenti delle bozze in PDF/PDF-A)
   converter:
+    container_name: atti-pa-converter
     build: { context: ., dockerfile: converter/Dockerfile }
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
   # Conversione in Markdown degli atti caricati (coda "conversione"): stessa immagine
   converter-consumatore:
+    container_name: atti-pa-converter-consumatore
     build: { context: ., dockerfile: converter/Dockerfile }
     command: ["python", "consumatore.py"]
     environment:
@@ -119,6 +129,7 @@ services:
       rabbitmq: { condition: service_healthy }
 
   frontend:
+    container_name: atti-pa-frontend
     build: { context: ., dockerfile: frontend/Dockerfile }
     ports: ["8080:8080"]
     environment:

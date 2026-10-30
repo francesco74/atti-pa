@@ -1,0 +1,74 @@
+# Processi standard dell'area M: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: M
+processi:
+- codice: M.1
+  denominazione: Atti di Governo del Territorio e/o relative Varianti
+  attivita:
+  - codice: M.1.1
+    descrizione: Redazione
+    rischi:
+    - codice: M.1.1_R.1
+      evento: Assenza di chiara e specifica indicazione degli obiettivi da conseguire e dei criteri generali
+        da utilizzare;
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+      misure:
+      - codice: M.1.1_R.1_M.1
+        descrizione: Regolazione contenuto atto avvio procedimento pianificatorio. La misura consiste
+          nell'indicare con apposito atto gli indirizzi e gli obiettivi assegnati dall'Amministrazione
+          per la redazione dell'atto di avvio del procedimento, di cui all'art. 17 della L.R. n. 65/2014,
+          all'interno del quale sarà contenuto lo specifico riferimento di attuazione e declinazione degli
+          stessi
+    - codice: M.1.1_R.2
+      evento: Possibile sussistenza cause di incompatibilità e/o conflitti di interesse in capo ai componenti
+        gruppo di lavoro interno/esterno incaricato
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+      misure:
+      - codice: M.1.1_R.2_M.1
+        descrizione: Regolazione procedimento atto avvio procedimento pianificatorio. La misura consiste,
+          in sede di avvio del procedimento di pianificazione e individuazione del gruppo di lavoro interno/esterno
+          incaricato della redazione dell'atto di pianificazione, di acquisire e verificare apposita dichiarazione
+          individuale di assenza di cause di incompatibilità e/o conflitti di interesse
+        categoria: Disciplina del conflitto di interessi
+  - codice: M.1.2
+    descrizione: Pubblicazione e raccolta osservazioni
+    rischi:
+    - codice: M.1.2_R.1
+      evento: Possibili asimmetrie informative fra gli interessati che possono agevolare alcuni o taluni
+        degli stessi, dovute anche all'elevato tecnicismo degli atti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+      misure:
+      - codice: M.1.2_R.1_M.1
+        descrizione: Regolazione istruttoria osservazioni. La misura consiste nella redazione e divulgazione
+          di documenti informativi ulteriori rispetto a quelli già previsti dalla normativa sul Governo
+          del Territorio, di natura sintetica e atecnica
+  - codice: M.1.3
+    descrizione: Approvazione controdeduzioni e approvazione Definitiva
+    rischi:
+    - codice: M.1.3_R.1
+      evento: Indebito accoglimento di osservazioni in contrasto con l'interesse pubblico generale, le
+        norme vigenti e gli obiettivi generali del piano
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+      misure:
+      - codice: M.1.3_R.1_M.1
+        descrizione: Regolazione procedimento di esame/decisioni osservazioni. La misura consiste nel
+          disciplinare, con apposito atto generale, l'obbligo ulteriore di individuare e pubblicizzare
+          preventivamente i criteri generali per l'istruttoria e le decisioni delle osservazioni.
+        categoria: Regolamentazione

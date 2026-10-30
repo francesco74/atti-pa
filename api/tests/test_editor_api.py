@@ -91,7 +91,7 @@ class EditorApi(unittest.TestCase):
         self.assertGreaterEqual(len(elenco["moduli"]), 7)
         self.assertGreaterEqual(len(elenco["checklist"]), 12)
         sf = next(m for m in elenco["modelli"] if m["codice"] == "DD_AFFIDAMENTO_DIRETTO_SF")
-        self.assertEqual(sf["pacchetto"], "Modelli standard Atti PA 2026.1")
+        self.assertEqual(sf["pacchetto"], "Modelli standard Atti PA 2026.2")
         d = self._ok(self.c.get("/api/v1/configurazione/modello/DD_AFFIDAMENTO_DIRETTO_SF"))
         self.assertGreaterEqual(d["pubblicata"]["versione"], 1)  # altri test lo ricompongono
         self.assertIsNotNone(d["standard"])

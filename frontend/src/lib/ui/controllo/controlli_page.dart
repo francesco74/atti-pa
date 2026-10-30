@@ -319,7 +319,7 @@ class _ControlliPageState extends State<ControlliPage> {
             if (stato != 'CHIUSO')
               IconButton(
                 tooltip: 'Elimina',
-                icon: const Icon(Icons.delete_outline),
+                icon: const IconaElimina(),
                 onPressed: () => _elimina(c),
               ),
           ],

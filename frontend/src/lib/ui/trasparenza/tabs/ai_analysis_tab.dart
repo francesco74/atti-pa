@@ -2,15 +2,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../../util/scelta_file.dart';
 import '../../comuni.dart';
 import '../browser.dart';
+import '../coda_analisi.dart';
 import '../forms/form_helpers.dart';
-import '../result_manager.dart';
 import '../servizio.dart';
 import '../utils/data_formatter.dart';
-import '../utils/error_dialog.dart';
 import '../widgets/modulo.dart';
 import '../widgets/selettore_schema.dart';
 
@@ -321,20 +321,19 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
         },
     };
     final servizio = ServizioTrasparenza(apiDi(context));
+    final coda = context.read<CodaAnalisi>();
     try {
+      // L'analisi gira in background: si segue nella scheda "Analisi avviate" e intanto
+      // se ne possono avviare altre (il form resta compilato).
       final lavoro = await servizio.avviaAnalisi(
         dati,
         web ? const [] : [for (final f in _selectedFiles) (f.name, f.bytes)],
       );
-      final risultato = await servizio.attendi(lavoro['id'] as String);
+      coda.aggiungi(lavoro);
       _mostraEsito(
-        'Analisi completata: il risultato è stato aperto nella scheda Risultati.',
+        'Analisi avviata: la segui nella scheda "Analisi avviate". Intanto puoi avviarne altre.',
         positivo: true,
       );
-      ResultManager.showResultInNewTab(risultato['html'] as String);
-    } on LavoroNonRiuscito catch (e) {
-      _mostraEsito('L\'analisi non è andata a buon fine.', positivo: false);
-      if (mounted) showErrorDialog(context, content: e.messaggio);
     } catch (e) {
       _mostraEsito('Analisi non avviata: $e', positivo: false);
     } finally {
@@ -538,7 +537,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
                         onPressed: () => _previewSelectedFile(index),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline),
+                        icon: const IconaElimina(),
                         color: Colors.red.shade700,
                         tooltip: 'Rimuovi',
                         onPressed: () => _removeFile(index),
@@ -710,7 +709,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
       iconaSecondaria: Icons.restart_alt,
       onSecondaria: _nuovaAnalisi,
       inCorso: _isUploading,
-      messaggioInCorso: 'Analisi in corso: può richiedere alcuni minuti. Puoi continuare a lavorare nelle altre schede.',
+      messaggioInCorso: 'Invio della richiesta…',
       avviso: mancanti.isEmpty
           ? null
           : 'Per avviare l\'analisi indica: ${mancanti.join(', ')}.',

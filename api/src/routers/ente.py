@@ -1,5 +1,5 @@
 """Amministrazione dell'ente: profilo (logo, caratteristiche), modi di accesso (utenti
-locali, Active Directory) e utenti.
+locali, Active Directory), strutture organizzative e utenti.
 
 Riservata all'amministratore dell'ente (ruolo ADMIN). I dati dell'ente e la carta intestata
 sono in routers/modelli.py. Gli utenti locali creati qui, o con la password reimpostata,
@@ -7,13 +7,15 @@ devono sceglierne una propria al primo accesso.
 """
 
 import asyncio
+import csv
+import io
 import logging
 from http import HTTPStatus
 
 from flask import Blueprint
 from ldap3.core.exceptions import LDAPException
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import undefer
 
 from auth import password as pw
@@ -21,7 +23,7 @@ from auth.ldap import GRUPPI_PREDEFINITI, ConfigLdap, ruoli_da_gruppi
 from deps import amministratore_ente, audit, autenticato, db, ente, risorse, utente
 from schemas import UtenteOut
 from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto
-from common.models import Ente, OrigineUtente, Ruolo, User
+from common.models import Ente, OrigineUtente, Ruolo, Struttura, User
 
 log = logging.getLogger("atti_api.ente")
 
@@ -171,6 +173,200 @@ async def prova_accesso():
     }
 
 
+# --- strutture organizzative ---------------------------------------------------------------
+
+IMPORTAZIONE_MAX_BYTE = 2 * 1024 * 1024
+
+
+class StrutturaIn(BaseModel):
+    codice: str = Field(min_length=1, max_length=50)
+    descrizione: str = Field(min_length=1, max_length=255)
+    padre_id: str | None = None
+    ordine: int = 0
+    attiva: bool = True
+
+
+def _struttura_out(s: Struttura) -> dict:
+    return {
+        "id": s.id, "codice": s.codice, "descrizione": s.descrizione,
+        "padre_id": s.padre_id, "ordine": s.ordine, "attiva": s.attiva,
+    }  # fmt: skip
+
+
+async def _strutture(sessione) -> list[Struttura]:
+    return list(
+        (await sessione.scalars(
+            select(Struttura).where(Struttura.ente_id == ente().id).order_by(Struttura.ordine, Struttura.codice)
+        )).all()
+    )  # fmt: skip
+
+
+async def _struttura_dell_ente(sessione, struttura_id: str) -> Struttura:
+    s = await sessione.get(Struttura, struttura_id)
+    if s is None or s.ente_id != ente().id:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Struttura non trovata")
+    return s
+
+
+async def _controlla_padre(sessione, s: Struttura, padre_id: str | None) -> None:
+    """Il padre è dell'ente e non è la struttura stessa né una sua sottostante."""
+    if padre_id is None:
+        return
+    padre = await _struttura_dell_ente(sessione, padre_id)
+    padri = {x.id: x.padre_id for x in await _strutture(sessione)}
+    corrente: str | None = padre.id
+    while corrente is not None:
+        if corrente == s.id:
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Una struttura non può stare sotto sé stessa")
+        corrente = padri.get(corrente)
+
+
+async def _codice_libero(sessione, codice: str, escluso: str | None = None) -> None:
+    q = select(Struttura).where(Struttura.ente_id == ente().id, Struttura.codice == codice)
+    trovata = await sessione.scalar(q)
+    if trovata is not None and trovata.id != escluso:
+        raise ErroreApi(HTTPStatus.CONFLICT, f"Codice già usato: {codice}")
+
+
+@bp.get("/strutture")
+@autenticato(modulo=None)
+async def elenco_strutture():
+    """Strutture dell'ente (anche disattivate), per ordine e codice: per tutti gli utenti, che
+    le scelgono nei moduli."""
+    return [_struttura_out(s) for s in await _strutture(db())]
+
+
+@bp.post("/strutture")
+@amministratore_ente
+async def crea_struttura():
+    dati = corpo(StrutturaIn)
+    sessione = db()
+    s = Struttura(ente_id=ente().id, codice=dati.codice.strip(), descrizione=dati.descrizione.strip(),
+                  ordine=dati.ordine, attiva=dati.attiva)  # fmt: skip
+    await _codice_libero(sessione, s.codice)
+    await _controlla_padre(sessione, s, dati.padre_id)
+    s.padre_id = dati.padre_id
+    sessione.add(s)
+    await sessione.flush()
+    audit(sessione, utente(), "struttura", s.id, "CREATA", {"codice": s.codice})
+    await sessione.commit()
+    return _struttura_out(s), HTTPStatus.CREATED
+
+
+@bp.put("/strutture/<struttura_id>")
+@amministratore_ente
+async def aggiorna_struttura(struttura_id: str):
+    dati = corpo(StrutturaIn)
+    sessione = db()
+    s = await _struttura_dell_ente(sessione, struttura_id)
+    await _codice_libero(sessione, dati.codice.strip(), escluso=s.id)
+    await _controlla_padre(sessione, s, dati.padre_id)
+    s.codice, s.descrizione = dati.codice.strip(), dati.descrizione.strip()
+    s.padre_id, s.ordine, s.attiva = dati.padre_id, dati.ordine, dati.attiva
+    audit(sessione, utente(), "struttura", s.id, "AGGIORNATA", {"codice": s.codice, "attiva": s.attiva})
+    await sessione.commit()
+    return _struttura_out(s)
+
+
+@bp.delete("/strutture/<struttura_id>")
+@amministratore_ente
+async def elimina_struttura(struttura_id: str):
+    """Solo se non ha strutture sottostanti né utenti; altrimenti si disattiva."""
+    sessione = db()
+    s = await _struttura_dell_ente(sessione, struttura_id)
+    figlie = await sessione.scalar(select(func.count()).select_from(Struttura).where(Struttura.padre_id == s.id))
+    utenti = await sessione.scalar(select(func.count()).select_from(User).where(User.struttura_id == s.id))
+    if figlie or utenti:
+        raise ErroreApi(
+            HTTPStatus.CONFLICT,
+            "La struttura ha strutture sottostanti o utenti assegnati: disattivala invece di eliminarla",
+        )
+    audit(sessione, utente(), "struttura", s.id, "ELIMINATA", {"codice": s.codice})
+    await sessione.delete(s)
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+def _righe_importazione(contenuto: bytes, nome: str) -> list[dict[str, str]]:
+    """Righe di un file Excel (.xlsx) o CSV con le colonne codice, descrizione e padre
+    (codice della struttura superiore, facoltativo); la prima riga è l'intestazione."""
+    if nome.lower().endswith(".xlsx"):
+        import openpyxl
+
+        foglio = openpyxl.load_workbook(io.BytesIO(contenuto), read_only=True, data_only=True).active
+        tabella = [["" if v is None else str(v).strip() for v in r] for r in foglio.iter_rows(values_only=True)]
+    elif nome.lower().endswith(".csv"):
+        testo = contenuto.decode("utf-8-sig", errors="replace")
+        dialetto = csv.Sniffer().sniff(testo.split("\n", 1)[0], delimiters=";,\t")
+        tabella = [[v.strip() for v in r] for r in csv.reader(io.StringIO(testo), dialetto)]
+    else:
+        raise ErroreApi(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Formato non ammesso: usa un file .xlsx o .csv")
+    if not tabella:
+        return []
+    intestazione = [c.lower() for c in tabella[0]]
+    if "codice" not in intestazione or "descrizione" not in intestazione:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Servono le colonne codice e descrizione (e facoltativa padre)")
+    righe = []
+    for r in tabella[1:]:
+        valori = dict(zip(intestazione, r, strict=False))
+        if valori.get("codice"):
+            righe.append({k: valori.get(k, "") for k in ("codice", "descrizione", "padre")})
+    return righe
+
+
+@bp.post("/strutture/importa")
+@amministratore_ente
+async def importa_strutture():
+    """Crea o aggiorna (per codice) le strutture di un file, nell'ordine del file; quelle che
+    non compaiono restano come sono."""
+    file = file_caricato()
+    contenuto = file.read(IMPORTAZIONE_MAX_BYTE + 1)
+    if len(contenuto) > IMPORTAZIONE_MAX_BYTE:
+        raise ErroreApi(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande (massimo 2 MB)")
+    try:
+        righe = _righe_importazione(contenuto, file.filename or "")
+    except (ValueError, csv.Error) as e:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"File non leggibile: {e}") from e
+    sessione = db()
+    esistenti = {s.codice: s for s in await _strutture(sessione)}
+    nel_file = {r["codice"] for r in righe}
+    errori = [
+        f"{r['codice']}: struttura superiore {r['padre']} non trovata"
+        for r in righe
+        if r["padre"] and r["padre"] not in esistenti and r["padre"] not in nel_file
+    ]
+    errori += [f"{r['codice']}: descrizione mancante" for r in righe if not r["descrizione"]]
+    errori += [f"{r['codice']}: codice o descrizione troppo lunghi" for r in righe
+               if len(r["codice"]) > 50 or len(r["descrizione"]) > 255]  # fmt: skip
+    if errori:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "; ".join(errori[:20]))
+    create = aggiornate = 0
+    for ordine, r in enumerate(righe, start=1):
+        s = esistenti.get(r["codice"])
+        if s is None:
+            s = Struttura(ente_id=ente().id, codice=r["codice"], attiva=True)
+            sessione.add(s)
+            esistenti[s.codice] = s
+            create += 1
+        else:
+            aggiornate += 1
+        s.descrizione, s.ordine = r["descrizione"], ordine
+    await sessione.flush()
+    for r in righe:  # i padri dopo: possono comparire più avanti nel file
+        esistenti[r["codice"]].padre_id = esistenti[r["padre"]].id if r["padre"] else None
+    padri = {s.id: s.padre_id for s in esistenti.values()}
+    for s in esistenti.values():
+        visti, corrente = set(), s.id
+        while corrente is not None:
+            if corrente in visti:
+                raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"Gerarchia circolare a partire da {s.codice}")
+            visti.add(corrente)
+            corrente = padri.get(corrente)
+    audit(sessione, utente(), "struttura", ente().id, "IMPORTATE", {"create": create, "aggiornate": aggiornate})
+    await sessione.commit()
+    return {"create": create, "aggiornate": aggiornate}
+
+
 # --- utenti --------------------------------------------------------------------------------
 
 
@@ -200,6 +396,7 @@ class UtenteNuovoIn(BaseModel):
     email: str | None = Field(default=None, max_length=255)
     ruoli: list[str] = Field(min_length=1)
     password: str
+    struttura_id: str | None = None
 
     @field_validator("ruoli")
     @classmethod
@@ -212,6 +409,7 @@ class UtenteIn(BaseModel):
     email: str | None = Field(default=None, max_length=255)
     ruoli: list[str] | None = None  # solo utenti locali: quelli AD vengono dai gruppi
     attivo: bool = True
+    struttura_id: str | None = None  # anche per gli utenti AD
 
     @field_validator("ruoli")
     @classmethod
@@ -237,10 +435,13 @@ async def crea_utente():
     username = dati.username.lower()
     if await sessione.scalar(select(User).where(User.ente_id == e.id, User.username == username)):
         raise ErroreApi(HTTPStatus.CONFLICT, "Nome utente già usato")
+    if dati.struttura_id:
+        await _struttura_dell_ente(sessione, dati.struttura_id)
     u = User(
         ente_id=e.id, username=username, origine=OrigineUtente.LOCALE,
         password_hash=pw.calcola(dati.password), cambio_password=True,
         nome_completo=dati.nome_completo, email=dati.email, ruoli=dati.ruoli,
+        struttura_id=dati.struttura_id,
     )  # fmt: skip
     sessione.add(u)
     await sessione.flush()
@@ -269,10 +470,14 @@ async def aggiorna_utente(utente_id: str):
         u.email = dati.email
         if dati.ruoli is not None:
             u.ruoli = dati.ruoli
+    if dati.struttura_id:
+        await _struttura_dell_ente(sessione, dati.struttura_id)
+    u.struttura_id = dati.struttura_id
     if u.attivo and not dati.attivo:
         u.token_version = (u.token_version or 0) + 1  # chiude le sessioni aperte
     u.attivo = dati.attivo
-    audit(sessione, utente(), "utente", u.id, "AGGIORNATO", {"attivo": u.attivo, "ruoli": u.ruoli})
+    audit(sessione, utente(), "utente", u.id, "AGGIORNATO",
+          {"attivo": u.attivo, "ruoli": u.ruoli, "struttura_id": u.struttura_id})  # fmt: skip
     await sessione.commit()
     return _utente_out(u)
 

@@ -13,6 +13,7 @@ class UtenteOut(Schema):
     nome_completo: str | None
     email: str | None
     ufficio: str | None
+    struttura_id: str | None = None
     decreto_incarico: str | None
     ruoli: list[str]
     ultimo_accesso: datetime | None = None

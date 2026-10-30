@@ -88,7 +88,7 @@ class _RiferimentiState extends State<_Riferimenti> {
                         ].join(' · ')),
                         trailing: (r['owner_id'] == utente.id || utente.isAdmin)
                             ? IconButton(
-                                icon: const Icon(Icons.delete_outline),
+                                icon: const IconaElimina(),
                                 onPressed: () async {
                                   if (!await conferma(context, 'Eliminare il riferimento?',
                                       r['citazione'].toString())) {

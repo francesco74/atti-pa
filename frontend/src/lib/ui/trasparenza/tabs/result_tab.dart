@@ -114,8 +114,10 @@ class _ResultTabState extends State<ResultTab>
   @override
   bool get wantKeepAlive => true;
 
-  /// C'è un contenuto mai salvato o modificato dopo l'ultimo salvataggio.
-  bool get _nonSalvato => _html.isNotEmpty && (_docId == null || _modificato);
+  /// Il contenuto è stato modificato nell'editor dopo l'apertura o l'ultimo
+  /// salvataggio. Un risultato appena aperto e non toccato non conta: si
+  /// rigenera o si riapre da "Analisi avviate".
+  bool get _nonSalvato => _html.isNotEmpty && _modificato;
 
   @override
   void initState() {

@@ -41,6 +41,24 @@ CREATE TABLE enti_domini (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
+-- Strutture organizzative dell'ente (staff, settori, U.O.), con la gerarchia: usate da
+-- tutti i moduli; chi è assegnato a una struttura opera anche su quelle sottostanti
+-- ---------------------------------------------------------------------------
+CREATE TABLE strutture (
+    id           CHAR(36) PRIMARY KEY,
+    ente_id      CHAR(36) NOT NULL,
+    codice       VARCHAR(50) NOT NULL,          -- es. SETTORE 2, U.O. 2.2
+    descrizione  VARCHAR(255) NOT NULL,
+    padre_id     CHAR(36),                      -- struttura superiore
+    ordine       INT NOT NULL DEFAULT 0,
+    attiva       BOOLEAN NOT NULL DEFAULT TRUE, -- soppressa: resta per lo storico
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_struttura_ente (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (padre_id) REFERENCES strutture(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
 -- Utenti di un ente: da Active Directory (al login, password mai salvata) o locali
 -- (password con hash). Ogni ente nasce con l'utente locale admin (deploy/enti.py).
 -- ---------------------------------------------------------------------------
@@ -55,13 +73,16 @@ CREATE TABLE users (
     nome_completo     VARCHAR(255),
     email             VARCHAR(255),
     ufficio           VARCHAR(255),
+    struttura_id      CHAR(36),               -- struttura organizzativa (strutture)
     decreto_incarico  VARCHAR(255),           -- precompila gli atti
-    ruoli             JSON NOT NULL,          -- REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA, ADMIN
+    ruoli             JSON NOT NULL,          -- REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA,
+                                              -- ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT, ADMIN
     attivo            BOOLEAN NOT NULL DEFAULT TRUE,
     ultimo_accesso    TIMESTAMP NULL,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_utente_ente (ente_id, username),
-    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE tipologie_atto (
@@ -440,6 +461,203 @@ CREATE TABLE trasparenza_lavori (
     KEY ix_stato (stato, created_at),
     FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
     FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- Modulo anticorruzione: processo -> attività -> rischio -> misura
+-- ---------------------------------------------------------------------------
+CREATE TABLE ac_metodologie (
+    ente_id        CHAR(36) PRIMARY KEY,
+    dati           JSON NOT NULL,          -- indicatori, scala, matrice, livelli
+    impronta       VARCHAR(64),
+    pacchetto      VARCHAR(150),
+    impronta_base  VARCHAR(64),
+    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_aree (
+    id                 CHAR(36) PRIMARY KEY,
+    ente_id            CHAR(36) NOT NULL,
+    codice             VARCHAR(20) NOT NULL,
+    descrizione        VARCHAR(500) NOT NULL,
+    descrizione_breve  VARCHAR(255),
+    ordine             INT NOT NULL DEFAULT 0,
+    UNIQUE KEY uq_ac_area (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_processi (
+    id              CHAR(36) PRIMARY KEY,
+    ente_id         CHAR(36) NOT NULL,
+    codice          VARCHAR(50) NOT NULL,
+    area_id         CHAR(36),
+    denominazione   VARCHAR(500) NOT NULL,
+    descrizione     TEXT,
+    tempi           TEXT,
+    attori_esterni  TEXT,
+    struttura_id    CHAR(36),               -- responsabile; vuota: trasversale
+    impronta        VARCHAR(64),
+    pacchetto       VARCHAR(150),
+    impronta_base   VARCHAR(64),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_ac_processo (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (area_id) REFERENCES ac_aree(id) ON DELETE SET NULL,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_attivita (
+    id                   CHAR(36) PRIMARY KEY,
+    ente_id              CHAR(36) NOT NULL,
+    processo_id          CHAR(36) NOT NULL,
+    codice               VARCHAR(50) NOT NULL,
+    descrizione          TEXT NOT NULL,
+    strutture_coinvolte  TEXT,
+    UNIQUE KEY uq_ac_attivita (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (processo_id) REFERENCES ac_processi(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_rischi (
+    id                      CHAR(36) PRIMARY KEY,
+    ente_id                 CHAR(36) NOT NULL,
+    attivita_id             CHAR(36) NOT NULL,
+    codice                  VARCHAR(60) NOT NULL,
+    evento                  TEXT NOT NULL,
+    fattore_abilitante      VARCHAR(500),
+    valori_probabilita      JSON,           -- {id indicatore: valore}
+    valori_impatto          JSON,
+    probabilita_calcolata   VARCHAR(50),    -- moda (a parità il più alto)
+    impatto_calcolato       VARCHAR(50),
+    probabilita             VARCHAR(50),    -- eventualmente corretta con motivazione
+    impatto                 VARCHAR(50),
+    livello                 VARCHAR(50),    -- dalla matrice
+    motivazione_correzione  TEXT,
+    valutato_il             TIMESTAMP NULL,
+    UNIQUE KEY uq_ac_rischio (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (attivita_id) REFERENCES ac_attivita(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_misure (
+    id                   CHAR(36) PRIMARY KEY,
+    ente_id              CHAR(36) NOT NULL,
+    rischio_id           CHAR(36) NOT NULL,
+    codice               VARCHAR(70) NOT NULL,
+    descrizione          TEXT NOT NULL,
+    tipo                 VARCHAR(20) NOT NULL DEFAULT 'SPECIFICA',  -- GENERALE, SPECIFICA
+    categoria            VARCHAR(255),
+    obbligo_trasparenza  VARCHAR(100),       -- schema ANAC (modulo trasparenza)
+    fasi                 TEXT,
+    tempi                TEXT,
+    struttura_id         CHAR(36),           -- responsabile dell'attuazione
+    indicatore           TEXT,
+    target               TEXT,
+    UNIQUE KEY uq_ac_misura (ente_id, codice),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (rischio_id) REFERENCES ac_rischi(id) ON DELETE CASCADE,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Proposte dei referenti: processo intero (JSON) da creare, modificare o eliminare
+CREATE TABLE ac_proposte (
+    id                  CHAR(36) PRIMARY KEY,
+    ente_id             CHAR(36) NOT NULL,
+    utente_id           CHAR(36) NOT NULL,
+    tipo                VARCHAR(10) NOT NULL,        -- CREA, MODIFICA, ELIMINA
+    processo_id         CHAR(36),
+    dati                JSON NOT NULL,
+    stato               VARCHAR(20) NOT NULL DEFAULT 'BOZZA',  -- BOZZA, INVIATA, APPROVATA, RESPINTA, RESTITUITA
+    nota                TEXT,                        -- del referente
+    motivazione         TEXT,                        -- del RPCT
+    base_aggiornamento  TIMESTAMP NULL,              -- updated_at del processo alla creazione
+    deciso_da           CHAR(36),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    inviata_il          TIMESTAMP NULL,
+    decisa_il           TIMESTAMP NULL,
+    KEY ix_ac_proposte_stato (ente_id, stato),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (processo_id) REFERENCES ac_processi(id) ON DELETE SET NULL,
+    FOREIGN KEY (deciso_da) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Monitoraggio annuale delle misure: dichiarazione della struttura e verifica del RPCT
+CREATE TABLE ac_monitoraggi (
+    id                   CHAR(36) PRIMARY KEY,
+    ente_id              CHAR(36) NOT NULL,
+    anno                 INT NOT NULL,
+    misura_id            CHAR(36),
+    struttura_id         CHAR(36),
+    contesto             JSON NOT NULL,      -- copia di misura, rischio, attività, processo, struttura
+    stato_attuazione     VARCHAR(20) NOT NULL,  -- ATTUATA, PARZIALE, NON_ATTUATA
+    motivazione          TEXT,
+    indicatore_rilevato  TEXT,
+    target               TEXT,
+    evidenze             TEXT,
+    dichiarato_da        CHAR(36),
+    dichiarato_il        TIMESTAMP NULL,
+    stato_verifica       VARCHAR(20) NOT NULL DEFAULT 'DA_VERIFICARE',  -- VERIFICATA, CONTESTATA
+    note_rpct            TEXT,
+    verificato_da        CHAR(36),
+    verificato_il        TIMESTAMP NULL,
+    UNIQUE KEY uq_ac_monitoraggio (ente_id, anno, misura_id, struttura_id),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (misura_id) REFERENCES ac_misure(id) ON DELETE SET NULL,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL,
+    FOREIGN KEY (dichiarato_da) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (verificato_da) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- PIAO dell'ente e obiettivi di performance, collegati a processi e attività
+CREATE TABLE ac_piao (
+    id           CHAR(36) PRIMARY KEY,
+    ente_id      CHAR(36) NOT NULL,
+    anno_inizio  INT NOT NULL,
+    anno_fine    INT NOT NULL,
+    descrizione  VARCHAR(255) NOT NULL,
+    atto         VARCHAR(255),               -- atto di approvazione
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_ac_piao (ente_id, anno_inizio),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_obiettivi (
+    id                  CHAR(36) PRIMARY KEY,
+    ente_id             CHAR(36) NOT NULL,
+    piao_id             CHAR(36) NOT NULL,
+    codice              VARCHAR(100) NOT NULL,
+    anno                INT NOT NULL,
+    titolo              TEXT,
+    tipo                VARCHAR(100),
+    struttura_id        CHAR(36),            -- assegnataria (copre le sottostanti)
+    centro_piano        VARCHAR(255),        -- com'era nel file del Piano
+    centro_descrizione  VARCHAR(500),
+    responsabile        VARCHAR(255),
+    fonte               VARCHAR(255),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_ac_obiettivo (piao_id, codice, anno),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (piao_id) REFERENCES ac_piao(id) ON DELETE CASCADE,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE ac_obiettivi_collegamenti (
+    id            CHAR(36) PRIMARY KEY,
+    ente_id       CHAR(36) NOT NULL,
+    obiettivo_id  CHAR(36) NOT NULL,
+    processo_id   CHAR(36),                  -- processo intero (con attività, rischi, misure)
+    attivita_id   CHAR(36),                  -- oppure una sola attività
+    note          TEXT,
+    utente_id     CHAR(36),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (obiettivo_id) REFERENCES ac_obiettivi(id) ON DELETE CASCADE,
+    FOREIGN KEY (processo_id) REFERENCES ac_processi(id) ON DELETE CASCADE,
+    FOREIGN KEY (attivita_id) REFERENCES ac_attivita(id) ON DELETE CASCADE,
+    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------

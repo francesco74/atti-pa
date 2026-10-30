@@ -1394,7 +1394,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
                 Expanded(child: Text('Riga ${i + 1}', style: Theme.of(context).textTheme.labelMedium)),
                 IconButton(
                   tooltip: 'Togli la riga',
-                  icon: const Icon(Icons.delete_outline, size: 20),
+                  icon: const IconaElimina(size: 20),
                   onPressed: () => setState(() {
                     for (final ctrl in righe.removeAt(i).values) {
                       ctrl.dispose();

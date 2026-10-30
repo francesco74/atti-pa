@@ -38,7 +38,7 @@ class ResultManager {
   static void Function(NuovoRisultato risultato)? navigateToResults;
 
   /// Impostata dalla schermata principale: porta a una scheda
-  /// (0 = analisi IA, 1 = generazione, 2 = risultati).
+  /// (0 = analisi IA, 1 = generazione, 2 = risultati, 3 = analisi avviate).
   static void Function(int scheda)? apriScheda;
 
   /// Impostata dalla scheda dei risultati: dice se l'editor contiene

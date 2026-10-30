@@ -1,0 +1,61 @@
+# Aree di rischio (PNA 2019 e PIAO del Comune di Lucca, § 2.3): create negli enti che non
+# le hanno, mai cancellate.
+aree:
+- codice: A
+  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari privi di effetto economico
+    diretto ed immediato per il destinatario
+  descrizione_breve: Autorizzazioni, concessioni, abilitazioni
+  ordine: 10
+- codice: B
+  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari con effetto economico diretto
+    ed immediato per il destinatario
+  descrizione_breve: Contributi, sussidi, agevolazioni
+  ordine: 20
+- codice: C
+  descrizione: Contratti pubblici (ex affidamento di lavori, servizi e forniture)
+  descrizione_breve: Affidamenti di lavori, servizi e forniture
+  ordine: 30
+- codice: D
+  descrizione: Acquisizione e gestione del personale (ex acquisizione, progressione e gestione del personale)
+  descrizione_breve: Concorsi, assunzioni, progressioni
+  ordine: 40
+- codice: E
+  descrizione: Gestione delle entrate, delle spese e del patrimonio
+  descrizione_breve: Tributi, bilancio, patrimonio
+  ordine: 50
+- codice: F
+  descrizione: Controlli, verifiche, ispezioni e sanzioni
+  descrizione_breve: Attività ispettive e sanzionatorie
+  ordine: 60
+- codice: G
+  descrizione: Incarichi e nomine
+  descrizione_breve: Incarichi professionali e nomine
+  ordine: 70
+- codice: H
+  descrizione: Affari legali e contenzioso
+  descrizione_breve: Contenzioso
+  ordine: 80
+- codice: I
+  descrizione: Governo del territorio
+  descrizione_breve: Edilizia e territorio
+  ordine: 90
+- codice: L
+  descrizione: Gestione dei rifiuti
+  descrizione_breve: Igiene urbana
+  ordine: 100
+- codice: M
+  descrizione: Pianificazione urbanistica
+  descrizione_breve: Piani urbanistici e varianti
+  ordine: 110
+- codice: N
+  descrizione: Programmazione e controlli
+  descrizione_breve: Programmazione e controlli interni
+  ordine: 120
+- codice: O
+  descrizione: Supporto agli organi
+  descrizione_breve: Organi istituzionali
+  ordine: 130
+- codice: EXL
+  descrizione: Servizi demografici (ex area L)
+  descrizione_breve: Anagrafe, stato civile, elettorale
+  ordine: 140

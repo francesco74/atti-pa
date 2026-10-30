@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 import yaml
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from common.configurazione import leggi_checklist
@@ -80,7 +80,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
         async with AsyncSession(self.motore) as db:
             self.assertIsNotNone(await db.get(TipologiaAtto, "DETERMINA"))
             modelli = (await db.scalars(select(ModelloAtto))).all()
-            self.assertTrue(all(m.pacchetto == "Modelli standard Atti PA 2026.1" for m in modelli))
+            self.assertTrue(all(m.pacchetto == "Modelli standard Atti PA 2026.2" for m in modelli))
 
     async def test_stesso_pacchetto_tutto_invariato(self):
         await self._iniziale()
@@ -207,3 +207,93 @@ class PacchettiNonValidi(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
+    """Metodologia, aree e processi standard: solo per gli enti con il modulo; confronto a tre
+    vie sui processi, aggiornamento per codice che conserva gli identificativi e le
+    valutazioni dell'ente, esportazione rileggibile."""
+
+    async def asyncSetUp(self):
+        from common.models import Modulo
+
+        self.motore = create_async_engine("sqlite+aiosqlite://")
+        # chiavi esterne controllate come in MySQL: l'ordine degli inserimenti conta
+        event.listen(self.motore.sync_engine, "connect", lambda c, _: c.execute("PRAGMA foreign_keys=ON"))
+        async with self.motore.begin() as c:
+            await c.run_sync(Base.metadata.create_all)
+        async with AsyncSession(self.motore) as db:
+            db.add(Ente(id=ENTE, codice="prova", nome="Ente", moduli_json=[Modulo.ANTICORRUZIONE], dati_json={}))
+            db.add(Ente(id="senza", codice="senza", nome="Senza modulo", moduli_json=[], dati_json={}))
+            await db.commit()
+        self.file = da_cartella(PACCHETTO)
+
+    async def asyncTearDown(self):
+        await self.motore.dispose()
+
+    def _processo_cambiato(self, codice: str, descrizione: str) -> dict[str, str]:
+        """Il pacchetto con una nuova descrizione per la prima attività del processo."""
+        area = codice.split(".")[0].lower()
+        nome = f"anticorruzione/processi/{area}.yaml"
+        dati = yaml.safe_load(self.file[nome])
+        processo = next(p for p in dati["processi"] if p["codice"] == codice)
+        processo["attivita"][0]["descrizione"] = descrizione
+        return _con_versione({**self.file, nome: yaml.safe_dump(dati, allow_unicode=True)}, "2026.9")
+
+    async def test_tre_vie_sui_processi(self):
+        from common.models import AcArea, AcAttivita, AcMetodologia, AcProcesso, AcRischio
+
+        pacchetto = leggi_pacchetto(self.file)
+        async with AsyncSession(self.motore, expire_on_commit=False) as db:
+            self.assertFalse([v for v in await analizza(db, "senza", pacchetto) if v.tipo == "processo"])
+            voci = [v for v in await analizza(db, ENTE, pacchetto) if v.tipo in ("processo", "metodologia")]
+            self.assertEqual({v.stato for v in voci}, {"NUOVO"})
+            r = await importa(db, ENTE, pacchetto)
+            await db.commit()
+            self.assertEqual(r.errori, [])
+            self.assertEqual(len((await db.scalars(select(AcProcesso))).all()), 130)
+            self.assertEqual(len((await db.scalars(select(AcArea))).all()), 14)
+            self.assertIsNotNone(await db.get(AcMetodologia, ENTE))
+            valutati = [x for x in (await db.scalars(select(AcRischio))).all() if x.livello]
+            self.assertEqual(len(valutati), 252)  # valutazione proposta nei rischi nuovi
+            voci = await analizza(db, ENTE, pacchetto)
+            self.assertEqual({v.stato for v in voci if v.tipo == "processo"}, {"INVARIATO"})
+
+            # l'ente modifica C.1 e rivaluta un rischio di C.4; lo standard cambia C.1 e C.4
+            c1 = await db.scalar(select(AcProcesso).where(AcProcesso.codice == "C.1"))
+            att = (await db.scalars(select(AcAttivita).where(AcAttivita.processo_id == c1.id))).all()
+            min(att, key=lambda a: a.codice).descrizione = "Versione dell'ente"
+            c4 = await db.scalar(select(AcProcesso).where(AcProcesso.codice == "C.4"))
+            att2 = min((await db.scalars(select(AcAttivita).where(AcAttivita.processo_id == c4.id))).all(),
+                       key=lambda a: a.codice)  # fmt: skip
+            id_att2 = att2.id
+            await db.commit()
+        file = self._processo_cambiato("C.1", "Nuovo standard")
+        dati = yaml.safe_load(file["anticorruzione/processi/c.yaml"])
+        next(p for p in dati["processi"] if p["codice"] == "C.4")["denominazione"] += " (aggiornato)"
+        file["anticorruzione/processi/c.yaml"] = yaml.safe_dump(dati, allow_unicode=True)
+        nuovo = leggi_pacchetto(file)
+        async with AsyncSession(self.motore, expire_on_commit=False) as db:
+            stati = {v.codice: v.stato for v in await analizza(db, ENTE, nuovo) if v.tipo == "processo"}
+            self.assertEqual((stati["C.1"], stati["C.4"], stati["C.5"]), ("CONFLITTO", "AGGIORNABILE", "INVARIATO"))
+            r = await importa(db, ENTE, nuovo)
+            await db.commit()
+            self.assertIn("processo:C.4", r.applicati)
+            self.assertIn("processo:C.1", r.mantenuti)
+            c4 = await db.scalar(select(AcProcesso).where(AcProcesso.codice == "C.4"))
+            self.assertTrue(c4.denominazione.endswith("(aggiornato)"))
+            self.assertIsNotNone(await db.get(AcAttivita, id_att2))  # stesso codice, stesso id
+            # dopo "mantieni" il nuovo standard è il riferimento: C.1 non è più in conflitto
+            stati = {v.codice: v.stato for v in await analizza(db, ENTE, nuovo) if v.tipo == "processo"}
+            self.assertEqual(stati["C.1"], "INVARIATO")
+
+            # esportazione rileggibile come pacchetto
+            esportato = await esporta(db, ENTE, "Esportazione", "1")
+            riletto = leggi_pacchetto(esportato)
+            self.assertEqual(len(riletto.di_tipo("processo")), 130)
+            self.assertEqual(len(riletto.aree), 14)
+
+    async def test_area_mancante(self):
+        file = {**self.file, "anticorruzione/aree.yaml": "aree: []\n"}
+        with self.assertRaises(PacchettoNonValido):
+            leggi_pacchetto(file)

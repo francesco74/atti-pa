@@ -1,0 +1,895 @@
+# Processi standard dell'area F: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: F
+processi:
+- codice: F.1
+  denominazione: Ordinanze ingiunzioni in materia di occupazioni abusive di spazi ed aree pubbliche
+  tempi: Entro 5 anni dall'accertamento del fatto il procedimento per il recupero è chiuso
+  attivita:
+  - codice: F.1.1
+    descrizione: Ricezione eventuale dalla PM
+  - codice: F.1.2
+    descrizione: Istruttoria con analisi delle eventuali difese del trasgressore
+    rischi:
+    - codice: F.1.2_R.1
+      evento: Erronea analisi dei presupposti/circostanze di fatto e di diritto
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.1.2_R.1_M.1
+        descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto
+          la direzione del Dirigente ed adozione di provvedimento motivato nella forma dell'ordinanza
+          ingiunzione a norma della legge 689/81
+        categoria: Controllo
+  - codice: F.1.3
+    descrizione: Emissione ordinanza ingiunzione di pagamento o provvedimento di archiviazione
+    rischi:
+    - codice: F.1.3_R.1
+      evento: Tardività
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.1.3_R.1_M.1
+        descrizione: Verifica del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti
+        categoria: Controllo
+- codice: F.2
+  denominazione: Partecipazione all'attività di accertamento dei tributi erariali
+  tempi: potere di segnalazione - termini correlati al tributo evaso
+  attori_esterni: ADE - GdF
+  attivita:
+  - codice: F.2.1
+    descrizione: Elaborazione ed invio della segnalazione qualificata di anomalia alle strutture competenti
+      interne o esterne all'Ente
+    rischi:
+    - codice: F.2.1_R.1
+      evento: Mancato invio di segnalazione qualificata sussistente.Disparità di trattamento
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.2.1_R.1_M.1
+        descrizione: Utilizzo di software informatico, che consente la tracciabilità dei soggetti che
+          operano sul sistema, per la individuazione delle posizioni dubbie e per la elaborazione delle
+          segnalazioni qualificate.Verifica a campione delle pratiche da parte del personale d'ufficio,
+          secondo rotazione casuale, sotto la direzione del dirigente.
+        categoria: Rotazione
+- codice: F.3
+  denominazione: Visura dei documenti risultanti mancanti in sede di controllo su strada
+  tempi: 20 giorni per presentare la documentazione ad un comando di Polizia
+  attori_esterni: cittadini, altri comandi che ricevono la documentazione che deve essere presentata presso
+    il Comando di Polizia Municipale di Lucca
+  attivita:
+  - codice: F.3.1
+    descrizione: Ricevimento dei documento soggetti a controllo
+    rischi:
+    - codice: F.3.1_R.1
+      evento: 'Controllo della documentazione presentata (ad esempio: omissione nella segnalazione di
+        irregolarità). Invio alla Forza di Polizia che ha intimato la presentazione del documento'
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.3.1_R.1_M.1
+        descrizione: Controllo dell'agente al front-office e dell'ufficio violazioni o della Forza di
+          Polizia diversa dalla P.M. Lucca che riceve le copie per competenza;
+        categoria: Controllo
+  - codice: F.3.2
+    descrizione: Rilascio ricevuta
+    rischi:
+    - codice: F.3.2_R.1
+      evento: Omissione
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.3.2_R.1_M.1
+        descrizione: Rilascio di attestazione dell'avvenuta presentazione del documento all'utente;Invio
+          della scansione del documento al Comando accertatore per PEC.
+- codice: F.4
+  denominazione: Annullamento d'ufficio
+  tempi: da uno a 3 giorni dalla presentazione della richiesta
+  attori_esterni: cittadini
+  attivita:
+  - codice: F.4.1
+    descrizione: Su istanza o d'ufficio
+  - codice: F.4.2
+    descrizione: Riesame
+  - codice: F.4.3
+    descrizione: Annullamento totale/parziale dell'atto ovvero conferma della legittimità
+    rischi:
+    - codice: F.4.3_R.1
+      evento: abuso nell'adozione/non adozione del provvedimento al fine di agevolare determinati soggetti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.4.3_R.1_M.1
+        descrizione: Determinazione dei casi di possibile archiviazione delle sanzioni in autotutela (DD
+          n. 1650/2011).Individuazione dei casi in cui il verbalizzante propone l'archiviazione del preavviso
+          di accertamento o la sostituzione dello stesso con altro verbale emendato dell'errore;Verifica
+          da parte del Responsabile dell'Ufficio
+        categoria: Controllo
+- codice: F.5
+  denominazione: Emissione ordinanza-ingiunzione per la riscossione delle somme derivanti da sanzioni
+    ambientali
+  tempi: 5 anni dal mancato pagamento del verbale
+  attori_esterni: privati/ditte
+  attivita:
+  - codice: F.5.1
+    descrizione: Ricezione accertamento
+    rischi:
+    - codice: F.5.1_R.1
+      evento: Trattazione in ordine diverso rispetto all'ordine di arrivo all'ufficio
+      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
+        della pratica
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.5.1_R.1_M.1
+        descrizione: Tenuta di un registro con numerazione cronologica interno all'ufficio
+        categoria: Controllo
+  - codice: F.5.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: F.5.2_R.1
+      evento: Motivazione generica e tautologica circa la sussistenza dei presupposti di legge per l'emissione
+        io l'archiviazione allo scopo di agevolare soggetti
+      fattore_abilitante: scarsità di personale che non permette di fare partecipare più persone alla
+        istruttoria della pratica
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.5.2_R.1_M.1
+        descrizione: Attuazione e applicazione dell'obbligo di motivazione dell'accoglimento/rigetto delle
+          memorie difensive già previsto dalla L.241/90
+    - codice: F.5.2_R.2
+      evento: Determinazione scorretta della sanzione per agevolare/favorire il soggetto
+      fattore_abilitante: Scarsità di personale; mancanza di criteri predeterminati
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.5.2_R.2_M.1
+        descrizione: Rispetto delle linee guida interne per la definizione dei criteri per la rideterminazione
+          delle sanzioni
+        categoria: Regolamentazione
+  - codice: F.5.3
+    descrizione: Emissione ingiunzione pagamento/archiviazione
+    rischi:
+    - codice: F.5.3_R.1
+      evento: Tardività nell'emissione del provvedimento ingiunzione abuso nell'adozione del provvedimento
+        di archiviazione
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto a causa della scarsità di personale
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.5.3_R.1_M.1
+        descrizione: Verifica annuale del rispetto dei tempi procedimentali
+        categoria: Controllo
+- codice: F.6
+  denominazione: Iscrizione a ruolo per mancato pagamento sanzioni
+  tempi: 5 anni dal mancato pagamento dell'ordinanza ingiunzione
+  attori_esterni: privati/ditte
+  attivita:
+  - codice: F.6.1
+    descrizione: Istruttoria
+    rischi:
+    - codice: F.6.1_R.1
+      evento: Trasmissione non tempestiva della determina di iscrizione a ruolo all'Esattore incaricato
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto a causa della scarsità di personale
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.6.1_R.1_M.1
+        descrizione: tenuta di un registro con numerazione cronologica interno all'ufficio
+        categoria: Controllo
+- codice: F.7
+  denominazione: Ordinanze in materia di ambiente (rifiuti, amianto, acustica, adeguamento scarichi, allaccio
+    fognatura , ecc.)
+  tempi: 30 giorni
+  attori_esterni: privati/ditte
+  attivita:
+  - codice: F.7.1
+    descrizione: Avvio procedimento d'ufficio o su ricezione segnalazione
+    rischi:
+    - codice: F.7.1_R.1
+      evento: Abuso/mancato avvio del procedimento;Mancata attivazione del controllo
+      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
+        della pratica
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.7.1_R.1_M.1
+        descrizione: Tenuta di un registro con numerazione cronologica interno all'ufficio
+        categoria: Controllo
+  - codice: F.7.2
+    descrizione: Istruttoria/verifiche
+    rischi:
+    - codice: F.7.2_R.1
+      evento: Omissione o mancata valutazione delle relazioni tecniche degli organi accertatori
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto; scarsità di personale
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.7.2_R.1_M.1
+        descrizione: Differenziazione tra la figura dell'istruttore e del responsabile del procedimento
+          in attuazione della L.241/90
+  - codice: F.7.3
+    descrizione: Emissione provvedimento
+    rischi:
+    - codice: F.7.3_R.1
+      evento: Ritardo nella predisposizione dell'attoMancata segnalazione agli organi competenti per l'applicazione
+        delle sanzioni
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto a causa della scarsità di personale
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.7.3_R.1_M.1
+        descrizione: Verifica annuale dei tempi procedimentali
+        categoria: Controllo
+- codice: F.8
+  denominazione: Messa in sicurezza, bonifica e ripristino siti inquinati
+  tempi: tempi previsti dal D.Lgs 152/06
+  attori_esterni: privati/ditte
+  attivita:
+  - codice: F.8.1
+    descrizione: Avvio del Procedimento
+    rischi:
+    - codice: F.8.1_R.1
+      evento: Abuso/mancato avvio del procedimentoAssegnazione di obblighi, termini o condizioni diversi
+        da quelli previsti dalla normativaMancata segnalazione agli organi competenti per l'applicazione
+        delle sanzioni
+      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
+        della pratica
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.8.1_R.1_M.1
+        descrizione: Monitoraggio dei tempi procedimentali
+        categoria: Controllo
+  - codice: F.8.2
+    descrizione: istruttoria verifiche
+    rischi:
+    - codice: F.8.2_R.1
+      evento: Omissione o mancata valutazione delle relazioni tecniche degli organi accertatori
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto - scarsità di personale
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.8.2_R.1_M.1
+        descrizione: Differenziazione tra la figura dell'istruttore e del responsabile del procedimento
+          in applicazione L.241/90; effettuato primo corso di formazione del personale in data 19/10/2023;
+          prevista ulteriore formazione nel corso del 2025
+        categoria: Formazione
+  - codice: F.8.3
+    descrizione: Emissione provvedimento
+    rischi:
+    - codice: F.8.3_R.1
+      evento: Ritardo nella predisposizione dell'attoMancata segnalazione agli organi competenti per l'applicazione
+        delle sanzioni
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto a causa della scarsità di personale
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.8.3_R.1_M.1
+        descrizione: Verifica annuale dei tempi procedimentali
+        categoria: Controllo
+- codice: F.9
+  denominazione: Attività ispettive e di controllo sui servizi educativi per la prima infanzia (3 36 mesi)
+    a titolarità privata
+  tempi: Le visite si svolgono su tutto l'anno educativo. L'art 54 dpgr 41/R/2013 prevede che almeno 2
+    vengano svolte senza preavviso
+  attori_esterni: Attualmente le visite ispettive ex art 54 DPGR 41/R/2013 vengono svolte da un soggetto
+    terzo appositamente incaricato dalla Conferenza Zonale per l'Istruzione
+  attivita:
+  - codice: F.9.1
+    descrizione: Analisi della documentazione inviata dai titolari dei servizi all'inizio dell'anno educativo,
+      al fine di verificare la permanenza dei requisiti di autorizzazione/accreditamento e richiesta di
+      eventuali integrazioni.
+    rischi:
+    - codice: F.9.1_R.1
+      evento: Mancata o superficiale analisi della documentazione
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.9.1_R.1_M.1
+        descrizione: Controllo a campione della documentazione da parte di un diverso operatore
+        categoria: Controllo
+  - codice: F.9.2
+    descrizione: Effettuazione delle visite ispettive senza preavviso.
+    rischi:
+    - codice: F.9.2_R.1
+      evento: Preavviso della visita
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.9.2_R.1_M.1
+        descrizione: non comunicazione del calendario delle visite da parte del soggetto incaricato
+  - codice: F.9.3
+    descrizione: Contestazione scritta al titolare del servizio di eventuali non conformità riscontrate
+      e intimazione a provvedere al ripristino della regolarità (con invio per conoscenza al SUAP, quale
+      ufficio competente al rilascio/sospensione/revoca dell'autorizzazione/accreditamento)
+    rischi:
+    - codice: F.9.3_R.1
+      evento: Mancata contestazione al titolare del servizio delle irregolarità riscontrate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.9.3_R.1_M.1
+        descrizione: Richiesta al soggetto che ha effettuato la visita di trasmettere per protocollo al
+          coordinatore pedagogico incaricato della vigilanza, al responsabile del servizio e al dirigente,
+          il verbale della visita con evidenziate le irregolarità riscontrate
+  - codice: F.9.4
+    descrizione: Analisi controdeduzioni e nuova visita per verificare ripristino dei requisiti di autorizzazione/accreditamento
+    rischi:
+    - codice: F.9.4_R.1
+      evento: Preavviso della visita
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.9.4_R.1_M.1
+        descrizione: non comunicazione del calendario delle visite da parte del soggetto incaricato
+  - codice: F.9.5
+    descrizione: Nel caso del venir meno dei requisiti di autorizzazione accreditamento, trasmissione
+      del verbale della visita al SUAP, per avvio del procedimento di irrogazione sanzioni (sospensione/revoca)
+    rischi:
+    - codice: F.9.5_R.1
+      evento: Mancata trasmissione del verbale al SUAP per avvio del procedimento sanzionatorio
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.9.5_R.1_M.1
+        descrizione: Richiesta al soggetto che ha effettuato la visita di trasmettere per protocollo al
+          coordinatore pedagogico incaricato della vigilanza, al responsabile del servizio e al dirigente,
+          il verbale della visita che attesta il mancato ripristino delle condizioni di autorizzazione
+          accreditamento
+- codice: F.11
+  denominazione: Demolizione d'ufficio di opere edilizie abusive
+  tempi: non previsto (in quanto articolato in molteplici attività)
+  attori_esterni: nessuno
+  attivita:
+  - codice: F.11.1
+    descrizione: 'Verifica degli esposti da parte di terzi o verifica di ufficio di eventuale opera abusiva:
+      invio a PM'
+    rischi:
+    - codice: F.11.1_R.1
+      evento: Mancato invio a PM per sopralluoghi
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.11.1_R.1_M.1
+        descrizione: Report semestrale delle segnalazioni inoltrate alla PM e riscontri ricevuti dalla
+          PM sui controlli effettuati
+        categoria: Controllo
+  - codice: F.11.2
+    descrizione: Sopralluogo di verifica
+    rischi:
+    - codice: F.11.2_R.1
+      evento: Eventuale negligenza nel controllo
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Medio}
+      misure:
+      - codice: F.11.2_R.1_M.1
+        descrizione: Redazione apposita relazione di servizio sul controllo effettuatoControlli/riscontri
+          periodiche su istanze presentate e sopralluoghi effettuatiVerifiche da parte del Responsabile
+          del Servizio
+        categoria: Controllo
+  - codice: F.11.3
+    descrizione: Ordinanza di demolizione e ripristino
+    rischi:
+    - codice: F.11.3_R.1
+      evento: Emissione ordinanze di demolizione in ordine non cronologico rispetto al verificarsi del
+        presupposto.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.11.3_R.1_M.1
+        descrizione: Rispetto dell'ordine cronologico.
+  - codice: F.11.4
+    descrizione: Verifica di esecuzione della demolizione o di inottemperanza - redazione verbale
+    rischi:
+    - codice: F.11.4_R.1
+      evento: Eventuale mancata comunicazione o comunicazione di ottemperanza non veritiera per favorire
+        il trasgressore
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.11.4_R.1_M.1
+        descrizione: Sopralluogo, eventualmente congiunto col tecnico comunale, documentazione fotografica
+          dello stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza,
+          redazione del verbale.
+        categoria: Controllo
+  - codice: F.11.5
+    descrizione: Irrogazione sanzione in caso di inottemperanza
+    rischi:
+    - codice: F.11.5_R.1
+      evento: Mancata emissione ordinanza di ottemperanza e ordinanza di applicazione sanzioni
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+  - codice: F.11.6
+    descrizione: Trasmissione atto sanzione definitivo a Ufficio Patrimonio e a Opere Pubbliche.
+    rischi:
+    - codice: F.11.6_R.1
+      evento: Mancato rispetto ordine cronologico
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.11.6_R.1_M.1
+        descrizione: Rispetto dell'ordine cronologico.
+  - codice: F.11.7
+    descrizione: Trascrizione del verbale di inottemperanza e voltura catastale dell'area al conto del
+      Comune. Presa di possesso del manufatto e dell'area acquisiti al patrimonio comunale.
+    rischi:
+    - codice: F.11.7_R.1
+      evento: Mancato rispetto ordine cronologico
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.11.7_R.1_M.1
+        descrizione: Istituzione di un capitolo di entrata e di corrispondente uscita.
+  - codice: F.11.8
+    descrizione: Preventivazione, individuazione ditta per esecuzione dei lavori, esecuzione dei lavori
+  - codice: F.11.9
+    descrizione: Recupero spese di ripristino
+- codice: F.13
+  denominazione: Verifiche e controlli su classificazione e servizi dichiarati dalle strutture ricettive
+  tempi: nessun termine; come misura abbiamo stabilito di effettuare il controllo entro sei mesi dall'apertura.
+  attori_esterni: strutture ricettive
+  attivita:
+  - codice: F.13.1
+    descrizione: Analisi della documentazione inviata dai titolari e/o gestori ai Suap competenti
+  - codice: F.13.2
+    descrizione: Sopralluogo presso le strutture ricettive per la verifica delle caratteristiche dei servizi
+      dichiarati
+    rischi:
+    - codice: F.13.2_R.1
+      evento: Mancata effettuazione del sopralluogo e conseguente verbalizzazione delle irregolarità riscontrate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Medio, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.13.2_R.1_M.1
+        descrizione: Previsto sopralluogo entro 6 mesi dalla ricezione per ogni apertura di nuova struttura
+          ricettiva.Presenza di almeno due persone al sopralluogo.Redazione e consegna al titolare del
+          verbale redatto secondo una procedura e un modello ben definiti.
+        categoria: Controllo
+  - codice: F.13.3
+    descrizione: Invio eventuali contestazioni al titolare/gestore della struttura con richiesta di provvedere
+      entro un termine prestabilito al ripristino della regolarità
+    rischi:
+    - codice: F.13.3_R.1
+      evento: Mancato invio delle contestazioni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Medio, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.13.3_R.1_M.1
+        descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro
+          dei sopralluoghi con aggiornamento periodico da parte degli incaricati sullo stato di avanzamento
+          del procedimento.
+        categoria: Controllo
+  - codice: F.13.4
+    descrizione: Sopralluogo al termine del periodo concesso per ripristino della regolarità
+    rischi:
+    - codice: F.13.4_R.1
+      evento: Non effettuazione del sopralluogo
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.13.4_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Presenza
+          di almeno due persone incaricate di effettuare la visita.
+        categoria: Controllo
+  - codice: F.13.5
+    descrizione: Eventuale avvio del procedimento di declassificazione nel caso in cui il titolare non
+      abbia provveduto al ripristino delle irregolarità
+    rischi:
+    - codice: F.13.5_R.1
+      evento: Mancato avvio del procedimento di declassificazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Medio, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.13.5_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+          del registro da parte del responsabile dell'ufficio.
+        categoria: Controllo
+  - codice: F.13.6
+    descrizione: Eventuale comunicazione al Comune competente per territorio a seguito della declassificazione
+      della struttura ricettiva
+- codice: F.14
+  denominazione: Gestione attività agenzie di viaggi
+  tempi: tempestivo
+  attori_esterni: agenzie di viaggi
+  attivita:
+  - codice: F.14.1
+    descrizione: Analisi della documentazione inviata dai titolari e/o gestori ai Suap competenti
+  - codice: F.14.2
+    descrizione: Verifica dei requisiti logistici, personali e professionali e degli obblighi previsti
+      per l'esercizio delle attività delle agenzie di viaggio.
+    rischi:
+    - codice: F.14.2_R.1
+      evento: Mancata verifica iniziale e sopralluogo
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.2_R.1_M.1
+        descrizione: Previsto sopralluogo entro 6 mesi dall'apertura di una nuova agenzia di viaggi
+        categoria: Controllo
+    - codice: F.14.2_R.2
+      evento: Mancata verifica periodica
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.2_R.2_M.1
+        descrizione: Presenza di almeno due persone al sopralluogo
+        categoria: Controllo
+    - codice: F.14.2_R.3
+      evento: Mancata verbalizzazione irregolarità riscontrate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.2_R.3_M.1
+        descrizione: Redazione e consegna al titolare del verbale redatto secondo una procedura e un modello
+          ben definiti
+  - codice: F.14.3
+    descrizione: Invio eventuali contestazioni al titolare dell'agenzia di viaggio con richiesta di provvedere
+      entro un termine prestabilito.
+    rischi:
+    - codice: F.14.3_R.1
+      evento: Mancato invio delle contestazioni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.3_R.1_M.1
+        descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro
+          dei sopralluoghi con aggiornamento periodico da parte degli incaricati sullo stato di avanzamento
+          del procedimento.
+        categoria: Controllo
+  - codice: F.14.4
+    descrizione: Eventuale provvedimento di sospensione o chiusura nel caso in cui il titolare non abbia
+      provveduto a quanto richiesto nei termini prestabiliti.
+    rischi:
+    - codice: F.14.4_R.1
+      evento: Mancato provvedimento di sospensione o chiusura
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.4_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+          del registro da parte del responsabile dell'ufficio.
+        categoria: Controllo
+  - codice: F.14.5
+    descrizione: Eventuale sopralluogo a seguito di provvedimento di sospensione o chiusura
+    rischi:
+    - codice: F.14.5_R.1
+      evento: Mancata effettuazione del sopralluogo
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.5_R.1_M.1
+        descrizione: Redazione verbale di sopralluogo e aggiornamento registro.Presenza di almeno due
+          persone al sopralluogo.
+        categoria: Controllo
+  - codice: F.14.6
+    descrizione: Richiesta agli uffici competenti per l'esecuzione coattiva con apposizione di sigilli
+      nel caso in cui il titolare non provveda volontariamente alla chiusura o sospensione dell'attività.
+    rischi:
+    - codice: F.14.6_R.1
+      evento: Mancato invio richiesta agli uffici competenti per esecuzione coattiva
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.14.6_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+          del registro da parte del responsabile dell'ufficio.
+        categoria: Controllo
+- codice: F.15
+  denominazione: Attività su Associazioni senza scopo di lucro che organizzano viaggi
+  tempi: tempestivo
+  attori_esterni: Associazioni senza scopo di lucro che organizzano viaggi
+  attivita:
+  - codice: F.15.1
+    descrizione: Verifica dell'iscrizione all'albo regionale e del possesso dei requisiti professionali
+      a seguito di comunicazione di inizio attività
+    rischi:
+    - codice: F.15.1_R.1
+      evento: Mancata analisi della documentazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.15.1_R.1_M.1
+        descrizione: Utilizzo di una check list per l'analisi dei documenti e redazione di un verbale
+          con gli esiti dell'istruttoria.
+  - codice: F.15.2
+    descrizione: Invio eventuali contestazioni al titolare dell'associazione con richiesta di provvedere
+      entro un termine prestabilito.
+    rischi:
+    - codice: F.15.2_R.1
+      evento: Mancato invio delle contestazioni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.15.2_R.1_M.1
+        descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro
+          delle istruttorie eseguite con aggiornamento periodico da parte degli incaricati sullo stato
+          di avanzamento del procedimento.
+        categoria: Controllo
+  - codice: F.15.3
+    descrizione: Eventuale provvedimento di sospensione o chiusura dell'attività in caso di assenza dei
+      requisiti previsti per lo svolgimento delle attività o nel caso in cui il titolare non abbia provveduto
+      a quanto richiesto nei termini prestabiliti.
+    rischi:
+    - codice: F.15.3_R.1
+      evento: Mancato invio del provvedimento
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.15.3_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+          del registro da parte del responsabile dell'ufficio.
+        categoria: Controllo
+  - codice: F.15.4
+    descrizione: Richiesta agli uffici competenti per l'esecuzione coattiva con apposizione di sigilli
+      nel caso in cui il titolare non provveda volontariamente alla chiusura o sospensione dell'attività.
+    rischi:
+    - codice: F.15.4_R.1
+      evento: Mancato invio richiesta agli uffici competenti per esecuzione coattiva
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.15.4_R.1_M.1
+        descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+          del registro da parte del responsabile dell'ufficio.
+        categoria: Controllo
+- codice: F.16
+  denominazione: Attività su associazioni dedite all'organizzazione occasionale di viaggi
+  tempi: tempestivo
+  attori_esterni: associazioni dedite all'organizzazione occasionale di viaggi
+  attivita:
+  - codice: F.16.1
+    descrizione: Verifica della documentazione sulle attività svolte
+    rischi:
+    - codice: F.16.1_R.1
+      evento: Mancata verifica della documentazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.16.1_R.1_M.1
+        descrizione: Utilizzo di una check list per l'analisi dei documenti e redazione di un verbale
+          con gli esiti dell'istruttoria.
+  - codice: F.16.2
+    descrizione: Eventuale provvedimento di sospensione delle attività in caso di superamento dei limiti
+      annuali di attività previsti, di mancanza dei requisiti professionali o della polizza assicurativa.
+    rischi:
+    - codice: F.16.2_R.1
+      evento: Mancato invio del provvedimento
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: F.16.2_R.1_M.1
+        descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro
+          delle istruttorie eseguite con aggiornamento periodico da parte degli incaricati sullo stato
+          di avanzamento del procedimento.
+        categoria: Controllo
+- codice: F.17
+  denominazione: Attività sanzionatorie amministrative diverse dal CdS; controlli edilizi, ambientali,
+    annonari
+  attori_esterni: cittadini
+  attivita:
+  - codice: F.17.1
+    descrizione: 'Accertamento (attività di controllo ad es: ambientali, annonari, antievasione)'
+    rischi:
+    - codice: F.17.1_R.1
+      evento: Abuso nell'adozione del provvedimento
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Basso, '7': Medio,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.17.1_R.1_M.1
+        descrizione: Redazione apposita relazione di servizio sul controllo effettuato
+        categoria: Controllo
+  - codice: F.17.2
+    descrizione: Notifica verbale
+  - codice: F.17.3
+    descrizione: Gestione eventuali scritti difensivi e redazione controdeduzioni ufficio
+    rischi:
+    - codice: F.17.3_R.1
+      evento: Annullamento in autotutela del verbale
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Basso, '6': Medio, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Medio, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: F.17.3_R.1_M.1
+        descrizione: Si vedano le misure per il procedimento relativo (cod F4)
+  - codice: F.17.4
+    descrizione: Trasmissione del rapporto all'autorità competente ad irrogare la sanzione o a procedere
+      all'archiviazione (fase in carico ad altro settore)
+  - codice: F.17.5
+    descrizione: Formazione gestione del ruolo
+- codice: F.18
+  denominazione: Autotutela (tributi)
+  tempi: non soggetta a decadenza - non sussiste obbligo di conclusione procedimento
+  attivita:
+  - codice: F.18.1
+    descrizione: Su impulso (eventuale perché il ricorso all'autotutela può/deve essere effettuato d'ufficio)/
+      d'ufficio; Riesame; Annullamento totale/parziale dell'atto ovvero conferma della legittimità
+    rischi:
+    - codice: F.18.1_R.1
+      evento: abuso nell'adozione/non adozione del provvedimento al fine di agevolare determinati soggetti
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: F.18.1_R.1_M.1
+        descrizione: Verifica ipotesi di conflitto di interesse; Verifica semestrale atti di annullamento
+          o conferma
+        categoria: Disciplina del conflitto di interessi
+- codice: F.19
+  denominazione: Controllo successivo di regolaritα amministrativa sugli atti dell'Ente
+  tempi: Controlli semestrali secondo il regolamento comunale sui controlli interni; comunicazione degli
+    esiti entro 30 giorni dalla conclusione
+  attori_esterni: eventuali organismi di controllo esterni (Corte dei Conti)
+  attivita:
+  - codice: F.19.1
+    descrizione: Estrazione casuale del campione di atti da sottoporre a controllo, tramite strumenti
+      informatici o sorteggio pubblico
+    rischi:
+    - codice: F.19.1_R.1
+      evento: Manipolazione del campione di atti da controllare, attraverso selezione non casuale o esclusione
+        di atti specifici, al fine di evitare la verifica di provvedimenti irregolari
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Alto}
+      misure:
+      - codice: F.19.1_R.1_M.1
+        descrizione: Utilizzo di generatore casuale di numeri con verbalizzazione dell'operazione di estrazione
+      - codice: F.19.1_R.1_M.2
+        descrizione: Presenza di almeno tre dipendenti durante l'estrazione del campione
+      - codice: F.19.1_R.1_M.3
+        descrizione: Conservazione del verbale di estrazione e degli elenchi degli atti estratti per almeno
+          5 anni
+  - codice: F.19.2
+    descrizione: Verifica di regolaritα amministrativa degli atti estratti, con compilazione di check
+      list conformi alle prescrizioni normative e al PTPCT
+  - codice: F.19.3
+    descrizione: Redazione della relazione semestrale sugli esiti dei controlli, comunicazione ai responsabili
+      degli uffici e al Sindaco/Assessore competente

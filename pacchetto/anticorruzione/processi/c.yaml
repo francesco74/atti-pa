@@ -1,0 +1,376 @@
+# Processi standard dell'area C: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: C
+processi:
+- codice: C.1
+  denominazione: Affidamenti di opere, lavori, servizi e forniture pubblici (indipentemente dal valore
+    e dalla tipologia)
+  tempi: Entro i termini di legge
+  attori_esterni: Operatori economici
+  attivita:
+  - codice: C.1.1
+    descrizione: 'Quadro esigenziale: Individuazione delle OO.LL.SS e FF da inserire nelle relative programmazioni'
+  - codice: C.1.2
+    descrizione: Adozione della deliberazione di GM e successiva approvazione del C.C per SS.FF.PP (da
+      Euro 140.000/00)
+  - codice: C.1.3
+    descrizione: Adozione della deliberazione di GM e successiva approvazione del C.C per OO.LL.PP (da
+      Euro 100.000/00)
+  - codice: C.1.4
+    descrizione: Progettazione, individuazione delle specifiche tecniche, dei requisiti di partecipazione
+      e criterio di selezione (oepv o prezzo più basso)
+    rischi:
+    - codice: C.1.4_R.1
+      evento: Definizioni delle specifiche in ordine alle esigenze individuate dal RUP e scelta del criterio
+        inadeguata alle esigenze dell'ente
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.4_R.1_M.1
+        descrizione: Riscontro e adozione dei parametri prezzo - qualità ex Convenzioni quadro di Consip
+          e degli altri Soggetti Aggregatori (Regione Toscana e Città Metropolitana di Firenze), Prezzari
+          regionali, Prezzari ANAC se presenti, ovvero rispetto della disciplina speciale ove ricorra.
+          Rispetto dell'art. 95 d. lgs 50/2016 e delle linee guida ANAC n. 2/2016
+        categoria: Regolamentazione
+  - codice: C.1.5
+    descrizione: DD a contrarre per le procedure negoziate/aperte/ristrette
+  - codice: C.1.6
+    descrizione: Individuazione degli operarori economici da invitare
+    rischi:
+    - codice: C.1.6_R.1
+      evento: Scelta degli operatori da invitare fino alla soglia di rilevanza comunitaria
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.6_R.1_M.1
+        descrizione: Atto regolatorio dell'Elenco degli operatori economici per forniture servizi e lavori
+          approvato con delibera di Giunta n. 81 del 31.08.2021 e successivi aggiornamenti.
+  - codice: C.1.7
+    descrizione: Invito su sistema di negoziazione
+  - codice: C.1.8
+    descrizione: Acquisizione su sistema di acquisto
+  - codice: C.1.9
+    descrizione: Seggio di gara (esame busta amministrativa, soccorsi istruttori, DD ammissione ed esclusione,
+      comunicazione ai partecipanti, verifica offerte economiche (in caso di prezzo più basso)
+    rischi:
+    - codice: C.1.9_R.1
+      evento: Presieduto dal Responsabile della procedura di gara individuato in ambito della U.O. A.3
+        (che può o meno coincidere con il RUP se acquisto esperito dal Provveditorato)
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.9_R.1_M.1
+        descrizione: Riferimento puntuale e rigoroso agli artt. 94, 95, 97, 98 e art. 100 del d.lgs 36/2023
+          nonché al Patto di integrità adottato con delibera di Giunta Comunale n. 235 del 31/08/2022.
+  - codice: C.1.10
+    descrizione: Nomina commissione per oepv
+  - codice: C.1.11
+    descrizione: Valutazione offerte tecniche ed economiche in caso di oepv (Commissione di gara)
+  - codice: C.1.12
+    descrizione: Congruità dell'offerta e valutazione costo della manodopera (RUP)
+  - codice: C.1.13
+    descrizione: Determinazione di affidamento/aggiudicazione
+  - codice: C.1.14
+    descrizione: Controlli di ordine generale sull'aggiudicatario
+  - codice: C.1.15
+    descrizione: Controlli speciali (tecnico-professionali) sull'aggiudicatario
+  - codice: C.1.16
+    descrizione: Adempimenti inerenti e conseguenti l'affidamento
+  - codice: C.1.17
+    descrizione: Redazione contratto
+  - codice: C.1.18
+    descrizione: Sottoscrizione del Contratto affidamenti diretti
+  - codice: C.1.19
+    descrizione: Sottoscrizione Contratto procedure negoziate/aperte/ristrette
+  - codice: C.1.20
+    descrizione: Gestione del contratto, liquidazione delle fatture e relativi adempimenti
+    rischi:
+    - codice: C.1.20_R.1
+      evento: Verifica quali-quantitativa dell'opera, del lavoro, della fornitura o del servizio da parte
+        del Responsabile Unico del Procedimento (RUP) e del Direttore dell'esecuzione del contratto (DEC),
+        quando previsto.
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.20_R.1_M.1
+        descrizione: 'Verifica puntuale da parte del RUP/ del DEC sul rispetto degli adempimenti contrattuali.
+          In caso di affidamenti gestiti dal Provveditorato: eventuali segnalazioni da parte di coloro
+          che sono a diretto contatto con la prestazione contrattuale ovvero utilizzano i beni forniti
+          di anomalie ed irregolarità sono sottoposte immediatamente al RUP/DEC.'
+        categoria: Controllo
+  - codice: C.1.21
+    descrizione: Emissione di Certificato di regolare esecuzione/collaudo
+    rischi:
+    - codice: C.1.21_R.1
+      evento: Certificazione dal parte del RUP che il servizio/la fornitura è stato/a svolto/a nel pieno
+        rispetto dei tempi e nei modi di esecuzione previsti nel contratto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.21_R.1_M.1
+        descrizione: Le attività del DEC sono presidiate e dirette dal RUP
+  - codice: C.1.22
+    descrizione: Emissione della Verifica di conformità
+    rischi:
+    - codice: C.1.22_R.1
+      evento: Certificazione dal parte del RUP che il servizio/la fornitura è stato/a svolto/a nel pieno
+        rispetto dei tempi e nei modi di esecuzione previsti nel contratto.
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.1.22_R.1_M.1
+        descrizione: Le attività del DEC sono presidiate e dirette dal RUP
+  - codice: C.1.23
+    descrizione: Resoconto della gestione finanziaria OO, LL, SS e FF
+- codice: C.4
+  denominazione: Affidamento di servizi di ingegneria ed architettura o di servizi di qualsiasi tipologia
+    nell'ambito di effettuazione di un lavoro pubblico per i quali la normativa vigente prevede la possibilità
+    della procedura di affidamento diretto
+  tempi: tempistica non disciplinata da norme - tempistica variabile in relazione all'urgenza dell'affidamento
+  attori_esterni: operatori economici
+  attivita:
+  - codice: C.4.1
+    descrizione: Individuazione del professionista
+    rischi:
+    - codice: C.4.1_R.1
+      evento: Discrezionalità nell'individuazione dell'affidatario dell'incarico
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.4.1_R.1_M.1
+        descrizione: Rotazione dei professionisti invitati attingendo anche dall'elenco vigente redatto
+          dal Settore 5 pubblicato sul sito comunale - approvato con DD 1836 del 27/10/2020
+        categoria: Rotazione
+    - codice: C.4.1_R.2
+      evento: Carenza di trasparenza sulle modalità di individuazione dei requisiti richiesti per partecipare
+        alla selezione e/o conferimento diretto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.4.1_R.2_M.1
+        descrizione: Rotazione dei professionisti invitati attingendo anche dall'elenco vigente redatto
+          dal Settore 5 pubblicato sul sito comunale - approvato con DD 1836 del 27/10/2020
+        categoria: Rotazione
+    - codice: C.4.1_R.3
+      evento: Ripetitività nell'assegnazione dell'incarico al medesimo soggetto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.4.1_R.3_M.1
+        descrizione: Rotazione dei professionisti invitati attingendo anche dall'elenco vigente redatto
+          dal Settore 5 pubblicato sul sito comunale - approvato con DD 1836 del 27/10/2020
+        categoria: Rotazione
+    - codice: C.4.1_R.4
+      evento: Mancanza di utilizzo dell'albo, laddove ciò sia previsto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.4.1_R.4_M.1
+        descrizione: Rotazione dei professionisti invitati attingendo anche dall'elenco vigente redatto
+          dal Settore 5 pubblicato sul sito comunale - approvato con DD 1836 del 27/10/2020
+        categoria: Rotazione
+- codice: C.5
+  denominazione: Affidamento di servizi di ingegneria ed architettura o di servizi di qualsiasi tipologia
+    nell'ambito di effettuazione di un lavoro pubblico per i quali la normativa vigente prevede l'affidamento
+    con procedura negoziata
+  tempi: tempistica non disciplinata da norme - tempistica variabile in relazione all'urgenza dell'affidamento
+  attori_esterni: operatori economici
+  attivita:
+  - codice: C.5.1
+    descrizione: Individuazione del professionista
+    rischi:
+    - codice: C.5.1_R.1
+      evento: Discrezionalità nell'individuazione dell'affidatario dell'incarico
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.5.1_R.1_M.1
+        descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
+          eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
+          di mercato - elenco professionisti approvato con DD 1836 del 27/10/2020-
+        categoria: Formazione
+    - codice: C.5.1_R.2
+      evento: Carenza di trasparenza sulle modalità di individuazione dei requisiti richiesti per partecipare
+        alla selezione e/o conferimento diretto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.5.1_R.2_M.1
+        descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
+          eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
+          di mercato elenco professionisti approvato con DD 1836 del 27/10/2020-
+        categoria: Formazione
+    - codice: C.5.1_R.3
+      evento: Ripetitività nell'assegnazione dell'incarico al medesimo soggetto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.5.1_R.3_M.1
+        descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
+          eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
+          di mercato - elenco professionisti approvato con DD 1836 del 27/10/2020
+        categoria: Formazione
+    - codice: C.5.1_R.4
+      evento: Mancanza di utilizzo dell'albo, laddove ciò sia previsto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.5.1_R.4_M.1
+        descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
+          eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
+          di mercato elenco professionisti approvato con DD 1836 del 27/10/2020-
+        categoria: Formazione
+- codice: C.6
+  denominazione: Progettazione Lavoro Pubblico (per qualsiasi tipologia ed importo)
+  tempi: tempi contrattuali
+  attori_esterni: eventuali professionisti esterni
+  attivita:
+  - codice: C.6.1
+    descrizione: Progettazione Lavoro Pubblico (per qualsiasi tipologia ed importo)
+    rischi:
+    - codice: C.6.1_R.1
+      evento: Ripetizione delle combinazioni d'incarico tra verificatore del progetto esecutivo e RUP
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.6.1_R.1_M.1
+        descrizione: Rotazione affidamento degli incarichi tra RUP e verificatore del progetto esecutivo,
+          per importi > a 1.000.000,00 ╒
+        categoria: Rotazione
+- codice: C.7
+  denominazione: Esecuzione dei lavori
+  tempi: tempi contrattuali
+  attori_esterni: operatori economici
+  attivita:
+  - codice: C.7.1
+    descrizione: Esecuzione dei lavori - contabilità
+    rischi:
+    - codice: C.7.1_R.1
+      evento: Mancanza di controllo incrociato dei documenti/atti riguardanti la contabilità di cantiere
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.7.1_R.1_M.1
+        descrizione: Divisione, ove possibile, delle figure del RUP e del Direttore Lavori, anche per
+          i lavori ove la norma non vieta la coincidenza, oppure qualora ciò non fosse possibile (per
+          mancanza di soggetti all'interno delle U.O. Con requisiti professionali previsti dalla norma)
+          formalizzare gli incarichi di Direttore Operativo e/o Ispettore di cantiere diversi dal RUP
+          e dal Direttore Lavori
+- codice: C.8
+  denominazione: Fine Lavori
+  tempi: tempi contrattuali
+  attori_esterni: operatori economici
+  attivita:
+  - codice: C.8.1
+    descrizione: Fine Lavori
+    rischi:
+    - codice: C.8.1_R.1
+      evento: Mancanza di controllo incrociato tra RUP/DD.LL.
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Medio}
+      misure:
+      - codice: C.8.1_R.1_M.1
+        descrizione: Divisione, ove possibile, delle figure del RUP e del Direttore Lavori, anche per
+          i lavori ove la norma non vieta la coincidenza, oppure qualora ciò non fosse possibile (per
+          mancanza di soggetti all'interno delle U.O. Con requisiti professionali previsti dalla norma)
+          formalizzare gli incarichi di Direttore Operativo e/o Ispettore di cantiere diversi dal RUP
+          e dal Direttore Lavori
+- codice: C.9
+  denominazione: Affidamento lavori/servizi in somma urgenza
+  attivita:
+  - codice: C.9.1
+    descrizione: Identificazone lavori
+    rischi:
+    - codice: C.9.1_R.1
+      evento: Identificazione dei lavori indispensabili a far fronte all'urgenza
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.9.1_R.1_M.1
+        descrizione: Perizia tecnica che indica anche la necessità dei lavori
+  - codice: C.9.2
+    descrizione: Selezione del contraente
+    rischi:
+    - codice: C.9.2_R.1
+      evento: Abuso dell'affidamento diretto al di fuori dei casi previsti dalla legge al fine di favorire
+        un'impresa
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: C.9.2_R.1_M.1
+        descrizione: Individuazione delle ditte immediatamente disponibili attuando ove possibile il criterio
+          di rotazione di cui sopra , fatta salva la necessità di utilizzare eventuali ditte presenti
+          in loco per contratti in corso al fine anche di limitare i costi.
+        categoria: Rotazione
+- codice: C.10
+  denominazione: Affidamento lavori somma urgenza
+  tempi: 10 gg e successiva approvazione da parte della GC - art. 163 del D.Lgs 50/2016
+  attori_esterni: operatori economici
+  attivita:
+  - codice: C.10.1
+    descrizione: Accertamento somma urgenza (ai sensi dell'art. 163 del D.Lgs 50/2016) e istruttoria pratica
+      mediante affidamento diretto dei lavori da eseguire
+    rischi:
+    - codice: C.10.1_R.1
+      evento: Ripetizione nell'individuazione dell'operatore economico per l'esecuzione dei lavori
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+  - codice: C.10.2
+    descrizione: Esecuzione lavori in somma urgenza e verifica della regolare esecuzione

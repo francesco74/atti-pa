@@ -1,14 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:provider/provider.dart';
 
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
+import 'anticorruzione/anticorruzione_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
 import 'bozze/bozze_page.dart';
 import 'controllo/controlli_page.dart';
 import 'libreria/libreria_page.dart';
+import 'logo_ente.dart';
 import 'trasparenza/result_manager.dart';
 import 'trasparenza/trasparenza_page.dart';
 
@@ -59,6 +63,7 @@ class _HomeShellState extends State<HomeShell> {
     final u = widget.utente;
     final redazione = u.modulo('redazione'); // redazione e controllo degli atti
     final trasparenza = u.modulo('trasparenza'); // verifica di Amministrazione Trasparente
+    final anticorruzione = u.modulo('anticorruzione'); // mappatura dei processi e rischi corruttivi
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
       if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
@@ -67,8 +72,10 @@ class _HomeShellState extends State<HomeShell> {
       if (redazione && u.isGestoreModelli)
         const _Voce('Modelli e checklist', Icons.architecture, ConfigurazionePage()),
       if (trasparenza && u.isTrasparenza) const _Voce('Trasparenza', Icons.visibility_outlined, TrasparenzaPage()),
+      if (anticorruzione && u.isAnticorruzione)
+        const _Voce('Anticorruzione', Icons.shield_outlined, AnticorruzionePage()),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (!redazione && !trasparenza && !u.isAdmin)
+      if (!redazione && !trasparenza && !anticorruzione && !u.isAdmin)
         const _Voce('Benvenuto', Icons.home, _NessunModulo()),
     ];
   }
@@ -184,6 +191,7 @@ class _HomeShellState extends State<HomeShell> {
     final voci = _voci;
     final indice = _indice.clamp(0, voci.length - 1);
     final largo = MediaQuery.sizeOf(context).width >= 900;
+    final logo = context.select<AuthState, Uint8List?>((a) => a.logo);
 
     final menuUtente = PopupMenuButton<String>(
       tooltip: widget.utente.nomeCompleto,
@@ -236,7 +244,7 @@ class _HomeShellState extends State<HomeShell> {
             labelType: NavigationRailLabelType.all,
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Icon(Icons.gavel, color: Theme.of(context).colorScheme.primary, size: 32),
+              child: Tooltip(message: widget.utente.ente.nome, child: IconaEnte(logo: logo)),
             ),
             trailing: Expanded(
               child: Align(
@@ -255,7 +263,11 @@ class _HomeShellState extends State<HomeShell> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(voci[indice].etichetta), actions: [menuUtente]),
+      appBar: AppBar(
+        leading: Padding(padding: const EdgeInsets.all(10), child: IconaEnte(logo: logo)),
+        title: Text(voci[indice].etichetta),
+        actions: [menuUtente],
+      ),
       body: contenuto,
       bottomNavigationBar: voci.length < 2
           ? null

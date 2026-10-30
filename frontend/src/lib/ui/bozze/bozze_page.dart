@@ -123,7 +123,7 @@ class _BozzePageState extends State<BozzePage> {
                           ].join(' · ')),
                           trailing: IconButton(
                             tooltip: 'Elimina',
-                            icon: const Icon(Icons.delete_outline),
+                            icon: const IconaElimina(),
                             onPressed: () => _elimina(b),
                           ),
                           onTap: () => _apri(b['id'] as String),

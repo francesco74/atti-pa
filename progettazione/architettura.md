@@ -10,7 +10,7 @@ Data: 27/10/2026, aggiornata il 28/10/2026.
 | 2. Client LLM e converter unici | **fatto con la trasparenza**: client LLM comune con JSON a schema libero e testo lungo; converter con HTML → PDF/DOCX e testo in Markdown via HTTP; i PDF all'LLM come file restano da decidere con il modulo chat |
 | 3. Modulo trasparenza | **backend e app fatti** (vedi `trasparenza.md`): catalogo, schede, documenti, verbale, esportazione, analisi ed estrazioni nel worker; app con le schede Analisi, Schede e Risultati (riprese da PApuntozeroIA); resta la migrazione dei dati |
 | 4. Modulo chat | da fare |
-| 5. Modulo anticorruzione | in attesa del repository |
+| 5. Modulo anticorruzione | **backend, pacchetto standard e app fatti** (vedi `anticorruzione.md`, da Si.Ge.Ri.Co.): strutture organizzative nel nucleo, mappatura con valutazione, proposte, monitoraggio, PIAO e obiettivi, allegati al PTPCT; restano i collegamenti con gli altri moduli |
 
 Decisioni prese: dati di rag e PApuntozeroIA conservati e migrati; accesso agli archivi
 configurabile nel database; installazione multi ente con accesso locale e AD; repository

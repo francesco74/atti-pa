@@ -71,6 +71,21 @@ class ServizioTrasparenza {
     throw LavoroNonRiuscito('Il lavoro non si è concluso in tempo: riprova più tardi');
   }
 
+  /// Analisi dell'utente degli ultimi 30 giorni, dalla più recente, senza il report.
+  Future<List<Map<String, dynamic>>> lavori() async =>
+      ((await api.get('$_base/lavori')) as List).cast<Map<String, dynamic>>();
+
+  /// Lavoro con il risultato, se completato.
+  Future<Map<String, dynamic>> lavoro(String id) async =>
+      await api.get('$_base/lavori/$id') as Map<String, dynamic>;
+
+  /// Rimette in coda un lavoro non riuscito, con la stessa richiesta.
+  Future<Map<String, dynamic>> riprovaLavoro(String id) async =>
+      await api.post('$_base/lavori/$id/riprova', {}) as Map<String, dynamic>;
+
+  /// Toglie il lavoro dall'elenco (se è ancora in coda lo annulla).
+  Future<void> eliminaLavoro(String id) => api.delete('$_base/lavori/$id');
+
   // --- documenti salvati ---------------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> documenti() async =>

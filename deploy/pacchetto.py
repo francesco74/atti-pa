@@ -1,4 +1,5 @@
-"""Pacchetti di modelli di atto, specificità e checklist (common/pacchetti.py).
+"""Pacchetti di modelli di atto, specificità, checklist e contenuti anticorruzione
+(common/pacchetti.py).
 
 Uso, dalla radice del repository (il database è quello di DATABASE_URL, anche dal .env):
 
@@ -85,10 +86,11 @@ def main() -> int:
         if args.comando in ("prova", "crea"):
             file = da_cartella(CARTELLA)
             p = leggi_pacchetto(file)
-            conteggi = {t: len(p.di_tipo(t)) for t in ("modello", "modulo", "checklist")}
+            conteggi = {t: len(p.di_tipo(t)) for t in ("modello", "modulo", "checklist", "processo")}
             print(
                 f"{p.manifesto.etichetta}: {conteggi['modello']} modelli, "
-                f"{conteggi['modulo']} specificità, {conteggi['checklist']} checklist"
+                f"{conteggi['modulo']} specificità, {conteggi['checklist']} checklist, "
+                f"{len(p.aree)} aree di rischio, {conteggi['processo']} processi standard"
             )
             if args.comando == "crea":
                 nome = f"atti-pa-modelli-{p.manifesto.versione}.zip"

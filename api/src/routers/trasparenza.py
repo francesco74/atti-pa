@@ -9,6 +9,7 @@ sola lettura). Logica in common/trasparenza.
 import asyncio
 import json
 import re
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any, Literal
 
@@ -37,6 +38,7 @@ operatore = autenticato(Ruolo.TRASPARENZA, modulo=Modulo.TRASPARENZA)
 
 MAX_HTML = 10 * 1024 * 1024
 MAX_DATI_SCHEMA = 2 * 1024 * 1024
+GIORNI_LAVORI = 30  # i lavori più vecchi non compaiono nell'elenco
 MIME = {
     "pdf": "application/pdf",
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -164,14 +166,33 @@ async def _accoda(tipo: str, dati: FonteIn, files, specifici: dict) -> dict:
     return _lavoro(lavoro)
 
 
+def _descrizione(richiesta: dict) -> tuple[str, str]:
+    """Controllo (o schema) e fonte del lavoro, per l'elenco dell'app."""
+    if richiesta.get("controllo"):
+        schema, variante = trova_prompt(richiesta["controllo"])
+    else:
+        schema, variante = get_schema(richiesta.get("schema_id") or ""), None
+    titolo = (
+        f"{schema.articolo[:1].upper()}{schema.articolo[1:]} - {variante.titolo if variante else schema.titolo}"
+        if schema
+        else richiesta.get("controllo") or richiesta.get("schema_id") or ""
+    )
+    fonte = richiesta.get("url") or ", ".join(f["nome"] for f in richiesta.get("file") or [])
+    return titolo, fonte
+
+
 def _lavoro(lavoro: TrasparenzaLavoro, risultato: bool = False) -> dict:
+    titolo, fonte = _descrizione(lavoro.richiesta or {})
     dati = {
         "id": lavoro.id,
         "tipo": lavoro.tipo,
         "stato": lavoro.stato,
+        "titolo": titolo,
+        "fonte": fonte,
         "errore": lavoro.errore,
         "modello_llm": lavoro.modello_llm,
         "created_at": lavoro.created_at.isoformat() if lavoro.created_at else None,
+        "avviato_il": lavoro.avviato_il.isoformat() if lavoro.avviato_il else None,
         "completato_il": lavoro.completato_il.isoformat() if lavoro.completato_il else None,
     }
     if risultato:
@@ -205,18 +226,84 @@ async def nuova_estrazione():
     return await _accoda(ESTRAZIONE, dati, files, specifici), HTTPStatus.ACCEPTED
 
 
+async def _lavoro_utente(lavoro_id: str, *, risultato: bool = False) -> TrasparenzaLavoro:
+    """Lavoro di chi l'ha avviato (gli altri non lo vedono)."""
+    q = select(TrasparenzaLavoro).where(TrasparenzaLavoro.id == lavoro_id, TrasparenzaLavoro.ente_id == ente_id())
+    if risultato:
+        q = q.options(undefer(TrasparenzaLavoro.risultato))
+    lavoro = await db().scalar(q)
+    if lavoro is None or lavoro.utente_id != utente().id:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Lavoro non trovato")
+    return lavoro
+
+
+@bp.get("/lavori")
+@operatore
+async def elenco_lavori():
+    """Lavori dell'utente degli ultimi GIORNI_LAVORI giorni, dal più recente, senza il
+    risultato (?tipo=ANALISI o ESTRAZIONE, di norma le analisi)."""
+    tipo = request.args.get("tipo", ANALISI)
+    if tipo not in (ANALISI, ESTRAZIONE):
+        raise ErroreApi(HTTPStatus.BAD_REQUEST, "Tipo di lavoro non previsto")
+    dal = datetime.now() - timedelta(days=GIORNI_LAVORI)
+    lavori = await db().scalars(
+        select(TrasparenzaLavoro)
+        .where(
+            TrasparenzaLavoro.ente_id == ente_id(),
+            TrasparenzaLavoro.utente_id == utente().id,
+            TrasparenzaLavoro.tipo == tipo,
+            TrasparenzaLavoro.created_at >= dal,
+        )
+        .order_by(TrasparenzaLavoro.created_at.desc())
+        .limit(200)
+    )
+    return [_lavoro(lavoro) for lavoro in lavori]
+
+
 @bp.get("/lavori/<lavoro_id>")
 @operatore
 async def lavoro(lavoro_id: str):
     """Stato del lavoro e, se completato, il risultato. Solo per chi l'ha avviato."""
-    lavoro = await db().scalar(
-        select(TrasparenzaLavoro)
-        .where(TrasparenzaLavoro.id == lavoro_id, TrasparenzaLavoro.ente_id == ente_id())
-        .options(undefer(TrasparenzaLavoro.risultato))
-    )
-    if lavoro is None or lavoro.utente_id != utente().id:
-        raise ErroreApi(HTTPStatus.NOT_FOUND, "Lavoro non trovato")
+    lavoro = await _lavoro_utente(lavoro_id, risultato=True)
     return _lavoro(lavoro, risultato=lavoro.stato == StatoVerifica.COMPLETATA)
+
+
+@bp.post("/lavori/<lavoro_id>/riprova")
+@operatore
+async def riprova_lavoro(lavoro_id: str):
+    """Rimette in coda un lavoro non riuscito, con la stessa richiesta (controllo, fonte, note,
+    date e file caricati, che restano finché il lavoro non riesce)."""
+    lavoro = await _lavoro_utente(lavoro_id)
+    if lavoro.stato != StatoVerifica.ERRORE:
+        raise ErroreApi(HTTPStatus.CONFLICT, "Si riprovano solo le analisi non riuscite")
+    for f in (lavoro.richiesta or {}).get("file") or []:
+        if not archivio.esiste(impostazioni().archivio_dir, f["percorso"]):
+            raise ErroreApi(HTTPStatus.CONFLICT, f"Il file {f['nome']} non c'è più: avvia una nuova analisi caricandolo di nuovo")
+    sessione = db()
+    lavoro.stato, lavoro.errore, lavoro.tentativi = StatoVerifica.IN_CODA, None, 0
+    lavoro.avviato_il = lavoro.completato_il = lavoro.worker = None
+    audit(sessione, utente(), "trasparenza_lavoro", lavoro.id, "RIPROVATO")
+    await sessione.commit()
+    await notifica(coda.TRASPARENZA, {"lavoro_id": lavoro.id})
+    return _lavoro(lavoro)
+
+
+@bp.delete("/lavori/<lavoro_id>")
+@operatore
+async def elimina_lavoro(lavoro_id: str):
+    """Toglie il lavoro dall'elenco, con i file caricati che restano (in coda o non riuscito);
+    se è ancora in coda lo annulla. Un lavoro in corso si toglie solo quando è concluso."""
+    lavoro = await _lavoro_utente(lavoro_id)
+    if lavoro.stato == StatoVerifica.IN_CORSO:
+        raise ErroreApi(HTTPStatus.CONFLICT, "L'analisi è in corso: si potrà togliere quando sarà conclusa")
+    if lavoro.stato != StatoVerifica.COMPLETATA:  # i completati non hanno più i file
+        for f in (lavoro.richiesta or {}).get("file") or []:
+            await asyncio.to_thread(archivio.elimina, impostazioni().archivio_dir, f["percorso"])
+    sessione = db()
+    audit(sessione, utente(), "trasparenza_lavoro", lavoro.id, "ELIMINATO", {"stato": lavoro.stato})
+    await sessione.delete(lavoro)
+    await sessione.commit()
+    return nessun_contenuto()
 
 
 # --- documenti salvati ---------------------------------------------------------------------

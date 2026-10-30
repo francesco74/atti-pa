@@ -30,7 +30,13 @@ const _azioni = {
   'disattiva': 'Disattiva',
 };
 
-const _tipi = {'modello': 'Modello', 'modulo': 'Specificità', 'checklist': 'Checklist'};
+const _tipi = {
+  'modello': 'Modello',
+  'modulo': 'Specificità',
+  'checklist': 'Checklist',
+  'metodologia': 'Anticorruzione',
+  'processo': 'Processo',
+};
 
 class _PacchettiPageState extends State<PacchettiPage> {
   late Future<List<dynamic>> _pacchetti;

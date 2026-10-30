@@ -1,4 +1,5 @@
-"""Pacchetti di modelli, specificità e checklist (common/pacchetti.py): il database comanda.
+"""Pacchetti di modelli, specificità, checklist e contenuti anticorruzione (common/pacchetti.py):
+il database comanda. Riservati all'amministratore dell'ente, qualunque modulo usi.
 
 L'amministratore carica un pacchetto zip: l'API lo controlla e analizza, per ogni oggetto,
 cosa cambia rispetto all'ente (confronto a tre vie con lo standard di riferimento). Poi lo
@@ -14,7 +15,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import undefer
 
-from deps import audit, db, ente_id, impostazioni, solo_admin, utente
+from deps import amministratore_ente, audit, db, ente_id, impostazioni, utente
 from schemas import Schema
 from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto, out
 from common.models import PacchettoImportato
@@ -48,7 +49,7 @@ class DecisioniIn(BaseModel):
 
 
 @bp.get("")
-@solo_admin
+@amministratore_ente
 async def elenco():
     righe = await db().scalars(
         select(PacchettoImportato)
@@ -59,7 +60,7 @@ async def elenco():
 
 
 @bp.post("")
-@solo_admin
+@amministratore_ente
 async def carica():
     """Carica e analizza un pacchetto: non cambia ancora nulla."""
     file = file_caricato()
@@ -92,7 +93,7 @@ async def carica():
 
 
 @bp.post("/<pacchetto_id>/importa")
-@solo_admin
+@amministratore_ente
 async def importa_pacchetto(pacchetto_id: str):
     """Importa il pacchetto analizzato con le decisioni dell'amministratore. L'analisi si
     ripete al momento dell'importazione: vale lo stato attuale del database."""
@@ -126,7 +127,7 @@ async def importa_pacchetto(pacchetto_id: str):
 
 
 @bp.delete("/<pacchetto_id>")
-@solo_admin
+@amministratore_ente
 async def annulla(pacchetto_id: str):
     sessione = db()
     riga = await sessione.get(PacchettoImportato, pacchetto_id)
@@ -140,7 +141,7 @@ async def annulla(pacchetto_id: str):
 
 
 @bp.get("/esporta")
-@solo_admin
+@amministratore_ente
 async def esporta_configurazione():
     """Tutti i modelli, le specificità e le checklist attivi, come pacchetto zip."""
     oggi = datetime.now(impostazioni().tz)

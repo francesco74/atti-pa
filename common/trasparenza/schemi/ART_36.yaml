@@ -10,6 +10,11 @@ fonte:
   versione: "10.06.2026"
 
 ambito: non_applicabile
+
+# Nell'analisi IA un solo controllo, "IBAN e pagamenti informatici": il modello
+# individua dalla pagina il caso (PagoPA esclusivo, non esclusivo o sistema
+# alternativo). Il modulo di creazione resta diviso per sezione.
+controllo_unico: true
 ambito_soggettivo: |
   Lo schema si articola in base all'obbligo di utilizzo della piattaforma PagoPA (art. 5 d.lgs. 82/2005, delibera ANAC
   77/2022): utilizzo esclusivo (pubbliche amministrazioni, Autorità indipendenti, ordini professionali, enti pubblici
@@ -97,6 +102,21 @@ sezioni:
       - {id: ccp, etichetta: Codice identificativo del conto corrente postale, tipo: testo}
 
 note_audit: |
+  INDIVIDUAZIONE DEL CASO (prima della checklist):
+  - Stabilisci quale dei tre casi dello schema si applica in base al tipo di ente indicato in _AUTHORITY_FEATURES_
+    (se non è indicato, in base a quanto risulta dal documento o da _NOTES_):
+    * utilizzo ESCLUSIVO di PagoPA: pubbliche amministrazioni di cui all'art. 1, co. 2, d.lgs. 165/2001 e Autorità
+      amministrative indipendenti; ordini professionali; enti pubblici economici inseriti nel conto economico
+      consolidato pubblicato dall'ISTAT;
+    * utilizzo NON ESCLUSIVO: società a controllo pubblico di cui al d.lgs. 175/2016 (TUSP), escluse le società
+      quotate;
+    * soggetti NON TENUTI all'utilizzo di PagoPA: gli altri soggetti tenuti alla trasparenza che non rientrano nei
+      due casi precedenti (cfr. delibere ANAC 77/2022 e 1134/2017).
+  - Indica nel report il caso individuato e da dove lo hai ricavato (descrizione dell'ente, documento o note).
+  - Se ciò che è pubblicato corrisponde a un caso diverso da quello del tipo di ente (es. una pubblica
+    amministrazione che pubblica solo l'IBAN come un soggetto non tenuto), applica i requisiti del caso corretto e
+    segnala la difformità.
+  - Se il tipo di ente non è determinabile, ricava il caso dal contenuto pubblicato e dichiara che lo hai dedotto.
   UTILIZZO ESCLUSIVO DI PAGOPA:
   - Serve la dicitura esatta "Aderente alla piattaforma PagoPA dal XX.XX.XXXX" (data GG.MM.AAAA) con il link alla
     sezione "Dove pagare" del sito PagoPA.

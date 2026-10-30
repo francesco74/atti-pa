@@ -206,7 +206,7 @@ class _NormeManualiState extends State<NormeManuali> {
                 if (puoGestire)
                   IconButton(
                     tooltip: 'Elimina il testo',
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const IconaElimina(),
                     onPressed: () async {
                       if (!await conferma(context, 'Eliminare il testo?',
                           'Il testo in vigore dal ${formatData(t['vigenza_inizio'])} non sarà più usato nelle verifiche.')) {
@@ -251,7 +251,7 @@ class _NormeManualiState extends State<NormeManuali> {
                     'Norma eliminata',
                   );
                 },
-                icon: const Icon(Icons.delete_outline),
+                icon: const IconaElimina(),
                 label: const Text('Elimina norma'),
               ),
             ],

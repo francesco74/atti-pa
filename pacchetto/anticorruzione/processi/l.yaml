@@ -1,0 +1,42 @@
+# Processi standard dell'area L: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: L
+processi:
+- codice: L.1
+  denominazione: Segnalazioni disservizi nell'erogazione servizio igiene urbana
+  tempi: 30 giorni
+  attori_esterni: privati/ditte/Az. USL/ARPAT/Sistema Ambiente
+  attivita:
+  - codice: L.1.1
+    descrizione: ricevimento segnalazione di disservizio da parte di privati, ditte, enti, ecc.
+    rischi:
+    - codice: L.1.1_R.1
+      evento: omissione dell'attivazione del procedimento di verifica della segnalazione
+      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
+        della pratica
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+      misure:
+      - codice: L.1.1_R.1_M.1
+        descrizione: Utilizzo di registro informatizzato (file excel) di arrivo delle pratiche con annotazione
+          data di avanzamento della fase del procedimento
+        categoria: Controllo
+  - codice: L.1.2
+    descrizione: inserimento in apposito registro informatico (file excel) e trasmissione al gestore del
+      servizio di igiene urbana per la verifica e successiva risposta al segnalante
+    rischi:
+    - codice: L.1.2_R.1
+      evento: Mancato rispetto ordine cronologico
+      fattore_abilitante: inserimento in apposito registro informatico (file excel) e trasmissione al
+        gestore del servizio di igiene urbana per la verifica e successiva risposta al segnalante
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+      misure:
+      - codice: L.1.2_R.1_M.1
+        descrizione: monitoraggio dei tempi procedimentali e annotazione dell'esito delle stesse
+        categoria: Controllo

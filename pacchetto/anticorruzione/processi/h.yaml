@@ -1,0 +1,214 @@
+# Processi standard dell'area H: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: H
+processi:
+- codice: H.1
+  denominazione: Contenzioso - rappresentanza legale e incarichi
+  tempi: Termini di costituzione in giudizio previsti dalle norme procedurali, variabili in virtù del
+    rito
+  attori_esterni: Tutti i servizi del Comune competenti per materia, i professionisti esterni
+  attivita:
+  - codice: H.1.1
+    descrizione: Ricezione ricorso/citazione ad avvocatura ed all'Ufficio/U.O/Settore competente per materia
+  - codice: H.1.2
+    descrizione: Relazione motivata, di resistere o meno in giudizio del Responsabile del Settore - sempre
+      necessaria anche quando il medesimo ritenga che l'Amministrazione non debba resistere in giudizio
+      - da trasmettere al Sindaco e all'Avvocatura comunale con l'eventuale motivazione della opportunità
+      o necessità di avvalersi di legale esterno
+    rischi:
+    - codice: H.1.2_R.1
+      evento: Indicazioni di un particolare professionista esterno
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Medio}
+      misure:
+      - codice: H.1.2_R.1_M.1
+        descrizione: 'Nella relazione predisposta ai sensi dello Statuto e del Regolamento dell''Avvocatura
+          dovrà essere data analitica motivazione della scelta di un particolare professionista. L''Avvocatura
+          - che, nel caso non assume la gestione della causa - sentito il Sindaco, provvede, in alternativa,
+          o: 1) acquisire il preventivo di notula del legale indicato dal dirigente; 2) procedere alla
+          individuazione di un legale esterno scelto tra gli iscritti nell''elenco degli Avvocati tenuto
+          presso l''Avvocatura previa valutazione del curriculum e l''acquisizione del preventivo di notula.
+          Il preventivo, comunque acquisito, viene valutato tenendo conto del tariffario DM vigente, e
+          comunque nel rispetto del Codice degli appalti, delle linee guida ANAC e del Regolamento comunale'
+        categoria: Regolamentazione
+  - codice: H.1.3
+    descrizione: Agli esiti della valutazione del Sindaco riguardo l'opzione di non avvalersi della Avvocatura
+      Comunale (se del caso rilevata anche dalla stessa Avvocatura, come - per esempio - qualora il procedimento
+      sia radicato in Consiglio di Stato o in Corte di Cassazione), salvo che non vi siano motivazioni
+      rappresentate dal dirigente che giustifichino la scelta di un legale particolare, l'Avvocatura procede
+      alla individuazione di legale esterno acquisendo almeno tre preventivi di Avvocati inseriti nell'elenco
+      Comunale, individuati sulla base della competenza per materia dichiarata nel curriculum.
+    rischi:
+    - codice: H.1.3_R.1
+      evento: Scelta del soggetto e verifica congruità parcella
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Medio}
+      misure:
+      - codice: H.1.3_R.1_M.1
+        descrizione: L'Avvocatura - qualora non debba assumere direttamente la rappresentanza processuale
+          dell'Ente - provvede alla individuazione di un legale esterno scelto - di regola e salvo diversa,
+          specifica motivata indicazione da parte del Responsabile del Settore - tra gli iscritti nell'elenco
+          degli Avvocati tenuto presso l'Avvocatura previa valutazione dei curriculum e l'acquisizione
+          del preventivo di notula da valutarsi come congruo e da impegnare sulle risorse disponibili
+- codice: H.2
+  denominazione: Procedimenti disciplinari
+  tempi: entro 120 giorni dalla contestazione di addebito.
+  attivita:
+  - codice: H.2.1
+    descrizione: Il procedimento si attiva su segnalazione del dirigente cui il dipendente è assegnato
+      all'Ufficio per i procedimenti disciplinari, presso l'Ufficio Personale, dopo che il primo ha valutato
+      che l'eventuale sanzione da applicare sia tra quelle di maggiore gravità stabilite dall'art. 55-bis
+      del D. Lgs 165/2001.
+  - codice: H.2.2
+    descrizione: Il dirigente dell'Ufficio Personale, in qualità di Ufficio per i procedimenti disciplinari,
+      entro il termine legale previsto, provvede alla contestazione scritta dell'addebito.
+    rischi:
+    - codice: H.2.2_R.1
+      evento: Il dirigente potrebbe non procedere alla contestazione di addebito facendo scadere i termini.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+      misure:
+      - codice: H.2.2_R.1_M.1
+        descrizione: La segnalazione protocollata ove proveniente da fonte diversa deve essere inviata
+          per conoscenza al Dirigente della struttura presso la quale il dipendente è assegnato.
+  - codice: H.2.3
+    descrizione: Il dipendente viene convocato l'audizione in contraddittorio, cui può partecipare anche
+      un procuratore ovvero un rappresentante dell'associazione sindacale cui il lavoratore aderisce o
+      conferisce mandato. Il dipendente, qualora lo ritenga, può anche depositare memorie scritte.
+  - codice: H.2.4
+    descrizione: Il dirigente dell'Ufficio Personale, in qualità di Ufficio per i procedimenti disciplinari,
+      conduce l'istruttoria e, entro il termine legale previsto, conclude il procedimento con l'irrogazione
+      della sanzione o con l'archiviazione.
+    rischi:
+    - codice: H.2.4_R.1
+      evento: Avvantaggiare il dipendente applicando una sanzione inferiore a quella oggettivamente imputabile
+        o archiviare impropriamente il procedimento disciplinare.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+      misure:
+      - codice: H.2.4_R.1_M.1
+        descrizione: Il provvedimento di archiviazione o di irrogazione della sanzione viene inviato al
+          dipendente interessato e, per conoscenza, al dirigente che ha inviato la segnalazione.
+- codice: H.3
+  denominazione: Verbali violazioni al CdS
+  tempi: contestazione immediata delle violazioni; notifica all'obbligato in solido, se non presente,
+    entro 100 giorni dall'accertamento; contestazione differita entro i 90 giorni all'obbligato in solido
+    e, se conosciuto, al trasgressore
+  attori_esterni: personale che si occupa di gestire la spedizione degli atti, cittadini,
+  attivita:
+  - codice: H.3.1
+    descrizione: Accertamento
+    rischi:
+    - codice: H.3.1_R.1
+      evento: Abuso nell'adozione del provvedimento
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Medio, '5': Medio, '6': Basso, '7': Medio,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: H.3.1_R.1_M.1
+        descrizione: Verifica conflitto interesse tra verbalizzante e destinatario del provvedimento
+        categoria: Controllo
+  - codice: H.3.2
+    descrizione: Notifica verbale
+    rischi:
+    - codice: H.3.2_R.1
+      evento: Trasmissione nei tempi al Gestore del servizio
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Medio, '5': Basso, '6': Medio, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: H.3.2_R.1_M.1
+        descrizione: Verifica periodica (almeno annuale) sui verbali notificati fuori termine
+        categoria: Controllo
+  - codice: H.3.3
+    descrizione: Eventuale opposizione all'autorità Giudiziaria/ricorso al prefetto, Autotutela
+- codice: H.4
+  denominazione: Contenzioso avanti le commissioni provinciale e regionale
+  tempi: soggetto ai termini di legge (60 gg) per l'attivazione del procedimento - I tempi di conclusione
+    sono correlati ai tempi di attività della Commissione Tributaria
+  attori_esterni: Commissioni Tributarie
+  attivita:
+  - codice: H.4.1
+    descrizione: Presentazione del ricorso da parte del contribuente
+  - codice: H.4.2
+    descrizione: Esame del ricorso per verifica della necessità di costituirsi in giudizio oppure annullare/riformare
+      l'atto impugnato
+    rischi:
+    - codice: H.4.2_R.1
+      evento: Analisi dei riferimenti di fatto e di diritto e predisposizione atti
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: H.4.2_R.1_M.1
+        descrizione: Verifica conflitto di interesse
+        categoria: Disciplina del conflitto di interessi
+  - codice: H.4.3
+    descrizione: Costituzione in giudizio (eventuale)
+  - codice: H.4.4
+    descrizione: Procedimento di autotutela (eventuale)
+  - codice: H.4.5
+    descrizione: Conciliazione Giudiziale (eventuale)
+    rischi:
+    - codice: H.4.5_R.1
+      evento: Accettazione di conciliazione giudiziale troppo favorevole per il contribuente
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: H.4.5_R.1_M.1
+        descrizione: La proposta di conciliazione concordata tra le parti del processo tributario è sottoposta
+          alla preventiva valutazione del dirigente.
+- codice: H.5
+  denominazione: Opposizione all'autorità giudiziaria/ricorso al Prefetto per Verbali violazione al CdS
+  tempi: 30 giorni per far ricorso al Giudice di Pace o in alternativa 60 giorni per proporre ricorso
+    al Prefetto
+  attori_esterni: Cittadini, Prefetto, Giudice di Pace, avvocati
+  attivita:
+  - codice: H.5.1
+    descrizione: 'Per il GdP: Ricezione decreto fissazione udienza da parte dell''Autorità giudiziaria
+      competente- Per Prefetto: ricezione ricorso'
+  - codice: H.5.2
+    descrizione: Redazione deduzioni tecniche e preparazione fascicolo
+    rischi:
+    - codice: H.5.2_R.1
+      evento: Deposito della documentazione
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: H.5.2_R.1_M.1
+        descrizione: Predisposizione memorie di argomentazioni standard per casi simili;Intervento degli
+          agenti operatori che hanno redatto il verbale oggetto di ricorso;analisi statistica dei ricorsi
+          favorevoli/sfavorevoli e delle anomalie;- predisposizione reports mensili per verifica andamento
+          ricorsi.
+        categoria: Controllo
+  - codice: H.5.3
+    descrizione: Difesa in Giudizio

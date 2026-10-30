@@ -1,0 +1,776 @@
+# Processi standard dell'area A: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: A
+processi:
+- codice: A.1
+  denominazione: Assegnazione definitiva di alloggi di edilizia residenziale pubblica
+  tempi: Assegnazione dell'alloggio ai beneficiari entro 60 giorni dalla sua disponibilità
+  attori_esterni: E.r.p. Lucca S.r.l. - inquilini alloggi edilizia residenziale pubblica
+  attivita:
+  - codice: A.1.1
+    descrizione: verifica dell'eventuale disponibilità di un alloggio adatto a coloro che sono collocati
+      in posizione utile all'interno della graduatoria per l'assegnazione di alloggi di edilizia residenziale
+      pubblica
+    rischi:
+    - codice: A.1.1_R.1
+      evento: Erronea valutazione dell'adeguatezza degli alloggi disponibili in relazione al nucleo beneficiario
+        e alle sue caratteristiche
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.1.1_R.1_M.1
+        descrizione: Chiedere all'ente gestore E.r.p. Lucca S.r.l. un elenco aggiornato trimestralmente
+          degli alloggi pronti e disponibili per l'assegnazione con il dettaglio, per ciascuno, dell'ubicazione,
+          dei vani utili, della composizione dell'alloggio (stanze presenti) e della metratura di ciascuna
+          stanza
+  - codice: A.1.2
+    descrizione: verifica del mantenimento dei requisiti necessari previsti per l'assegnazione tramite
+      richiesta di documentazione all'utente
+    rischi:
+    - codice: A.1.2_R.1
+      evento: Erronea valutazione della documentazione richiesta all'utente per la verifica del mantenimento
+        dei requisiti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.1.2_R.1_M.1
+        descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+          dalla normativa di riferimento da consultare durante il controllo del mantenimento dei requisiti
+          del soggetto in posizione utile in graduatoria propedeutico all'assegnazione di un alloggio
+        categoria: Controllo
+  - codice: A.1.3
+    descrizione: Proposta dell'alloggio all'avente diritto; in caso di accettazione, predisposizione di
+      determina dirigenziale di assegnazione
+  - codice: A.1.4
+    descrizione: in caso di rifiuto da parte dell'avente diritto, valutazione della sussistenza di una
+      valida motivazione. Se la rinuncia non è giustificata, cancellazione dalla graduatoria
+- codice: A.2
+  denominazione: Consegna carte di identità e autenticazione di firme a domicilio
+  tempi: 1 settimana
+  attori_esterni: congiunti/tutori
+  attivita:
+  - codice: A.2.1
+    descrizione: Ricezione richiesta
+  - codice: A.2.2
+    descrizione: Visita dell'agente incaricato al domicilio dell'interessato
+    rischi:
+    - codice: A.2.2_R.1
+      evento: Apposizione della firma di soggetto non in grado di intendere e di esprimere la propria
+        volontà
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.2.2_R.1_M.1
+        descrizione: 'In ufficio: l''agente verifica che sul programma gestito dall''anagrafe non vi siano
+          annotazioni della eventuale incapacità del soggetto;Sul posto: l''agente compila apposita dichiarazione
+          nella quale dà atto che il soggetto non appare in condizioni di incapacità'
+        categoria: Controllo
+- codice: A.4
+  denominazione: Rilascio concessioni/autorizzazioni per esecuzione lavori sulla sede stradale da parte
+    di terzi
+  tempi: 30 gg
+  attori_esterni: cittadini operatori economici
+  attivita:
+  - codice: A.4.1
+    descrizione: Ricezione istanza
+    rischi:
+    - codice: A.4.1_R.1
+      evento: Omessa trattazione delle pratiche secondo l'ordine di arrivo al protocollo
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.4.1_R.1_M.1
+        descrizione: Registro informatizzato di arrivo delle pratiche con annotazione data di avanzamento
+          della fase del procedimento
+        categoria: Controllo
+  - codice: A.4.2
+    descrizione: Istruttoria
+  - codice: A.4.3
+    descrizione: Rilascio parere
+    rischi:
+    - codice: A.4.3_R.1
+      evento: Omesso rispetto tempi
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.4.3_R.1_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+          rispetto a comportamenti non conformi.
+        categoria: Controllo
+- codice: A.5
+  denominazione: Scia
+  tempi: '- 30 gg.'
+  attori_esterni: '- Soprintendenza ai beni Culturali, Paesaggisti e Ambientali - Autorità di Bacino -
+    Regione Toscana - Società Autostrade - Ferrovie dello Stato - Consorzio di Bonifica Toscana Nord -
+    VV.FF. - Terna Rete Elettrica Nazionale SpA'
+  attivita:
+  - codice: A.5.1
+    descrizione: Dichiarazione del cittadino/professionista di inizio di attività
+  - codice: A.5.2
+    descrizione: Controlli
+    rischi:
+    - codice: A.5.2_R.1
+      evento: Disparità di trattamento nella fase di controllo
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.5.2_R.1_M.1
+        descrizione: Ogni SCIA, entro le 24 ore lavorative successive alla presentazione, viene assegnata
+          ad un diverso istruttore, seguendo progressivamente un elenco di istruttori ordinato alfabeticamente.
+          L'elenco prestabilito è pubblicizzato all'interno dell'ufficio. L'istruttore assegnatario entro
+          il giorno successivo dovrà verificare e, nel caso, rappresentare al dirigente ed al responsabile
+          della U.O. la presenza di eventuale conflitto di interesse -anche potenziale- rispetto alla
+          SCIA assegnata.
+        categoria: Disciplina del conflitto di interessi
+  - codice: A.5.3
+    descrizione: 'Esito in caso di non conformità: provvedimento, lettera di diffida, richiesta documentazione'
+- codice: A.7
+  denominazione: Autorizzazione al transito di veicoli eccezionali con percorsi sul territorio comunale
+  tempi: 15 giorni
+  attori_esterni: enti proprietari delle strade - ditte
+  attivita:
+  - codice: A.7.1
+    descrizione: Ricezione richiesta- istruttoria
+  - codice: A.7.2
+    descrizione: Accoglimento/diniego
+    rischi:
+    - codice: A.7.2_R.1
+      evento: Verifica sussistenza presupposti per il rilascio
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.7.2_R.1_M.1
+        descrizione: Procedura regolamentata dal CdS; richiesta parere ufficio traffico;in caso di diniego
+          verifica delle motivazioni.
+        categoria: Regolamentazione
+- codice: A.8
+  denominazione: Autorizzazioni paesaggistiche
+  tempi: Ordinaria 105 gg dalla richiestaSemplificata da 40 a 95 gg dalla richiestaAccertamento compatibilità
+    paesaggistica 180 gg dalla richiesta
+  attori_esterni: Soprintendenza
+  attivita:
+  - codice: A.8.1
+    descrizione: Ricezione istanza
+    rischi:
+    - codice: A.8.1_R.1
+      evento: Carenza di informazione ai fini della presentazione dell'istanza
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.8.1_R.1_M.1
+        descrizione: Indicazione sul sito internet delle informazioni necessarie per l'utente
+        categoria: Formazione
+    - codice: A.8.1_R.2
+      evento: Mancato rispetto della cronologia nell'esame dell'istanza
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.8.1_R.2_M.1
+        descrizione: In caso di urgenza presentazione di documentazione giustificativa con motivazione
+          autorizzata dal dirigente
+    - codice: A.8.1_R.3
+      evento: Disparità di trattamento nella fase di accettazione ed esame dell'istanza, in relazione
+        alla verifica di atti o del possesso di requisiti richiesti
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.8.1_R.3_M.1
+        descrizione: Rotazione dei dipendenti nell'analisi delle istanze
+        categoria: Rotazione
+  - codice: A.8.2
+    descrizione: Istruttoria
+  - codice: A.8.3
+    descrizione: Rilascio autorizzazione
+- codice: A.9
+  denominazione: 'Archivio storico Comunale: accesso ai documenti front office ed estrazione copia'
+  tempi: '30'
+  attivita:
+  - codice: A.9.1
+    descrizione: Supporto alla consultazione, ricerca documenti, rilascio copia e riposizionamento documenti
+    rischi:
+    - codice: A.9.1_R.1
+      evento: Eventuali atteggiamenti non collaborativi e fattivi del personale
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: A.9.1_R.1_M.1
+        descrizione: Verifica periodica (mensile) delle richieste presentate ed evase con esito positivo
+        categoria: Controllo
+- codice: A.10
+  denominazione: 'Archivio comunale di deposito: accesso ai documenti- estrazione copia'
+  attivita:
+  - codice: A.10.1
+    descrizione: Ricezione domanda e ricerca documenti
+  - codice: A.10.2
+    descrizione: Predisposizione copie
+- codice: A.11
+  denominazione: Rilascio di pareri sulle occupazioni di suolo pubblico e/o emissione ordinanze di modifica
+    alla circolazione stradale e alla sosta
+  tempi: 10 giorni, per prassi amministrativa interna per il rilascio di pareri e/o ordinanze inerenti
+    le occupazioni di suolo pubblico per lavori edili, traslochi, manifestazioni a carattere temporaneo,
+    mercati, ecc..- entro 30 giorni per pareri su occupazioni stagionali per pubblici esercizi, tende,
+    insegne, impianti pubblicitari ecc..
+  attivita:
+  - codice: A.11.1
+    descrizione: Ricezione richiesta parere
+  - codice: A.11.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: A.11.2_R.1
+      evento: Errata valutazione presupposti
+      fattore_abilitante: Mancanza di misure di controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.11.2_R.1_M.1
+        descrizione: Decisione assunta in maniera collegiale tra il dirigente, funzionario e tecnico istruttore.
+  - codice: A.11.3
+    descrizione: Emissione parere vincolante
+    rischi:
+    - codice: A.11.3_R.1
+      evento: Omesso rispetto tempi procedimentali per la trasmissione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.11.3_R.1_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+          rispetto a comportamenti non conformi.
+        categoria: Controllo
+- codice: A.12
+  denominazione: Nulla-Osta al rilascio di permesso in deroga al regolamento per l'accesso, il transito
+    e la sosta dei veicolo nel Centro Storico
+  tempi: 5 giorni per permessi in deroga giornalieri e 30 giorni per i permessi in deroga annuali
+  attori_esterni: METRO SRL
+  attivita:
+  - codice: A.12.1
+    descrizione: Ricezione richiesta
+  - codice: A.12.2
+    descrizione: istruttoria
+    rischi:
+    - codice: A.12.2_R.1
+      evento: Valutazione nel rilascio dell'Autorizzazione
+      fattore_abilitante: Complessità e scarsa chiarezza della normativa di riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.12.2_R.1_M.1
+        descrizione: Decisione assunta in maniera collegiale tra il dirigente, funzionario e tecnico istruttore.
+  - codice: A.12.3
+    descrizione: Rilascio parere alla società Metro
+    rischi:
+    - codice: A.12.3_R.1
+      evento: Omesso rispetto tempi procedimentali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.12.3_R.1_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+          rispetto a comportamenti non conformi.
+        categoria: Controllo
+- codice: A.14
+  denominazione: Autorizzazione per l'istallazione di segnaletica per attività di interesse pubblico,
+    da porre in opera su strade comunali e provinciali e per l'istallazione di manufatti interessanti
+    la circolazione e la sosta (specchi parabolici, dissuasori, ecc..)
+  tempi: 30 giorni
+  attivita:
+  - codice: A.14.1
+    descrizione: Ricevimento istanza
+    rischi:
+    - codice: A.14.1_R.1
+      evento: Mancato avvio procedimento
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.14.1_R.1_M.1
+        descrizione: Verifica tra istanze presentate e procedimenti conclusi
+        categoria: Controllo
+  - codice: A.14.2
+    descrizione: Verifica e valutazione sulla localizzazione in relazione a problematiche legate al traffico
+      ed eventuale sopralluogo
+  - codice: A.14.3
+    descrizione: Richiesta eventuali pareri ad altri enti
+  - codice: A.14.4
+    descrizione: Rilascio autorizzazione/diniego
+    rischi:
+    - codice: A.14.4_R.1
+      evento: Omesso rispetto tempi procedimentali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.14.4_R.1_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+          rispetto a comportamenti non conformi.Verifica a campione sui dinieghi
+        categoria: Controllo
+- codice: A.15
+  denominazione: Accesso agli atti ex L. 241/1990
+  tempi: 30 gg come previsto dalla L.241/1990
+  attori_esterni: Qualsiasi persona fisica o giuridica
+  attivita:
+  - codice: A.15.1
+    descrizione: Ricezione dell'istanza
+  - codice: A.15.2
+    descrizione: Istruttoria dell'ufficio volta al corretto esame della domanda
+    rischi:
+    - codice: A.15.2_R.1
+      evento: Arbitrarietà nella decisione.Inosservanza delle regole procedurali a garanzia della trasparenza,
+        dell'imparzialità e della completezza dell'accessoAbuso nel rilascio delle copie richieste
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.15.2_R.1_M.1
+        descrizione: Controllo a campione sulle richieste accolte (corrispondenza tra quanto richiesto
+          e quanto consegnato) e sui dinieghi taciti ed espressi (verifica della motivazione) da parte
+          del Responsabile del servizio
+        categoria: Controllo
+  - codice: A.15.3
+    descrizione: Accoglimento/diniego/differimento dell'accesso
+    rischi:
+    - codice: A.15.3_R.1
+      evento: Ritardi nella conclusione del procedimento che possono dare seguito a danni per l'Ente
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.15.3_R.1_M.1
+        descrizione: Monitoraggio dei tempi procedimentali
+        categoria: Controllo
+- codice: A.16
+  denominazione: Autorizzazioni (Autorizzazioni Vincolo idrogeologico, Autorizzazioni agli scarichi fuori
+    fognatura, Autorizzazioni in deroga ai limiti di emissione acustica semplificate o no)
+  tempi: 'vincolo idrogeologico:60 giorni; autorizzazione scarichi: 30 giorni; autorizzazioni in deroga
+    ai limiti acustici: 30 giorni'
+  attori_esterni: privati/ditte/Az. USL/ARPAT/Autorità di bacino Distrettuale dell'Appennino Settentrionale
+  attivita:
+  - codice: A.16.1
+    descrizione: Ricezione dell'istanza
+    rischi:
+    - codice: A.16.1_R.1
+      evento: Mancata o tardiva registrazione delle istanze
+      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
+        della pratica
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.16.1_R.1_M.1
+        descrizione: Utilizzo portale VBG a partire dal 01/10/2024 per le pratiche di autorizzazione allo
+          scarico. In fase di avvio l'utilizzo del portale per la gestione delle altre pratiche e del
+          loro stato di avanzamento
+  - codice: A.16.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: A.16.2_R.1
+      evento: Abuso nel rilascio di autorizzazioni in ambiti in cui il pubblico ufficio ha funzioniesclusive
+        o preminenti di controllo al fine di agevolare determinati soggetti
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto e mancanza di criteri predeterminati su cui valutare l'esito dell'istruttoria
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.16.2_R.1_M.1
+        descrizione: Rotazione del personale effettuata nel corso del 2022 con assegnazione pratiche di
+          autorizzazioni in deroga ai limiti di emissione acustica a ulteriore personale della U.O. 7.2
+        categoria: Rotazione
+  - codice: A.16.3
+    descrizione: Rilascio autorizzazione/emissione ordinanza o diniego e archiviazione della pratica
+    rischi:
+    - codice: A.16.3_R.1
+      evento: Rilascio tardivo o archiviazione
+      fattore_abilitante: scarsità di personale
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.16.3_R.1_M.1
+        descrizione: check list da utilizzare in fase istruttoria
+- codice: A.17
+  denominazione: Bando per assegnazione di alloggi di Edilizia Residenziale Pubblica
+  tempi: Bando con cadenza almeno triennale. Presentazione delle domande di partecipazione entro 60 giorni
+    dalla data di pubblicazione del bando. La scadenza è prorogata di 60 giorni per i lavoratori emigrati
+    all'estero residenti nell'Unione Europea, di 90 giorni per coloro che risiedono in Paesi extraeuropei.
+    Pubblicazione all'albo pretorio della graduatoria provvisoria entro 60 giorni dalla data di scadenza
+    di presentazione delle domande. Presentazione di eventuali opposizioni avverso la graduatoria provvisoria
+    entro 30 giorni dalla sua pubblicazione. Trasmissione delle suddette opposizioni alla Commissione
+    intercomunale entro 60 giorni dalla pubblicazione della graduatoria provvisoria
+  attori_esterni: soggetti richiedenti - Lode Lucchese (Comitato di Coordinamento e Assemblea) - Tavolo
+    Tecnico (Comitato di Coordinamento del Lode Lucchese e tecnici comunali dei Comuni facenti parte il
+    Lode) - Commissione intercomunale costituita presso il Lode Lucchese (composta secondo L.R. 2/2019)
+  attivita:
+  - codice: A.17.1
+    descrizione: Accoglimento bando predisposto dal Tavolo Tecnico e deliberato dall'Assemblea del Lode
+      Lucchese tramite determina dirigenziale e sua pubblicazione
+  - codice: A.17.2
+    descrizione: Presentazione domande di partecipazione tramite protocollo comunale
+  - codice: A.17.3
+    descrizione: Inserimento delle domande sul gestionale Urbi a seguito di istruttoria dell'ufficio volta
+      ad accertare la sussistenza dei requisiti prescritti dal bando e ad attribuire i punteggi
+    rischi:
+    - codice: A.17.3_R.1
+      evento: Non corretta rilevazione di una causa di esclusione (limite Isee, residenza o occupazione
+        lavorativa nel Comune di Lucca, permesso di soggiorno...)
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.17.3_R.1_M.1
+        descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+          dalla normativa di riferimento da consultare nella prima fase della valutazione delle domande,
+          quando cioè è necessario definire se la domanda in analisi è da escludere o o meno
+    - codice: A.17.3_R.2
+      evento: Assegnazione punteggio non corretto
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.17.3_R.2_M.1
+        descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+          dalla normativa di riferimento da consultare nella fase di attribuzione del punteggio a ogni
+          domanda
+      - codice: A.17.3_R.2_M.2
+        descrizione: Una volta terminata la fase di assegnazione dei punteggi a tutte le domande non escluse,
+          procedere a un controllo a campione incrociato. Se i dipendenti che hanno valutato le domande
+          sono due, fare in modo che ciascuno riveda i punteggi assegnati ad alcune delle domande precedentemente
+          analizzate dall'altro
+        categoria: Controllo
+  - codice: A.17.4
+    descrizione: Determinazione dirigenziale di approvazione della graduatoria provvisoria
+  - codice: A.17.5
+    descrizione: Eventuali ricorsi presentati avverso la graduatoria, accolti o respinti da parte della
+      Commissione Intercomunale
+  - codice: A.17.6
+    descrizione: Determinazione Dirigenziale di approvazione della Graduatoria definitiva
+- codice: A.18
+  denominazione: Bando per assegnazione di contributi ad integrazione del canone di locazione
+  tempi: Presentazione delle domande di partecipazione nella primavera dell'anno di riferimento. Pubblicazione
+    della graduatoria provvisoria all'Albo Pretorio per 15 giorni. Presentazione di eventuali opposizioni
+    avverso la graduatoria provvisoria entro 15 giorni dalla sua pubblicazione. Trasmissione delle suddette
+    opposizioni alla Commissione intercomunale. Pubblicazione graduatoria definitiva e trasmissione alla
+    Regione toscana entro il 31/10 dell'anno di riferimento. Rendicontazione economica entro il 30/09
+    dell'anno successivo.
+  attori_esterni: soggetti richiedenti - Commissione intercomunale - Regione Toscana
+  attivita:
+  - codice: A.18.1
+    descrizione: Predisposizione bando in base alle linee guida indicate dalla Regione Toscana e sua pubblicazione
+  - codice: A.18.2
+    descrizione: presentazione domande
+  - codice: A.18.3
+    descrizione: Istruttoria domande e inserimento sul portale dedicato della Regione Toscana
+    rischi:
+    - codice: A.18.3_R.1
+      evento: Non corretta rilevazione di una causa di esclusione o di inserimento in una determinata
+        fascia
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.18.3_R.1_M.1
+        descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che
+          ha curato l'istruttoria per verificarne la correttezza
+        categoria: Controllo
+      - codice: A.18.3_R.1_M.2
+        descrizione: Effettuare controlli a campione su almeno il 10% dei ammessi definitivamente ad usufruire
+          del beneficio
+        categoria: Controllo
+  - codice: A.18.4
+    descrizione: Determinazione Dirigenziale di approvazione della graduatoria provvisoria e sua pubblicazione
+  - codice: A.18.5
+    descrizione: Eventuali ricorsi presentati avverso la graduatoria, accolti o respinti dalla commissione
+      intercomunale e aggiornamento del portale RT
+  - codice: A.18.6
+    descrizione: Pubblicazione della graduatoria definitiva
+  - codice: A.18.7
+    descrizione: Liquidazione dei contributi spettanti e relativa rendicontazione alla Regione Toscana
+      entro il 30/09 dell'anno successivo a quello di emanazione del bando
+- codice: A.19
+  denominazione: Gestione (iscrizione, cancellazione, revisione, ecc.) registri enti terzo settore
+  tempi: Iscrizioni per APS e coop 60 gg dalla data di presentazione della domanda - per OVD 90 gg dalla
+    data di presentazione della domanda
+  attori_esterni: ETS richiedente, Comune sede legale del ETS, Regione Toscana, Cesvot
+  attivita:
+  - codice: A.19.1
+    descrizione: Istruttoria e conclusione del procedimento
+    rischi:
+    - codice: A.19.1_R.1
+      evento: Mancato rispetto dell'ordine cronologico di arrivo al protocollo nell'istruttoria delle
+        pratiche
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.19.1_R.1_M.1
+        descrizione: Istituzione di un registro informatizzato di arrivo delle pratiche con annotazione
+          data di avanzamento della fase del procedimento, e tempi di conclusione
+        categoria: Controllo
+    - codice: A.19.1_R.2
+      evento: Omesso rispetto tempi procedimentali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: A.19.1_R.2_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi di rilascio del provvedimento al fine
+          di evitare il prolungamento illegittimo dei tempi di conclusione dei procedimenti.
+        categoria: Controllo
+- codice: A.20
+  denominazione: Rilascio di licenza e cartello di passi carrabili
+  tempi: 30 gg
+  attori_esterni: cittadini
+  attivita:
+  - codice: A.20.1
+    descrizione: Ricezione dell'istanza bollo - utilizzo di modulo predisposto- pagamento diritti- allegati
+      tecnici
+    rischi:
+    - codice: A.20.1_R.1
+      evento: Mancata o tardiva registrazione delle istanze
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.20.1_R.1_M.1
+        descrizione: Inserimento su programma informatizzato delle istanze mantenendo l'ordine di registrazione
+          del Protocollo Generale
+        categoria: Controllo
+  - codice: A.20.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: A.20.2_R.1
+      evento: Abuso nel rilascio di autorizzazioni in ambiti in cui il pubblico ufficio ha funzioniesclusive
+        o preminenti di controllo al fine di agevolare determinati soggetti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.20.2_R.1_M.1
+        descrizione: Esecuzione istruttoria delle istanze seguendo l'ordine di caricamento sul programma
+  - codice: A.20.3
+    descrizione: Predisposizione cartello e licenza e relativo consegna entro 30 gg. Dal ricevimento dell'istanza
+    rischi:
+    - codice: A.20.3_R.1
+      evento: Rilascio tardivo o archiviazione
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.20.3_R.1_M.1
+        descrizione: Rispetto dei tempi di rilascio
+- codice: A.21
+  denominazione: Rilascio certificazioni di classificazione strade
+  tempi: 30 gg
+  attori_esterni: cittadini
+  attivita:
+  - codice: A.21.1
+    descrizione: Domanda in carta semplice da presentarsi all'Ufficio del Protocollo Generale n. 2 copie
+      planimetria di zona ;ricevuta pagamento diritti tecnici
+    rischi:
+    - codice: A.21.1_R.1
+      evento: Mancato rispetto dell'ordine di arrivo della richiesta
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.21.1_R.1_M.1
+        descrizione: Inserimento su programma informatizzato delle istanze mantenendo l'ordine di registrazione
+          del Protocollo Generale
+        categoria: Controllo
+  - codice: A.21.2
+    descrizione: Istruttoria e rilascio invio certificazione - entro 30 gg
+    rischi:
+    - codice: A.21.2_R.1
+      evento: Mancato rispetto dei tempi di rilascio della certificazione
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.21.2_R.1_M.1
+        descrizione: Esecuzione istruttoria delle istanze seguendo l'ordine di caricamento sul programma
+- codice: A.22
+  denominazione: Rilascio autorizzazioni all'apertura di accessi provvisori a servizio di cantieri
+  tempi: 30 gg
+  attori_esterni: richiesta da parte del tecnico incaricato dal committente dei lavori;
+  attivita:
+  - codice: A.22.1
+    descrizione: Presentazione richiesta da parte del tecnico incaricato dal committente dei lavori;
+    rischi:
+    - codice: A.22.1_R.1
+      evento: Mancato rispetto dell'ordine di arrivo della richiesta
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.22.1_R.1_M.1
+        descrizione: Esecuzione istruttoria delle istanze seguendo l'ordine di caricamento sul programma
+  - codice: A.22.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: A.22.2_R.1
+      evento: Mancato rispetto dei tempi
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.22.2_R.1_M.1
+        descrizione: Doppio Controllo Rup- Dirigente del Settore
+        categoria: Controllo
+  - codice: A.22.3
+    descrizione: Rilascio autorizzazione con eventuali prescrizioni o diniego entro 30 gg
+    rischi:
+    - codice: A.22.3_R.1
+      evento: Diniego- eccesso di prescrizioni
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.22.3_R.1_M.1
+        descrizione: Duplice controllo
+        categoria: Controllo
+  - codice: A.22.4
+    descrizione: In caso di diniego applicazione delle procedure previste dal'art. 10 bis della L.241-1990
+      e ss.mm.ii
+    rischi:
+    - codice: A.22.4_R.1
+      evento: rilascio con eccesso di prescrizioni
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.22.4_R.1_M.1
+        descrizione: Duplice controllo
+        categoria: Controllo
+- codice: A.23
+  denominazione: Rilascio pareri tecnici
+  tempi: 30 gg
+  attori_esterni: U.O interne all'Ente(Suap, Ed Privata, Uff.Pianif.Urbanistica)- soggetti privati altri
+    Enti
+  attivita:
+  - codice: A.23.1
+    descrizione: Ricevimento della richiesta, valutazione del progetto e eventuale sopralluogo
+    rischi:
+    - codice: A.23.1_R.1
+      evento: Mancato rispetto dell'ordine di arrivo della richiesta
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.23.1_R.1_M.1
+        descrizione: Esecuzione istruttoria delle istanze seguendo l'ordine di caricamento sul programma
+  - codice: A.23.2
+    descrizione: Eventuale rinvio e richiesta documentazione integrativa;
+    rischi:
+    - codice: A.23.2_R.1
+      evento: Ritardi nella conclusione del procedimento
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.23.2_R.1_M.1
+        descrizione: Doppio Controllo Rup- Dirigente del Settore
+        categoria: Controllo
+  - codice: A.23.3
+    descrizione: Emissione del nulla-osta o comunicazione di parere negativo e applicazione delle procedure
+      previste dal'art. 10 bis della L.241-1990 e ss.mm.ii
+    rischi:
+    - codice: A.23.3_R.1
+      evento: Rilascio con eccesso di prescrizioni - diniego in mancanza di presupposti adeguati
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: A.23.3_R.1_M.1
+        descrizione: Doppio Controllo Rup- Dirigente del Settore
+        categoria: Controllo

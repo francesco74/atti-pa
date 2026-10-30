@@ -71,6 +71,10 @@ def leggi(cartella: str, percorso: str) -> bytes:
         raise FileNonInArchivio(f"File non presente nell'archivio: {percorso}") from e
 
 
+def esiste(cartella: str, percorso: str) -> bool:
+    return _assoluto(cartella, percorso).is_file()
+
+
 def elimina(cartella: str, percorso: str) -> None:
     try:
         _assoluto(cartella, percorso).unlink()

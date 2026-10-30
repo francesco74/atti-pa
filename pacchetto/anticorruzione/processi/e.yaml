@@ -1,0 +1,776 @@
+# Processi standard dell'area E: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: E
+processi:
+- codice: E.1
+  denominazione: Accertamento tributi comunali
+  tempi: termini di legge (5 anni che diventano 6 per omessa dichiarazione)
+  attivita:
+  - codice: E.1.1
+    descrizione: Istruttoria
+    rischi:
+    - codice: E.1.1_R.1
+      evento: Applicazione di aliquote ridotte o di agevolazioni/esenzioni non spettanti
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.1.1_R.1_M.1
+        descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti
+          che tiene traccia delle operazioni effettuate.
+        categoria: Semplificazione
+  - codice: E.1.2
+    descrizione: Emissione provvedimento
+    rischi:
+    - codice: E.1.2_R.1
+      evento: Omissione
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.1.2_R.1_M.1
+        descrizione: Verifica a campione incrociata delle azioni per l'individuazione delle anomalie,
+          sotto la direzione del dirigente.
+        categoria: Controllo
+- codice: E.2
+  denominazione: Richiesta rimborso tributi
+  tempi: termini di legge (5 anni)
+  attivita:
+  - codice: E.2.1
+    descrizione: Istruttoria
+    rischi:
+    - codice: E.2.1_R.1
+      evento: Non riconoscimento/riconoscimento dei presupposti per procedere all'accoglimento/diniego
+        al rimborso
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.2.1_R.1_M.1
+        descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti
+          che tiene traccia delle operazioni effettuate.
+        categoria: Semplificazione
+  - codice: E.2.2
+    descrizione: Emissione provvedimento di accoglimento o diniego
+    rischi:
+    - codice: E.2.2_R.1
+      evento: Analisi della completezza e della adeguatezza della situazione rappresentata e della documentazione
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.2.2_R.1_M.1
+        descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto
+          la direzione del dirigente.
+        categoria: Controllo
+    - codice: E.2.2_R.2
+      evento: Assegnazione che prescinda dalla previa analisi di situazioni pendenti di richiesta di mobilità
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.2.2_R.2_M.1
+        descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto
+          la direzione del dirigente.
+        categoria: Controllo
+    - codice: E.2.2_R.3
+      evento: Analisi della condizione di morosità pregressa
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.2.2_R.3_M.1
+        descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto
+          la direzione del dirigente.
+        categoria: Controllo
+- codice: E.4
+  denominazione: Emissione mandati di pagamento
+  tempi: Termini previsti dal D.Lgs.231/2002 a sua volta condizionati dalle disponibilità di cassa
+  attori_esterni: FORNITORI
+  attivita:
+  - codice: E.4.1
+    descrizione: Acquisizione degli atti di liquidazione predisposti dai vari uffici comunali
+  - codice: E.4.2
+    descrizione: Effettuazione, secondo i princìpi e le procedure della contabilità pubblica, dei controlli
+      e riscontri amministrativi, contabili e fiscali sugli atti di liquidazione.
+    rischi:
+    - codice: E.4.2_R.1
+      evento: Non effettuazione dei controlli contabili necessari a verificare il sussistere dei requisiti
+        di legge o effettuare controlli insufficienti o inefficaci
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggettoScarsa responsabilizzazione interna;Inadeguatezza o assenza di
+        competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.4.2_R.1_M.1
+        descrizione: Applicazione della rotazione almeno annuale delle competenze tra il personale coinvolto;
+        categoria: Rotazione
+  - codice: E.4.3
+    descrizione: Registrazione della liquidazione contabile nella procedura informatica utilizzata per
+      la tenuta della contabilità finanziaria
+  - codice: E.4.4
+    descrizione: Emissione mandato di pagamento
+    rischi:
+    - codice: E.4.4_R.1
+      evento: Pagamento di somme non dovute (per mancata verifica ai sensi dell'art 48-bis del D.P.R.
+        n. 602/1973 e s.m.i. per pagamenti di importo superiore a 5.000╒; a seguito di accertata inadempienza
+        ai sensi dell'art 48-bis del D.P.R. n. 602/1973 e s.m.i.; in caso di crediti pignorati)
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggettoScarsa responsabilizzazione interna;Inadeguatezza o assenza di
+        competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
+      misure:
+      - codice: E.4.4_R.1_M.1
+        descrizione: Distinzione tra il personale che effettua le verifiche Equitalia e chi effettua il
+          pagamento
+        categoria: Controllo
+      - codice: E.4.4_R.1_M.2
+        descrizione: Applicazione della rotazione almeno annuale delle competenze tra il personale coinvolto
+        categoria: Rotazione
+    - codice: E.4.4_R.2
+      evento: Mancato rispetto dei tempi di pagamento e dell'ordine cronologico degli atti di liquidazione
+        e/o data fattura- nota di debito
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggettoScarsa responsabilizzazione interna;Inadeguatezza o assenza di
+        competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
+      misure:
+      - codice: E.4.4_R.2_M.1
+        descrizione: Pubblicazione sul sito istituzionale Sez. Amministrazione Trasparente _ Pagamenti
+          dell'Amministrazione dei tempi medi di pagamento e dei dati sui pagamenti
+        categoria: Trasparenza
+- codice: E.5
+  denominazione: Rateizzazioni sanzioni amministrative
+  attivita:
+  - codice: E.5.1
+    descrizione: Ricezione richiesta rateizzazione
+  - codice: E.5.2
+    descrizione: Provvedimento di accoglimento/diniego
+    rischi:
+    - codice: E.5.2_R.1
+      evento: Valutare presupposti per il diniego o l'accoglimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.5.2_R.1_M.1
+        descrizione: Disposizioni interne per orientare la discrezionalità e uniformare i comportamenti,
+          ove possibile, (DD n. 1631/2011).Utilizzo di criteri oggettivi per la valutazione della sussistenza
+          dei presupposti per concedere la rateizzazione.
+- codice: E.6
+  denominazione: Autorizzazione partecipazione dipendenti a interventi formativi fuori sede e a catalogo
+  tempi: entro 30 gg. dalla richiesta
+  attivita:
+  - codice: E.6.1
+    descrizione: 'Ricevimento della richiesta da parte del dipendente interessato a partecipare a corsi
+      di formazione fuori sede su specifico modulo firmato dal proprio Dirigente all''Ufficio Personale.
+      Nel modulo sono indicati: i dipendenti interessati all''intervento, la denominazione del corso,
+      il nominativo dell''Agenzia Formativa, l''oggetto del corso, le date, gli orari e la sede, il costo
+      complessivo e le modalità di pagamento.'
+  - codice: E.6.2
+    descrizione: Valutazione della richiesta tenendo conto delle risorse finanziarie a disposizione.
+    rischi:
+    - codice: E.6.2_R.1
+      evento: Mancata valutazione della richiesta e mancata consegna della richiesta al Dirigente del
+        Personale per l'autorizzazione/diniego.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.6.2_R.1_M.1
+        descrizione: La richiesta, compilata in ogni sua parte, dovrà essere protocollata e inviata sia
+          al Dirigente del Personale che all'Ufficio Personale entro 10 giorni dalla data di svolgimento
+          del corso di formazione.
+        categoria: Formazione
+  - codice: E.6.3
+    descrizione: Autorizzazione da parte del Dirigente del Personale con apposizione della propria firma
+      sul modulo.
+    rischi:
+    - codice: E.6.3_R.1
+      evento: Autorizzare /non autorizzare la formazione richiesta al fine di avvantaggiare una determinata
+        agenzia formativa
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.6.3_R.1_M.1
+        descrizione: Nella richiesta dovrà essere motivata da parte del Dirigente al scelta del corso
+          effettuando una valutazione in termini di qualità prezzo
+  - codice: E.6.4
+    descrizione: Adozione della Determinazione Dirigenziale di autorizzazione all'iscrizione al corso
+      di formazione fuori sede e impegno di spesa e successiva liquidazione.
+- codice: E.7
+  denominazione: Riscossioni di cassa
+  tempi: Entro i termini previsti dal Regolamento di Economato
+  attori_esterni: Uffici interni ed Utenze esterne
+  attivita:
+  - codice: E.7.1
+    descrizione: Versamento all'economo da parte degli Staff/settori di somme di denaro corredate da apposita
+      distinta contabile per voci di entrata
+  - codice: E.7.2
+    descrizione: Registrazione dell'entrata nel software di contabilità
+    rischi:
+    - codice: E.7.2_R.1
+      evento: Registrazione non accurata
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.7.2_R.1_M.1
+        descrizione: Consegna al dipendente del Servizio/Settore di ricevuta attestante l'entità del versamento
+          il cui importo coincide con la distinta presentata.
+  - codice: E.7.3
+    descrizione: Chiusura giornaliera di cassa con rilevazione di tutte le entrate
+    rischi:
+    - codice: E.7.3_R.1
+      evento: Rilevazione non accurata
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.7.3_R.1_M.1
+        descrizione: La chiusura di cassa avviene tramite procedura informatizzata, che accorpa i dati
+          di tutte le ricevute rilasciate in giornata ai vari Servivi/Settori.
+  - codice: E.7.4
+    descrizione: Consegna dell'insieme delle entrate alla Tesoreria comunale
+    rischi:
+    - codice: E.7.4_R.1
+      evento: Consegna non accurata
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.7.4_R.1_M.1
+        descrizione: Per ciascun giorno di chiusura viene redatta una specifica distinta di versamento
+          che viene consegnata con il relativo introito alla Tesoreria.
+  - codice: E.7.5
+    descrizione: Trasmissione riepilogo degli incassi economali del mese al Servizio finanziario
+    rischi:
+    - codice: E.7.5_R.1
+      evento: Trasmissione non accurata
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.7.5_R.1_M.1
+        descrizione: Ogni fine mese viene trasmesso al Servizio Finanziario il riepilogo delle somme incassate
+          che coincide con la somma delle distinte di versamento in Tesoreria e delle reversali dalla
+          stessa rilasciate.
+  - codice: E.7.6
+    descrizione: Conto di gestione dell'Economo
+    rischi:
+    - codice: E.7.6_R.1
+      evento: Conto non accurato
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.7.6_R.1_M.1
+        descrizione: L'Economo rende al Servizio Finanziario il Conto di gestione sul quale il Ragioniere
+          capo appone il visto di regolarità contabile.
+- codice: E.8
+  denominazione: Recupero canone per l'occupazione di spazi ed aree pubbliche
+  tempi: Entro 5 anni dall'accertamento del fatto il procedimento per il recupero è chiuso
+  attori_esterni: /
+  attivita:
+  - codice: E.8.1
+    descrizione: Istruttoria
+    rischi:
+    - codice: E.8.1_R.1
+      evento: Non riconoscimento/riconoscimento dei presupposti per procedere al recupero
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.8.1_R.1_M.1
+        descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti
+          che tiene traccia delle operazioni effettuate e pertanto con iter non riferibili a singolo operatore
+          ma all'intera U.O.
+        categoria: Semplificazione
+  - codice: E.8.2
+    descrizione: Adozione provvedimento di recupero
+    rischi:
+    - codice: E.8.2_R.1
+      evento: Omissione
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.8.2_R.1_M.1
+        descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto
+          la direzione del dirigente ed emissione del relativo ruolo da riscuotere in forma coattiva da
+          parte di Lucca Riscossione e Servizi, come da contratto di servizio con il Comune
+        categoria: Controllo
+- codice: E.9
+  denominazione: Affidamento in concessione degli impianti sportivi
+  tempi: 60-90 giorni
+  attori_esterni: associazioni /società sportive dilettantische
+  attivita:
+  - codice: E.9.1
+    descrizione: Predisposizione dell'Avviso
+  - codice: E.9.2
+    descrizione: Approvazione e pubblicazione documenti di gara
+  - codice: E.9.3
+    descrizione: Nomina commissione giudicatrice
+    rischi:
+    - codice: E.9.3_R.1
+      evento: Individuazione dei componenti
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Alto, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.9.3_R.1_M.1
+        descrizione: 'Verifica in ordine all''insussistenza di quanto previsto all''35 bis comma 1 lett.
+          c) del d. lgs 165/2001 (condanne penali in capo ai membri): deve essere acquisita all''atto
+          di nomina una previa dichiarazione resa da ciascun membro ai sensi del d.P.R. 445/2000.'
+        categoria: Controllo
+  - codice: E.9.4
+    descrizione: Valutazione offerte
+  - codice: E.9.5
+    descrizione: Aggiudicazione definitiva dell'impianto
+  - codice: E.9.6
+    descrizione: Gestione dell'impianto
+    rischi:
+    - codice: E.9.6_R.1
+      evento: Verifica delle attività del concessionario e del pagamento del canone
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Alto, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.9.6_R.1_M.1
+        descrizione: Verifica puntuale degli adempimenti previsti dalla concessione e richiesta documentazione
+        categoria: Controllo
+- codice: E.10
+  denominazione: Rimborso danni a privati a seguito di eventi calamitosi
+  attivita:
+  - codice: E.10.1
+    descrizione: Recepimento normative nazionali o regionali di assegnazione contributi all'ente;avviso
+      pubblico;raccolta domande di contributo;istruttoria;sopralluoghi tecnici;valutazione del danno;criteri
+      di elargizione del contributo a favore dei privati
+    rischi:
+    - codice: E.10.1_R.1
+      evento: Scorretto riconoscimento del danno e sua quantificazione. Il problema è che nonostante esista
+        un regolamento regionale, la regione e lo stato gestiscono le procedure emergenziali con modalità
+        ogni volta diverse.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.10.1_R.1_M.1
+        descrizione: Corretta applicazione dei parametri tecnici di valutazione e comparazione dei danni
+          in relazione all'evento, che consentano di definire i soggetti cui assegnare il rimborso ed
+          il suo ammontare. Si sottolinea che nelle ultime procedure per i danni a privati e imprese il
+          compito del comune si è risolto nel pubblicizzare le informazioni. Altre volte, nella raccolta
+          e trasmissione delle istanze, quest'ultima sostituita, nelle ultime emergenze, da portali gestiti
+          da RT/ARTEA o altre agenzie regionali
+        categoria: Formazione
+- codice: E.11
+  denominazione: Acquisto immobili
+  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
+    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
+  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
+    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
+  attivita:
+  - codice: E.11.1
+    descrizione: Decisione acquisto
+  - codice: E.11.2
+    descrizione: avviso pubblico
+    rischi:
+    - codice: E.11.2_R.1
+      evento: Predisposizione atti e valutazione in modo distorto al fine di favorire un soggetto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.11.2_R.1_M.1
+        descrizione: 'Il bando contiene le specifiche richieste senza indicare caratteristiche che non
+          siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di parcheggi,
+          ecc.In caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta economica.'
+  - codice: E.11.3
+    descrizione: Valutazione offerte e parer congruità del prezzo
+    rischi:
+    - codice: E.11.3_R.1
+      evento: Discrezionalità nella valutazione
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.11.3_R.1_M.1
+        descrizione: 'Il bando contiene le specifiche richieste senza indicare caratteristiche che non
+          siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di parcheggi,
+          ecc.In caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta economica.'
+  - codice: E.11.4
+    descrizione: Rogito notarile
+- codice: E.12
+  denominazione: Vendita immobili mediante pubblico incanto
+  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
+    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
+  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
+    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
+  attivita:
+  - codice: E.12.1
+    descrizione: Delibera CC approvazione vendita
+  - codice: E.12.2
+    descrizione: stima del valore immobile
+  - codice: E.12.3
+    descrizione: Avviso d'asta
+  - codice: E.12.4
+    descrizione: Rogito di vendita
+- codice: E.13
+  denominazione: Vendita immobili a trattativa privata diretta
+  tempi: Non esistono termini prestabiliti, ma il processo si conclude normalmente entro 120 giorni dalla
+    presentazione dell'istanza
+  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
+    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
+  attivita:
+  - codice: E.13.1
+    descrizione: Richiesta/offerta di acquisto da parte terzi
+  - codice: E.13.2
+    descrizione: Stima del valore di mercato dell'immobile
+    rischi:
+    - codice: E.13.2_R.1
+      evento: Stima del prezzo di vendita
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.13.2_R.1_M.1
+        descrizione: La stima dovrà essere redatta con le modalità stabilite dall'apposito regolamento
+          comunale in base ad oggettivi criteri di mercato.
+        categoria: Regolamentazione
+  - codice: E.13.3
+    descrizione: Delibera CC di approvazione vendita
+  - codice: E.13.4
+    descrizione: Rogito notarile
+- codice: E.14
+  denominazione: Locazioni passive immobili
+  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
+    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
+  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
+    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
+  attivita:
+  - codice: E.14.1
+    descrizione: Delibera di Giunta comunale di ricorrere al mercato per la locazione, previa verifica
+      della indisponibilità di immobili comunali di caratteristiche idonee
+  - codice: E.14.2
+    descrizione: Avviso pubblico
+    rischi:
+    - codice: E.14.2_R.1
+      evento: Predisposizione atti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.14.2_R.1_M.1
+        descrizione: 'Il bando dovrà contenere le specifiche richieste senza indicare caratteristiche
+          che non siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di
+          parcheggi, ecc.In caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta
+          economica.'
+  - codice: E.14.3
+    descrizione: Esame offerte pervenute e verifica congruità del canone
+    rischi:
+    - codice: E.14.3_R.1
+      evento: Discrezionalità nella scelta dell'immobile offerto
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.14.3_R.1_M.1
+        descrizione: 'Il bando dovrà contenere le specifiche richieste senza indicare caratteristiche
+          che non siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di
+          parcheggi, ecc.In caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta
+          economica.'
+  - codice: E.14.4
+    descrizione: Individuazione immobile
+  - codice: E.14.5
+    descrizione: Stipula contratto di locazione
+- codice: E.15
+  denominazione: Espropriazione Pubblica utilità (procedimento disciplinato dal DPR 327/2001 - Testo unico
+    espropriazioni)
+  tempi: Il procedimento espropriativo si deve concludere entro i 5 anni di validità della dichiarazione
+    di pubblica utilità che decorre dalla approvazione del progetto definitivo dell'opera pubblica. Per
+    giustificate ragioni l'autorità espropriante può disporre la proroga del termine di scadenza per un
+    massiomo di anni due (art. 13 DPR 327/2001).
+  attori_esterni: Tutti i soggetti che risultino proprietari secondo i registri catastali
+  attivita:
+  - codice: E.15.1
+    descrizione: Comunicazione di avvio del procedimento
+  - codice: E.15.2
+    descrizione: Redazione piano particellare di esproprio con stima presunta delle indennità e dei costi
+      indiretti
+  - codice: E.15.3
+    descrizione: occupazione delle aree con redazione stati consistenza
+  - codice: E.15.4
+    descrizione: redazione tipo di frazionamento (a lavori ultimati) per l'effettiva individuazione della
+      aree da acquisire al patrimonio comunale
+  - codice: E.15.5
+    descrizione: Stima delle indennità da corrispondere a ciascun proprietario
+  - codice: E.15.6
+    descrizione: fissazione indennità provvisoria di esproprio
+  - codice: E.15.7
+    descrizione: pagamento diretto indennità condivise e deposito alla cassa DD.PP. di quelle non accettate
+  - codice: E.15.8
+    descrizione: Emissione decreto di esproprio
+- codice: E.16
+  denominazione: Liquidazione
+  tempi: Termini di legge
+  attori_esterni: Fornitori di beni e servizi; INPS (per acquisizione Durc).
+  attivita:
+  - codice: E.16.1
+    descrizione: Verifica regolarità della prestazione
+    rischi:
+    - codice: E.16.1_R.1
+      evento: Puntualità della verifica e adeguatezza del controllo rispetto al contratto ed alla prestazioni
+        ivi contenuta.
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.16.1_R.1_M.1
+        descrizione: 'Verifica entro 15 giorni dall''arrivo della fattura all''ufficio.Qualora trattasi
+          di forniture trasversali gli uffici devono trasmettere i giustificativi entro 15 giorni dalla
+          richiesta.Per la liquidazione di contributi: check list per verifica dei presupposti necessari
+          da parte del firmatarioLa determinazione di liquidazione deve essere adottata entro 15 giorni
+          dall''esito positivo delle verifiche di regolarità della prestazione.'
+        categoria: Controllo
+  - codice: E.16.2
+    descrizione: Predisposizione atto
+    rischi:
+    - codice: E.16.2_R.1
+      evento: Indeterminatezza del tempo per predisporre l'atto, rispetto alla conclusione delle verifiche.
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: E.16.2_R.1_M.1
+        descrizione: 'Verifica entro 15 giorni dall''arrivo della fattura all''ufficio.Qualora trattasi
+          di forniture trasversali gli uffici devono trasmettere i giustificativi entro 15 giorni dalla
+          richiesta.Per la liquidazione di contributi: check list per verifica dei presupposti necessari
+          da parte del firmatarioLa determinazione di liquidazione deve essere adottata entro 15 giorni
+          dall''esito positivo delle verifiche di regolarità della prestazione.'
+        categoria: Controllo
+- codice: E.17
+  denominazione: Parificazione conti agenti contabili interni ed esterni
+  tempi: entro 60 gg dall'approvazione del rendiconto della gestione ai sensi di quanto disposto dall'art.
+    233, comma 1, D.Lgs. 267/2000
+  attori_esterni: '* Agenti contabili esterni* Corte dei Conti - Sezione Giurisdizionale per la Toscana'
+  attivita:
+  - codice: E.17.1
+    descrizione: Acquisizione dei conti di gestione resi dagli agenti contabili interni ed esterni entro
+      il termine di 30 gg dalla chiusura dell'esercizio finanziario, ai sensi di quanto disposto dall'art.
+      233, comma 1, D.Lgs. 267/2000
+    rischi:
+    - codice: E.17.1_R.1
+      evento: Mancata richiesta di trasmissione del conto di gestione in caso di inadempienza da parte
+        dell'agente contabile
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.17.1_R.1_M.1
+        descrizione: Richiamo formale in caso di ritardo o mancata trasmissione del conto di gestione.
+          Considerata la specificità dell'imposta di soggiorno, sia per la natura dei soggetti che per
+          il n° degli stessi, l'attività sopra elencata è attribuita all'ufficio competente in tema di
+          tributi comunali.
+  - codice: E.17.2
+    descrizione: Controllo concordanza dati contenuti nei conti degli agenti contabili interni ed esterni
+      con le scritture contabili dell'Ente
+    rischi:
+    - codice: E.17.2_R.1
+      evento: Non effettuazione dei dovuti controlli contabili o l'effettuazione di controlli insufficienti
+        o inefficaci
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.17.2_R.1_M.1
+        descrizione: Elaborazione tramite la procedura informatica della contabilità di stampe/prospetti
+          dimostrativi delle concordanze contabili. Comunicazioni formali all'agente contabile in caso
+          di discordanze e/o richiesta informazioni. Rotazione del personale preposto alla verifica dei
+          conti di gestione. Apposizione firma da parte della competente P.O. Considerata la specificità
+          dell'imposta di soggiorno, sia per la natura dei soggetti che per il n° degli stessi, le attività
+          sopra elencate sono attribuite all'ufficio competente in tema di tributi comunali. Verifiche
+          periodiche da parte dell'organo di revisione contabile.
+        categoria: Formazione
+  - codice: E.17.3
+    descrizione: Rilascio parificazione del conto da parte del Responsabile del Servizio finanziario
+    rischi:
+    - codice: E.17.3_R.1
+      evento: Parificazione conto di gestione non conforme alle scritture contabili dell'Ente
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: E.17.3_R.1_M.1
+        descrizione: Verifica finale effettuata dal Responsabile del Servizio Finanziario mediante l'apposizione
+          del visto di parificazione. Presa d'atto dell'avvenuta parificazione dei conti di gestione e
+          relativa approvazione da parte della G.C.. Trasmissione dei conti di gestione alla Corte dei
+          Conti - Sezione Giurisdizionale per la Toscana per il successivo giudizio di conto. Considerata
+          la specificità dell'imposta di soggiorno, sia per la natura dei soggetti che per il n° degli
+          stessi, l'attività inerente la trasmissione dei conti di gestione alla Corte dei Conti è attribuita
+          all'ufficio competente in tema di tributi comunali.
+        categoria: Controllo
+- codice: E.18
+  denominazione: Gestione e rendicontazione di progetti finanziati
+  tempi: Stabiliti dai rispettivi programmi e regolamenti di finanziamento
+  attori_esterni: Uffici a vario titolo coinvolti nell'attuazione del progetto
+  attivita:
+  - codice: E.18.1
+    descrizione: Gestione del budget di progetto in conformità allo schema di previsione e alle finalità
+      per cui i fondi sono stati concessi
+    rischi:
+    - codice: E.18.1_R.1
+      evento: Strumentalità dell'impiego dei fondi di finanziamento rispetto alle finalità per cui sono
+        concessi
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli e mancanza di professionalità
+        formate nell'Ente
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Alto}
+      misure:
+      - codice: E.18.1_R.1_M.1
+        descrizione: Osservazione di procedura interna all'ufficio, con valore di linea guida generale
+          per la programmazione e gestione del finanziamento
+  - codice: E.18.2
+    descrizione: Rispetto termini di rendicontazione e reportistica nei confronti dell'Ente finanziatore
+    rischi:
+    - codice: E.18.2_R.1
+      evento: Mancata produzione o ritardi nella sottomissione dei documenti richiesti a verifica della
+        rendicontazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli e mancanza di professionalità
+        formate nell'Ente
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Alto}
+      misure:
+      - codice: E.18.2_R.1_M.1
+        descrizione: Predisposizione di timeplan e checklist delle scadenze all'avvio di ogni singolo
+          progetto/finanziamento e verifica del responsabile sulla congruità e completezza della documentazione
+          predisposta, prima di ciascuna sottomissione
+        categoria: Controllo
+      - codice: E.18.2_R.1_M.2
+        descrizione: Svolgimento di specifica formazione professionale del personale assegnato alle attività
+        categoria: Formazione
+  - codice: E.18.3
+    descrizione: Rispetto normativa e obblighi di monitoraggio PNRR
+    rischi:
+    - codice: E.18.3_R.1
+      evento: Scarso monitoraggio degli adempimenti legati all'attuzione dei progetti PNRR per gli aspetti
+        anticorruttivi, di regolarità del finanziamento e relativa tracciabilità
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Medio, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Alto, '3': Medio, '4': Alto}
+      misure:
+      - codice: E.18.3_R.1_M.1
+        descrizione: Osservazione del Protocollo di Intesa con la Guardia di Finanza rep. n. 73 del 19.01.2023
+      - codice: E.18.3_R.1_M.2
+        descrizione: Redazione documento di sintesi della strategia antifrode del Comune di Lucca entro
+          Giugno 2025 - in attuazione Reg. (Ue) 2021/241 e dal d.l. 77/2021
+      - codice: E.18.3_R.1_M.3
+        descrizione: Osservazione delle procedure inserite nella strategia antifrode approvata
+- codice: E.20
+  denominazione: Bilancio consolidato del Comune di Lucca
+  tempi: 30/09/2025
+  attori_esterni: Società e organismi partecipati, Collegio dei Revisori dei Conti
+  attivita:
+  - codice: E.20.1
+    descrizione: Individuazione del Gruppo Amministrazione Pubblica e degli enti da includere nel perimetro
+      di consolidamento, ai sensi del D.Lgs. 23.06.2011, n. 118 e relativo aggiornamento
+  - codice: E.20.2
+    descrizione: Predisposizione della nota informativa sulla verifica dei crediti e debiti reciproci
+      tra il Comune di Lucca e gli organismi partecipati ai sensi dell'art. 11, comma 6, lett. j), D.Lgs.
+      23.06.2011, n. 118
+  - codice: E.20.3
+    descrizione: Predisposizione del bilancio consolidato ai sensi del D.Lgs.n. 118/2011
+- codice: E.21
+  denominazione: Razionalizzazione periodica delle partecipazioni pubbliche ai sensi dell'art. 20 del
+    D.Lgs. n. 175/2016
+  tempi: 31 dicembre di ogni anno
+  attori_esterni: Società e organismi partecipati, MEF, Corte dei Conti, Collegio dei Revisori dei Conti
+  attivita:
+  - codice: E.21.1
+    descrizione: Definizione degli obiettivi delle società e organismi partecipati, ai sensi dell'art.
+      147 quater del D.Lgs. n. 267/2000
+  - codice: E.21.2
+    descrizione: Monitoraggio periodico sul raggiungimento degli obiettivi e predisposizione di report
+      periodici
+- codice: E.22
+  denominazione: Acquisto di immobili su offerta/proposta di terzi
+  attivita:
+  - codice: E.22.1
+    descrizione: Acquisto di immobili su offerta/proposta di terzi
+  - codice: E.22.2
+    descrizione: Stima del valore dimercato/parere di congruità dell'immobile
+  - codice: E.22.3
+    descrizione: Deliberazione di consiglio comunale di approvazionedell'acquisto
+  - codice: E.22.4
+    descrizione: Rogito notarile
+  - codice: E.22.5
+    descrizione: aggiornamento inventario degli immobili comunali

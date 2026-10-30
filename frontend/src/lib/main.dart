@@ -8,6 +8,7 @@ import 'stato/auth_state.dart';
 import 'ui/cambio_password_page.dart';
 import 'ui/home_shell.dart';
 import 'ui/login_page.dart';
+import 'ui/logo_ente.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,8 +36,16 @@ class AttiPaApp extends StatelessWidget {
         colorScheme: tema,
         fontFamily: 'Roboto',
         useMaterial3: true,
+        // righe degli elenchi e altre voci cliccabili: al passaggio del mouse si evidenziano
+        hoverColor: tema.primary.withValues(alpha: 0.10),
         inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
         cardTheme: const CardThemeData(elevation: 0.5),
+        // fondo con il logo dell'ente sotto ogni pagina (TransizioneConSfondo): gli Scaffold
+        // sono trasparenti
+        scaffoldBackgroundColor: Colors.transparent,
+        pageTransitionsTheme: PageTransitionsTheme(builders: {
+          for (final piattaforma in TargetPlatform.values) piattaforma: const TransizioneConSfondo(),
+        }),
       ),
       locale: const Locale('it'),
       supportedLocales: const [Locale('it')],

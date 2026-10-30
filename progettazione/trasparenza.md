@@ -1,6 +1,6 @@
 # Modulo Trasparenza — analisi di PApuntozeroIA e piano di integrazione
 
-Stato: **backend e app fatti** (passi 1-4); da fare la migrazione dei dati (5). Decisioni al §5. Fonte: `private_zone/PApuntozeroIA`
+Stato: **backend e app fatti** (passi 1-4); la migrazione dei dati si fa a mano (§3). Decisioni al §5. Fonte: `private_zone/PApuntozeroIA`
 (commit `ed245a5`, 20/10/2026).
 
 ## 1. Cosa fa oggi
@@ -64,7 +64,8 @@ modulo si chiama `trasparenza` e si attiva per ente con `enti.py moduli CODICE .
 | Codice | `app.py` unico | `moduli/trasparenza/` (vedi §4): schemi, registro, estrazione, prompt, viste |
 | LLM | SDK Gemini | client LLM comune (`common/llm`), quindi qualunque provider configurato |
 | Conversioni | `soffice` e `pandoc` nel container dell'API | servizio `converter` già esistente (LibreOffice), con in più HTML → PDF/DOCX |
-| Lavori lunghi | sincroni | **in coda** (RabbitMQ) come le verifiche degli atti: l'app crea il lavoro e ne segue lo stato |
+| Lavori lunghi | sincroni | **in coda** (RabbitMQ) come le verifiche degli atti: l'app crea il lavoro e lo segue nella scheda "Analisi avviate", senza bloccare la pagina |
+| Report dell'analisi | HTML completo scritto dal modello | il modello risponde con un **JSON** (analisi, rilievi, esiti) e il report HTML lo compone il server: meno token generati, badge e tabella sempre uguali |
 | Scraping | `requests` + Playwright nel container dell'API | nel **worker**, che ha il browser; l'immagine dell'API resta leggera |
 | Sicurezza | `security.py` | ripreso così com'è (nh3, SSRF) |
 | Editor dei risultati | `html_editor_enhanced` (Summernote in un iframe `srcdoc` con script inline) | Summernote servito come pagina statica (`frontend/src/web/editor`), in un iframe della stessa origine con una CSP propria senza script inline; l'app gli parla con `postMessage`. Così la CSP dell'app resta senza `'unsafe-inline'` |
@@ -87,6 +88,7 @@ modulo si chiama `trasparenza` e si attiva per ente con `enti.py moduli CODICE .
 | `POST /api/v1/trasparenza/analisi` (URL o file) → lavoro | `/ai_analyze` |
 | `POST /api/v1/trasparenza/estrazioni` (URL o file) → lavoro | `/estrai_dati` |
 | `GET /api/v1/trasparenza/lavori/<id>` | — (stato e risultato) |
+| `GET /api/v1/trasparenza/lavori`, `DELETE /api/v1/trasparenza/lavori/<id>` | — (analisi avviate degli ultimi 30 giorni, scheda "Analisi avviate"; si toglie un lavoro concluso o si annulla uno in coda) |
 | `GET/POST/PUT/DELETE /api/v1/trasparenza/documenti[/<id>]` | `load_documents`, `load_document`, `save_document`, `delete_document` |
 | `POST /api/v1/trasparenza/verbale` | `/crea_verbale` |
 | `POST /api/v1/trasparenza/esporta?formato=pdf\|docx` | `/html2pdf`, `/html2docx` |
@@ -95,23 +97,9 @@ modulo si chiama `trasparenza` e si attiva per ente con `enti.py moduli CODICE .
 
 ## 3. Migrazione dei dati di produzione
 
-Script `deploy/migra_trasparenza.py`, da eseguire una volta nel container dell'API, dopo aver
-creato gli enti con `enti.py`. Legge il database di PApuntozeroIA (`TRASPARENZA_DATABASE_URL`)
-e una tabella di corrispondenza `offices.id → codice ente`.
-
-1. **Enti**: per ogni `office` copia `authority_features` e `description` nei dati dell'ente e
-   il logo (dai file di `static/sc`) nel logo dell'ente.
-2. **Utenti**: crea l'utente locale nell'ente con lo stesso username e lo stesso hash bcrypt
-   (si rigenera al primo login); ruolo di operatore della trasparenza. Se nell'ente esiste
-   già un utente con quel nome (es. di Active Directory) lo segnala e collega i documenti a
-   quello esistente.
-3. **Documenti**: copia `user_documents` in `trasparenza_documenti` mantenendo date, esito e
-   dati del form; il tipo si ricava (dati del form → SCHEDA, esito → ANALISI, altrimenti
-   VERBALE). L'HTML viene sanificato.
-4. Riepilogo finale: enti, utenti creati o collegati, documenti, anomalie. Si può rilanciare
-   senza duplicare (`--prova` per vedere cosa farebbe).
-
-Si prova prima su una copia del database di produzione.
+Manuale, senza procedura automatica: corrispondenze e differenze da gestire (id, tipologia
+dell'ente nelle caratteristiche, utenti, tipo dei documenti, logo nei documenti) sono in
+[migrazione_trasparenza.md](migrazione_trasparenza.md).
 
 ## 4. Organizzazione del codice
 

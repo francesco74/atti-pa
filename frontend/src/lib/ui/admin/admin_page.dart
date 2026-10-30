@@ -8,6 +8,7 @@ import '../../stato/auth_state.dart';
 import 'ente_accesso.dart';
 import 'pacchetti.dart';
 import 'profilo_ente.dart';
+import 'strutture.dart';
 import '../../util/scelta_file.dart';
 
 /// Da dove viene un modello o una checklist: dal pacchetto standard (eventualmente
@@ -18,7 +19,7 @@ String provenienza(Map<String, dynamic> o) => o['pacchetto'] == null
         ? 'standard (${o['pacchetto']})'
         : 'standard modificato dall\'ente';
 
-/// Amministrazione dell'ente: profilo, accesso e utenti sempre; dati per gli atti, pacchetti
+/// Amministrazione dell'ente: profilo, accesso, strutture organizzative e utenti sempre; dati per gli atti, pacchetti
 /// e aggiornamenti delle norme se l'ente usa la redazione degli atti.
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
@@ -26,15 +27,16 @@ class AdminPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final redazione = context.read<AuthState>().utente?.modulo('redazione') ?? false;
+    final anticorruzione = context.read<AuthState>().utente?.modulo('anticorruzione') ?? false;
     final schede = <(Tab, Widget)>[
       const (Tab(icon: Icon(Icons.badge_outlined), text: 'Profilo dell\'ente'), ProfiloEntePage()),
       const (Tab(icon: Icon(Icons.login), text: 'Accesso'), AccessoEntePage()),
+      const (Tab(icon: Icon(Icons.account_tree_outlined), text: 'Strutture organizzative'), StrutturePage()),
       const (Tab(icon: Icon(Icons.people_outline), text: 'Utenti'), UtentiEntePage()),
-      if (redazione) ...const [
-        (Tab(icon: Icon(Icons.apartment), text: 'Dati per gli atti'), _ModelliEnte()),
-        (Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'), PacchettiPage()),
-        (Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'), _Aggiornamenti()),
-      ],
+      if (redazione) const (Tab(icon: Icon(Icons.apartment), text: 'Dati per gli atti'), _ModelliEnte()),
+      if (redazione || anticorruzione)
+        const (Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'), PacchettiPage()),
+      if (redazione) const (Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'), _Aggiornamenti()),
     ];
     return DefaultTabController(
       length: schede.length,

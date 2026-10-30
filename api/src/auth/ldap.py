@@ -33,6 +33,8 @@ GRUPPI_PREDEFINITI = {
     Ruolo.CONTROLLORE: "ATTI-PA-Controllori",
     Ruolo.GESTORE_MODELLI: "ATTI-PA-Gestori-Modelli",
     Ruolo.TRASPARENZA: "ATTI-PA-Trasparenza",
+    Ruolo.ANTICORRUZIONE_REFERENTE: "ATTI-PA-Anticorruzione-Referenti",
+    Ruolo.ANTICORRUZIONE_RPCT: "ATTI-PA-Anticorruzione-RPCT",
     Ruolo.ADMIN: "ATTI-PA-Admin",
 }
 

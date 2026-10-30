@@ -44,7 +44,14 @@ class Ruolo:
     GESTORE_MODELLI = "GESTORE_MODELLI"  # modifica modelli, specificità e checklist in bozza
     ADMIN = "ADMIN"  # amministratore dell'ente: pubblica le modifiche ai modelli
     TRASPARENZA = "TRASPARENZA"  # modulo trasparenza: analisi, schede, verbali
-    TUTTI = (REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA, ADMIN)
+    # modulo anticorruzione: il referente propone e compila il monitoraggio della sua
+    # struttura; il RPCT (e il suo staff) modifica, approva e verifica
+    ANTICORRUZIONE_REFERENTE = "ANTICORRUZIONE_REFERENTE"
+    ANTICORRUZIONE_RPCT = "ANTICORRUZIONE_RPCT"
+    TUTTI = (
+        REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA,
+        ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT, ADMIN,
+    )  # fmt: skip
 
 
 class Modulo:
@@ -52,7 +59,8 @@ class Modulo:
 
     REDAZIONE = "redazione"  # redazione e controllo degli atti, modelli e checklist
     TRASPARENZA = "trasparenza"  # verifica e schede di Amministrazione Trasparente
-    TUTTI = (REDAZIONE, TRASPARENZA)
+    ANTICORRUZIONE = "anticorruzione"  # mappatura dei processi e gestione del rischio corruttivo
+    TUTTI = (REDAZIONE, TRASPARENZA, ANTICORRUZIONE)
 
 
 UTENTE_ADMIN = "admin"  # amministratore creato con l'ente (deploy/enti.py)
@@ -112,6 +120,24 @@ class EnteDominio(Base):
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
 
 
+class Struttura(Base):
+    """Struttura organizzativa dell'ente (settore, staff, U.O.), con la gerarchia: un utente
+    assegnato a una struttura opera anche su quelle sottostanti. Usata da tutti i moduli.
+    Una struttura soppressa si disattiva: lo storico può richiamarla."""
+
+    __tablename__ = "strutture"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_struttura_ente"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    codice: Mapped[str] = mapped_column(String(50))  # es. "SETTORE 2", "U.O. 2.2"
+    descrizione: Mapped[str] = mapped_column(String(255))
+    padre_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="RESTRICT"))
+    ordine: Mapped[int] = mapped_column(Integer, default=0)
+    attiva: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class User(Base):
     """Utente di un ente (Active Directory o locale). Ogni ente nasce con l'utente locale
     admin (UTENTE_ADMIN), con la password iniziale da cambiare al primo accesso."""
@@ -132,6 +158,8 @@ class User(Base):
     nome_completo: Mapped[str | None] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255))
     ufficio: Mapped[str | None] = mapped_column(String(255))
+    # struttura organizzativa, assegnata dall'amministratore (anche agli utenti di AD)
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
     # decreto di conferimento dell'incarico (es. "del Sindaco n. 12 del 3 gennaio 2026"):
     # precompila la competenza negli atti
     decreto_incarico: Mapped[str | None] = mapped_column(String(255))
@@ -552,6 +580,246 @@ class TrasparenzaLavoro(Base):
     worker: Mapped[str | None] = mapped_column(String(100))
     avviato_il: Mapped[datetime | None] = mapped_column(DateTime)
     completato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+
+# --- modulo anticorruzione (progettazione/anticorruzione.md) --------------------------------
+
+
+class AcMetodologia(Base):
+    """Metodologia di valutazione del rischio adottata dall'ente nel PIAO (indicatori, scala,
+    matrice, livelli; common/anticorruzione/metodologia.py). Senza riga vale lo standard."""
+
+    __tablename__ = "ac_metodologie"
+
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"), primary_key=True)
+    dati: Mapped[dict[str, Any]] = mapped_column(JSON)
+    impronta: Mapped[str | None] = mapped_column(String(64))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
+    impronta_base: Mapped[str | None] = mapped_column(String(64))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+# Modulo anticorruzione. Le relationship(lazy="raise") verso le tabelle "padre" non servono
+# per leggere (si usano gli id) ma dicono alla sessione in che ordine scrivere: senza, una misura
+# può essere inserita prima del suo rischio e MySQL rifiuta la chiave esterna.
+
+
+class AcArea(Base):
+    """Area di rischio (PNA: A, B, C... più quelle dell'ente)."""
+
+    __tablename__ = "ac_aree"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_area"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    codice: Mapped[str] = mapped_column(String(20))
+    descrizione: Mapped[str] = mapped_column(String(500))
+    descrizione_breve: Mapped[str | None] = mapped_column(String(255))
+    ordine: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class AcProcesso(Base):
+    """Processo mappato: si compone di attività, che hanno rischi, mitigati da misure. Senza
+    struttura responsabile è trasversale (tutti i servizi). La provenienza (pacchetto) è del
+    processo intero, con le sue attività, rischi e misure."""
+
+    __tablename__ = "ac_processi"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_processo"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    codice: Mapped[str] = mapped_column(String(50))  # es. A.1
+    area_id: Mapped[str | None] = mapped_column(ForeignKey("ac_aree.id", ondelete="SET NULL"))
+    area: Mapped["AcArea | None"] = relationship(lazy="raise")
+    denominazione: Mapped[str] = mapped_column(String(500))
+    descrizione: Mapped[str | None] = mapped_column(Text)
+    tempi: Mapped[str | None] = mapped_column(Text)
+    attori_esterni: Mapped[str | None] = mapped_column(Text)
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    impronta: Mapped[str | None] = mapped_column(String(64))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
+    impronta_base: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class AcAttivita(Base):
+    __tablename__ = "ac_attivita"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_attivita"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    processo_id: Mapped[str] = mapped_column(ForeignKey("ac_processi.id", ondelete="CASCADE"))
+    processo: Mapped["AcProcesso"] = relationship(lazy="raise")
+    codice: Mapped[str] = mapped_column(String(50))  # es. A.1.1
+    descrizione: Mapped[str] = mapped_column(Text)
+    strutture_coinvolte: Mapped[str | None] = mapped_column(Text)
+
+
+class AcRischio(Base):
+    """Evento rischioso di un'attività, con la valutazione: valori degli indicatori,
+    probabilità e impatto calcolati (moda) ed eventualmente corretti con motivazione, livello
+    dalla matrice della metodologia."""
+
+    __tablename__ = "ac_rischi"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_rischio"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    attivita_id: Mapped[str] = mapped_column(ForeignKey("ac_attivita.id", ondelete="CASCADE"))
+    attivita: Mapped["AcAttivita"] = relationship(lazy="raise")
+    codice: Mapped[str] = mapped_column(String(60))  # es. A.1.1_R.1
+    evento: Mapped[str] = mapped_column(Text)
+    fattore_abilitante: Mapped[str | None] = mapped_column(String(500))
+    valori_probabilita: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # {id indicatore: valore}
+    valori_impatto: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    probabilita_calcolata: Mapped[str | None] = mapped_column(String(50))
+    impatto_calcolato: Mapped[str | None] = mapped_column(String(50))
+    probabilita: Mapped[str | None] = mapped_column(String(50))
+    impatto: Mapped[str | None] = mapped_column(String(50))
+    livello: Mapped[str | None] = mapped_column(String(50))
+    motivazione_correzione: Mapped[str | None] = mapped_column(Text)
+    valutato_il: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class AcMisura(Base):
+    """Misura che mitiga un rischio: generale o specifica, con la categoria (PNA), l'eventuale
+    obbligo di pubblicazione (schema ANAC del modulo trasparenza) e l'attuazione programmata."""
+
+    __tablename__ = "ac_misure"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_misura"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    rischio_id: Mapped[str] = mapped_column(ForeignKey("ac_rischi.id", ondelete="CASCADE"))
+    rischio: Mapped["AcRischio"] = relationship(lazy="raise")
+    codice: Mapped[str] = mapped_column(String(70))  # es. A.1.1_R.1_M.1
+    descrizione: Mapped[str] = mapped_column(Text)
+    tipo: Mapped[str] = mapped_column(String(20), default="SPECIFICA")  # GENERALE, SPECIFICA
+    categoria: Mapped[str | None] = mapped_column(String(255))
+    obbligo_trasparenza: Mapped[str | None] = mapped_column(String(100))  # schema ANAC, es. ART_23
+    fasi: Mapped[str | None] = mapped_column(Text)
+    tempi: Mapped[str | None] = mapped_column(Text)
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    indicatore: Mapped[str | None] = mapped_column(Text)
+    target: Mapped[str | None] = mapped_column(Text)
+
+
+
+class AcProposta(Base):
+    """Proposta di un referente sulla mappatura: creazione, modifica o eliminazione di un
+    processo intero (dati: processo con attività, rischi, misure e valutazioni). Stati:
+    BOZZA -> INVIATA -> APPROVATA (applicata) | RESPINTA | RESTITUITA (si corregge e si
+    reinvia)."""
+
+    __tablename__ = "ac_proposte"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(10))  # CREA, MODIFICA, ELIMINA
+    processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="SET NULL"))
+    processo: Mapped["AcProcesso | None"] = relationship(lazy="raise")
+    dati: Mapped[dict[str, Any]] = mapped_column(JSON)
+    stato: Mapped[str] = mapped_column(String(20), default="BOZZA")
+    nota: Mapped[str | None] = mapped_column(Text)  # del referente
+    motivazione: Mapped[str | None] = mapped_column(Text)  # del RPCT (respinta, restituita, approvata)
+    # data di modifica del processo quando è nata la proposta: all'approvazione segnala se
+    # nel frattempo il processo è cambiato
+    base_aggiornamento: Mapped[datetime | None] = mapped_column(DateTime)
+    deciso_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    inviata_il: Mapped[datetime | None] = mapped_column(DateTime)
+    decisa_il: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+
+class AcMonitoraggio(Base):
+    """Dichiarazione annuale sull'attuazione di una misura da parte di una struttura, con la
+    verifica del RPCT. Conserva una copia della misura e del suo contesto (processo, attività,
+    rischio, struttura) com'erano al momento della dichiarazione: resta anche se la mappatura
+    cambia. Una misura trasversale (senza struttura responsabile) la dichiara ogni struttura."""
+
+    __tablename__ = "ac_monitoraggi"
+    __table_args__ = (UniqueConstraint("ente_id", "anno", "misura_id", "struttura_id", name="uq_ac_monitoraggio"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    anno: Mapped[int] = mapped_column(Integer)
+    misura_id: Mapped[str | None] = mapped_column(ForeignKey("ac_misure.id", ondelete="SET NULL"))
+    misura: Mapped["AcMisura | None"] = relationship(lazy="raise")
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    contesto: Mapped[dict[str, Any]] = mapped_column(JSON)  # copia di misura, rischio, attività, processo, struttura
+    stato_attuazione: Mapped[str] = mapped_column(String(20))  # ATTUATA, PARZIALE, NON_ATTUATA
+    motivazione: Mapped[str | None] = mapped_column(Text)
+    indicatore_rilevato: Mapped[str | None] = mapped_column(Text)
+    target: Mapped[str | None] = mapped_column(Text)
+    evidenze: Mapped[str | None] = mapped_column(Text)
+    dichiarato_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    dichiarato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    stato_verifica: Mapped[str] = mapped_column(String(20), default="DA_VERIFICARE")  # VERIFICATA, CONTESTATA
+    note_rpct: Mapped[str | None] = mapped_column(Text)
+    verificato_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    verificato_il: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+
+class AcPiao(Base):
+    """PIAO dell'ente (anno o triennio, atto di approvazione): raggruppa gli obiettivi."""
+
+    __tablename__ = "ac_piao"
+    __table_args__ = (UniqueConstraint("ente_id", "anno_inizio", name="uq_ac_piao"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    anno_inizio: Mapped[int] = mapped_column(Integer)
+    anno_fine: Mapped[int] = mapped_column(Integer)
+    descrizione: Mapped[str] = mapped_column(String(255))
+    atto: Mapped[str | None] = mapped_column(String(255))  # es. "DGC n. 59 del 26/03/2026"
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class AcObiettivo(Base):
+    """Obiettivo di performance del PIAO, assegnato a una struttura (un settore copre le sue
+    U.O.); del Piano si conservano il centro e la sua descrizione com'erano nel file."""
+
+    __tablename__ = "ac_obiettivi"
+    __table_args__ = (UniqueConstraint("piao_id", "codice", "anno", name="uq_ac_obiettivo"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    piao_id: Mapped[str] = mapped_column(ForeignKey("ac_piao.id", ondelete="CASCADE"))
+    piao: Mapped["AcPiao"] = relationship(lazy="raise")
+    codice: Mapped[str] = mapped_column(String(100))
+    anno: Mapped[int] = mapped_column(Integer)
+    titolo: Mapped[str | None] = mapped_column(Text)
+    tipo: Mapped[str | None] = mapped_column(String(100))  # Operativo, Funzionamento, Miglioramento...
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    centro_piano: Mapped[str | None] = mapped_column(String(255))
+    centro_descrizione: Mapped[str | None] = mapped_column(String(500))
+    responsabile: Mapped[str | None] = mapped_column(String(255))
+    fonte: Mapped[str | None] = mapped_column(String(255))  # file da cui è stato importato
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class AcObiettivoCollegamento(Base):
+    """Processo o attività che concorre a un obiettivo. Un processo porta con sé le sue
+    attività, rischi e misure, anche quelli aggiunti dopo (si calcola in lettura)."""
+
+    __tablename__ = "ac_obiettivi_collegamenti"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    obiettivo_id: Mapped[str] = mapped_column(ForeignKey("ac_obiettivi.id", ondelete="CASCADE"))
+    obiettivo: Mapped["AcObiettivo"] = relationship(lazy="raise")
+    processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="CASCADE"))
+    processo: Mapped["AcProcesso | None"] = relationship(lazy="raise")
+    attivita_id: Mapped[str | None] = mapped_column(ForeignKey("ac_attivita.id", ondelete="CASCADE"))
+    attivita: Mapped["AcAttivita | None"] = relationship(lazy="raise")
+    note: Mapped[str | None] = mapped_column(Text)
+    utente_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 

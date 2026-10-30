@@ -301,6 +301,10 @@ class Schema(_Base):
     # sceglie la sezione da verificare. Si scrivono a mano solo negli schemi
     # con una sezione (es. art. 14, controlli per tipo di soggetto).
     audit: list[VarianteAudit] = []
+    # Eccezione alla regola "un controllo per sezione": l'analisi IA propone un
+    # solo controllo per tutto lo schema (es. art. 36, dove le sezioni sono i
+    # casi alternativi della stessa pagina e il modello individua quello giusto).
+    controllo_unico: bool = False
 
     @field_validator("sezioni")
     @classmethod
@@ -353,7 +357,7 @@ class Schema(_Base):
     @property
     def controlli_per_sezione(self) -> bool:
         """Più sezioni (o gruppi di sezioni alternative): un controllo per ciascuna."""
-        return len({s.controllo or s.id for s in self.sezioni}) > 1
+        return not self.controllo_unico and len({s.controllo or s.id for s in self.sezioni}) > 1
 
     def _genera_controlli(self) -> list:
         gruppi: dict = {}

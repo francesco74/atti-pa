@@ -248,6 +248,7 @@ class LlmClient:
             len(messaggi),
             len(sistema) + sum(len(m["content"]) for m in messaggi),
         )
+        log.debug("Prompt di sistema:\n%s", _accorcia(sistema))
         log.debug("Ultimo messaggio inviato:\n%s", _accorcia(messaggi[-1]["content"]))
         inizio = time.perf_counter()
         contenuto = await self._completa(sistema, messaggi, formato=formato, redazione=redazione)
@@ -312,10 +313,6 @@ class LlmClient:
         return await self._valuta_json(
             testo_prompt("dati_personali_sistema"), prompt, DatiTrovati, interattiva=interattiva
         )
-
-    async def genera(self, sistema: str, testo: str) -> str:
-        """Testo libero lungo (es. report di un'analisi), nel worker: timeout pieno."""
-        return await self._chiama(sistema, [{"role": "user", "content": testo}], formato=None, redazione=False)
 
     async def dati_json(self, sistema: str, testo: str, schema: dict) -> dict:
         """Risposta JSON conforme a uno schema costruito al momento (JSON Schema); se non è
@@ -418,9 +415,13 @@ class ClientCompatibileOpenAI(LlmClient):
                 e.response.text[:300],
             )
             raise LlmError(f"Chiamata al modello fallita: HTTP {e.response.status_code}") from e
+        except httpx.TimeoutException as e:
+            limite = self.timeout_redazione if redazione else self.timeout
+            log.warning("Chiamata a %s (%s) fallita: nessuna risposta in %.0f s", self.provider, self.modello, limite)
+            raise LlmError(f"Il modello non ha risposto entro {limite:.0f} secondi") from e
         except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
-            log.warning("Chiamata a %s (%s) fallita: %s", self.provider, self.modello, e)
-            raise LlmError(f"Chiamata al modello fallita: {e}") from e
+            log.warning("Chiamata a %s (%s) fallita: %r", self.provider, self.modello, e)
+            raise LlmError(f"Chiamata al modello fallita: {e or type(e).__name__}") from e
 
 
 # Fallback lato server: se i filtri di sicurezza di Claude rifiutano una richiesta, l'API

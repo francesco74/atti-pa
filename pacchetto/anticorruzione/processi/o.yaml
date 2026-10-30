@@ -1,0 +1,44 @@
+# Processi standard dell'area O: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: O
+processi:
+- codice: O.1
+  denominazione: Attività istruttoria di supporto al Soggetto gestore in materia di antiriciclaggio
+  attori_esterni: UIF della Banca d'Italia, soggetto gestore e referenti/segnalanti
+  attivita:
+  - codice: O.1.1
+    descrizione: Raccolta delle segnalazioni interne in materia di antiriciclaggio, istruttoria e approfondimenti
+      con gli uffici competenti ed eventuale trasmissione telematica alla U.I.F. Della Banca d'Italia
+- codice: O.2
+  denominazione: Segreteria di supporto al Nucleo di Valutazione
+  tempi: triennio di riferimento
+  attori_esterni: componenti NDV
+  attivita:
+  - codice: O.2.1
+    descrizione: Gestione incontri con il NdV (predisposizione materiale per il NdV e relativa trasmissione,
+      organizzazione incontri, verbalizzazione)
+  - codice: O.2.2
+    descrizione: Supporto al NDV per predisposizione griglia Trasparenza
+  - codice: O.2.3
+    descrizione: Cura e gestione dei rapporti tra NdV e uffici comunali
+  - codice: O.2.4
+    descrizione: Cura delle pubblicazione in Amministrazione Trasparenza della documentazione elaborata
+      da NdV
+- codice: O.4
+  denominazione: Supporto all'attivitα deliberativa della Giunta Comunale e del Consiglio Comunale
+  tempi: Convocazione almeno 5 giorni prima della seduta; pubblicazione delibere entro 10 giorni dall'adozione
+  attori_esterni: Consiglieri comunali, componenti della Giunta, cittadini (per pubblicazione atti)
+  attivita:
+  - codice: O.4.1
+    descrizione: Ricezione delle proposte di deliberazione dagli uffici competenti, verifica formale della
+      completezza documentale e dei pareri di regolaritα tecnica e contabile
+  - codice: O.4.2
+    descrizione: Redazione dell'ordine del giorno, predisposizione degli atti di convocazione e trasmissione
+      ai componenti dell'organo collegiale nei termini previsti
+  - codice: O.4.3
+    descrizione: Assistenza durante le sedute degli organi collegiali, verbalizzazione delle deliberazioni
+      e delle votazioni
+  - codice: O.4.4
+    descrizione: Numerazione, repertoriazione e pubblicazione delle deliberazioni adottate; trasmissione
+      ai capigruppo consiliari e agli uffici competenti

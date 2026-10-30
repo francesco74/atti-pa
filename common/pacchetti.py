@@ -1,4 +1,5 @@
-"""Pacchetti di modelli di atto, specificità e checklist: il database comanda.
+"""Pacchetti di modelli di atto, specificità, checklist e contenuti anticorruzione: il
+database comanda.
 
 L'ente modifica nell'app modelli, specificità (moduli di regole) e checklist. I contenuti
 standard forniti dall'azienda arrivano come pacchetti: una cartella o uno zip con
@@ -7,6 +8,8 @@ standard forniti dall'azienda arrivano come pacchetti: una cartella o uno zip co
     modelli/*.yaml          modelli di atto
     modelli/regole/*.yaml   specificità
     checklist/*.json        schede di controllo
+    anticorruzione/...      metodologia, aree di rischio e processi standard (modulo
+                            anticorruzione: common/anticorruzione/pacchetto.py)
 
 Il sistema parte vuoto: il pacchetto standard (sorgenti in pacchetto/, zip creato con
 deploy/pacchetto.py crea) si carica da Amministrazione come tutti i successivi. Nessun file
@@ -25,8 +28,9 @@ oggetto, confronta tre versioni con le impronte del contenuto:
     l'ente l'ha disattivato  DISATTIVATO    resta disattivato, salvo scelta diversa
     tolto dallo standard     RIMOSSO        resta, salvo scelta di disattivarlo
 
-Ogni aggiornamento crea una nuova versione: le bozze e le verifiche restano legate a
-quella usata. Le specificità si compongono nei modelli: quando cambiano, i modelli che le
+Ogni aggiornamento di modelli, specificità e checklist crea una nuova versione: le bozze e
+le verifiche restano legate a quella usata. Metodologia e processi non hanno versioni: si
+aggiornano sul posto, e solo per gli enti con il modulo anticorruzione. Le specificità si compongono nei modelli: quando cambiano, i modelli che le
 usano ricevono una nuova versione (ricomponi_modelli).
 """
 
@@ -55,10 +59,15 @@ from common.configurazione import (
     leggi_checklist,
     sorgente_checklist,
 )
+from common.anticorruzione import pacchetto as ac
 from common.models import (
+    AcMetodologia,
+    AcProcesso,
     AuditLog,
     Checklist,
+    Ente,
     ModelloAtto,
+    Modulo,
     ModuloDiRegole,
     TipologiaAtto,
 )
@@ -77,8 +86,9 @@ MANIFESTO = "pacchetto.yaml"
 MAX_FILE_ZIP = 500  # file in un pacchetto
 MAX_BYTE_ZIP = 20 * 1024 * 1024  # contenuto decompresso
 
-Tipo = Literal["modulo", "modello", "checklist"]
-ORDINE_TIPI: tuple[Tipo, ...] = ("modulo", "modello", "checklist")
+Tipo = Literal["modulo", "modello", "checklist", "metodologia", "processo"]
+ORDINE_TIPI: tuple[Tipo, ...] = ("modulo", "modello", "checklist", "metodologia", "processo")
+TIPI_ANTICORRUZIONE = ("metodologia", "processo")
 
 
 class PacchettoNonValido(ValueError):
@@ -127,6 +137,7 @@ class Oggetto:
 class Pacchetto:
     manifesto: Manifesto
     oggetti: list[Oggetto]
+    aree: list[ac.AreaStd] = field(default_factory=list)  # aree di rischio (anticorruzione)
 
     def di_tipo(self, tipo: Tipo) -> list[Oggetto]:
         return [o for o in self.oggetti if o.tipo == tipo]
@@ -158,6 +169,7 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
         raise PacchettoNonValido([f"{MANIFESTO}: {e}"]) from e
     oggetti: list[Oggetto] = []
     moduli: list[ModuloRegole] = []
+    aree: list[ac.AreaStd] = []
     for percorso in sorted(file):
         p = PurePosixPath(percorso)
         sorgente = file[percorso]
@@ -180,6 +192,21 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                         "checklist", d.codice, d.titolo, percorso, sorgente, impronta_checklist(d)
                     )
                 )
+            elif percorso == ac.FILE_METODOLOGIA:
+                m = ac.leggi_metodologia(sorgente)
+                oggetti.append(
+                    Oggetto("metodologia", "metodologia", "Metodologia di valutazione del rischio",
+                            percorso, sorgente, ac.impronta_metodologia(m))
+                )  # fmt: skip
+            elif percorso == ac.FILE_AREE:
+                aree = ac.leggi_aree(sorgente)
+            elif p.parent == PurePosixPath(ac.CARTELLA_PROCESSI) and p.suffix == ".yaml":
+                f = ac.leggi_processi(sorgente)
+                for proc in f.processi:  # ogni processo è un oggetto
+                    oggetti.append(
+                        Oggetto("processo", proc.codice, proc.denominazione, percorso,
+                                ac.sorgente_processo(proc, f.area), ac.impronta_processo(proc, f.area))
+                    )  # fmt: skip
         except (ModelloNonValido, ValueError) as e:
             errori.append(f"{percorso}: {e}")
     for tipo in ORDINE_TIPI:
@@ -192,9 +219,15 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                 leggi_modello(o.sorgente, moduli)
             except ModelloNonValido as e:
                 errori.append(f"{o.percorso} con le specificità: {e}")
+    codici_aree = {a.codice for a in aree}
+    for o in oggetti:
+        if o.tipo == "processo":
+            area = ac.leggi_processi(o.sorgente).area
+            if area and area not in codici_aree:
+                errori.append(f"{o.percorso}: area {area} non definita in {ac.FILE_AREE}")
     if errori:
         raise PacchettoNonValido(errori)
-    return Pacchetto(manifesto, oggetti)
+    return Pacchetto(manifesto, oggetti, aree)
 
 
 def da_cartella(cartella: Path) -> dict[str, str]:
@@ -205,6 +238,9 @@ def da_cartella(cartella: Path) -> dict[str, str]:
         *sorted((cartella / "modelli").glob("*.yaml")),
         *sorted((cartella / "modelli" / "regole").glob("*.yaml")),
         *sorted((cartella / "checklist").glob("*.json")),
+        cartella / ac.FILE_METODOLOGIA,
+        cartella / ac.FILE_AREE,
+        *sorted((cartella / ac.CARTELLA_PROCESSI).glob("*.yaml")),
     ]
     for f in candidati:
         if f.is_file():
@@ -237,8 +273,8 @@ def da_zip(dati: bytes) -> dict[str, str]:
         p = PurePosixPath(relativo)
         if ".." in p.parts or p.is_absolute():
             continue
-        if relativo == MANIFESTO or (
-            str(p.parent) in ("modelli", "modelli/regole", "checklist")
+        if relativo in (MANIFESTO, ac.FILE_METODOLOGIA, ac.FILE_AREE) or (
+            str(p.parent) in ("modelli", "modelli/regole", "checklist", ac.CARTELLA_PROCESSI)
             and p.suffix in (".yaml", ".json")
         ):
             try:
@@ -521,10 +557,35 @@ def _voce(o, stato: Stato, azione: Azione, azioni: list[Azione], versione=None) 
     )
 
 
+async def _stato_anticorruzione(db: AsyncSession, ente_id: str, o: Oggetto) -> tuple[bool, str | None, str | None]:
+    """Metodologia o processo nell'ente: (presente, impronta attuale, impronta base)."""
+    if o.tipo == "metodologia":
+        riga, m = await ac.metodologia_ente(db, ente_id)
+        if riga is None:
+            return False, None, None
+        return True, ac.impronta_metodologia(m), riga.impronta_base
+    trovato = await ac.processo_ente(db, ente_id, o.codice)
+    if trovato is None:
+        return False, None, None
+    processo, std, area = trovato
+    return True, ac.impronta_processo(std, area), processo.impronta_base
+
+
+async def _con_anticorruzione(db: AsyncSession, ente_id: str) -> bool:
+    ente = await db.get(Ente, ente_id)
+    return ente is not None and ente.modulo_attivo(Modulo.ANTICORRUZIONE)
+
+
 async def analizza(db: AsyncSession, ente_id: str, pacchetto: Pacchetto) -> list[Voce]:
-    """Cosa succede importando il pacchetto, oggetto per oggetto (confronto a tre vie)."""
+    """Cosa succede importando il pacchetto, oggetto per oggetto (confronto a tre vie).
+    I contenuti anticorruzione contano solo per gli enti con quel modulo."""
     voci: list[Voce] = []
+    anticorruzione = await _con_anticorruzione(db, ente_id)
     for tipo in ORDINE_TIPI:
+        if tipo in TIPI_ANTICORRUZIONE:
+            if anticorruzione:
+                voci += await _analizza_anticorruzione(db, ente_id, pacchetto, tipo)
+            continue
         nel_pacchetto = {o.codice for o in pacchetto.di_tipo(tipo)}
         for o in pacchetto.di_tipo(tipo):
             attivo = await versione_attiva(db, ente_id, tipo, o.codice)
@@ -563,6 +624,46 @@ async def analizza(db: AsyncSession, ente_id: str, pacchetto: Pacchetto) -> list
                     _voce(fittizio, "RIMOSSO", "mantieni", ["mantieni", "disattiva"], r.versione)
                 )
     return voci
+
+
+async def _analizza_anticorruzione(db: AsyncSession, ente_id: str, pacchetto: Pacchetto, tipo: Tipo) -> list[Voce]:
+    voci: list[Voce] = []
+    for o in pacchetto.di_tipo(tipo):
+        presente, ente, base = await _stato_anticorruzione(db, ente_id, o)
+        if not presente:
+            voci.append(_voce(o, "NUOVO", "applica", ["applica", "mantieni"]))
+        elif base == o.impronta:
+            voci.append(_voce(o, "INVARIATO", "mantieni", ["mantieni", "applica"]))
+        elif ente == o.impronta:
+            voci.append(_voce(o, "ALLINEATO", "mantieni", ["mantieni"]))
+        elif base is not None and ente == base:
+            voci.append(_voce(o, "AGGIORNABILE", "applica", ["applica", "mantieni"]))
+        else:
+            voci.append(_voce(o, "CONFLITTO", "mantieni", ["mantieni", "applica"]))
+    if tipo == "processo":  # processi venuti da un pacchetto e non più nello standard: restano
+        nel_pacchetto = {o.codice for o in pacchetto.di_tipo(tipo)}
+        for p in await db.scalars(select(AcProcesso).where(AcProcesso.ente_id == ente_id, AcProcesso.pacchetto.is_not(None))):
+            if p.codice not in nel_pacchetto:
+                voci.append(_voce(Oggetto("processo", p.codice, p.denominazione, "", "", ""), "RIMOSSO", "mantieni", ["mantieni"]))
+    return voci
+
+
+async def _importa_anticorruzione(db: AsyncSession, ente_id: str, o: Oggetto, etichetta: str) -> None:
+    if o.tipo == "metodologia":
+        await ac.applica_metodologia(db, ente_id, ac.leggi_metodologia(o.sorgente), etichetta, o.impronta)
+    else:
+        f = ac.leggi_processi(o.sorgente)
+        await ac.applica_processo(db, ente_id, f.processi[0], f.area, etichetta, o.impronta)
+
+
+async def _mantieni_anticorruzione(db: AsyncSession, ente_id: str, o: Oggetto, etichetta: str) -> None:
+    """La versione dell'ente resta; lo standard nuovo diventa il riferimento."""
+    if o.tipo == "metodologia":
+        riga = await db.get(AcMetodologia, ente_id)
+    else:
+        riga = await db.scalar(select(AcProcesso).where(AcProcesso.ente_id == ente_id, AcProcesso.codice == o.codice))
+    if riga is not None:
+        riga.pacchetto, riga.impronta_base = etichetta, o.impronta
 
 
 @dataclass
@@ -604,6 +705,8 @@ async def importa(
     decisioni = decisioni or {}
     r = Resoconto(pacchetto=pacchetto.manifesto.etichetta)
     await _tipologie(db, pacchetto.manifesto)
+    if pacchetto.aree and await _con_anticorruzione(db, ente_id):
+        await ac.crea_aree(db, ente_id, pacchetto.aree)
     oggetti = {o.chiave: o for o in pacchetto.oggetti}
     for voce in await analizza(db, ente_id, pacchetto):
         azione = decisioni.get(voce.chiave, voce.azione)
@@ -611,6 +714,19 @@ async def importa(
             r.errori.append(f"{voce.chiave}: azione {azione!r} non ammessa ({voce.stato})")
             continue
         o = oggetti.get(voce.chiave)
+        if voce.tipo in TIPI_ANTICORRUZIONE:
+            if azione == "applica":
+                try:
+                    async with db.begin_nested():
+                        await _importa_anticorruzione(db, ente_id, o, pacchetto.manifesto.etichetta)
+                    r.applicati.append(voce.chiave)
+                except ValueError as e:
+                    r.errori.append(f"{voce.chiave}: {e}")
+            else:
+                r.mantenuti.append(voce.chiave)
+                if o is not None and voce.stato in ("AGGIORNABILE", "ALLINEATO", "CONFLITTO"):
+                    await _mantieni_anticorruzione(db, ente_id, o, pacchetto.manifesto.etichetta)
+            continue
         if azione == "disattiva":
             attivo = await versione_attiva(db, ente_id, voce.tipo, voce.codice)
             if attivo is not None:
@@ -660,7 +776,7 @@ async def esporta(db: AsyncSession, ente_id: str, nome: str, versione: str) -> d
     manifesto = {
         "nome": nome,
         "versione": versione,
-        "descrizione": "Esportazione di modelli, specificità e checklist dell'ente",
+        "descrizione": "Esportazione di modelli, specificità, checklist e contenuti anticorruzione dell'ente",
         "tipologie": [
             {"codice": t.codice, "descrizione": t.descrizione, "ordine": t.ordine}
             for t in tipologie
@@ -689,4 +805,6 @@ async def esporta(db: AsyncSession, ente_id: str, nome: str, versione: str) -> d
         )
     ).all():
         file[f"checklist/{r.codice.lower()}.json"] = sorgente_checklist(checklist_in(r))
+    if await _con_anticorruzione(db, ente_id):
+        file |= await ac.esporta(db, ente_id)
     return file

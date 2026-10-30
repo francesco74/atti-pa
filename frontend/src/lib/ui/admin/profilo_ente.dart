@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import '../../util/scelta_file.dart';
 
@@ -67,6 +69,8 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
         bytes: file.bytes,
         nomeFile: file.name,
       );
+      if (!mounted) return;
+      context.read<AuthState>().impostaLogo(file.bytes);
       _carica();
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -78,6 +82,8 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
     if (!mounted) return;
     try {
       await apiDi(context).delete('/api/v1/ente/logo');
+      if (!mounted) return;
+      context.read<AuthState>().impostaLogo(null);
       _carica();
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -94,7 +100,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
           titolo: 'Logo',
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Immagine PNG o JPEG (al massimo 2 MB) riportata in testa ai documenti '
-                'generati, come le schede e i verbali della trasparenza.'),
+                'generati, come le schede e i verbali della trasparenza, e usata come icona e sfondo dell\'app.'),
             const SizedBox(height: 12),
             if (_logo != null)
               FutureBuilder<Uint8List>(

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../comuni.dart';
+import 'strutture.dart';
 
 const _etichetteRuoli = {
   'REDATTORE': 'Redattore',
   'CONTROLLORE': 'Controllore',
   'GESTORE_MODELLI': 'Gestore dei modelli',
   'TRASPARENZA': 'Operatore della trasparenza',
+  'ANTICORRUZIONE_REFERENTE': 'Referente anticorruzione',
+  'ANTICORRUZIONE_RPCT': 'RPCT e staff anticorruzione',
   'ADMIN': 'Amministratore dell\'ente',
 };
 
@@ -254,6 +257,7 @@ class UtentiEntePage extends StatefulWidget {
 
 class _UtentiEntePageState extends State<UtentiEntePage> {
   late Future<List<dynamic>> _utenti;
+  List<Map<String, dynamic>> _strutture = const [];
 
   @override
   void initState() {
@@ -262,8 +266,19 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
   }
 
   void _carica() => setState(() {
-        _utenti = apiDi(context).get('/api/v1/ente/utenti').then((v) => v as List);
+        final api = apiDi(context);
+        _utenti = Future.wait([api.get('/api/v1/ente/utenti'), api.get('/api/v1/ente/strutture')]).then((v) {
+          _strutture = (v[1] as List).cast<Map<String, dynamic>>();
+          return v[0] as List;
+        });
       });
+
+  String? _struttura(Object? id) {
+    for (final s in _strutture) {
+      if (s['id'] == id) return s['codice'] as String;
+    }
+    return null;
+  }
 
   Future<void> _modifica([Map<String, dynamic>? u]) async {
     final nuovo = u == null;
@@ -274,6 +289,7 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
     final password = TextEditingController();
     final ruoli = <String>{...List<String>.from(u?['ruoli'] as List? ?? const ['REDATTORE'])};
     var attivo = u?['attivo'] != false;
+    var strutturaId = u?['struttura_id'] as String?;
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -314,6 +330,13 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
                       onChanged: (v) => aggiorna(() => v == true ? ruoli.add(r) : ruoli.remove(r)),
                     ),
                 ],
+                const SizedBox(height: 8),
+                SceltaStruttura(
+                  strutture: _strutture,
+                  valore: strutturaId,
+                  etichetta: 'Struttura organizzativa',
+                  onChanged: (v) => aggiorna(() => strutturaId = v),
+                ),
                 if (!nuovo)
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -345,13 +368,14 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
     try {
       final api = apiDi(context);
       if (nuovo) {
-        await api.post('/api/v1/ente/utenti', {...corpo, 'ruoli': ruoli.toList()});
+        await api.post('/api/v1/ente/utenti', {...corpo, 'ruoli': ruoli.toList(), 'struttura_id': strutturaId});
       } else {
         await api.put('/api/v1/ente/utenti/${u['id']}', {
           'nome_completo': corpo['nome_completo'],
           'email': corpo['email'],
           'ruoli': locale ? ruoli.toList() : null,
           'attivo': attivo,
+          'struttura_id': strutturaId,
         });
       }
       _carica();
@@ -416,6 +440,7 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
                   u['username'],
                   u['origine'] == 'LOCALE' ? 'utente dell\'app' : 'Active Directory',
                   (u['ruoli'] as List).map((r) => etichettaRuolo(r.toString())).join(', '),
+                  ?_struttura(u['struttura_id']),
                   if (u['ultimo_accesso'] != null) 'ultimo accesso ${formatData(u['ultimo_accesso'])}',
                 ].join(' · ')),
                 trailing: u['origine'] == 'LOCALE'

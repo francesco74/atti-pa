@@ -1,0 +1,1037 @@
+# Processi standard dell'area B: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: B
+processi:
+- codice: B.1
+  denominazione: Concessione Contributi
+  attivita:
+  - codice: B.1.1
+    descrizione: Concessione Contributi
+    rischi:
+    - codice: B.1.1_R.1
+      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.1.1_R.1_M.1
+        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
+          comunale n. 2 del 08/01/2019
+        categoria: Regolamentazione
+    - codice: B.1.1_R.2
+      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.1.1_R.2_M.1
+        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
+          comunale n. 2 del 08/01/2019
+        categoria: Regolamentazione
+    - codice: B.1.1_R.3
+      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
+        disparità di trattamento
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.1.1_R.3_M.1
+        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
+          comunale n. 2 del 08/01/2019
+        categoria: Regolamentazione
+    - codice: B.1.1_R.4
+      evento: Riconoscimento del diritto al contributo in caso di rendicontazione non congrua
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.1.1_R.4_M.1
+        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
+          comunale n. 2 del 08/01/2019
+        categoria: Regolamentazione
+- codice: B.2
+  denominazione: Prestazioni agevolate, bonus, assegni di maternità e assegni per nucleo familiare numeroso
+  attivita:
+  - codice: B.2.1
+    descrizione: Ricezione istanza
+    rischi:
+    - codice: B.2.1_R.1
+      evento: Non rispetto diritto di precedenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.2.1_R.1_M.1
+        descrizione: Protocollazione istanze
+  - codice: B.2.2
+    descrizione: Valutazione requisiti - istruttoria
+    rischi:
+    - codice: B.2.2_R.1
+      evento: Alterazione del corretto svolgimento dell'istruttoria Assecondare la richiesta del richiedente
+        ad avere lo stesso operatore
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.2.2_R.1_M.1
+        descrizione: Rotazione del personale che evita che una funzione dell'Ente vada, nel tempo, a identificarsi
+          con il dipendente che la svolge e che si creino relazioni particolari tra i destinatari dei
+          provvedimenti e il persona degli uffici interessati.
+        categoria: Rotazione
+  - codice: B.2.3
+    descrizione: Adozione provvedimento
+    rischi:
+    - codice: B.2.3_R.1
+      evento: Tardività
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.2.3_R.1_M.1
+        descrizione: Verifica del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+          rispetto a comportamenti non conformi.
+        categoria: Controllo
+- codice: B.3
+  denominazione: Ritrovamento e riconsegna oggetti smarriti
+  attori_esterni: soggetto che ritrova
+  attivita:
+  - codice: B.3.1
+    descrizione: Ricezione cose smarrite o abbandonate
+    rischi:
+    - codice: B.3.1_R.1
+      evento: Omissione di repertoriare quanto ricevuto o ritrovato
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Medio, '6': Basso, '7': Medio,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.3.1_R.1_M.1
+        descrizione: Rilascio di copia del verbale (di ritrovamento e consegna alla PM) al soggetto che
+          consegna le cose
+  - codice: B.3.2
+    descrizione: Ricerca proprietario
+  - codice: B.3.3
+    descrizione: Consegna delle cose smarrite e ritrovate
+    rischi:
+    - codice: B.3.3_R.1
+      evento: Consegna a soggetto non avente diritto
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.3.3_R.1_M.1
+        descrizione: Invio del verbale di riconsegna viene inviata alla segreteria del Comando e visionata
+          dal Responsabile del Servizio
+- codice: B.4
+  denominazione: Rilascio certificazioni di certezza, liquidità ed esigibilità del credito relativo a
+    contratti di somministrazione, fornitura, appalti e prestazioni professionali
+  tempi: 30 gg come previsto dall'art.9 c.3 bis D.L.n.185/2008 convertito da L.n.2/2009 e successive modificazioni
+  attori_esterni: FORNITORI
+  attivita:
+  - codice: B.4.1
+    descrizione: 1. Ricevimento tramite l'apposita piattaforma (PCC) messa a disposizione dal Ministero
+      delle Finanze dell'istanza di certificazione del credito
+  - codice: B.4.2
+    descrizione: '2. Verifica dei requisiti di legge richiesti per il rilascio della certificazione: -
+      liquidazione del credito da parte del responsabile del procedimento - verifica, per crediti di importo
+      superiore a 5.000╒, di eventuali inadempienze tributarie da parte del soggetto beneficiario del
+      pagamento stesso, mediante apposita richiesta da inoltrare a Equitalia Servizi S.p.a'
+    rischi:
+    - codice: B.4.2_R.1
+      evento: Non effettuazione dei controlli contabili necessari a verificare il sussistere dei requisiti
+        di legge o effettuare controlli insufficienti o inefficaci
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
+      misure:
+      - codice: B.4.2_R.1_M.1
+        descrizione: Applicazione del principio della rotazione almeno annuale del personale assegnato
+          all'espletamento di tale fase;Suddivisione tra il personale preposto ai riscontri contabili
+          e quello che provvede alle verifiche delle inadempienze.
+        categoria: Rotazione
+  - codice: B.4.3
+    descrizione: 3. Rilascio, tramite la piattaforma, della certificazione del credito richiesta
+    rischi:
+    - codice: B.4.3_R.1
+      evento: Riconoscimento indebito di un credito verso la P.A.
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
+      misure:
+      - codice: B.4.3_R.1_M.1
+        descrizione: Utilizzo della procedura informatica messa a disposizione del MEF;Verifica finale
+          della correttezza del procedimento effettuata dal responsabile del servizio finanziario al momento
+          di firmare digitalmente il rilascio della certificazione richiesta.
+        categoria: Semplificazione
+- codice: B.5
+  denominazione: Attribuzione di misure di sostegno economico
+  tempi: 45 giorni
+  attori_esterni: RESIDENTI NEL COMUNE DI LUCCA, STRANIERI E APOLIDI SECONDO LE NORMATIVE VIGENTI, MINORI
+    ITALIANI O STRANIERI NON RESIDENTI NEL COMUNE DI LUCCA CHE NECESSITANO DI INTERVENTI DI PRIMA NECESSITA'
+  attivita:
+  - codice: B.5.1
+    descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
+      in carico. Redazione di relazione sociale con proposta di intervento economico. Attivazione su domanda
+      dell'utente.
+    rischi:
+    - codice: B.5.1_R.1
+      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      valutazione:
+        probabilita: {'1': Alto, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.1_R.1_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+    - codice: B.5.1_R.2
+      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.1_R.2_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+    - codice: B.5.1_R.3
+      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
+        disparità di trattamento
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.1_R.3_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+  - codice: B.5.2
+    descrizione: Esame della domanda del cittadino e della proposta assistenziale redatta dal Servizio
+      Sociale Professionale. Istruttoria delle domande da parte dell'ufficio per il successivo inoltro
+      alla Commissione Tecnica ai fini della concessione del beneficio/economico/contributi/sussidio agli
+      utenti.
+    rischi:
+    - codice: B.5.2_R.1
+      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.2_R.1_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+    - codice: B.5.2_R.2
+      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.2_R.2_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+    - codice: B.5.2_R.3
+      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
+        disparità di trattamento
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.5.2_R.3_M.1
+        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
+          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
+          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
+          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
+          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
+          dell'A.S. nelle diverse situazioni.
+        categoria: Regolamentazione
+- codice: B.6
+  denominazione: Ammissione ai servizi/interventi di assistenza
+  tempi: 45 giorni
+  attori_esterni: ANZIANI, MINORI E FAMIGLIE, DISABILI CHE SI TROVANO IN SITUAZIONE DI DISAGIO SOCIO-ECONOMICO
+  attivita:
+  - codice: B.6.1
+    descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
+      in carico. Redazione di relazione sociale.
+    rischi:
+    - codice: B.6.1_R.1
+      evento: Analisi parziale o incompleta nella predisposizione della proposta di assistenza..
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.6.1_R.1_M.1
+        descrizione: Al fine di evitare disparità di trattamento, l'esame della domanda e della proposta
+          assistenziale viene effettuata da parte della Commissione Tecnica.
+- codice: B.7
+  denominazione: Percorso di valutazione avviato sul territorio ai fini della predisposizione dei PAP
+    da parte dell'UVM dell'Azienda USL
+  tempi: 60 giorni
+  attori_esterni: AZIENDA USL TOSCANA NORD OVEST , ANZIANI NON AUTOSUFFICIENTI E DISABILI
+  attivita:
+  - codice: B.7.1
+    descrizione: Analisi situazione personale e contesto familiare dell'utente, presa in carico da parte
+      dell'A.S. di riferimento fini della valutazione dell'UVM per la predisposizione del PAP
+    rischi:
+    - codice: B.7.1_R.1
+      evento: Analisi parziale o incompleta nella predisposizione della proposta di assistenza..
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+- codice: B.9
+  denominazione: Compartecipazione del Comune alla retta sociale del cittadino per le strutture collegate
+    alla RSA e per l'accesso ai servizi di supporto alla domiciliarità
+  tempi: 45 giorni
+  attori_esterni: ANZIANI e DISABILI CHE SI TROVANO IN SITUAZIONE DI DISAGIO SOCIO-ECONOMICO E SOCIO SANITARIO
+    - USL TOSCANA NORD OVEST
+  attivita:
+  - codice: B.9.1
+    descrizione: Ricevimento e valutazione del contenuto della certificazione ISEE o reddituale presentata
+      per l'accesso della compartecipazione da parte del Comune e/o esenzione dal pagamento ed adeguamento
+      della misura in ragione dell'aggiornamento della certificazione ISEE
+    rischi:
+    - codice: B.9.1_R.1
+      evento: Verifica certificazione ISEE
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.9.1_R.1_M.1
+        descrizione: Successiva verifica a campione effettuata da personale/soggetto diverso rispetto
+          a quello che ha effettuato la verifica originaria.
+        categoria: Controllo
+  - codice: B.9.2
+    descrizione: Adeguamento della misura della compartecipazione in ragione dell'aggiornamento della
+      certificazione ISEE.
+    rischi:
+    - codice: B.9.2_R.1
+      evento: Verifica certificazione ISEE e calcolo compartecipazione su parametri prestabiliti
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.9.2_R.1_M.1
+        descrizione: Ad ogni variabile gestita dagli operatori sulla scheda anagrafica dovrà risultare
+          agli atti il documento a supporto.Verifica a campione delle movimentazioni.
+        categoria: Controllo
+- codice: B.11
+  denominazione: Concessione di contributi in situazione di disagio abitativo
+  tempi: 60 giorni dalla presentazione della domanda; 30 giorni in caso di assoluta urgenza.
+  attori_esterni: soggetti richiedenti - assistenti sociali
+  attivita:
+  - codice: B.11.1
+    descrizione: Istanza di parte/d'Ufficio
+  - codice: B.11.2
+    descrizione: Valutazione sociale
+    rischi:
+    - codice: B.11.2_R.1
+      evento: Errata analisi della situazione rappresentata della documentazione (completezza, adeguatezza...).
+        Reiterazione dei contributi verso i medesimi soggetti ed esclusione di altri
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.11.2_R.1_M.1
+        descrizione: Report periodico di verifica (almeno semestrale) tra richieste e accoglimenti/rigetti
+        categoria: Controllo
+      - codice: B.11.2_R.1_M.2
+        descrizione: Rafforzare l'analisi condotta di concerto tra U.O. 2.1. e 2.2 per la stesura di progettualità
+          condivise sui bisogni dei cittadini
+  - codice: B.11.3
+    descrizione: Valutazione commissione
+  - codice: B.11.4
+    descrizione: Approvazione degli interventi decisi in Commissione con Determinazione Dirigenziale
+  - codice: B.11.5
+    descrizione: Liquidazione del contributo dietro presentazione della ricevuta attestante l'avvenuto
+      pagamento del canone di locazione o a fronte di delega del conduttore a favore del locatore.
+- codice: B.12
+  denominazione: Richiesta di esenzione o agevolazione al servizio ristorazione e trasporto scolastico
+  tempi: Maggio- settembre (in caso di domanda di agevolazione presentata oltre il termine previsto dall'ufficio
+    comunale, gli effetti dell'applicazione delle tariffe aggiornate decorrono dal primo giorno del mese
+    successivo rispetto alla data di presentazione della medesima ex DGC n. 128/2017)
+  attori_esterni: Utenti del servizio
+  attivita:
+  - codice: B.12.1
+    descrizione: Presentazione delle istanze on-line (su sistema gestionale E-civis) per l'esenzione o
+      le agevolazioni tariffarie, nel periodo stabilito dall'ufficio;
+  - codice: B.12.2
+    descrizione: Istruttoria dell'ufficio volta a verificare la correttezza formale delle istanze con
+      particolare riferimento a controllo valore ISEE dichiarato tramite accesso alle banche dati sul
+      sito dell'INPS e a verifica luogo di residenza;
+    rischi:
+    - codice: B.12.2_R.1
+      evento: Attribuzione dell'esenzione e/o agevolazione anche in mancanza dei requisiti previsti.
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.12.2_R.1_M.1
+        descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che
+          ha curato l'istruttoria
+        categoria: Controllo
+  - codice: B.12.3
+    descrizione: Accettazione o respingimento dell'istanza presentata e comunicazione all'interessato
+      tramite portale.
+  - codice: B.12.4
+    descrizione: Valutazione delle istanze presentate dopo la scadenza dei termini previsti dall'ufficio
+      con relativa accettazione o respingimento.
+    rischi:
+    - codice: B.12.4_R.1
+      evento: Mancata applicazione del principio per cui, in caso di accoglimento della domanda di agevolazione
+        presentata oltre il termine previsto dal competente ufficio comunale, gli effetti dell'applicazione
+        delle tariffe aggiornate decorrono dal primo giorno del mese successivo rispetto alla data di
+        presentazione della medesima istanza.
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.12.4_R.1_M.1
+        descrizione: Controlli a campione da parte di personale diverso rispetto a quello che ha curato
+          l'istruttoria
+        categoria: Controllo
+      - codice: B.12.4_R.1_M.2
+        descrizione: Report periodico (almeno annuale) sulle istanze presentate in ritardo/istanze accolte
+- codice: B.13
+  denominazione: '"Pacchetto scuola" benefici finalizzati a sostenere le spese necessarie per al frequenza
+    scolastica'
+  tempi: Termini procedimento stabiliti DGRT che annualmente approva indirizzi
+  attori_esterni: '- Regione Tosc.;- Amm. Prov;- Student* scuole secondarie I° e II° grado'
+  attivita:
+  - codice: B.13.1
+    descrizione: Predisposizione bando comunale secondo indirizzi espressi con Deliberazione Giunta Regionale;
+  - codice: B.13.2
+    descrizione: Presentazione delle domande di partecipazione tramite modulo on-line su gestionale in
+      uso all'ufficio;
+  - codice: B.13.3
+    descrizione: Istruttoria dell'ufficio volta ad accertare la sussistenza dei requisiti prescritti dal
+      bando.
+    rischi:
+    - codice: B.13.3_R.1
+      evento: Mancata rilevazione di una causa formale di esclusione secondo i requisiti prevista dal
+        bando.
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.13.3_R.1_M.1
+        descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che
+          ha curato l'istruttoria per verificarne la correttezza
+        categoria: Controllo
+  - codice: B.13.4
+    descrizione: determinazione dirigenziale di approvazione della graduatoria provvisoria degli ammessi
+      al concorso, in quanto in possesso dei requisiti previsti dal bando.
+  - codice: B.13.5
+    descrizione: possibilità per coloro che hanno presentato domanda di partecipazione al concorso di
+      inoltrare ricorso avverso la graduatoria di cui alla fase precedente entro i 30 giorni successivi
+      alla sua pubblicazione
+    rischi:
+    - codice: B.13.5_R.1
+      evento: Accoglimento o respingimento ricorsi per motivazioni non fondate
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.13.5_R.1_M.1
+        descrizione: Controllo del ricorso da parte di una commissione interna all'ufficio formata da
+          almeno tre membri.
+        categoria: Controllo
+  - codice: B.13.6
+    descrizione: verifica con le scuole, l' ISCRIZIONE scolastica degli studenti assegnatari dei benefici.
+  - codice: B.13.7
+    descrizione: approvazione graduatoria degli ammessi al concorso (aventi i requisiti).
+  - codice: B.13.8
+    descrizione: approvazione Graduatoria definitiva dei beneficiari IN BASE ALLE RISORSE ASSEGNATE DALLA
+      REGIONE TOSCANA
+    rischi:
+    - codice: B.13.8_R.1
+      evento: Inserimento nella graduatoria di soggetti che non hanno i requisiti previsti dal bando
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.13.8_R.1_M.1
+        descrizione: Effettuare controlli a campione su almeno il 20% dei ammessi definitivamente ad usufruire
+          del beneficio
+        categoria: Controllo
+- codice: B.14
+  denominazione: Pratiche in SCIA
+  tempi: 60 gg
+  attori_esterni: ASL+VdF+R.T.+QUEST.+PREF.+C.COMM.+AG.DOG.+INPS+INAIL+AG.ENTRATE+SOC.PARTECIPATE, ECC..
+  attivita:
+  - codice: B.14.1
+    descrizione: Ricezione della comunicazione online, verifica della completezza e rilascio ricevuta
+  - codice: B.14.2
+    descrizione: Trasmissione ad altri uffici di quanto di competenza in tempi definiti dalla legge
+    rischi:
+    - codice: B.14.2_R.1
+      evento: Ritardo nella trasmissione/formarsi del silenzio assenso
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: B.14.2_R.1_M.1
+        descrizione: Le pratiche che si concludono con il formarsi del silenzio assenso devono essere
+          corredate da una motivazione scritta dell'operatore cui erano state assegnate.
+  - codice: B.14.3
+    descrizione: Analisi della pratica nel suo insieme
+    rischi:
+    - codice: B.14.3_R.1
+      evento: Scelta operatori
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: B.14.3_R.1_M.1
+        descrizione: Rotazione del personale sulle pratiche relative allo stesso operatore commerciale.
+          Le pratiche vengono assegnate da due dipendenti addette allo smistamento dei protocolli, che
+          applicano suddetto principio di rotazione.
+        categoria: Rotazione
+- codice: B.15
+  denominazione: Pratiche in Autorizzazione
+  tempi: 60 gg
+  attori_esterni: Vedi sopra più ANAS e SOPRINTENDENZA
+  attivita:
+  - codice: B.15.1
+    descrizione: Ricezione della domanda online, verifica della completezza e rilascio ricevuta
+  - codice: B.15.2
+    descrizione: Trasmissione ad altri uffici di quanto di competenza
+    rischi:
+    - codice: B.15.2_R.1
+      evento: Ritardo nella trasmissione al fine di sfavorire alcuni operatori
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: B.15.2_R.1_M.1
+        descrizione: rispetto dei tempi procedimentali indicati negli artt. 14-15 del Regolamento dello
+          Sportello Unico delle Attività produttive approvato con D.G.C. 251 del 1999 e s.m.i.
+        categoria: Regolamentazione
+  - codice: B.15.3
+    descrizione: Analisi della pratica nel suo insieme
+    rischi:
+    - codice: B.15.3_R.1
+      evento: Favorire alcuni operatori
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: B.15.3_R.1_M.1
+        descrizione: Rotazione del personale sulle pratiche relative allo stesso operatore commerciale.
+          Le pratiche vengono assegnate da due dipendenti addette allo smistamento dei protocolli, che
+          applicano suddetto principio di rotazione
+        categoria: Rotazione
+- codice: B.16
+  denominazione: Affidamento posteggi presso fiere a seguito spunta
+  tempi: Immediato, il giorno stesso della fiera/mercato
+  attivita:
+  - codice: B.16.1
+    descrizione: I titolari di posto si presentano nelle ore antecedenti la Fiera per occupare i posti.
+      Gli altri operatori non titolari occupano posti abusivamente senza procedura di spunta
+  - codice: B.16.2
+    descrizione: L'assegnazione dei suddetti posti avviene tramite il procedimento della spunta.
+    rischi:
+    - codice: B.16.2_R.1
+      evento: Scelta operatori
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+  - codice: B.16.3
+    descrizione: 'Situazioni eccezionali: ritardi nell''arrivo degli operatori fissi'
+    rischi:
+    - codice: B.16.3_R.1
+      evento: Scelta operatori
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+- codice: B.17
+  denominazione: Autorizzazione per spettacolo viaggiante
+  tempi: 60 gg
+  attori_esterni: COMM. PROV. DEL V.P.S. (ASL+VdF+R.T.+QUEST.+PREF.)
+  attivita:
+  - codice: B.17.1
+    descrizione: Ricezione della domanda online, verifica della completezza e rilascio ricevuta
+  - codice: B.17.2
+    descrizione: Assegnazione spazi
+    rischi:
+    - codice: B.17.2_R.1
+      evento: Favorire alcuni operatori sia di ruolo che nuovi assegnatari a seconda della collocazione
+        sul palco
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.17.2_R.1_M.1
+        descrizione: Assegnazioni secondo il regolamento comunale e coinvolgimento della commissione interna
+          del Luna Park. Rispetto del codice di comportamento dei dipendenti del Comune di Lucca.
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+- codice: B.18
+  denominazione: Concessione suolo pubblico per attività commerciali
+  tempi: Max 30 gg come da Regolamento
+  attori_esterni: SOPRINTENDENZA
+  attivita:
+  - codice: B.18.1
+    descrizione: Ricezione richiesta
+  - codice: B.18.2
+    descrizione: Istruttoria
+    rischi:
+    - codice: B.18.2_R.1
+      evento: Inosservanza dei criteri previsti dal regolamento Canone Unico Patrimoniale
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.18.2_R.1_M.1
+        descrizione: Esame della domanda per la verifica dei presupposti effettuata da più settori/servizi.Standardizzazione
+          del procedimento di rilascio delle concessioni, come previsto dal vigente regolamento Canone
+          Unico Patrimoniale
+        categoria: Regolamentazione
+  - codice: B.18.3
+    descrizione: Provvedimento accoglimento/rigetto
+    rischi:
+    - codice: B.18.3_R.1
+      evento: Tardività nell'adozione
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.18.3_R.1_M.1
+        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+          illegittima dei tempi di conclusione dei procedimenti, come stabiliti dal vigente Regolamento
+          Canone Unico Patrimoniale
+        categoria: Regolamentazione
+- codice: B.19
+  denominazione: Erogazione contributi edifici religiosi
+  tempi: non previsto (in quanto articolato in molteplici attività)
+  attori_esterni: nessuno
+  attivita:
+  - codice: B.19.1
+    descrizione: Definizione del programma di interventi per lavori su edifici di culto, inviato da enti
+      religiosi.
+    rischi:
+    - codice: B.19.1_R.1
+      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.19.1_R.1_M.1
+        descrizione: Pubblicizzazione su sito istituzionale della possibilità di richiedere contributi
+          in base agli oneri di urbanizzazione secondaria incassati ed accantonabili nella misura del
+          10%.
+    - codice: B.19.1_R.2
+      evento: Escludere dalla opportunità culti diversi da quello cattolico
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.19.1_R.2_M.1
+        descrizione: Pubblicizzazione su sito istituzionale della possibilità di richiedere contributi
+          in base agli oneri di urbanizzazione secondaria incassati ed accantonabili nella misura del
+          10%.
+  - codice: B.19.2
+    descrizione: Analisi delle richieste di ammissibilità al contributo.
+    rischi:
+    - codice: B.19.2_R.1
+      evento: Eccessiva discrezionalità
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.19.2_R.1_M.1
+        descrizione: Definizione modalità e criteri della ripartizione.
+  - codice: B.19.3
+    descrizione: Liquidazione contributo
+    rischi:
+    - codice: B.19.3_R.1
+      evento: Analisi non corretta della documentazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.19.3_R.1_M.1
+        descrizione: Acquisizione documenti asseverati dai tecnici e dalle imprese che hanno eseguito
+          i lavori.
+- codice: B.20
+  denominazione: Concessione d'uso di aree o immobili di proprietà pubblica gestite direttamente dalla
+    U.O.6.1 (cd. sistema congressuale- impianti sportivi)
+  tempi: '30'
+  attivita:
+  - codice: B.20.1
+    descrizione: Valutazione della domanda di concessione d'uso Verifica disponibilità
+    rischi:
+    - codice: B.20.1_R.1
+      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
+        o agevolato in assenza delle condizioni che giustificano la gratuità)'
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.20.1_R.1_M.1
+        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
+          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
+          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
+          tariffe per il servizio offerto (facoltativo)
+        categoria: Trasparenza
+  - codice: B.20.2
+    descrizione: Verifica dei requisiti oggettivi e soggettivi
+    rischi:
+    - codice: B.20.2_R.1
+      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
+        o agevolato in assenza delle condizioni che giustificano la gratuità)'
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.20.2_R.1_M.1
+        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
+          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
+          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
+          tariffe per il servizio offerto (facoltativo)
+        categoria: Trasparenza
+  - codice: B.20.3
+    descrizione: Verifica pagamento tariffa o della presenza della condizione che giustifica la gratuità
+    rischi:
+    - codice: B.20.3_R.1
+      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
+        o agevolato in assenza delle condizioni che giustificano la gratuità)'
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.20.3_R.1_M.1
+        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
+          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
+          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
+          tariffe per il servizio offerto (facoltativo)
+        categoria: Trasparenza
+  - codice: B.20.4
+    descrizione: Concessione d'uso
+    rischi:
+    - codice: B.20.4_R.1
+      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
+        o agevolato in assenza delle condizioni che giustificano la gratuità)'
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.20.4_R.1_M.1
+        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
+          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
+          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
+          tariffe per il servizio offerto (facoltativo)
+        categoria: Trasparenza
+- codice: B.21
+  denominazione: Concessione/locazione immobili comunali
+  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
+    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
+  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
+    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
+  attivita:
+  - codice: B.21.1
+    descrizione: Atto programmatorio/dispositivo della concessione o locazione l'immobile (non strumentaleall'esercizio
+      delle funzioni istituzionali dell'ente) stima canone di locazione/di concessione
+  - codice: B.21.2
+    descrizione: individuazione concessionario o locatario.
+    rischi:
+    - codice: B.21.2_R.1
+      evento: Valutazione discrezionale
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.21.2_R.1_M.1
+        descrizione: a) La misura consiste in via transitoria nel dare attuazione ai principi generali
+          di cui al par. 1.3 lett. e) del presente PTPC; b) per la misura a regime si rinvia invece all'allegato
+          A/3 misura n. 8
+  - codice: B.21.3
+    descrizione: stipula contratto di concessione o locazione
+- codice: B.22
+  denominazione: Concessione aree/immobili comunali per l'istallazione impianti di telefonia mobile
+  tempi: Tempi legati alla approvazione con D.D. della concessione ed alla sua sottoscrizione - normalmente
+    60gg dalla richiesta
+  attori_esterni: Gestori di servizi di telefonia mobile
+  attivita:
+  - codice: B.22.1
+    descrizione: Istanza di concessione
+  - codice: B.22.2
+    descrizione: Verifiche in relazione all'inserimento dell'area nel piano della telefonia approvato
+      dal Comune
+  - codice: B.22.3
+    descrizione: determinazione del canone in base alle apposite tariffe COSAP
+  - codice: B.22.4
+    descrizione: stipula contratto di concessione
+- codice: B.23
+  denominazione: Concessione immobili/locali/spazi a soggetti del Terzo Settore senza finalità di lucro
+  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
+    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
+  attori_esterni: Associazioni ed altri enti del Terzo Settore
+  attivita:
+  - codice: B.23.1
+    descrizione: Pubblicazione avviso spazi/immobili disponibili e relativi canoni
+  - codice: B.23.2
+    descrizione: Esame delle richieste, verifica requisiti, valutazione attività dei richiedenti, individuazione
+      assegnatari
+    rischi:
+    - codice: B.23.2_R.1
+      evento: Mancanza di trasparenza nella assegnazione dell'immobile
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.23.2_R.1_M.1
+        descrizione: a) La misura consiste in via transitoria nel dare attuazione ai principi generali
+          di cui al par. 1.3 lett. e) del presente PTPC; b) per la misura a regime si rinvia invece all'allegato
+          A/3 misura n. 8
+  - codice: B.23.3
+    descrizione: stipula convenzione
+- codice: B.25
+  denominazione: Rilascio autorizzazione al transito e sosta sulle Mura Urbane
+  tempi: 5 giorni per le autorizzazioni giornaliere e 30 giorni per altre autorizzazioni
+  attivita:
+  - codice: B.25.1
+    descrizione: Ricezione della richiesta IstruttoriaPredisposizione dell'attoPagamento della tariffa
+    rischi:
+    - codice: B.25.1_R.1
+      evento: Riconoscimento indebito dell'esenzione dal pagamento della tariffa prevista dall'apposito
+        Regolamento d'uso delle Mura urbane
+      fattore_abilitante: Scarsa chiarezza della normativa di riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.25.1_R.1_M.1
+        descrizione: Controlli periodici da parte del responsabile dell'ufficio dei permessi e delle tariffe
+          riscosse, con particolare attenzione alle esenzioni;Rotazione periodica del personale addetto
+          all'istruttoria
+        categoria: Rotazione
+- codice: B.26
+  denominazione: Assegnazione posteggi presso mercati a seguito di spunta
+  tempi: ogni giorno di mercato
+  attivita:
+  - codice: B.26.1
+    descrizione: Assegnazione
+    rischi:
+    - codice: B.26.1_R.1
+      evento: Modalità assegnazione
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.26.1_R.1_M.1
+        descrizione: 'I criteri sono stabiliti dalla L.R. Toscana n. 28/2005 e del Regolamento Comunale
+          del Commercio su Aree Pubbliche (approvato con Delibera C.C. n. 192 del 22/11/2001).I posteggi
+          vengono assegnati in base ad una graduatoria redatta e aggiornata dall''ufficio commercio su
+          aree pubbliche: i soggetti non assegnatari di posteggio fisso nei mercati firmano la presenza
+          entro le ore 8,00 e vengono chiuse le liste degli "spuntisti". I posteggi rimasti liberi, saranno
+          assegnati seguendo la graduatoria sopra descritta e previo pagamento della tariffa per l''occupazione
+          giornaliera del posteggio.Delle operazioni viene redatta apposita documentazione che è trasmessa
+          all''ufficio commercio su aree pubbliche per l''aggiornamento delle graduatorie degli "spuntisti".'
+        categoria: Regolamentazione
+- codice: B.27
+  denominazione: Erogazione di contributi al soggetto del Terzo Settore (associazioni, APS, ecc.)
+  tempi: 60 giorni
+  attori_esterni: ASSOCIAZIONI, ISTITUZIONI, ENTI, COMITATI E GRUPPI DI VOLONTARIATO NON AVENTI FINALITA'
+    DI LUCRO CHE OPERANO IN AMBITO SOCIALE A FAVORE DI ANZIANI, DISABILI, MINORI, ADOLESCENTI E FAMIGLIE
+  attivita:
+  - codice: B.27.1
+    descrizione: Esame della richiesta con concessione del contributo economico.
+    rischi:
+    - codice: B.27.1_R.1
+      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti. Discrezionalità nella
+        determinazione delle somme o dei vantaggi da attribuire. Inadeguatezza della documentazione per
+        l'accesso ai vantaggi che può determinare eventuali disparità di trattamento. Ritardi costanti
+        nella valutazione delle domande pervenute. Alla luce del contesto (interno ed esterno), ex Determinazione
+        ANAC n. 12/2015, occorre graduare il rischio in base alle funzioni effettivamente svolte.
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.27.1_R.1_M.1
+        descrizione: Sulla base del "Regolamento generale per la concessione dei contributi e benefici
+          economici (Deliberazione C.C. n. 2 dell'8/01/2019) l'erogazione di contributi finanziari ai
+          soggetti che operano in ambito sociale a favore di anziani, disabili, minori e famiglie, viene
+          concesso tramite la pubblicazione di un Avviso pubblico approvato con determinazione dirigenziale.
+          Nell'Avviso pubblico sono indicati i criteri di valutazione qualitativi-quantitativi per la
+          concessione.
+        categoria: Trasparenza
+- codice: B.28
+  denominazione: Rapporti convenzionali con ETS (ai sensi del D.Lgs. 117/2017)
+  tempi: Convenzioni stipulate annualmente con ETS per servizi e interventi ti carattere sociale
+  attori_esterni: ETS del territorio
+  attivita:
+  - codice: B.28.1
+    descrizione: Individuazione del bisogno sociale del territorio, raccordo con ETS per individuazione
+      modalità di intervento (attraverso rapporto Convenzionale ai sensi del D.Lgs 117/2017)
+    rischi:
+    - codice: B.28.1_R.1
+      evento: Parziale individuazione dei bisogni del territorio e interventi messi in atto poco efficaci
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Medio, '3': Basso, '4': Medio}
+      misure:
+      - codice: B.28.1_R.1_M.1
+        descrizione: 'Incremento qualitativo dei Tavoli della Marginalità, sede in cui A.C.ed ETS si confrontano
+          sui bisogni individuati sul territorio e programmano congiuntamente gli interventi necessari
+          in base alle risorse disponibili. Richiesta di modifica: abbiamo provveduto non tanto all''incremento
+          numerico del n. di sedute del Tavolo Marginalità, ma a una crescita qualitativa di questo organo,
+          ampliamento della platea dei partecipanti: costituzione del "Tavolo del Terzo Settore per l''inclusione",
+          che, oltre a coinvolgere gli ETS del Comune di Lucca, comprende tutti gli ETS dell''intera Piana
+          di Lucca che si occupano dei temi della marginalità e dell''inclusione.'
+- codice: B.29
+  denominazione: Co-progettazione di servizi innovativi a supporto delle politiche socio-abitative (ai
+    sensi del D.Lgs. 117/2017)
+  tempi: Co-progettazione pluriennale con Fondazione Casa Lucca
+  attori_esterni: Fondazione Casa Lucca
+  attivita:
+  - codice: B.29.1
+    descrizione: Manifestazione interesse per l'individuazione soggetto con cui co-progettare i servizi
+      innovativi, avvio della fase di coprogettazione e selezione soggetto
+- codice: B.30
+  denominazione: Contributo a privati per manutenzione delle vie vicinali di uso pubblico
+  tempi: 30 gg
+  attori_esterni: cittadini operatori economici
+  attivita:
+  - codice: B.30.1
+    descrizione: Ricezione istanza e istruttoria pratica seguendo ordine di arrivo dell'istanza al Protocollo
+      Generale e in base alle disponibilità previste in Bilancio
+    rischi:
+    - codice: B.30.1_R.1
+      evento: Rischio relativo alla determinazione della congruità della spesa e del corrispondente contributo
+        richiesto dall'utente previsto per l'intervento
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.30.1_R.1_M.1
+        descrizione: I contributi vengono rilasciati in ordine di arrivo della richiesta al Protocollo
+          Generale, in base alle disponibilità allocate in bilancio; sulla determinazione della congruità
+          della spesa per l'esecuzione dei lavori e del correlato contributo viene effettuato un doppio
+          controllo interno da parte del personale dell'ufficio competente - tecnico incaricato e RUP
+        categoria: Controllo
+  - codice: B.30.2
+    descrizione: Verifica esecuzione lavori e erogazione contributo
+    rischi:
+    - codice: B.30.2_R.1
+      evento: Rischio relativo all'erogazione del contributo anche in presenza di lavori non eseguiti
+        regolarmente
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: B.30.2_R.1_M.1
+        descrizione: Doppio controllo sui lavori effettuati - rotazione del personale
+        categoria: Rotazione

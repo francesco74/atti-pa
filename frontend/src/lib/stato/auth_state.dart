@@ -1,17 +1,20 @@
 import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
+import '../util/favicon.dart';
 
-/// Ente su cui lavora l'utente, con i moduli abilitati.
+/// Ente su cui lavora l'utente, con i moduli abilitati e la presenza del logo.
 class EnteUtente {
   EnteUtente.daJson(Map<String, dynamic> j)
       : codice = j['codice'] as String,
         nome = j['nome'] as String,
-        moduli = List<String>.from(j['moduli'] as List? ?? const []);
+        moduli = List<String>.from(j['moduli'] as List? ?? const []),
+        logo = j['logo'] == true;
 
   final String codice;
   final String nome;
   final List<String> moduli;
+  final bool logo;
 }
 
 class Utente {
@@ -20,6 +23,7 @@ class Utente {
         username = j['username'] as String,
         nomeCompleto = (j['nome_completo'] as String?) ?? j['username'] as String,
         ufficio = j['ufficio'] as String?,
+        strutturaId = j['struttura_id'] as String?,
         decretoIncarico = j['decreto_incarico'] as String?,
         ruoli = List<String>.from(j['ruoli'] as List),
         origine = (j['origine'] as String?) ?? 'LDAP',
@@ -30,6 +34,7 @@ class Utente {
   final String username;
   final String nomeCompleto;
   final String? ufficio;
+  final String? strutturaId; // struttura organizzativa (Amministrazione → Strutture)
   final String? decretoIncarico;
   final List<String> ruoli;
   final String origine; // LDAP, LOCALE
@@ -46,6 +51,8 @@ class Utente {
   bool get isControllore => isAdmin || ruoli.contains('CONTROLLORE');
   bool get isGestoreModelli => isAdmin || ruoli.contains('GESTORE_MODELLI');
   bool get isTrasparenza => isAdmin || ruoli.contains('TRASPARENZA');
+  bool get isAnticorruzioneRpct => isAdmin || ruoli.contains('ANTICORRUZIONE_RPCT');
+  bool get isAnticorruzione => isAnticorruzioneRpct || ruoli.contains('ANTICORRUZIONE_REFERENTE');
 }
 
 enum StatoAuth { verifica, anonimo, autenticato }
@@ -59,6 +66,9 @@ class AuthState extends ChangeNotifier {
   StatoAuth stato = StatoAuth.verifica;
   Utente? utente;
 
+  /// Logo dell'ente (icona dell'app, favicon e sfondo); null se non caricato.
+  Uint8List? logo;
+
   /// All'avvio verifica se esiste già una sessione valida (cookie di sessione).
   Future<void> avvia() async {
     try {
@@ -68,11 +78,32 @@ class AuthState extends ChangeNotifier {
       stato = StatoAuth.anonimo;
     }
     notifyListeners();
+    if (utente != null) await _caricaLogo();
   }
 
   Future<void> login(String username, String password, {String? modo}) async {
     utente = Utente.daJson(await api.login(username, password, modo: modo));
     stato = StatoAuth.autenticato;
+    notifyListeners();
+    await _caricaLogo();
+  }
+
+  Future<void> _caricaLogo() async {
+    Uint8List? immagine;
+    if (utente?.ente.logo ?? false) {
+      try {
+        immagine = await api.getBytes('/api/v1/ente/logo');
+      } catch (_) {
+        // senza logo l'app usa il martelletto
+      }
+    }
+    impostaLogo(immagine);
+  }
+
+  /// Logo caricato o tolto dall'amministratore: l'app si aggiorna subito.
+  void impostaLogo(Uint8List? immagine) {
+    logo = immagine;
+    impostaFavicon(immagine);
     notifyListeners();
   }
 
@@ -97,6 +128,8 @@ class AuthState extends ChangeNotifier {
   Future<void> logout() async {
     await api.logout();
     utente = null;
+    logo = null;
+    impostaFavicon(null);
     stato = StatoAuth.anonimo;
     notifyListeners();
   }
@@ -104,6 +137,8 @@ class AuthState extends ChangeNotifier {
   void _sessioneScaduta() {
     if (stato == StatoAuth.autenticato) {
       utente = null;
+      logo = null;
+      impostaFavicon(null);
       stato = StatoAuth.anonimo;
       notifyListeners();
     }

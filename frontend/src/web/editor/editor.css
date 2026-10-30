@@ -24,7 +24,7 @@ body {
   display: none;
 }
 
-.note-editor .note-editing-area {
+.note-editor.note-frame .note-editing-area {
   flex: 1;
   min-height: 0;
   overflow: auto;

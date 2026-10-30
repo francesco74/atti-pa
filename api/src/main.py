@@ -12,7 +12,7 @@ import time
 from http import HTTPStatus
 
 from routers import (
-    auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, trasparenza,
+    anticorruzione, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, trasparenza,
 )  # fmt: skip
 from flask import g, request
 from flask_cors import CORS
@@ -166,7 +166,7 @@ def create_app(
 
     for modulo in (
         auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
-        verifiche, controllo, trasparenza,
+        verifiche, controllo, trasparenza, anticorruzione,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 

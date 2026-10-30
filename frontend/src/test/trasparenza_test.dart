@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:atti_pa/api/api_client.dart';
+import 'package:atti_pa/ui/trasparenza/coda_analisi.dart';
 import 'package:atti_pa/ui/trasparenza/servizio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -51,5 +52,29 @@ void main() {
       ServizioTrasparenza(api).attendi('l2', intervallo: Duration.zero),
       throwsA(isA<LavoroNonRiuscito>().having((e) => e.messaggio, 'messaggio', 'Pagina non raggiungibile')),
     );
+  });
+
+  test('analisi avviate: si seguono finché sono in coda e si avvisa alla fine', () async {
+    var letture = 0;
+    final api = ApiClient(
+      'http://api.test',
+      client: MockClient((r) async {
+        letture++;
+        return json([
+          {'id': 'a1', 'stato': letture < 2 ? 'IN_CORSO' : 'COMPLETATA', 'titolo': 'Art. 23'},
+          {'id': 'a0', 'stato': 'ERRORE', 'titolo': 'Art. 12'},
+        ]);
+      }),
+    );
+    final concluse = <String>[];
+    final coda = CodaAnalisi(ServizioTrasparenza(api), intervallo: const Duration(milliseconds: 1))
+      ..suConclusa = (l) => concluse.add(l['id'] as String);
+    await coda.aggiorna();
+    expect(coda.inCorso, 1);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(coda.inCorso, 0);
+    expect(concluse, ['a1']); // quella già in errore non si annuncia
+    expect(letture, 2); // senza analisi attive non si rilegge più
+    coda.dispose();
   });
 }

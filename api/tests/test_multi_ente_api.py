@@ -280,6 +280,58 @@ class MultiEnte(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self._login(A, "nuovo", "Scelta-da-me-3", atteso=403)  # utente disattivato
 
+    def test_strutture_organizzative(self):
+        import io
+
+        c, _ = self._login(A, "admin")
+        csv = "codice;descrizione;padre\nU.O. 2.1;Servizi di personale;SETTORE 2\nSETTORE 2;Risorse umane;\n"
+        r = c.post("/api/v1/ente/strutture/importa", base_url=A, content_type="multipart/form-data",
+                   data={"file": (io.BytesIO(csv.encode()), "strutture.csv")})  # fmt: skip
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        self.assertEqual(r.get_json(), {"create": 2, "aggiornate": 0})
+        strutture = {s["codice"]: s for s in c.get("/api/v1/ente/strutture", base_url=A).get_json()}
+        settore, uo = strutture["SETTORE 2"], strutture["U.O. 2.1"]
+        self.assertEqual(uo["padre_id"], settore["id"])  # il padre può venire dopo nel file
+
+        # nuova U.O. sotto il settore; codice doppio e gerarchia circolare rifiutati
+        r = c.post("/api/v1/ente/strutture", base_url=A,
+                   json={"codice": "U.O. 2.2", "descrizione": "Trattamento economico", "padre_id": settore["id"]})
+        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
+        uo2 = r.get_json()
+        self.assertEqual(c.post("/api/v1/ente/strutture", base_url=A,
+                                json={"codice": "U.O. 2.2", "descrizione": "x"}).status_code, 409)  # fmt: skip
+        r = c.put(f"/api/v1/ente/strutture/{settore['id']}", base_url=A,
+                  json={"codice": "SETTORE 2", "descrizione": "Risorse umane", "padre_id": uo["id"]})
+        self.assertEqual(r.status_code, 422)
+
+        # struttura dell'utente; una struttura con utenti non si elimina, si disattiva
+        r = c.post("/api/v1/ente/utenti", base_url=A, json={
+            "username": "referente", "ruoli": ["ANTICORRUZIONE_REFERENTE"], "password": PASSWORD,
+            "struttura_id": uo2["id"],
+        })  # fmt: skip
+        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
+        self.assertEqual(r.get_json()["struttura_id"], uo2["id"])
+        self.assertEqual(c.delete(f"/api/v1/ente/strutture/{uo2['id']}", base_url=A).status_code, 409)
+        self.assertEqual(c.delete(f"/api/v1/ente/strutture/{settore['id']}", base_url=A).status_code, 409)
+        r = c.put(f"/api/v1/ente/strutture/{uo2['id']}", base_url=A, json={
+            "codice": "U.O. 2.2", "descrizione": "Trattamento economico", "padre_id": settore["id"], "attiva": False,
+        })  # fmt: skip
+        self.assertFalse(r.get_json()["attiva"])
+
+        # le strutture si leggono da tutti gli utenti dell'ente, ma le gestisce solo l'admin
+        u, _ = self._login(A, "referente")
+        self._cambia(u, A, PASSWORD, "Scelta-da-me-4")
+        self.assertEqual(len(u.get("/api/v1/ente/strutture", base_url=A).get_json()), 3)
+        self.assertEqual(u.post("/api/v1/ente/strutture", base_url=A,
+                                json={"codice": "X", "descrizione": "x"}).status_code, 403)  # fmt: skip
+
+        # importazione con una struttura superiore inesistente: nulla viene creato
+        r = c.post("/api/v1/ente/strutture/importa", base_url=A, content_type="multipart/form-data",
+                   data={"file": (io.BytesIO(b"codice;descrizione;padre\nU.O. 9;Nove;MANCA\n"), "s.csv")})
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("MANCA", r.get_data(as_text=True))
+        self.assertEqual(len(c.get("/api/v1/ente/strutture", base_url=A).get_json()), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

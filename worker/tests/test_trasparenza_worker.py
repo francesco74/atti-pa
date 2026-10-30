@@ -1,6 +1,7 @@
 """Lavori della trasparenza nel worker, su SQLite e con LLM e converter simulati: presa in
-carico, analisi completata con i file eliminati, errore della richiesta senza nuovi tentativi,
-errore temporaneo ritentato, lavori bloccati rimessi in coda.
+carico, analisi completata con i file eliminati, errore della richiesta senza nuovi tentativi
+(i file restano per riprovarla), errore temporaneo ritentato, lavori bloccati rimessi in coda,
+lavori non riusciti e scaduti eliminati con i file.
     cd worker/tests && python test_trasparenza_worker.py
 """
 
@@ -27,7 +28,15 @@ from common.llm import LlmError  # noqa: E402
 from common.models import Base, Ente, Modulo, StatoVerifica, TrasparenzaLavoro, User  # noqa: E402
 from trasparenza import LavoriTrasparenza  # noqa: E402
 
-REPORT = '<p>Analisi</p><span class="esito-validazione">Non pubblicabile</span>'
+REPORT = {
+    "analisi": ["Mancano gli estremi dei provvedimenti."],
+    "rilievi": [{"campo": "Estremi", "valore_rilevato": "assenti", "esito": "Negativo", "nota_correttiva": "Indicarli"}],
+    "livello_open_data": 1,
+    "motivazione_open_data": "PDF",
+    "esito_globale": "Non conforme",
+    "esito_validazione": "Non pubblicabile",
+    "motivazione_validazione": "Dati essenziali mancanti",
+}
 
 
 class LlmFinto:
@@ -37,7 +46,7 @@ class LlmFinto:
         self.errori = 0  # chiamate da far fallire prima di rispondere
         self.sistemi: list[str] = []
 
-    async def genera(self, sistema, testo):
+    async def dati_json(self, sistema, testo, schema):
         if self.errori:
             self.errori -= 1
             raise LlmError("Chiamata al modello fallita: HTTP 503")
@@ -132,7 +141,17 @@ class LavoriWorker(unittest.TestCase):
         lavoro = self._leggi(lavoro_id)
         self.assertEqual((lavoro.stato, lavoro.tentativi), (StatoVerifica.ERRORE, 1))
         self.assertIn("Formato non ammesso", lavoro.errore)
+        self.assertTrue((Path(self.cartella.name) / file["percorso"]).exists())  # per riprovarla
+
+        async def invecchia_e_pulisci():
+            async with self.sessioni() as db:
+                await db.execute(update(TrasparenzaLavoro).values(created_at=datetime(2020, 1, 1)))
+                await db.commit()
+            return await self.lavori.pulisci_falliti()
+
+        self.assertEqual(asyncio.run(invecchia_e_pulisci()), 1)
         self.assertFalse((Path(self.cartella.name) / file["percorso"]).exists())
+        self.assertIsNone(self._leggi(lavoro_id))
 
     def test_errore_temporaneo_ritentato_fino_al_massimo(self):
         file = self._file("elenco.pdf", b"%PDF")

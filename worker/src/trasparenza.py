@@ -99,6 +99,9 @@ class LavoriTrasparenza:
         """Esegue il lavoro; se va ritentato restituisce i secondi di attesa."""
         async with self.sessionmaker() as db:
             lavoro = await db.get(TrasparenzaLavoro, lavoro_id)
+            if lavoro is None:  # tolto dall'utente mentre era in coda
+                log.info("Lavoro %s non più presente: ignorato", lavoro_id)
+                return None
             ente = await db.get(Ente, lavoro.ente_id)
             attesa = None
             try:
@@ -118,6 +121,8 @@ class LavoriTrasparenza:
                 attesa = None if ultimo else 30 * lavoro.tentativi
             if lavoro.stato != StatoVerifica.IN_CODA:
                 lavoro.completato_il = _ora()
+            if lavoro.stato == StatoVerifica.COMPLETATA:
+                # un lavoro non riuscito tiene i file: l'utente può riprovarlo (API "riprova")
                 await self._elimina_file(lavoro.richiesta)
             await db.commit()
             return attesa
@@ -144,6 +149,19 @@ class LavoriTrasparenza:
             )
             await db.commit()
             return in_errore.rowcount + in_coda.rowcount
+
+    async def pulisci_falliti(self, giorni: int = 30) -> int:
+        """Elimina i lavori non riusciti più vecchi di `giorni` (non più nell'elenco dell'app)
+        con i file caricati, che restavano per poterli riprovare."""
+        limite = _ora() - timedelta(days=giorni)
+        async with self.sessionmaker() as db:
+            vecchi = (await db.scalars(select(TrasparenzaLavoro).where(
+                TrasparenzaLavoro.stato == StatoVerifica.ERRORE, TrasparenzaLavoro.created_at < limite))).all()  # fmt: skip
+            for lavoro in vecchi:
+                await self._elimina_file(lavoro.richiesta)
+                await db.delete(lavoro)
+            await db.commit()
+            return len(vecchi)
 
     async def fermi(self, attesa: timedelta) -> list[str]:
         """Lavori in coda da più di `attesa` (messaggio perso o RabbitMQ non raggiungibile)."""

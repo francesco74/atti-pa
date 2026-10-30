@@ -375,6 +375,8 @@ class Worker:
                 log.warning("%d verifiche bloccate rimesse in coda", recuperate)
             if recuperati := await self.trasparenza.recupera_bloccati():
                 log.warning("%d lavori della trasparenza bloccati rimessi in coda", recuperati)
+            if puliti := await self.trasparenza.pulisci_falliti():
+                log.info("%d lavori della trasparenza non riusciti e scaduti eliminati", puliti)
             if reinviati := await self.reinvia_fermi():
                 log.warning("%d lavori fermi reinviati sulle code", reinviati)
         except Exception:

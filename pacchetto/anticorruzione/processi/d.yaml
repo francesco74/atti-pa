@@ -1,0 +1,595 @@
+# Processi standard dell'area D: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: D
+processi:
+- codice: D.1
+  denominazione: Concorso pubblico
+  tempi: Sei mesi dalla data di effettuazione delle prove scritte o, se trattasi di selezioni per titoli,
+    dalla data della prima convocazione. (Art. 17 Allegato L al Regolamento sull'ordinamento degli uffici
+    e dei servizi)
+  attori_esterni: Pubblicazione sul portale InPA e sito istituzionale dell'Ente e secondo quanto previsto
+    dal Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici
+    e dei Servizi dell'Ente)
+  attivita:
+  - codice: D.1.1
+    descrizione: Predisposizione bando di concorso in attuazione della programmazione triennale del fabbisogno
+      di personale.
+    rischi:
+    - codice: D.1.1_R.1
+      evento: Predisposizione di un bando contenente requisiti che possano avvantaggiare particolari categorie
+        di soggetti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.1_R.1_M.1
+        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
+          Responsabile del servizio a cui le risorse sono destinate.
+  - codice: D.1.2
+    descrizione: Determinazione dirigenziale di approvazione del bando.
+  - codice: D.1.3
+    descrizione: Pubblicazione sul portale InPA e sito istituzionale dell'Ente e secondo quanto previsto
+      dal Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici
+      e dei Servizi dell'Ente)
+  - codice: D.1.4
+    descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione
+      dirigenziale di ammissione con riserva ed eventuale esclusione dei candidati. Comunicazione ai concorrenti
+      della esclusione e pubblicazione sul portale InPA e sito istituzionale dell'Ente dei concorrenti
+      ammessi con riserva ed eventuali esclusi.
+    rischi:
+    - codice: D.1.4_R.1
+      evento: Ammissione di soggetto che non ha i requisiti o esclusione di soggetto che ha i requisiti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.4_R.1_M.1
+        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
+          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota. Tutti i candidati
+          la cui domanda sia pervenuta tramite portale nei termini perentori di scadenza, sono ammessi
+          con riserva alla selezione, sulla base delle dichiarazioni sottoscritte. L'accertamento del
+          possesso dei requisiti viene fatto ai sensi dell'art. 15 del Regolamento.
+        categoria: Regolamentazione
+  - codice: D.1.5
+    descrizione: Nomina della commissione esaminatrice.
+    rischi:
+    - codice: D.1.5_R.1
+      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.5_R.1_M.1
+        descrizione: La composizione e il funzionamento delle Commissioni è disciplinato dal Regolamento
+          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+          dell'Ente).
+        categoria: Regolamentazione
+  - codice: D.1.6
+    descrizione: Predisposizione fascicolo degli atti del concorso per la Commissione Esaminatrice.
+  - codice: D.1.7
+    descrizione: Ausilio alla Commissione Esaminatrice per eventuali problemi o pareri durante lo svolgimento
+      del concorso.
+  - codice: D.1.8
+    descrizione: Svolgimento procedura di selezione (valutazione dei titoli e svolgimento prove la cui
+      responsabilità è in capo alla Commissione Esaminatrice). Formulazione graduatoria di merito da parte
+      della Commissione esaminatrice e trasmissione atti all'Ufficio personale.
+    rischi:
+    - codice: D.1.8_R.1
+      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.8_R.1_M.1
+        descrizione: I criteri stabiliti dalla Commissione, nell'ambito di quanto previsto dal bando di
+          concorso, per la valutazione dei titoli, saranno pubblicati sul portale InPA e nella pagina
+          del sito web.
+    - codice: D.1.8_R.2
+      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.8_R.2_M.1
+        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).La Commissione propone
+          tre tracce per ciascuna prova scritta. Deve essere garantita analoga complessità e rilevanza
+          nella formulazione dei quesiti. Le tracce sono segrete, elaborate con modalità digitale e ne
+          è vietata la divulgazione. L'estrazione della prova è effettuata da almeno 2 candidati.
+        categoria: Regolamentazione
+  - codice: D.1.9
+    descrizione: Ricevimento atti della Commissione Esaminatrice.
+  - codice: D.1.10
+    descrizione: Predisposizione e adozione determinazione di approvazione dei lavori della Commissione.
+  - codice: D.1.11
+    descrizione: Approvazione graduatoria finale con applicazione delle eventuali riserve e preferenze
+      e nomina dei vincitori.
+    rischi:
+    - codice: D.1.11_R.1
+      evento: Avvantaggiare/svantaggiare i singoli concorrenti nella fase di applicazione delle riserve
+        /preferenze.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.1.11_R.1_M.1
+        descrizione: Indicazione specifiche delle singole posizioni di riserva/precedenza nella determinazione
+          di approvazione della graduatoria finale.
+- codice: D.2
+  denominazione: Assunzione tramite centro per l'impiego
+  tempi: Art. 35 del Decreto n. 7/R del 4.2.2004:- 6 mesi dalla pubblicazione della graduatoria per le
+    assunzioni a tempo indeterminato- 12 mesi dalla pubblicazione della graduatoria per le assunzioni
+    a tempo determinato
+  attori_esterni: Centro per l'Impiego
+  attivita:
+  - codice: D.2.1
+    descrizione: Predisposizione bando di concorso in attuazione della programmazione triennale del fabbisogno
+      di personale.
+    rischi:
+    - codice: D.2.1_R.1
+      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
+        particolari categorie di soggetti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Medio, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.2.1_R.1_M.1
+        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
+          Responsabile del servizio a cui le risorse sono destinate e viene inviato per un preventivo
+          esame al Centro per l'Impiego.
+  - codice: D.2.2
+    descrizione: Determinazione dirigenziale di approvazione del bando.
+  - codice: D.2.3
+    descrizione: Invio del bando di concorso al Centro per l'Impiego per la pubblicazione.
+  - codice: D.2.4
+    descrizione: Ricevimento della graduatoria dal Centro per l'Impiego.
+  - codice: D.2.5
+    descrizione: Nomina della commissione esaminatrice.
+    rischi:
+    - codice: D.2.5_R.1
+      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.2.5_R.1_M.1
+        descrizione: La composizione e il funzionamento delle Commissioni è disciplinato dal Regolamento
+          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+          dell'Ente).
+        categoria: Regolamentazione
+  - codice: D.2.6
+    descrizione: Predisposizione fascicolo degli atti del concorso per la Commissione Esaminatrice.
+  - codice: D.2.7
+    descrizione: Ausilio alla Commissione Esaminatrice per eventuali problemi o pareri durante lo svolgimento
+      del concorso.
+  - codice: D.2.8
+    descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti idonei da parte della
+      Commissione Esaminatrice; trasmissione atti all'Ufficio personale.
+    rischi:
+    - codice: D.2.8_R.1
+      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.2.8_R.1_M.1
+        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
+        categoria: Regolamentazione
+    - codice: D.2.8_R.2
+      evento: Dichiarare /non dichiarare un soggetto idoneo facendo una valutazione non oggettiva della
+        prova.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+      misure:
+      - codice: D.2.8_R.2_M.1
+        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
+        categoria: Regolamentazione
+  - codice: D.2.9
+    descrizione: Predisposizione e adozione della determinazione di approvazione dei lavori della Commissione
+      esaminatrice e nomina dei vincitori.
+- codice: D.3
+  denominazione: Assunzione personale di ruolo per mobilità volontaria
+  tempi: entro 30 gg. dalla determinazione contenente l'individuazione dei soggetti scelti per la copertura
+    dei posti, fatti salvi eventuali altri accordi con l'Amministrazione cedente se compatibili con le
+    esigenze organizzative
+  attivita:
+  - codice: D.3.1
+    descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
+      del fabbisogno di personale, dove vengono indicati i posti/profili per i quali si procede a selezione,
+      i requisiti di partecipazione, nonché le modalità di selezione e pubblicazione sulla piattaforma
+      InPA e sul sito istituzionale dell'Ente e secondo quanto previsto dal Regolamento delle Procedure
+      Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente)
+    rischi:
+    - codice: D.3.1_R.1
+      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
+        particolari categorie di soggetti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.3.1_R.1_M.1
+        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
+          Responsabile del servizio a cui le risorse sono destinate. Alle selezioni per mobilità volontaria
+          - ancorché non qualificabili strettamente quali concorsi pubblici - si applicano le disposizioni
+          di carattere generale di cui al Regolamento delle Procedure Selettive (Allegato L del Regolamento
+          sull'Ordinamento degli Uffici e dei Servizi dell'Ente). ritenute compatibili con la disciplina
+          normativa specifica di riferimento.
+        categoria: Regolamentazione
+  - codice: D.3.2
+    descrizione: Determinazione dirigenziale di approvazione dell'avviso.
+  - codice: D.3.4
+    descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione
+      dirigenziale di ammissione con riserva ed eventuale esclusione dei candidati. Pubblicazione sul
+      portale InPA e sito istituzionale dell'Ente dei concorrenti ammessi con riserva ed eventuali esclusi.
+    rischi:
+    - codice: D.3.4_R.1
+      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.3.4_R.1_M.1
+        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
+          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota.
+        categoria: Controllo
+  - codice: D.3.5
+    descrizione: Nomina della Commissione esaminatrice.
+    rischi:
+    - codice: D.3.5_R.1
+      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.3.5_R.1_M.1
+        descrizione: Alle selezioni per mobilità volontaria - ancorché non qualificabili strettamente
+          quali concorsi pubblici - si applicano le disposizioni di carattere generale di cui al Regolamento
+          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+          dell'Ente) ritenute compatibili con la disciplina normativa specifica di riferimento. In ogni
+          caso per dette selezioni trova applicazione la disciplina sulla composizione delle Commissioni
+          deputate alla valutazione dei candidati.
+        categoria: Regolamentazione
+  - codice: D.3.6
+    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
+      della selezione.
+  - codice: D.3.7
+    descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti scelti per la copertura
+      dei posti mediante formulazione della graduatoria di merito
+    rischi:
+    - codice: D.3.7_R.1
+      evento: Far conoscere preventivamente i contenuti della selezione ai candidati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.3.7_R.1_M.1
+        descrizione: Le materie oggetto di colloquio e valutazione sono inserite nell'Avviso.
+  - codice: D.3.8
+    descrizione: Adozione determinazione contenente l'individuazione dei soggetti scelti per la copertura
+      dei posti, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
+  - codice: D.3.9
+    descrizione: Acquisizione del nulla-osta da parte dell'Amministrazione di appartenenza dei soggetti
+      scelti.
+  - codice: D.3.10
+    descrizione: Definizione della data di entrata in servizio, in accordo con l'Amministrazione cedente.
+  - codice: D.3.11
+    descrizione: Sottoscrizione contratto individuale di lavoro.
+- codice: D.4
+  denominazione: Tirocini formativi extracurriculari
+  tempi: entro 30 gg. dalla determinazione contenentel'individuazione dei soggetti scelti per l'inserimento
+    nei progetti formativi oggetto di tirocinio, fermi restando ulteriori tempi necessari al Centro perl'Impiego
+    per i propri adempimenti.
+  attori_esterni: Centro per l'Impiego
+  attivita:
+  - codice: D.4.1
+    descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
+      del fabbisogno di personale, dove vengono individuati i progetti di tirocinio, gli uffici comunali
+      interessati, i requisiti di partecipazione, nonché le modalità di selezione.
+    rischi:
+    - codice: D.4.1_R.1
+      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
+        particolari categorie di soggetti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Medio, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.4.1_R.1_M.1
+        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
+          Responsabile del servizio a cui le risorse sono destinate. Alle presenti selezioni - ancorché
+          non qualificabili strettamente quali concorsi pubblici - si applicano le disposizioni di carattere
+          generale di cui al Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento
+          degli Uffici e dei Servizi dell'Ente) ritenute compatibili con la disciplina normativa specifica
+          di riferimento.
+        categoria: Regolamentazione
+  - codice: D.4.2
+    descrizione: Determinazione dirigenziale di approvazione dell'avviso.
+  - codice: D.4.3
+    descrizione: Pubblicazione all'Albo Pretorio, sul sito istituzionale e su quotidiani a rilevanza locale.
+  - codice: D.4.4
+    descrizione: Ricezione delle domande di partecipazione ed esame delle stesse;determinazione dirigenziale
+      di ammissione con riserva ed esclusione dei candidati. Pubblicazione sul sito istituzionale degli
+      ammessi con riserva e degli esclusi;comunicazione ai concorrenti della esclusione.
+    rischi:
+    - codice: D.4.4_R.1
+      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.4.4_R.1_M.1
+        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+          dirigenziale di ammissione ed esclusione devono essere indicati per ogni candidato escluso i
+          singoli e specifici motivi di esclusione.
+        categoria: Controllo
+  - codice: D.4.5
+    descrizione: Nomina della Commissione esaminatrice.
+    rischi:
+    - codice: D.4.5_R.1
+      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.4.5_R.1_M.1
+        descrizione: Applicazione delle disposizioni sulla composizione delle Commissioni di cui al Regolamento
+          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+          dell'Ente).
+        categoria: Regolamentazione
+  - codice: D.4.6
+    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
+      della selezione.
+  - codice: D.4.7
+    descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
+      nei progetti formativi oggetto di tirocinio mediante formulazione della graduatoria di merito. Adozione
+      determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti formativi
+      oggetto di tirocinio, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
+    rischi:
+    - codice: D.4.7_R.1
+      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.4.7_R.1_M.1
+        descrizione: I criteri stabiliti dalla Commissione per la valutazione dei titoli, nell'ambito
+          di quanto previsto dal bando di selezione, saranno eventualmente pubblicati nella pagina del
+          sito web.
+    - codice: D.4.7_R.2
+      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.4.7_R.2_M.1
+        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi) per quanto ritenuto compatibile
+          con la disciplina normativa specifica di riferimento.
+        categoria: Regolamentazione
+  - codice: D.4.8
+    descrizione: Comunicazione dei soggetti individuati al Centro per l'Impiego della Provincia di Lucca
+      (ARTI).
+  - codice: D.4.9
+    descrizione: Inizio tirocinio.
+- codice: D.5
+  denominazione: Servizio civile Regionale
+  tempi: entro 30 gg. dalla determinazione contenente l'individuazione dei soggetti scelti per l'inserimento
+    nei progetti di Servizio civile Regionale, fermi restando ulteriori tempi necessari alla Regione per
+    i propri adempimenti
+  attori_esterni: Regione Toscana
+  attivita:
+  - codice: D.5.1
+    descrizione: Individuazione di progetti di Servizio civile da sottoporre alla Regione Toscana per
+      ottenerne il finanziamento.
+  - codice: D.5.2
+    descrizione: Pubblicizzazione sul sito istituzionale e su quotidiani locali del bando per la selezione
+      dei giovani da inserire nei progetti, bando redatto dalla Regione Toscana dove sono indicati i progetti,
+      gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
+  - codice: D.5.3
+    descrizione: Pubblicizzazione sul sito istituzionale e su quotidiani locali del bando per la selezione
+      dei giovani da inserire nei progetti, bando redatto dalla Regione Toscana dove sono indicati i progetti,
+      gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
+    rischi:
+    - codice: D.5.3_R.1
+      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.5.3_R.1_M.1
+        descrizione: Le domande vengono controllate più dipendenti dell'Ufficio Personale.Nella determinazione
+          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
+          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota.
+        categoria: Controllo
+  - codice: D.5.4
+    descrizione: Nomina della Commissione esaminatrice.
+    rischi:
+    - codice: D.5.4_R.1
+      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti.
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.5.4_R.1_M.1
+        descrizione: Applicazione delle disposizioni sulla composizione delle Commissioni di cui al Regolamento
+          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+          dell'Ente).
+        categoria: Regolamentazione
+  - codice: D.5.5
+    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
+      della selezione.
+  - codice: D.5.6
+    descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
+      nei progetti di Servizio civile regionale mediante formulazione della graduatoria di merito. Adozione
+      determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti, sulla
+      base delle valutazioni effettuate dalla Commissione esaminatrice.
+    rischi:
+    - codice: D.5.6_R.1
+      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.5.6_R.1_M.1
+        descrizione: I criteri stabiliti dalla Commissione per la valutazione dei titoli, nell'ambito
+          di quanto previsto dal bando di selezione, saranno eventualmente pubblicati nella pagina del
+          sito web.
+    - codice: D.5.6_R.2
+      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: D.5.6_R.2_M.1
+        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi) per quanto ritenuto compatibile
+          con la disciplina normativa specifica di riferimento.
+        categoria: Regolamentazione
+  - codice: D.5.7
+    descrizione: Comunicazione dei soggetti individuati alla Regione Toscana.
+  - codice: D.5.8
+    descrizione: Inizio progetti.
+- codice: D.6
+  denominazione: Erogazione di compensi e retribuzioni per dipendenti e Amministratori e denunce mensili
+    e annuali relative ai compensi nonché ai versamenti contributivi effettuati
+  attivita:
+  - codice: D.6.1
+    descrizione: Erogazione delle retribuzioni ai dipendenti dell'Ente. Erogazione delle indennità per
+      gli Amministratori in carica. Effettuazione dei versamenti contributivi mensili relativi alle retribuzioni
+      percepite. Effettuazione delle denunce mensili e annuali relative ai contributi versati
+- codice: D.7
+  denominazione: Valutazione della performance dei dirigenti, PO e dipendenti privi di incarico
+  tempi: Entro 30 giorni dalla validazione della Relazione sulla performance da parte del NDV, salvo slittamento
+    dei tempi per ricorsi dei dipendenti
+  attori_esterni: NdVGestore conservazione digitale della documentazione
+  attivita:
+  - codice: D.7.1
+    descrizione: Predisposizione ed aggiornamento SMVP
+  - codice: D.7.2
+    descrizione: Validazione da parte del NDV del documento SMVP
+  - codice: D.7.3
+    descrizione: Comunicazione e cura dei rapporti con gli uffici
+  - codice: D.7.4
+    descrizione: Predisposizione schede, con i fattori valutativi, per la valutazione dei dirigenti e
+      dei dipendenti ( a supporto ai dirigenti, per valutare i propri collaboratori e supporto al NDV/
+      Sindaco per la valutazione dei Dirigenti)
+  - codice: D.7.5
+    descrizione: Raccolta schede di valutazione e verifica della presenza di tutti gli elementi (firme
+      valutatore e valutato, data certa di consegna e presa visione, assegnazione punteggio)
+  - codice: D.7.6
+    descrizione: Caricamento dato sul data base e verifica di eventuali anomalie
+  - codice: D.7.7
+    descrizione: Elaborazione file valutazione definitive e trasmissione all'ufficio preposto all'erogazione
+      dei premi correlati alla performance
+  - codice: D.7.8
+    descrizione: Archiviazione e conservazione schede di valutazione dirigenti e dipendenti
+- codice: D.8
+  denominazione: Rimborso Spese sostenute da Amministratori e dipendenti per missioni autorizzate nell'interesse
+    dell'Ente
+  attivita:
+  - codice: D.8.1
+    descrizione: Preventiva ricezione dell'autorizzazione alla missione da parte dei soggetti titolati.
+      Successiva ricezione delle pezze d'appoggio attestanti le spese sostenute in occasione della missione
+      e relativo controllo sulla ammissibilità delle spese da rimborsare. Rimborso della missione sul
+      cedolino.
+- codice: D.9
+  denominazione: Corresponsione di trattamenti accessori per dipendenti del comparto e della dirigenza
+  attivita:
+  - codice: D.9.1
+    descrizione: Verifica del rispetto dei limiti individuali annuali di lavoro straordinario. Verifica
+      del rispetto di requisiti di legge, del CCNL nazionale e/o decentrato nonché di regolamenti per
+      l'erogazione dei trattamenti accessori.
+- codice: D.10
+  denominazione: Cessazione dal servizio per qualsiasi causa e conseguente gestione del trattamento pensionistico
+    e di TFR/TFS
+  attivita:
+  - codice: D.10.1
+    descrizione: Comunicazione della risoluzione unilaterale del rapporto di lavoro al dipendente che
+      ha maturato i requisiti pensionistici con un preavviso di 6 mesi e conseguente inserimento, nella
+      posizione assicurativa, delle retribuzioni relative agli ultimi 6 mesi di impiego prima della cessazione
+      (anticipo DMA). Inserimento dati di ultimo miglio per il calcolo del TFS/TFR.
+- codice: D.11
+  denominazione: Redazione CU dipendenti
+  attivita:
+  - codice: D.11.1
+    descrizione: Invio della CU ordinaria all'AE entro il termine perentorio stabilito. Successivo invio
+      delle CU modello sintetico ai dipendenti e ai percettori di redditi assimilati.
+- codice: D.12
+  denominazione: Certificazioni stipendio per richieste cessione del quinto
+  attivita:
+  - codice: D.12.1
+    descrizione: Certificazione stipendiale rilasciata ai dipendenti e/o finanziarie su delega del dipendente
+      per rilascio finanziamenti.
+- codice: D.13
+  denominazione: Certificazioni e attestazioni posizioni assicurative per pratiche pensionistiche, ricongiunzioni
+    e riscatti del personale a tempo determinato e indeterminato
+  attivita:
+  - codice: D.13.1
+    descrizione: Ricezione delle richieste di sistemazione posizione assicurativa da parte di altri enti,
+      degli interessati e/o da parte dell'INPS. Conseguente istruttoria e ricostruzione della posizione
+      richiesta sia da un punto di vista giuridico che economico. Eventuale correzione dei dati in caso
+      di inesattezze sull'applicativo passweb e conseguente certificazione della posizione.
+- codice: D.14
+  denominazione: Denunce infortuni e malattie professionali dipendenti
+  attivita:
+  - codice: D.14.1
+    descrizione: Tempestiva denuncia (entro 48 h dall'evento) all'istituto nazionale assicurazione contro
+      gli infortuni sul lavoro e successivi adempimenti
+- codice: D.15
+  denominazione: Certificazioni stipendio ex art. 547 cpc
+  attivita:
+  - codice: D.15.1
+    descrizione: Dichiarazione resa nei confronti del creditore procedente in cui si specifica l'ammontare
+      dello stipendio netto del soggetto pignorato e si dichiarano eventuali e ulteriori pignoramenti
+      e/o cessioni già in corso

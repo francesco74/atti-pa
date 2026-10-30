@@ -1,0 +1,72 @@
+# Processi standard dell'area G: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: G
+processi:
+- codice: G.1
+  denominazione: Incarichi professionali
+  tempi: Termini di legge
+  attori_esterni: professionisti
+  attivita:
+  - codice: G.1.1
+    descrizione: Scelta dell'operatore
+    rischi:
+    - codice: G.1.1_R.1
+      evento: Inosservanza delle regole procedurali a garanzia della trasparenza e dell'imparzialità della
+        selezione.
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: G.1.1_R.1_M.1
+        descrizione: Verifica conflitti di interessi
+        categoria: Disciplina del conflitto di interessi
+    - codice: G.1.1_R.2
+      evento: Motivazione generica e tautologica circa la sussistenza dei presupposti di legge per il
+        conferimento di incarichi professionali allo scopo di agevolare soggetti particolari
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: G.1.1_R.2_M.1
+        descrizione: Utilizzo dell'elenco professionisti pubblicato sul sito istituzionale
+    - codice: G.1.1_R.3
+      evento: Previsioni di requisiti di accesso "personalizzati" ed insufficienza di meccanismi oggettivi
+        e trasparenti idonei a verificare il possesso dei requisiti attitudinali e professionali richiesti
+        in relazione all'incarico da ricoprire allo scopo di reclutare determinati soggetti
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: G.1.1_R.3_M.1
+        descrizione: Utilizzo del metodo indagine di mercato con almeno tre operatori, anche ove la normativa
+          dà la possibilità di affidamento diretto
+    - codice: G.1.1_R.4
+      evento: Ripetitività nell'assegnazione dell'incarico al medesimo soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: G.1.1_R.4_M.1
+        descrizione: Rotazione delle chiamate per le gare/indagini di mercato etc.
+        categoria: Rotazione
+- codice: G.2
+  denominazione: Attività istruttoria relativa alle nomine dei rappresentanti del Comune di Lucca in enti,
+    istituzioni e organismi partecipati
+  tempi: Ricognizione annuale nei termini indicati dal regolamento e nomine in base alle scadenze degli
+    organi degli organismi partecipati
+  attori_esterni: Società e organismi partecipati e candidati
+  attivita:
+  - codice: G.2.1
+    descrizione: Ricognizione delle posizioni in scadenza
+  - codice: G.2.3
+    descrizione: Raccolta e verifica sulle candidature pervenute
+  - codice: G.2.4
+    descrizione: Controlli in ordine all'insussistenza di cause di incompatibilità e inconferibilità ai
+      sensi del D.Lgs. n. 39/2013
+  - codice: G.2.5
+    descrizione: Predisposizione dei decreti di nomina

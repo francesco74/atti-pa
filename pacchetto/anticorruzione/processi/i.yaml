@@ -1,0 +1,204 @@
+# Processi standard dell'area I: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: I
+processi:
+- codice: I.3
+  denominazione: Titoli abilitativi edilizi
+  tempi: 90 gg.
+  attori_esterni: '- Soprintendenza ai beni Culturali, Paesaggisti e Ambientali - Autorità di Bacino -
+    Regione Toscana - Provincia di Lucca -Società Autostrade - Ferrovie dello Stato - Consorzio di Bonifica
+    Toscana Nord - VV.FF.'
+  attivita:
+  - codice: I.3.1
+    descrizione: Arrivo richiesta da cittadino/professionista
+  - codice: I.3.2
+    descrizione: Assegnazione a tecnico della UO
+    rischi:
+    - codice: I.3.2_R.1
+      evento: Assegnazione delle richieste a tecnico "individuato" in qualche modo dal cittadino/professionista
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: I.3.2_R.1_M.1
+        descrizione: Ogni domanda, entro le 24 ore lavorative successive alla presentazione, viene assegnata
+          ad un diverso istruttore, seguendo progressivamente un elenco di istruttori ordinato alfabeticamente.
+          L'elenco prestabilito è pubblicizzato all'interno dell'ufficio. L'istruttore assegnatario entro
+          il giorno successivo dovrà verificare e, nel caso, rappresentare al dirigente ed al responsabile
+          della U.O. la presenza di eventuale conflitto di interesse - anche potenziale - rispetto alla
+          pratica.
+        categoria: Disciplina del conflitto di interessi
+  - codice: I.3.3
+    descrizione: Analisi richiesta e documentazione
+    rischi:
+    - codice: I.3.3_R.1
+      evento: Disparità di trattamento nella fase di istruttoria, in relazione alla verifica di atti e
+        documentazione
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: I.3.3_R.1_M.1
+        descrizione: Registrazione di tutta la documentazione presentata.Implementazione scheda di rilevazione
+          della documentazione presentata
+        categoria: Controllo
+      - codice: I.3.3_R.1_M.2
+        descrizione: Astensione in caso di conflitto di interesse
+        categoria: Disciplina del conflitto di interessi
+    - codice: I.3.3_R.2
+      evento: Carenza di controlli sulle dichiarazioni
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: I.3.3_R.2_M.1
+        descrizione: Predisposizione schemi di istruttoria (tipo check list) per guidare i tecnici nell'esame
+          delle pratiche
+    - codice: I.3.3_R.3
+      evento: Possibile condizionamento esterno derivante dall'esercizio di attività esterne da parte
+        di dipendenti comunali in collaborazione con professionisti del territorio
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+      misure:
+      - codice: I.3.3_R.3_M.1
+        descrizione: Disposizione dirigenziale che rammenta al personale il divieto di svolgere attività
+          esterne in materia di edilizia , se non al di fuori dell'ambito del territorio comunale, in
+          forza del Regolamento C.le relativo all'ordinamento degli uffici e dei servizi (artt. 35, 128,
+          129, 130), nonché in base delle disposizioni fondamentali sulla incompatibilità nel Pubblico
+          Impiego (art. 60 D.P.R. n. 3/1957 e art. 53 D.Lgs. n. 165/2001)
+        categoria: Disciplina del conflitto di interessi
+  - codice: I.3.4
+    descrizione: Integrazione documenti titoli abilitativi edilizi
+    rischi:
+    - codice: I.3.4_R.1
+      evento: Eccessiva frequenza nella richiesta di integrazioni documentali
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.3.4_R.1_M.1
+        descrizione: Controlli interni/attività formativa sulla corretta ed uniforme gestione dei procedimenti
+        categoria: Controllo
+    - codice: I.3.4_R.2
+      evento: Mancato rispetto dei tempi massimi del procedimento
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Alto, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.3.4_R.2_M.1
+        descrizione: Monitoraggio tempi di procedimento (referto settoriale da parte del Responsabile
+          servizio competente al RPCT)
+        categoria: Controllo
+  - codice: I.3.5
+    descrizione: Esito istruttoria con la motivata proposta di adozione di provvedimento
+    rischi:
+    - codice: I.3.5_R.1
+      evento: Istruttoria non corretta, non aggiornata, non adeguata e/o non adeguata commisurazione del
+        contributo per favorire soggetti interessati
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.3.5_R.1_M.1
+        descrizione: Richiesta finale di contributo firmata da soggetto diverso rispetto all'istruttore
+        categoria: Controllo
+- codice: I.4
+  denominazione: Controllo e vigilanza
+  tempi: in tutti i casi di presunta violazione urbanistico-edilizia, ne danno immediata comunicazione
+    all'Autorità Giudiziaria, alla Provincia e al Comune che verifica, entro 30 giorni, la regolarità
+    delle opere e dispone gli atti conseguenti.
+  attori_esterni: cittadini, direttori dei lavori, committenti, ditte
+  attivita:
+  - codice: I.4.1
+    descrizione: Controlli e Vigilanza in materia edilizia (vedi anche F 11)
+    rischi:
+    - codice: I.4.1_R.1
+      evento: Omissione dell'attivazione del procedimento di verifica in presenza di segnalazioni circostanziate
+        e non pretestuose
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Basso, '6': Basso, '7': Medio,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.4.1_R.1_M.1
+        descrizione: Redazione di apposita relazione di servizio sul controllo effettuato a cui seguono
+          controlli/riscontri periodici sulle istanze presentate e sui sopralluoghi effettuati da parte
+          del Responsabile del servizio.Redazione di un report semestrale delle segnalazioni inoltrate
+          all'Edilizia Privata e riscontri ricevuti dall'Edilizia Privata sui controlli effettuati. Per
+          le istanze presentate viene effettuato sopralluogo con eventuale documentazione fotografica
+          dello stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza
+          all'ordinanza, redazione del verbale.
+        categoria: Controllo
+    - codice: I.4.1_R.2
+      evento: Erronea applicazione delle norme che qualificano la fattispecie abusiva al fine di elidere
+        e/o alleggerire il connesso regime sanzionatorio per favorire l'interessato
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
+        riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Basso, '7': Alto,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.4.1_R.2_M.1
+        descrizione: Redazione di apposita relazione di servizio sul controllo effettuato a cui seguono
+          controlli/riscontri periodici sulle istanze presentate e sui sopralluoghi effettuati da parte
+          del Responsabile del servizio.Redazione di un report semestrale delle segnalazioni inoltrate
+          all'Edilizia Privata e riscontri ricevuti dall'Edilizia Privata sui controlli effettuati. Per
+          le istanze presentate viene effettuato sopralluogo con eventuale documentazione fotografica
+          dello stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza
+          all'ordinanza, redazione del verbale.
+        categoria: Controllo
+    - codice: I.4.1_R.3
+      evento: Mancata pianificazione e predeterminazione dei criteri di effettuazione delle verifiche
+        d'ufficio, al fine di favorire determinati soggetti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
+          '8': Medio, '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.4.1_R.3_M.1
+        descrizione: Redazione di apposita relazione di servizio sul controllo effettuato a cui seguono
+          controlli/riscontri periodici sulle istanze presentate e sui sopralluoghi effettuati da parte
+          del Responsabile del servizio.Redazione di un report semestrale delle segnalazioni inoltrate
+          all'Edilizia Privata e riscontri ricevuti dall'Edilizia Privata sui controlli effettuati. Per
+          le istanze presentate viene effettuato sopralluogo con eventuale documentazione fotografica
+          dello stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza
+          all'ordinanza, redazione del verbale.
+        categoria: Controllo
+    - codice: I.4.1_R.4
+      evento: Divulgazione di informazioni relative a verifiche d'ufficio, allo scopo di favorire uno
+        o più interessati
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+      misure:
+      - codice: I.4.1_R.4_M.1
+        descrizione: Redazione di apposita relazione di servizio sul controllo effettuato a cui seguono
+          controlli/riscontri periodici sulle istanze presentate e sui sopralluoghi effettuati da parte
+          del Responsabile del servizio.Redazione di un report semestrale delle segnalazioni inoltrate
+          all'Edilizia Privata e riscontri ricevuti dall'Edilizia Privata sui controlli effettuati. Per
+          le istanze presentate viene effettuato sopralluogo con eventuale documentazione fotografica
+          dello stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza
+          all'ordinanza, redazione del verbale.
+        categoria: Controllo

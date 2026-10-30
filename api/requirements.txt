@@ -7,3 +7,4 @@ gunicorn==26.2.0
 ldap3==2.9.1
 bcrypt==5.0.0  # hash delle password importate da PApuntozeroIA
 pyjwt==2.15.1
+openpyxl==3.1.5  # importazione delle strutture organizzative (e del modulo anticorruzione)

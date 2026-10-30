@@ -239,6 +239,54 @@ class TrasparenzaApi(unittest.TestCase):
         })  # fmt: skip
         self.assertEqual(r.status_code, 415)
 
+    def test_elenco_e_rimozione_delle_analisi(self):
+        import io
+        from pathlib import Path
+
+        op, collega = self._client("operatore"), self._client("collega")
+        r = op.post("/api/v1/trasparenza/analisi", base_url=ENTE, content_type="multipart/form-data", data={
+            "dati": '{"controllo": "ART_23_DIRIGENTI"}', "file": [(io.BytesIO(b"data;numero"), "elenco.csv")],
+        })  # fmt: skip
+        lavoro = self._ok(r, 202)
+        elenco = self._ok(op.get("/api/v1/trasparenza/lavori", base_url=ENTE))
+        voce = next(v for v in elenco if v["id"] == lavoro["id"])
+        self.assertEqual(voce["fonte"], "elenco.csv")
+        self.assertTrue(voce["titolo"].startswith("Art. 23 - "))
+        self.assertNotIn("risultato", voce)
+        self.assertNotIn(lavoro["id"], [v["id"] for v in self._ok(collega.get("/api/v1/trasparenza/lavori", base_url=ENTE))])
+        estrazioni = self._ok(op.get("/api/v1/trasparenza/lavori?tipo=ESTRAZIONE", base_url=ENTE))
+        self.assertEqual({v["tipo"] for v in estrazioni} - {"ESTRAZIONE"}, set())
+
+        async def percorso_e_stato(lavoro_id, stato=None):
+            from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+            from common.models import TrasparenzaLavoro
+
+            motore = create_async_engine(f"sqlite+aiosqlite:///{self.cartella.name}/prova.db")
+            async with AsyncSession(motore) as db:
+                l = await db.get(TrasparenzaLavoro, lavoro_id)
+                percorso = l.richiesta["file"][0]["percorso"]
+                if stato:
+                    l.stato = stato
+                    await db.commit()
+            await motore.dispose()
+            return percorso
+
+        # non riuscita: si riprova con la stessa richiesta (solo da chi l'ha avviata)
+        asyncio.run(percorso_e_stato(lavoro["id"], "ERRORE"))
+        self.assertEqual(collega.post(f"/api/v1/trasparenza/lavori/{lavoro['id']}/riprova", base_url=ENTE).status_code, 404)
+        r = self._ok(op.post(f"/api/v1/trasparenza/lavori/{lavoro['id']}/riprova", base_url=ENTE))
+        self.assertEqual(r["stato"], "IN_CODA")
+        self.assertEqual(op.post(f"/api/v1/trasparenza/lavori/{lavoro['id']}/riprova", base_url=ENTE).status_code, 409)
+
+        # in corso: non si toglie; in coda: si annulla con i file caricati
+        percorso = asyncio.run(percorso_e_stato(lavoro["id"], "IN_CORSO"))
+        self.assertEqual(op.delete(f"/api/v1/trasparenza/lavori/{lavoro['id']}", base_url=ENTE).status_code, 409)
+        asyncio.run(percorso_e_stato(lavoro["id"], "IN_CODA"))
+        self.assertEqual(collega.delete(f"/api/v1/trasparenza/lavori/{lavoro['id']}", base_url=ENTE).status_code, 404)
+        self.assertEqual(op.delete(f"/api/v1/trasparenza/lavori/{lavoro['id']}", base_url=ENTE).status_code, 204)
+        self.assertFalse((Path(self.cartella.name) / percorso).exists())
+        self.assertEqual(op.get(f"/api/v1/trasparenza/lavori/{lavoro['id']}", base_url=ENTE).status_code, 404)
+
     def test_accesso_per_ruolo_e_modulo(self):
         redattore = self._client("redattore")
         self.assertEqual(redattore.get("/api/v1/trasparenza/schemi", base_url=ENTE).status_code, 403)

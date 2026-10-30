@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
@@ -124,6 +125,18 @@ class Sezione extends StatelessWidget {
   }
 }
 
+/// Icona di cancellazione: rossa in tutta l'app, grigia (dal pulsante) se non è attiva.
+class IconaElimina extends StatelessWidget {
+  const IconaElimina({super.key, this.size, this.attiva = true});
+
+  final double? size;
+  final bool attiva;
+
+  @override
+  Widget build(BuildContext context) =>
+      Icon(Icons.delete_outline, size: size, color: attiva ? Theme.of(context).colorScheme.error : null);
+}
+
 /// Mostra il risultato di un Future con indicatore di caricamento ed errore riprovabile.
 class Caricamento<T> extends StatelessWidget {
   const Caricamento({super.key, required this.future, required this.builder, this.riprova});
@@ -162,13 +175,17 @@ class Caricamento<T> extends StatelessWidget {
 Future<bool> conferma(BuildContext context, String titolo, String testo) async {
   final esito = await showDialog<bool>(
     context: context,
-    builder: (c) => AlertDialog(
-      title: Text(titolo),
-      content: Text(testo),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Conferma')),
-      ],
+    // PointerInterceptor: la conferma può comparire sopra l'editor dei risultati della
+    // trasparenza (un iframe), che altrimenti prenderebbe i clic sui pulsanti
+    builder: (c) => PointerInterceptor(
+      child: AlertDialog(
+        title: Text(titolo),
+        content: Text(testo),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Conferma')),
+        ],
+      ),
     ),
   );
   return esito ?? false;

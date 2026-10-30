@@ -1,0 +1,91 @@
+# Processi standard dell'area EXL: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: EXL
+processi:
+- codice: EXL.1
+  denominazione: Attestazione di diritto di soggiorno permanente per cittadini U.E. (regolarmente residenti
+    in Italia da almeno 5 anni)
+  tempi: 30 gg
+  attori_esterni: richiedente
+  attivita:
+  - codice: EXL.1.1
+    descrizione: Ricevimento richiesta in bollo e su modulistica predisposta, comprendente la dichiarazione
+      circa il non allontanamento dal territorio italiano per periodi superiori ai 6 mesi e la documentazione
+      comprovante il requisito di soggiorno per almeno 5 anni (contratti di lavoro, buste paga, iscrizioni
+      CCAA e dichiarazione redditi, corsi di studi effettuati, rendiconti bancari ecc) verifica dei requisiti,
+      e rilascio del documento (in bollo e con pagamento diritti)
+    rischi:
+    - codice: EXL.1.1_R.1
+      evento: Verifica documentazione comprovante la sussistenza dei requisiti
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Medio}
+      misure:
+      - codice: EXL.1.1_R.1_M.1
+        descrizione: Controllo rigoroso e preventivo della consistenza dei documenti presentati, per ogni
+          singola richiesta di attestazione.
+        categoria: Controllo
+- codice: EXL.2
+  denominazione: Riconoscimento della cittadinanza jure sanguinisi (per discendenza da avo italiano emigrato
+    all'estero)
+  tempi: 240 gg
+  attori_esterni: richiedente
+  attivita:
+  - codice: EXL.2.1
+    descrizione: Ricevimento (da consolato o direttamente dagli interessati, se iscritti nell'anagrafe
+      della popolazione residente) degli atti di eventi avvenuti all'estero, da trascrivere nei Registri
+      di Stato Civile, verifica dei presupposti di iscrizione nel comune di Lucca e ricostruzione dell'albero
+      genealogico, istruttoria (comprendente per gli atti ricevuti direttamente anche la verifica con
+      il consolato) trascrizione nei nostri Registi dello Stato Civile ed attestato di cittadinanza in
+      ordine cronologico di ricevimento o comunicazione dei motivi di non procedibilità
+    rischi:
+    - codice: EXL.2.1_R.1
+      evento: A livello nazionale sono stati segnalati accordi con intermediari, per la trascrizione degli
+        atti e per il rilascio dell'attestato in modo immediato e sistematico contestualmente alla presentazione
+        della dichiarazione di residenza dei cittadini di origine italiana nati e residenti all'estero
+        e che, trovandosi temporaneamente in Italia, registrano la residenza solo per avviare qui il procedimento
+        (questa facoltà è prevista da una circolare del Ministero dell'Interno)
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Medio}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Medio}
+      misure:
+      - codice: EXL.2.1_R.1_M.1
+        descrizione: Trattamento delle richieste in rigoroso ordine di ricevimento (tenuto tramite repertorio
+          ad hoc) e valutazione delle domande dei residenti (temporaneamente in Italia) solo dopo la chiusura
+          del procedimento di registrazione della loro residenza.
+        categoria: Controllo
+- codice: EXL.3
+  denominazione: Dichiarazione di residenza
+  tempi: 48 ore
+  attori_esterni: dichiarante
+  attivita:
+  - codice: EXL.3.1
+    descrizione: Ricevimento della dichiarazione, verifica documentazione e delle informazioni essenziali,
+      registrazione in anagrafe o comunicazione delle motivazioni di non ricevibilità, invio alla PM per
+      verifiche in ordine alla sussistenza effettiva della dimora abituale, comunicazione chiusura procedimento
+      o gestione verifiche negative previa comunicazione preavviso di rigetto all'interessato (sono gestite
+      anche le verifiche negative oltre i termini del silenzio assenso)
+    rischi:
+    - codice: EXL.3.1_R.1
+      evento: Abuso nell'adozione di provvedimenti
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
+        di pochi o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
+          '8': Basso, '9': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Alto}
+      misure:
+      - codice: EXL.3.1_R.1_M.1
+        descrizione: Fuori dai termini del silenzio assenso ed in caso di accertamento negativo, apertura
+          di altro procedimento di regolarizzazione. Controlli a campione tra richieste e rilasci da parte
+          di dipendenti diversi da quelli che hanno istruito la pratica. La residenza è registrata immediatamente
+          e comunque (obbligatoriamente entro due giorni) e produce immediatamente i suoi effetti. Verifica
+          e valutazione degli esiti PM, anche quando pervenuti successivamente al silenzio-assenso, al
+          fine di valutarli per ulteriori procedimenti.
+        categoria: Controllo

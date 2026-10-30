@@ -16,6 +16,8 @@ import openpyxl
 
 from common.trasparenza import analisi, fonti, rete
 from common.trasparenza.estrazione import json_schema
+from common.trasparenza.registro import get_schema
+from common.trasparenza.sicurezza import estrai_esito
 
 
 class LlmFinto:
@@ -26,10 +28,6 @@ class LlmFinto:
     def __init__(self, *risposte):
         self.risposte = list(risposte)
         self.richieste: list[tuple] = []
-
-    async def genera(self, sistema, testo):
-        self.richieste.append((sistema, testo))
-        return self.risposte.pop(0)
 
     async def dati_json(self, sistema, testo, schema):
         self.richieste.append((sistema, testo, schema))
@@ -134,28 +132,58 @@ class Contenuti(unittest.TestCase):
 
 
 class Analisi(unittest.TestCase):
-    def test_report_con_prompt_dallo_schema(self):
-        report = (
-            "```html\n<html><body><p onclick='x()'>Analisi</p><script>alert(1)</script>"
-            '<span class="esito-validazione">Pubblicabile</span></body></html>\n```'
-        )
-        llm = LlmFinto(report)
+    def test_report_composto_dalla_risposta_json(self):
+        risposta = {
+            "analisi": ["Elenco completo.", "<script>alert(1)</script> & altro"],
+            "rilievi": [
+                {"campo": "Oggetto", "valore_rilevato": "presente", "esito": "Positivo", "nota_correttiva": ""},
+                {"campo": "Spesa", "valore_rilevato": "assente", "esito": "Negativo", "nota_correttiva": "Indicarla"},
+            ],
+            "livello_open_data": 1,
+            "motivazione_open_data": "PDF non strutturato",
+            "esito_globale": "Parzialmente conforme",
+            "esito_validazione": "Pubblicabile provvisoriamente",
+            "motivazione_validazione": "Manca la spesa prevista",
+        }
+        llm = LlmFinto(risposta)
         contesto = analisi.Contesto(ente="Provincia di Prova", caratteristiche="Provincia con 380.000 abitanti")
-        c = analisi.Contenuti(["--- DOCUMENTO ---\nElenco provvedimenti"], estensione="pdf")
+        c = analisi.Contenuti(["--- DOCUMENTO ---\nElenco provvedimenti"], estensione="pdf", fonte="elenco.pdf")
         html = _esegui(analisi.analizza("ART_23_DIRIGENTI", c, contesto, llm))["html"]
         self.assertTrue(html.startswith("<div class='compliance-section'>"))
-        self.assertIn("esito-validazione", html)
-        self.assertNotIn("script", html)
-        self.assertNotIn("onclick", html)
-        sistema, testo = llm.richieste[0]
+        self.assertEqual(estrai_esito(html), "Pubblicabile provvisoriamente")
+        self.assertIn("elenco.pdf", html)
+        self.assertIn("Indicarla", html)
+        self.assertIn("Art. 23", html)
+        self.assertNotIn("<script", html)  # il testo del modello è escapato
+        self.assertIn("&lt;script&gt;", html)
+        sistema, testo, schema = llm.richieste[0]
         self.assertIn("Provincia con 380.000 abitanti", sistema)
         self.assertIn("Estensione originale file: pdf", sistema)
         self.assertNotRegex(sistema, r"_[A-Z]+(_[A-Z]+)*_")  # nessun segnaposto rimasto
         self.assertEqual(testo, c.testo)
+        self.assertIn("esito_validazione", schema["required"])
+        self.assertFalse(schema["additionalProperties"])
+
+    def test_risposta_fuori_formato(self):
+        llm = LlmFinto({"analisi": ["x"], "esito_validazione": "Forse"})
+        c = analisi.Contenuti(["testo"], estensione="pdf")
+        with self.assertRaises(analisi.AnalisiNonRiuscita):
+            _esegui(analisi.analizza("ART_23_DIRIGENTI", c, analisi.Contesto(ente="x"), llm))
 
     def test_schema_a_sezioni_richiede_il_controllo(self):
         with self.assertRaises(analisi.AnalisiNonRiuscita):
             analisi.prompt_analisi("ART_23", analisi.Contesto(ente="x"))
+
+    def test_schema_a_controllo_unico(self):
+        # Art. 36: le sezioni (casi PagoPA) restano nel modulo di creazione, ma l'analisi
+        # ha un solo controllo e il modello individua il caso dalla pagina
+        schema = get_schema("ART_36")
+        self.assertGreater(len(schema.sezioni), 1)
+        self.assertFalse(schema.controlli_per_sezione)
+        self.assertEqual(schema.audit, [])
+        self.assertFalse(schema.per_frontend()["solo_varianti"])
+        sistema = analisi.prompt_analisi("ART_36", analisi.Contesto(ente="x"))
+        self.assertIn("INDIVIDUAZIONE DEL CASO", sistema)
 
     def test_estrazione_con_schema_json_standard(self):
         llm = LlmFinto(

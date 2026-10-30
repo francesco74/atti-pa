@@ -1,0 +1,122 @@
+# Processi standard dell'area N: ricavati dalla mappatura del Comune di Lucca
+# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
+# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+area: N
+processi:
+- codice: N.1
+  denominazione: Controlli di efficacia, efficienza, economicità degli organismi partecipati ai sensi
+    del TUEL e del TUSP
+  attori_esterni: Società e organismi partecipati
+  attivita:
+  - codice: N.1.1
+    descrizione: Rilascio di nulla osta alle richieste di assunzione di personale nelle società e organismi
+      controllati (ai sensi del "Regolamento sul controllo analogo di LH" e del "Regolamento di Gruppo
+      LH")
+  - codice: N.1.2
+    descrizione: Monitoraggio sul rispetto degli "indirizzi e obiettivi di contenimento delle spese di
+      funzionamento delle società controllate dal Comune di Lucca" ai sensi dell'art. 19 del D.Lgs. n.
+      175/2016 e dell'art. 147 quater del D.Lgs. 267/2000 (approvati con deliberazione C.C. n. 26/2023)
+  - codice: N.1.3
+    descrizione: Monitoraggio sulla rilevazione di eccedenze di personale nelle società e organismi controllati,
+      ai sensi dell'art. 19 del D.Lgs. n. 175/2016
+  - codice: N.1.4
+    descrizione: Monitoraggio dell'andamento societario attraverso l'analisi dei bilanci e delle relazioni
+      e delle relazioni annuali e semestrali sul governo societario, con predisposizione di report, ai
+      sensi dell'art. 147 quater del D.Lgs. n. 267/2000 e del D.Lgs. n. 175/2016
+  - codice: N.1.5
+    descrizione: Controllo sulle sezioni "società trasparenti" delle società e organismi partecipati ai
+      sensi del D.Lgs. n. 33/2013, con predisposizione di report annuale
+- codice: N.2
+  denominazione: Assegnazione obiettivi gestionali agli organismi partecipati
+  tempi: Contestuale all'approvazione del DUP
+  attori_esterni: Società e organismi partecipati
+  attivita:
+  - codice: N.2.1
+    descrizione: Definizione degli obiettivi delle società e organismi partecipati, ai sensi dell'art.
+      147 quater del D.Lgs. n. 267/2000
+  - codice: N.2.2
+    descrizione: Monitoraggio periodico sul raggiungimento degli obiettivi e predisposizione di report
+      periodici
+- codice: N.3
+  denominazione: Elaborazione documenti di programmazione strategica ed operativa
+  tempi: entro i termini previsti dalla normativa
+  attori_esterni: Società partecipate
+  attivita:
+  - codice: N.3.1
+    descrizione: Cura dei rapporti con gli uffici (supporto, raccolta dati, comunicazioni, incontri con
+      gli uffici, Dirigenti e assessori di riferimento, ecc.)
+  - codice: N.3.2
+    descrizione: 'attività istruttoria per la programmazione e ricognizione Obiettivi di DUP ( strategici
+      ed operativi): definizione Obiettivi, definizione interventi, elaborazione di indicatori, conseguente
+      inserimento nel DUP, ecc'
+  - codice: N.3.3
+    descrizione: Elaborazione dello schema di DUP da presentare alla Giunta
+  - codice: N.3.4
+    descrizione: attività istruttoria per programmazione degli Obiettivi gestionali/esecutivi e definizione
+      indicatori per la misurazione della performance
+  - codice: N.3.5
+    descrizione: Elaborazione piano performance
+  - codice: N.3.6
+    descrizione: Acquisizione del parere da parte della commissione pari opportunità a seguito approvazione
+      schema di DUP da parte della Giunta
+  - codice: N.3.7
+    descrizione: Acquisizione parere tecnico e pesatura obiettivi da parte del NdV per approvazione del
+      piano performance
+  - codice: N.3.8
+    descrizione: Stesura degli atti deliberativi di approvazione dei documenti di programmazione, DUP
+      e piano performance, e relativo caricamento su SICRAWEB
+  - codice: N.3.9
+    descrizione: Adempimenti obbligatori per la trasparenza, per quanto di competenza
+- codice: N.4
+  denominazione: Controllo di gestione
+  tempi: annuale
+  attivita:
+  - codice: N.4.1
+    descrizione: Cura dei rapporti con gli uffici (supporto, raccolta dati, comunicazioni, incontri con
+      gli uffici ecc.)
+  - codice: N.4.2
+    descrizione: Attività istruttoria (monitoraggio intermedio e finale/rendicontazione) sullo stato di
+      avanzamento degli obiettivi e degli indicatori contenuti nel piano performance (misurazione e valutazione)
+      nonché analisi dei dati contabili ed extracontabili raccolti
+  - codice: N.4.3
+    descrizione: Predisposizione:- di eventuale documento di modifica del PIANO PERFORMANCE ( a seguito
+      monitoraggio intermedio- Relazione sulla performance ( a seguito monitoraggio finale/rendicontazione)-
+      Report su controllo di gestione
+  - codice: N.4.4
+    descrizione: Coinvolgimento del NdV nell'attività di monitoraggio intermedio e rendicontazione nonché
+      acquisizione- parere tecnico su proposte di modifica al piano performace (a seguito monitoraggio
+      intermedio)- validazione della relazione sulla performance ( a seguito monitoraggio finale)
+  - codice: N.4.5
+    descrizione: 'Stesura degli atti deliberativi di approvazione: - eventuale modifica del piano performance-
+      Relazione sulla performance- Report controllo di gestioneRelativo caricamento su SICRAWEB'
+  - codice: N.4.6
+    descrizione: Adempimenti obbligatori per la trasparenza, per quanto di competenza
+- codice: N.5
+  denominazione: Controllo strategico
+  tempi: annuale
+  attori_esterni: Società partecipate
+  attivita:
+  - codice: N.5.1
+    descrizione: 'Cura dei rapporti con i settori e gli assessorati (supporto, raccolta dati, comunicazioni,
+      incontri con: Dirigenti e assessori di riferimento, ecc.)'
+  - codice: N.5.2
+    descrizione: Attività istruttoria per la ricognizione dello stato di attuazione/avanzamento obiettivi
+      strategici ed operativi
+  - codice: N.5.3
+    descrizione: Studio delle diverse fonti informative e raccolta dati
+  - codice: N.5.4
+    descrizione: Stesura del Referto di controllo strategico
+  - codice: N.5.6
+    descrizione: Pubblicazione sul sito istituzionale e intranet per quanto di competenza e necessiti
+      di pubblicità/comunicazione
+- codice: N.6
+  denominazione: Referti Controlli Corte dei Conti
+  tempi: tempi indicati ogni anno dalla Corte dei Conti
+  attori_esterni: Corte dei Conti
+  attivita:
+  - codice: N.6.1
+    descrizione: Raccolta dei dati utili con il coinvolgimento degli uffici interessati
+  - codice: N.6.2
+    descrizione: Compilazione questionario predisposto dalla Corte dei Conti
+  - codice: N.6.3
+    descrizione: Trasmissione alla Corte dei Conti del Referto tramite i canali deputati

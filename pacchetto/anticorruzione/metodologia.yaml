@@ -1,0 +1,102 @@
+# Metodologia standard di valutazione del rischio corruttivo: Allegato 1 al PNA 2019, come
+# adottata nel PIAO 2026-2028 del Comune di Lucca (sottosezione 2.3, § 2.5). Ogni ente può
+# adattarla alla propria (Anticorruzione → Metodologia).
+#
+# Per ogni rischio si valutano gli indicatori con la scala; probabilità e impatto finali sono
+# la moda dei valori (a parità il valore più alto, salvo correzione motivata) e il livello
+# viene dalla matrice probabilità × impatto.
+
+scala: [Basso, Medio, Alto]  # dal più basso
+
+# livelli di rischio dal più basso: "Critico" è sotto "Alto" (matrice del PIAO)
+livelli: [Rischio Minimo, Rischio Basso, Rischio Medio, Rischio Critico, Rischio Alto]
+
+# probabilità → impatto → livello
+matrice:
+  Alto: {Alto: Rischio Alto, Medio: Rischio Critico, Basso: Rischio Medio}
+  Medio: {Alto: Rischio Critico, Medio: Rischio Medio, Basso: Rischio Basso}
+  Basso: {Alto: Rischio Medio, Medio: Rischio Basso, Basso: Rischio Minimo}
+
+indicatori_probabilita:
+  - id: "1"
+    nome: Discrezionalità
+    descrizione: >-
+      Grado di discrezionalità nelle attività svolte o negli atti prodotti; entità del rischio
+      in conseguenza delle responsabilità attribuite e della necessità di dare risposta
+      immediata all'emergenza
+  - id: "2"
+    nome: Coerenza operativa
+    descrizione: >-
+      Coerenza fra le prassi operative sviluppate dalle unità organizzative che svolgono il
+      processo e gli strumenti normativi e di regolamentazione che disciplinano lo stesso
+  - id: "3"
+    nome: Rilevanza degli interessi esterni
+    descrizione: Entità del beneficio economico e non ottenibile dai soggetti destinatari del processo
+  - id: "4"
+    nome: Livello di opacità del processo
+    descrizione: >-
+      Misurato attraverso solleciti scritti del RPCT, richieste di accesso civico, rilievi del
+      Nucleo di Valutazione in sede di attestazione annuale degli obblighi di trasparenza
+  - id: "5"
+    nome: Presenza di eventi sentinella
+    descrizione: >-
+      Procedimenti avviati dall'autorità giudiziaria/contabile/amministrativa o procedimenti
+      disciplinari nei confronti di dipendenti impiegati sul processo
+  - id: "6"
+    nome: Livello di attuazione delle misure di prevenzione
+    descrizione: Desunto dai monitoraggi effettuati dai Responsabili (PTPCT)
+  - id: "7"
+    nome: Segnalazioni, reclami pervenuti
+    descrizione: >-
+      Segnalazioni relative ad abusi, illeciti, mancato rispetto delle procedure, condotta non
+      etica, corruzione, cattiva gestione, scarsa qualità del servizio
+  - id: "8"
+    nome: Rilievi a seguito dei controlli interni
+    descrizione: Rilievi tali da richiedere annullamento in autotutela, revoca di provvedimenti adottati, ecc.
+  - id: "9"
+    nome: Capacità dell'Ente di far fronte alle carenze organizzative
+    descrizione: Attraverso l'acquisizione delle corrispondenti figure apicali anziché l'affidamento di interim
+
+indicatori_impatto:
+  - id: "1"
+    nome: Impatto sull'immagine dell'Ente
+    descrizione: >-
+      Numero di articoli di giornale o servizi radiotelevisivi che hanno riguardato episodi di
+      cattiva amministrazione, scarsa qualità dei servizi o corruzione
+  - id: "2"
+    nome: Impatto in termini di contenzioso
+    descrizione: Costi economici e/o organizzativi sostenuti per il trattamento del contenzioso dall'Amministrazione
+  - id: "3"
+    nome: Impatto organizzativo e/o sulla continuità del servizio
+    descrizione: >-
+      Effetto che il verificarsi di uno o più eventi rischiosi può comportare nel normale
+      svolgimento delle attività dell'Ente
+  - id: "4"
+    nome: Danno generato a seguito di irregolarità
+    descrizione: >-
+      Da organismi interni di controllo (controllo di gestione, audit) o autorità esterne
+      (Corte dei Conti, Autorità Giudiziaria, Autorità Amministrativa)
+
+fattori_abilitanti:
+  - Mancanza di misure di trattamento del rischio e/o controlli
+  - Mancanza di trasparenza
+  - Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
+  - Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi o di un unico soggetto
+  - Scarsa responsabilizzazione interna
+  - Inadeguatezza o assenza di competenze del personale addetto ai processi
+  - Inadeguata diffusione della cultura della legalità
+  - Mancata attuazione del principio di distinzione tra politica e amministrazione
+
+# categorie delle misure (PNA 2019, All. 1, § 6 e PIAO §§ 3-4)
+categorie_misure:
+  - Controllo
+  - Trasparenza
+  - Definizione e promozione dell'etica e di standard di comportamento
+  - Regolamentazione
+  - Semplificazione
+  - Formazione
+  - Sensibilizzazione e partecipazione
+  - Rotazione
+  - Segnalazione e protezione
+  - Disciplina del conflitto di interessi
+  - Regolazione dei rapporti con i rappresentanti di interessi particolari

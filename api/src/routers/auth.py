@@ -165,7 +165,13 @@ def dati_utente(user: User, ente: Ente) -> dict:
     return {
         **UtenteOut.model_validate(user).model_dump(mode="json"),
         "cambio_password": user.cambio_password,
-        "ente": {"id": ente.id, "codice": ente.codice, "nome": ente.nome, "moduli": ente.moduli_json or []},
+        "ente": {
+            "id": ente.id,
+            "codice": ente.codice,
+            "nome": ente.nome,
+            "moduli": ente.moduli_json or [],
+            "logo": ente.logo_mime is not None,  # l'app lo usa come icona e come sfondo
+        },
     }
 
 
