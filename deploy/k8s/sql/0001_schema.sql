@@ -30,6 +30,9 @@ CREATE TABLE enti (
     caratteristiche       TEXT,                   -- caratteristiche dell'amministrazione (contesto per l'LLM)
     accesso_locale        BOOLEAN NOT NULL DEFAULT TRUE,
     ldap_json             JSON,                   -- url, dominio, base_dn, ca_pem, gruppi...
+    rag_json              JSON,                   -- collegamento al RAG: url, chiave_cifrata
+    smtp_json             JSON,                   -- posta in uscita: host, porta, utente, password_cifrata, mittente...
+    mappatura_pubblica    BOOLEAN NOT NULL DEFAULT FALSE, -- mappatura consultabile su /pubblico/mappatura
     created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -481,8 +484,7 @@ CREATE TABLE ac_aree (
     ente_id            CHAR(36) NOT NULL,
     codice             VARCHAR(20) NOT NULL,
     descrizione        VARCHAR(500) NOT NULL,
-    descrizione_breve  VARCHAR(255),
-    ordine             INT NOT NULL DEFAULT 0,
+    descrizione_breve  VARCHAR(255),           -- le aree si elencano in ordine alfabetico di questa
     UNIQUE KEY uq_ac_area (ente_id, codice),
     FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -491,11 +493,14 @@ CREATE TABLE ac_processi (
     id              CHAR(36) PRIMARY KEY,
     ente_id         CHAR(36) NOT NULL,
     codice          VARCHAR(50) NOT NULL,
+    tipo            VARCHAR(20) NOT NULL DEFAULT 'PROCESSO',  -- PROCESSO, PROCEDIMENTO
     area_id         CHAR(36),
     denominazione   VARCHAR(500) NOT NULL,
     descrizione     TEXT,
     tempi           TEXT,
     attori_esterni  TEXT,
+    termine_conclusione  VARCHAR(255),      -- procedimento
+    norma_riferimento    TEXT,              -- procedimento
     struttura_id    CHAR(36),               -- responsabile; vuota: trasversale
     impronta        VARCHAR(64),
     pacchetto       VARCHAR(150),
@@ -561,18 +566,32 @@ CREATE TABLE ac_misure (
     FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- Proposte dei referenti: processo intero (JSON) da creare, modificare o eliminare
+-- Codici della mappatura: l'ultimo numero assegnato per prefisso (es. "A.1." per le attività
+-- del processo A.1), così un codice non si riusa nemmeno dopo l'eliminazione dell'elemento
+CREATE TABLE ac_contatori (
+    ente_id   CHAR(36) NOT NULL,
+    prefisso  VARCHAR(100) NOT NULL,
+    ultimo    INT NOT NULL,
+    PRIMARY KEY (ente_id, prefisso),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Proposte dei referenti: creazione, modifica o eliminazione di un elemento della mappatura
 CREATE TABLE ac_proposte (
     id                  CHAR(36) PRIMARY KEY,
     ente_id             CHAR(36) NOT NULL,
     utente_id           CHAR(36) NOT NULL,
     tipo                VARCHAR(10) NOT NULL,        -- CREA, MODIFICA, ELIMINA
-    processo_id         CHAR(36),
-    dati                JSON NOT NULL,
-    stato               VARCHAR(20) NOT NULL DEFAULT 'BOZZA',  -- BOZZA, INVIATA, APPROVATA, RESPINTA, RESTITUITA
+    oggetto             VARCHAR(20) NOT NULL,        -- AREA, PROCESSO, ATTIVITA, RISCHIO, MISURA
+    elemento_id         CHAR(36),                    -- elemento modificato, eliminato o (approvata) creato
+    padre_id            CHAR(36),                    -- creazione: processo, attività o rischio di destinazione
+    processo_id         CHAR(36),                    -- processo interessato (struttura del referente)
+    dati                JSON NOT NULL,               -- elemento proposto (eliminazione: com'era)
+    prima               JSON,                        -- modifica: l'elemento alla creazione della proposta
+    contesto            JSON,                        -- percorso e codice, per gli elenchi
+    stato               VARCHAR(20) NOT NULL DEFAULT 'INVIATA',  -- INVIATA, APPROVATA, RESPINTA, RESTITUITA
     nota                TEXT,                        -- del referente
     motivazione         TEXT,                        -- del RPCT
-    base_aggiornamento  TIMESTAMP NULL,              -- updated_at del processo alla creazione
     deciso_da           CHAR(36),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     inviata_il          TIMESTAMP NULL,
@@ -611,53 +630,24 @@ CREATE TABLE ac_monitoraggi (
     FOREIGN KEY (verificato_da) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- PIAO dell'ente e obiettivi di performance, collegati a processi e attività
-CREATE TABLE ac_piao (
-    id           CHAR(36) PRIMARY KEY,
-    ente_id      CHAR(36) NOT NULL,
-    anno_inizio  INT NOT NULL,
-    anno_fine    INT NOT NULL,
-    descrizione  VARCHAR(255) NOT NULL,
-    atto         VARCHAR(255),               -- atto di approvazione
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_ac_piao (ente_id, anno_inizio),
-    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE ac_obiettivi (
+-- ---------------------------------------------------------------------------
+-- Coda di invio delle email (common/posta.py): scritta dall'API, inviata dal worker
+-- ---------------------------------------------------------------------------
+CREATE TABLE notifiche_email (
     id                  CHAR(36) PRIMARY KEY,
     ente_id             CHAR(36) NOT NULL,
-    piao_id             CHAR(36) NOT NULL,
-    codice              VARCHAR(100) NOT NULL,
-    anno                INT NOT NULL,
-    titolo              TEXT,
-    tipo                VARCHAR(100),
-    struttura_id        CHAR(36),            -- assegnataria (copre le sottostanti)
-    centro_piano        VARCHAR(255),        -- com'era nel file del Piano
-    centro_descrizione  VARCHAR(500),
-    responsabile        VARCHAR(255),
-    fonte               VARCHAR(255),
+    destinatario        VARCHAR(255) NOT NULL,
+    oggetto             VARCHAR(255) NOT NULL,
+    testo               TEXT NOT NULL,
+    origine             VARCHAR(100),             -- es. ac_proposta:<id>
+    stato               VARCHAR(20) NOT NULL DEFAULT 'DA_INVIARE', -- INVIATA, ERRORE
+    tentativi           INT NOT NULL DEFAULT 0,
+    prossimo_tentativo  DATETIME,
+    errore              TEXT,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_ac_obiettivo (piao_id, codice, anno),
-    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
-    FOREIGN KEY (piao_id) REFERENCES ac_piao(id) ON DELETE CASCADE,
-    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE ac_obiettivi_collegamenti (
-    id            CHAR(36) PRIMARY KEY,
-    ente_id       CHAR(36) NOT NULL,
-    obiettivo_id  CHAR(36) NOT NULL,
-    processo_id   CHAR(36),                  -- processo intero (con attività, rischi, misure)
-    attivita_id   CHAR(36),                  -- oppure una sola attività
-    note          TEXT,
-    utente_id     CHAR(36),
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
-    FOREIGN KEY (obiettivo_id) REFERENCES ac_obiettivi(id) ON DELETE CASCADE,
-    FOREIGN KEY (processo_id) REFERENCES ac_processi(id) ON DELETE CASCADE,
-    FOREIGN KEY (attivita_id) REFERENCES ac_attivita(id) ON DELETE CASCADE,
-    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE SET NULL
+    inviata_il          DATETIME,
+    KEY ix_da_inviare (stato, prossimo_tentativo),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------

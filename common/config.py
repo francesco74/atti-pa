@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     # Temperatura (ollama, openai_compatibile, gemini; OpenAI e Claude usano la propria)
     llm_temperatura: float = 0.0  # valutazioni ripetibili
     llm_temperatura_redazione: float = 0.2  # un minimo di varietà nella scrittura
+    llm_temperatura_assistente: float = 0.3  # chat: risposte meno rigide
     # Solo anthropic: profondità del ragionamento (low | medium | high | xhigh | max).
     # medium = predefinito del modello, buon equilibrio tra qualità e costo
     llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
@@ -128,6 +129,20 @@ class Settings(BaseSettings):
     documenti_url: str = "http://converter:8000"
     documenti_timeout: float = 150.0
     upload_max_mb: int = 20  # l'Ingress accetta 25 MB per richiesta
+
+    # Segreto con cui si cifrano nel database le chiavi dei servizi collegati (es. la chiave
+    # del RAG di ogni ente). Se cambia, le chiavi salvate vanno reinserite.
+    chiave_cifratura: str = ""
+    # API del progetto RAG (indirizzo e chiave nella configurazione di ogni ente)
+    rag_timeout: float = 30.0
+    # Posta in uscita (server SMTP nella configurazione di ogni ente): attesa del server,
+    # tentativi di invio di ogni email prima di segnarla in errore (attese crescenti: 1, 2,
+    # 4... minuti) ed email inviate a ogni giro del worker
+    posta_timeout: float = 20.0
+    posta_tentativi: int = 6
+    posta_lotto: int = 50
+    # Assistente: caratteri al massimo in una conversazione, documenti allegati compresi
+    assistente_max_caratteri: int = 100_000
 
     # Job notturno di aggiornamento normative
     sync_giorni_iniziali: int = 7  # prima esecuzione: modifiche dell'ultima settimana

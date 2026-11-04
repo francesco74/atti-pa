@@ -20,6 +20,7 @@ senza toccare il codice: le modifiche valgono al riavvio di API e worker.
 | `riconoscimento_norma.md` | una norma manuale dell'elenco | `id`, `citazione`, `titolo`, `denominazioni` |
 | `dati_personali_sistema.md` | prompt di sistema del rilevamento dei dati personali (omissis) | — |
 | `dati_personali_utente.md` | messaggio con il testo (o una sua parte) in cui cercare i dati | `parte`, `testo_atto` |
+| `assistente_sistema.md` | prompt di sistema della chat dell'assistente | — |
 
 I segnaposto si scrivono `${nome}`. Per un simbolo `$` letterale nel testo scrivere `$$`.
 Un segnaposto sconosciuto o scritto male blocca l'avvio di API e worker con un errore che

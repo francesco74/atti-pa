@@ -16,6 +16,7 @@ from auth.ldap import LdapAuthenticator
 from auth.token import COOKIE, decodifica_token
 from web import ErroreApi
 from common import archivio
+from common.posta import invia as invia_email
 from common.config import Settings
 from common.models import AuditLog, Ente, EnteDominio, Modulo, Ruolo, User
 from common.testo import mime_da_nome
@@ -35,6 +36,8 @@ class Risorse:
     llm: Any = None
     documenti: Any = None
     coda: Any = None  # common.coda.Coda
+    rag_http: Any = None  # httpx.AsyncClient per le API del RAG degli enti
+    posta_invio: Any = invia_email  # invio immediato (prova della posta); sostituibile nei test
 
 
 def risorse() -> Risorse:

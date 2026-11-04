@@ -125,6 +125,26 @@ class Sezione extends StatelessWidget {
   }
 }
 
+/// Schermo piccolo o basso: i menu e le schede mostrano solo le icone.
+bool schermoPiccolo(BuildContext context) {
+  final misura = MediaQuery.sizeOf(context);
+  return misura.width < 700 || misura.height < 600;
+}
+
+/// Scheda con icona e testo; sugli schermi piccoli solo l'icona, con il testo al passaggio
+/// del mouse.
+class Scheda extends StatelessWidget {
+  const Scheda(this.icona, this.testo, {super.key});
+
+  final Widget icona;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) => schermoPiccolo(context)
+      ? Tab(icon: Tooltip(message: testo, child: icona))
+      : Tab(icon: icona, text: testo);
+}
+
 /// Icona di cancellazione: rossa in tutta l'app, grigia (dal pulsante) se non è attiva.
 class IconaElimina extends StatelessWidget {
   const IconaElimina({super.key, this.size, this.attiva = true});

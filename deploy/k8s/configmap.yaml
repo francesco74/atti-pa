@@ -37,6 +37,15 @@ data:
   LLM_TIMEOUT_REDAZIONE: "60"    # riscrittura appunti, interattiva (< 180 s dell'Ingress)
   LLM_TEMPERATURA: "0"
   LLM_TEMPERATURA_REDAZIONE: "0.2"
+  LLM_TEMPERATURA_ASSISTENTE: "0.3"
+  # Assistente: caratteri al massimo in una conversazione, documenti allegati compresi
+  ASSISTENTE_MAX_CARATTERI: "100000"
+  # API del RAG (indirizzo e chiave nella configurazione di ogni ente)
+  RAG_TIMEOUT: "30"
+  # Posta in uscita: attesa del server SMTP, tentativi per email, email per giro del worker
+  POSTA_TIMEOUT: "20"
+  POSTA_TENTATIVI: "6"
+  POSTA_LOTTO: "50"
   LLM_EFFORT: "medium"           # solo anthropic: low | medium | high | xhigh | max
   LLM_MAX_TOKEN: "16000"         # solo anthropic
   LLM_FALLBACK: "true"           # solo anthropic: se Claude rifiuta, riprova su un altro modello

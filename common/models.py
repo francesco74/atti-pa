@@ -60,7 +60,8 @@ class Modulo:
     REDAZIONE = "redazione"  # redazione e controllo degli atti, modelli e checklist
     TRASPARENZA = "trasparenza"  # verifica e schede di Amministrazione Trasparente
     ANTICORRUZIONE = "anticorruzione"  # mappatura dei processi e gestione del rischio corruttivo
-    TUTTI = (REDAZIONE, TRASPARENZA, ANTICORRUZIONE)
+    ASSISTENTE = "assistente"  # chat con l'LLM per il lavoro quotidiano (email, riassunti...)
+    TUTTI = (REDAZIONE, TRASPARENZA, ANTICORRUZIONE, ASSISTENTE)
 
 
 UTENTE_ADMIN = "admin"  # amministratore creato con l'ente (deploy/enti.py)
@@ -102,6 +103,13 @@ class Ente(Base):
     # verifica_certificato, timeout, gruppi {ruolo: gruppo})
     accesso_locale: Mapped[bool] = mapped_column(Boolean, default=True)
     ldap_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # collegamento al RAG (common/rag.py): url e chiave_cifrata
+    rag_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # posta in uscita (common/posta.py): host, porta, sicurezza, utente, password_cifrata,
+    # mittente, rispondi_a
+    smtp_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # anticorruzione: la mappatura è consultabile dai cittadini su /pubblico/mappatura
+    mappatura_pubblica: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
@@ -617,7 +625,6 @@ class AcArea(Base):
     codice: Mapped[str] = mapped_column(String(20))
     descrizione: Mapped[str] = mapped_column(String(500))
     descrizione_breve: Mapped[str | None] = mapped_column(String(255))
-    ordine: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class AcProcesso(Base):
@@ -631,12 +638,15 @@ class AcProcesso(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     codice: Mapped[str] = mapped_column(String(50))  # es. A.1
+    tipo: Mapped[str] = mapped_column(String(20), default="PROCESSO")  # PROCESSO, PROCEDIMENTO
     area_id: Mapped[str | None] = mapped_column(ForeignKey("ac_aree.id", ondelete="SET NULL"))
     area: Mapped["AcArea | None"] = relationship(lazy="raise")
     denominazione: Mapped[str] = mapped_column(String(500))
     descrizione: Mapped[str | None] = mapped_column(Text)
     tempi: Mapped[str | None] = mapped_column(Text)
     attori_esterni: Mapped[str | None] = mapped_column(Text)
+    termine_conclusione: Mapped[str | None] = mapped_column(String(255))  # procedimento
+    norma_riferimento: Mapped[str | None] = mapped_column(Text)  # procedimento
     struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
     impronta: Mapped[str | None] = mapped_column(String(64))
     pacchetto: Mapped[str | None] = mapped_column(String(150))
@@ -708,11 +718,23 @@ class AcMisura(Base):
 
 
 
+class AcContatore(Base):
+    """Ultimo numero assegnato a un prefisso di codice (es. "A.1." per le attività del
+    processo A.1): i codici della mappatura non si riusano, nemmeno dopo un'eliminazione."""
+
+    __tablename__ = "ac_contatori"
+
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"), primary_key=True)
+    prefisso: Mapped[str] = mapped_column(String(100), primary_key=True)
+    ultimo: Mapped[int] = mapped_column(Integer)
+
+
 class AcProposta(Base):
-    """Proposta di un referente sulla mappatura: creazione, modifica o eliminazione di un
-    processo intero (dati: processo con attività, rischi, misure e valutazioni). Stati:
-    BOZZA -> INVIATA -> APPROVATA (applicata) | RESPINTA | RESTITUITA (si corregge e si
-    reinvia)."""
+    """Proposta di un referente su un elemento della mappatura (area, processo o
+    procedimento, attività, rischio con la valutazione, misura): creazione, modifica o
+    eliminazione. La creazione può portare con sé gli elementi sottostanti (es. un'attività
+    con i suoi rischi e misure). Stati: INVIATA (alla creazione) -> APPROVATA (applicata) |
+    RESPINTA | RESTITUITA (si corregge e torna INVIATA); finché non è decisa si ritira."""
 
     __tablename__ = "ac_proposte"
 
@@ -720,15 +742,18 @@ class AcProposta(Base):
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     tipo: Mapped[str] = mapped_column(String(10))  # CREA, MODIFICA, ELIMINA
+    oggetto: Mapped[str] = mapped_column(String(20))  # AREA, PROCESSO, ATTIVITA, RISCHIO, MISURA
+    elemento_id: Mapped[str | None] = mapped_column(String(36))  # modificato, eliminato o creato
+    padre_id: Mapped[str | None] = mapped_column(String(36))  # creazione: dove si aggiunge
+    # processo interessato: la struttura del referente si controlla su questo
     processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="SET NULL"))
     processo: Mapped["AcProcesso | None"] = relationship(lazy="raise")
-    dati: Mapped[dict[str, Any]] = mapped_column(JSON)
-    stato: Mapped[str] = mapped_column(String(20), default="BOZZA")
+    dati: Mapped[dict[str, Any]] = mapped_column(JSON)  # eliminazione: l'elemento com'era
+    prima: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # modifica: com'era alla proposta
+    contesto: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # percorso e codice
+    stato: Mapped[str] = mapped_column(String(20), default="INVIATA")
     nota: Mapped[str | None] = mapped_column(Text)  # del referente
     motivazione: Mapped[str | None] = mapped_column(Text)  # del RPCT (respinta, restituita, approvata)
-    # data di modifica del processo quando è nata la proposta: all'approvazione segnala se
-    # nel frattempo il processo è cambiato
-    base_aggiornamento: Mapped[datetime | None] = mapped_column(DateTime)
     deciso_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     inviata_il: Mapped[datetime | None] = mapped_column(DateTime)
@@ -766,61 +791,26 @@ class AcMonitoraggio(Base):
 
 
 
-class AcPiao(Base):
-    """PIAO dell'ente (anno o triennio, atto di approvazione): raggruppa gli obiettivi."""
+class NotificaEmail(Base):
+    """Email da inviare (coda di invio, common/posta.py): la scrive l'API nella stessa
+    transazione dell'operazione che la genera; il worker la invia con l'SMTP dell'ente,
+    riprovando con attese crescenti fino a POSTA_TENTATIVI volte. Stati: DA_INVIARE ->
+    INVIATA | ERRORE."""
 
-    __tablename__ = "ac_piao"
-    __table_args__ = (UniqueConstraint("ente_id", "anno_inizio", name="uq_ac_piao"),)
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
-    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
-    anno_inizio: Mapped[int] = mapped_column(Integer)
-    anno_fine: Mapped[int] = mapped_column(Integer)
-    descrizione: Mapped[str] = mapped_column(String(255))
-    atto: Mapped[str | None] = mapped_column(String(255))  # es. "DGC n. 59 del 26/03/2026"
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-
-class AcObiettivo(Base):
-    """Obiettivo di performance del PIAO, assegnato a una struttura (un settore copre le sue
-    U.O.); del Piano si conservano il centro e la sua descrizione com'erano nel file."""
-
-    __tablename__ = "ac_obiettivi"
-    __table_args__ = (UniqueConstraint("piao_id", "codice", "anno", name="uq_ac_obiettivo"),)
+    __tablename__ = "notifiche_email"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
-    piao_id: Mapped[str] = mapped_column(ForeignKey("ac_piao.id", ondelete="CASCADE"))
-    piao: Mapped["AcPiao"] = relationship(lazy="raise")
-    codice: Mapped[str] = mapped_column(String(100))
-    anno: Mapped[int] = mapped_column(Integer)
-    titolo: Mapped[str | None] = mapped_column(Text)
-    tipo: Mapped[str | None] = mapped_column(String(100))  # Operativo, Funzionamento, Miglioramento...
-    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
-    centro_piano: Mapped[str | None] = mapped_column(String(255))
-    centro_descrizione: Mapped[str | None] = mapped_column(String(500))
-    responsabile: Mapped[str | None] = mapped_column(String(255))
-    fonte: Mapped[str | None] = mapped_column(String(255))  # file da cui è stato importato
+    destinatario: Mapped[str] = mapped_column(String(255))
+    oggetto: Mapped[str] = mapped_column(String(255))
+    testo: Mapped[str] = mapped_column(Text)
+    origine: Mapped[str | None] = mapped_column(String(100))  # es. ac_proposta:<id>
+    stato: Mapped[str] = mapped_column(String(20), default="DA_INVIARE")
+    tentativi: Mapped[int] = mapped_column(Integer, default=0)
+    prossimo_tentativo: Mapped[datetime | None] = mapped_column(DateTime)
+    errore: Mapped[str | None] = mapped_column(Text)  # dell'ultimo tentativo
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-
-class AcObiettivoCollegamento(Base):
-    """Processo o attività che concorre a un obiettivo. Un processo porta con sé le sue
-    attività, rischi e misure, anche quelli aggiunti dopo (si calcola in lettura)."""
-
-    __tablename__ = "ac_obiettivi_collegamenti"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
-    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
-    obiettivo_id: Mapped[str] = mapped_column(ForeignKey("ac_obiettivi.id", ondelete="CASCADE"))
-    obiettivo: Mapped["AcObiettivo"] = relationship(lazy="raise")
-    processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="CASCADE"))
-    processo: Mapped["AcProcesso | None"] = relationship(lazy="raise")
-    attivita_id: Mapped[str | None] = mapped_column(ForeignKey("ac_attivita.id", ondelete="CASCADE"))
-    attivita: Mapped["AcAttivita | None"] = relationship(lazy="raise")
-    note: Mapped[str | None] = mapped_column(Text)
-    utente_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    inviata_il: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class AuditLog(Base):

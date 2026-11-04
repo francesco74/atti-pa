@@ -39,7 +39,9 @@ class SfondoEnte extends StatelessWidget {
     final logo = context.select<AuthState, Uint8List?>((a) => a.logo);
     return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
-      child: SfondoLogo(logo: logo, child: child),
+      // Material trasparente sopra il fondo: le righe cliccabili (ListTile) disegnano lì
+      // l'evidenziazione al passaggio del mouse; altrimenti la disegnerebbero sotto il fondo
+      child: SfondoLogo(logo: logo, child: Material(type: MaterialType.transparency, child: child)),
     );
   }
 }

@@ -26,7 +26,7 @@ void main() {
         ];
       } else if (r.url.path.endsWith('/processi/p1')) {
         corpo = {
-          'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare', 'obiettivi': const [],
+          'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare',
           'attivita': [
             {'id': 'a1', 'codice': 'C.1.1', 'descrizione': 'Bando', 'rischi': [
               {'id': 'r1', 'codice': 'C.1.1_R.1', 'evento': 'Bando su misura', 'valori_probabilita': null, 'misure': [

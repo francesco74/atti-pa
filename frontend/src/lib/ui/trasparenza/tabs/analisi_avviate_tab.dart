@@ -134,6 +134,7 @@ class _VoceAnalisiState extends State<_VoceAnalisi> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        onTap: stato == 'COMPLETATA' && !_occupata ? _apri : null,
         leading: SizedBox(width: 32, child: Center(child: icona)),
         title: Text((_l['titolo'] as String?) ?? 'Analisi'),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

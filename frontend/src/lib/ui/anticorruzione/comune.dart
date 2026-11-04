@@ -184,7 +184,7 @@ class Percorso extends StatelessWidget {
 String? testoOppureNull(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
 
 /// Finestra di modifica con campi di testo (multilinea dove serve) e menu a tendina: usata
-/// per processi, attività, rischi, misure, aree, PIAO e obiettivi.
+/// per aree, processi, attività, rischi e misure.
 class Campo {
   const Campo(this.chiave, this.etichetta, {this.righe = 1, this.obbligatorio = false, this.scelte, this.aiuto});
 
@@ -275,3 +275,7 @@ Future<Map<String, dynamic>?> modificaCampi(
   }
   return ok == true ? risultato : null;
 }
+
+/// Messaggio dopo l'invio di una proposta del referente.
+void propostaInviata(BuildContext context) => mostraMessaggio(
+    context, 'Proposta inviata al RPCT. Finché non decide la trovi in Proposte, dove puoi completarla o ritirarla.');

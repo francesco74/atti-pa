@@ -1,6 +1,6 @@
 # Modulo Anticorruzione — analisi di Si.Ge.Ri.Co. e piano di integrazione
 
-Stato: **backend, pacchetto standard e app fatti** (passi 1-4: strutture organizzative, metodologia, mappatura e valutazione, proposte, monitoraggio, PIAO e obiettivi, riepilogo e allegati al PTPCT, processi standard in `pacchetto/anticorruzione` da rivedere: vedi [processi_standard.md](processi_standard.md)); resta il passo 5 (collegamenti con gli altri moduli). Decisioni al §7.
+Stato: **backend, pacchetto standard e app fatti** (passi 1-4: strutture organizzative, metodologia, mappatura e valutazione, proposte, monitoraggio, riepilogo e allegati al PTPCT, processi standard in `pacchetto/anticorruzione` da rivedere: vedi [processi_standard.md](processi_standard.md)); resta il passo 5 (collegamenti con gli altri moduli, sospeso). Decisioni al §7; quelle del 04/11/2026 (proposte per elemento, procedimenti, codici, niente PIAO) dalla 13.
 del 29/10/2026, v1.4). Si.Ge.Ri.Co. = Sistema Gestione Rischi Corruttivi, nato per il Comune di
 Lucca.
 
@@ -80,18 +80,18 @@ Nel modulo (prefisso `ac_`): `ac_aree`, `ac_processi`, `ac_attivita`, `ac_rischi
 
 | Ruolo | Può |
 |---|---|
-| `ANTICORRUZIONE_REFERENTE` | consultare la mappatura; fare proposte; compilare il monitoraggio delle misure della propria struttura; associare obiettivi |
-| `ANTICORRUZIONE_RPCT` (RPCT e staff) | tutto il precedente; modifiche dirette; approvare, respingere, restituire le proposte; verificare o contestare il monitoraggio; importare gli obiettivi; esportazioni |
+| `ANTICORRUZIONE_REFERENTE` (referente / dirigente) | consultare la mappatura; fare proposte sugli elementi della propria struttura (decisione 14); compilare il monitoraggio delle misure della propria struttura |
+| `ANTICORRUZIONE_RPCT` (RPCT e staff) | tutto il precedente; modifiche dirette; approvare, respingere, restituire le proposte; verificare o contestare il monitoraggio; esportazioni |
 | `ADMIN` | tutto, come negli altri moduli |
 
 ## 5. Organizzazione
 
 ```
-common/anticorruzione/   metodologia.yaml (indicatori, fattori, matrice), valutazione.py,
-                         proposte.py, obiettivi.py (import Excel), esportazione.py
+common/anticorruzione/   metodologia (indicatori, fattori, matrice), pacchetto standard, Excel
 api/src/routers/anticorruzione.py
-frontend/src/lib/ui/anticorruzione/   schede: Mappatura, Proposte, Monitoraggio, Obiettivi,
-                                      Report; dettaglio con valutazione
+frontend/src/lib/ui/anticorruzione/   schede: Mappatura, Proposte, Monitoraggio, Riepilogo
+api/src/routers/pubblico.py            mappatura pubblica, senza accesso (decisione 18)
+frontend/src/lib/ui/pubblico/          pagina /pubblico/mappatura
 ```
 
 ## 6. Piano
@@ -135,7 +135,7 @@ Riferimento: PIAO 2026-2028 del Comune di Lucca (`docs/Allegato_1_PIAO.pdf`), so
    1-8, articolati in U.O.; gli obiettivi di performance sono assegnati a Staff e Settori
    (`PERF_ORG_SETTORE 2`, `PERF_ORG_STAFF B`) e da lì passano alle loro U.O. (è la
    "derivazione" di Si.Ge.Ri.Co., che con la gerarchia diventa generale).
-5. **Obiettivi di performance**: legati al PIAO dell'ente (sottosezione 2.2), quindi per ente
+5. ~~**Obiettivi di performance**~~ (superata dalla 16): legati al PIAO dell'ente (sottosezione 2.2), quindi per ente
    e mai nel pacchetto standard.
 6. **Misure**: il PIAO distingue misure **generali** (§ 3: trasparenza, codice di
    comportamento, rotazione, conflitto di interessi, incarichi extra-istituzionali,
@@ -147,14 +147,79 @@ Riferimento: PIAO 2026-2028 del Comune di Lucca (`docs/Allegato_1_PIAO.pdf`), so
    pantouflage, rotazione).
 7. **Backup**: per ora non si porta.
 8. **Dati di Lucca**: non si importano; servono a definire i processi standard del pacchetto.
-9. **Propagazione degli obiettivi**: anche ai sottoelementi creati dopo l'associazione
+9. ~~**Propagazione degli obiettivi**~~ (superata dalla 16): anche ai sottoelementi creati dopo l'associazione
    (attività, rischi e misure nuovi ereditano gli obiettivi del padre).
-10. **Associazione degli obiettivi**: per ora aperta a tutti gli utenti del modulo.
-11. **Struttura dei contenuti**: Processo → Attività → Rischio → Misura. I rischi
+10. ~~**Associazione degli obiettivi**~~ (superata dalla 16): per ora aperta a tutti gli utenti del modulo.
+11. **Struttura dei contenuti**: Processo → Attività → Rischio → Misura (con l'area sopra e il
+    procedimento accanto al processo: decisione 13). I rischi
     caratterizzano le attività, le misure (anticorruttive e di trasparenza) mitigano i rischi.
     Processi, attività, rischi e misure sono **standardizzabili** (pacchetto). Le misure di
     trasparenza si collegano agli obblighi di pubblicazione (schemi ANAC del modulo trasparenza).
-12. **Obiettivi**: specifici dell'ente e del suo **PIAO** (raggruppati per PIAO: anno o
+12. ~~**Obiettivi**~~ (superata dalla 16): specifici dell'ente e del suo **PIAO** (raggruppati per PIAO: anno o
     triennio, atto di approvazione). A un obiettivo si collegano **processi e attività**; un
     processo collegato porta con sé tutte le sue attività, rischi e misure, anche quelli
     aggiunti dopo (la propagazione si calcola, non si copia).
+
+Decisioni del 04/11/2026:
+
+13. **Gerarchia**: area → processo o procedimento → attività → rischio (con la valutazione) →
+    misura, ciascuno uno a molti. Il **procedimento** sta allo stesso livello del processo: è un
+    processo con `tipo = PROCEDIMENTO` e due campi in più, termine di conclusione e norma di
+    riferimento. Così attività, rischi, misure, monitoraggio ed esportazioni valgono per
+    entrambi; nella mappatura si distinguono e si filtrano.
+14. **Profili e proposte**: due profili, RPCT (con il suo staff) e referente, uno per dirigente.
+    Il referente propone su un **singolo elemento**: nuova area, nuovo processo o procedimento,
+    nuova attività, nuova analisi del rischio, nuova misura, e la modifica o l'eliminazione di
+    ciascuno (una rivalutazione è la modifica di un rischio). Una creazione può portare con sé
+    gli elementi sottostanti (es. un'attività con i suoi rischi e misure), così non servono
+    approvazioni in sequenza. Il RPCT approva, respinge o restituisce ogni proposta; approvando,
+    la mappatura si aggiorna con le stesse operazioni delle modifiche dirette. Se l'elemento è
+    cambiato dopo la proposta, l'approvazione chiede conferma; se è sparito, non si approva.
+    Nell'app il referente usa gli stessi pulsanti del RPCT, con le etichette "Proponi...". La
+    proposta va al RPCT appena creata (non ci sono bozze); finché il RPCT non decide, il
+    referente la ritrova nella scheda Proposte, dove la corregge, la completa o la ritira. Una
+    proposta restituita, corretta e salvata, torna da sola al RPCT.
+15. **Struttura del referente**: propone solo sui processi della propria struttura (dal
+    profilo utente) e delle sottostanti, perché il referente rappresenta il dirigente e i
+    processi possono essere assegnati alle U.O. del settore. Senza struttura nel profilo non
+    propone; i processi trasversali restano al RPCT; le aree, che non hanno struttura, le può
+    proporre ogni referente. La struttura la assegna l'amministratore (Amministrazione →
+    Utenti); l'utente che non ce l'ha la può scegliere da sé, **una sola volta**, in "Il mio
+    profilo" tra quelle attive: dopo, per cambiarla, serve l'amministratore, perché da lei
+    dipendono proposte e monitoraggio.
+16. **PIAO e obiettivi**: tolti dal modulo (tabelle, importazione, collegamenti, monitoraggio,
+    scheda). Il monitoraggio riguarda solo le misure.
+17. **Codici**: li assegna solo il sistema, alla creazione (per le proposte all'approvazione):
+    aree con lettere (A, B... Z, AA), processi e procedimenti `<area>.<n>` (`P.<n>` senza
+    area), attività `<processo>.<n>`, rischi `<attività>_R.<n>`, misure `<rischio>_M.<n>`. Per
+    ogni prefisso il numero è il successivo al più alto mai assegnato (tabella
+    `ac_contatori`), quindi un codice non si riusa nemmeno dopo un'eliminazione; i codici del
+    pacchetto standard contano come assegnati. Il codice resta anche se l'elemento cambia
+    area. Limite noto: un aggiornamento del pacchetto standard che aggiunge un elemento con un
+    codice già assegnato dall'ente a un proprio elemento lo abbinerebbe a quello (il pacchetto
+    abbina per codice).
+18. **Mappatura pubblica** (4/11/2026): la mappatura è consultabile dai cittadini, senza
+    accesso, su `https://<dominio dell'ente>/pubblico/mappatura`: una pagina a sé della stessa
+    app (non incorporata in un iframe: le regole di nginx restano quelle dell'app) a cui il
+    sito dell'ente rimanda con un link. Stessa navigazione della scheda Mappatura (aree →
+    processi e procedimenti → attività → rischi e misure), con la ricerca e i filtri, in sola
+    lettura. La pubblica il RPCT con l'interruttore nella scheda Mappatura
+    (`enti.mappatura_pubblica`, spento di default; `PUT /api/v1/anticorruzione/pubblicazione`,
+    registrato nell'audit), che dà anche il link da copiare. Le API pubbliche
+    (`/api/v1/pubblico/mappatura`, `.../processi`, `.../processi/<id>`, `/api/v1/pubblico/logo`)
+    riconoscono l'ente dal dominio e rispondono 404 se il modulo non è attivo o la mappatura
+    non è pubblicata. Si pubblica un **dettaglio ridotto**: per i rischi evento, fattore
+    abilitante e livello; per le misure descrizione, tipo, categoria, obbligo di
+    pubblicazione, fasi, tempi, struttura, indicatore e target; per le strutture solo codice e
+    descrizione. Restano riservati i valori degli indicatori, probabilità e impatto, le
+    correzioni con la loro motivazione, l'origine dal pacchetto e le date di aggiornamento.
+19. **Notifiche email delle proposte** (4/11/2026): quando un referente invia una proposta, o
+    la reinvia corretta dopo una restituzione, gli utenti dell'ente con ruolo
+    `ANTICORRUZIONE_RPCT` che hanno un indirizzo ricevono un'email (chi propone e la sua
+    struttura, cosa, dove nella mappatura, la nota, il link all'app sul dominio dell'ente).
+    Quando il RPCT approva, respinge o restituisce, l'esito con la motivazione va al referente
+    autore. Correggere una proposta ancora in attesa non notifica di nuovo. Le email partono dal
+    server SMTP dell'ente (Amministrazione → Posta in uscita); senza posta configurata o senza
+    indirizzo del destinatario non si invia nulla e la proposta funziona come prima. L'API le
+    mette in coda (`notifiche_email`) nella stessa transazione della proposta e il worker le
+    invia entro un minuto, riprovando se il server non risponde (`common/posta.py`).

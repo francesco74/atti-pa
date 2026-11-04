@@ -15,10 +15,10 @@ class LibreriaPage extends StatelessWidget {
       length: 4,
       child: Column(children: [
         TabBar(tabs: [
-          Tab(icon: Icon(Icons.bookmarks_outlined), text: 'Riferimenti'),
-          Tab(icon: Icon(Icons.library_books_outlined), text: 'Norme (Normattiva)'),
-          Tab(icon: Icon(Icons.account_balance_outlined), text: 'Regolamenti e altre norme'),
-          Tab(icon: Icon(Icons.search), text: 'Consulta articolo'),
+          Scheda(Icon(Icons.bookmarks_outlined), 'Riferimenti'),
+          Scheda(Icon(Icons.library_books_outlined), 'Norme (Normattiva)'),
+          Scheda(Icon(Icons.account_balance_outlined), 'Regolamenti e altre norme'),
+          Scheda(Icon(Icons.search), 'Consulta articolo'),
         ]),
         Expanded(
           child: TabBarView(
@@ -206,16 +206,13 @@ class _NormeState extends State<_Norme> {
               leading: const Icon(Icons.gavel),
               title: Text(n['citazione'].toString()),
               subtitle: n['titolo'] != null ? Text(n['titolo'].toString()) : null,
-              trailing: IconButton(
-                tooltip: 'Consulta',
-                icon: const Icon(Icons.open_in_new),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => Scaffold(
-                    appBar: AppBar(title: Text(n['citazione'].toString())),
-                    body: ConsultaArticolo(urnAtto: n['urn'] as String),
-                  ),
-                )),
-              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: Text(n['citazione'].toString())),
+                  body: ConsultaArticolo(urnAtto: n['urn'] as String),
+                ),
+              )),
             ),
         ]),
       ),

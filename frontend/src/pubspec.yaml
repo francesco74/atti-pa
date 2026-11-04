@@ -21,6 +21,7 @@ dependencies:
   # risultati (web/editor), date e importi in formato italiano
   pointer_interceptor: ^0.10.1+2
   intl: ^0.20.2
+  flutter_markdown_plus: ^1.0.12
 
 dev_dependencies:
   flutter_test:

@@ -108,10 +108,12 @@ class AuthState extends ChangeNotifier {
   }
 
   /// Profilo modificato dall'utente (settore usato per precompilare gli atti).
-  Future<void> aggiornaProfilo({String? ufficio, String? decretoIncarico}) async {
+  /// Profilo dell'utente; la struttura si sceglie solo se non è ancora assegnata.
+  Future<void> aggiornaProfilo({String? ufficio, String? decretoIncarico, String? strutturaId}) async {
     final r = await api.put('/api/v1/auth/profilo', {
       'ufficio': ufficio,
       'decreto_incarico': decretoIncarico,
+      'struttura_id': ?strutturaId,
     }) as Map<String, dynamic>;
     utente = Utente.daJson(r);
     notifyListeners();

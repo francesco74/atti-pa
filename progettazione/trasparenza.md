@@ -125,9 +125,9 @@ frontend/src/lib/moduli/trasparenza/   pagine dell'app
 3. **Schemi ANAC**: catalogo unico nel codice del modulo, uguale per tutti gli enti (le linee
    guida sono nazionali), aggiornato con le versioni; le specificità dell'ente passano dalle
    "caratteristiche dell'amministrazione".
-4. **PDF all'LLM**: in sospeso, si decide con il modulo RAG (che ha il suo convertitore dei
-   PDF). Nel frattempo i file vanno all'LLM come testo estratto dal converter: funziona con
-   tutti i provider, ma le scansioni senza testo non si leggono.
+4. **PDF all'LLM**: i file vanno all'LLM come testo estratto dal converter: funziona con tutti
+   i provider, ma le scansioni senza testo non si leggono. Si leggeranno con un'apposita API
+   autenticata del progetto RAG (vedi `architettura.md`, sezione 9).
 5. **Output JSON con schema imposto**: aggiunto al client LLM comune per i provider che lo
    supportano; per gli altri JSON libero, validato.
 6. **Playwright**: resta, nel worker.

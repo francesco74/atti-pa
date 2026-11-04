@@ -12,8 +12,10 @@ import time
 from http import HTTPStatus
 
 from routers import (
-    anticorruzione, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, trasparenza,
+    anticorruzione, assistente, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, pubblico,
+    trasparenza,
 )  # fmt: skip
+import httpx
 from flask import g, request
 from flask_cors import CORS
 from sqlalchemy import text
@@ -83,6 +85,7 @@ def create_app(
         documenti=DocumentiClient(settings.documenti_url, timeout=settings.documenti_timeout),
         # connessione a RabbitMQ al primo invio: l'API parte anche se il broker non risponde
         coda=Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso),
+        rag_http=httpx.AsyncClient(timeout=settings.rag_timeout),
     )
 
     async def chiudi_risorse() -> None:
@@ -90,6 +93,7 @@ def create_app(
         for client in (stato.llm, stato.documenti, stato.coda):
             if client is not None:
                 await client.close()
+        await stato.rag_http.aclose()
         if normattiva is None:
             await client_normattiva.close()
         if engine is None:
@@ -166,7 +170,7 @@ def create_app(
 
     for modulo in (
         auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
-        verifiche, controllo, trasparenza, anticorruzione,
+        verifiche, controllo, trasparenza, anticorruzione, assistente, pubblico,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 

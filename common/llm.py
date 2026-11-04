@@ -127,6 +127,7 @@ SEGNAPOSTO = {
     "riconoscimento_norma": {"id", "citazione", "titolo", "denominazioni"},
     "dati_personali_sistema": set(),
     "dati_personali_utente": {"parte", "testo_atto"},
+    "assistente_sistema": set(),
 }
 
 
@@ -230,6 +231,7 @@ class LlmClient:
         *,
         formato: type[BaseModel] | dict | None,
         redazione: bool,
+        assistente: bool = False,
     ) -> str:
         raise NotImplementedError
 
@@ -240,6 +242,7 @@ class LlmClient:
         *,
         formato: type[BaseModel] | dict | None,
         redazione: bool,
+        assistente: bool = False,
     ) -> str:
         log.debug(
             "Richiesta a %s (modello %s, %d messaggi, %d caratteri)",
@@ -251,7 +254,9 @@ class LlmClient:
         log.debug("Prompt di sistema:\n%s", _accorcia(sistema))
         log.debug("Ultimo messaggio inviato:\n%s", _accorcia(messaggi[-1]["content"]))
         inizio = time.perf_counter()
-        contenuto = await self._completa(sistema, messaggi, formato=formato, redazione=redazione)
+        contenuto = await self._completa(
+            sistema, messaggi, formato=formato, redazione=redazione, assistente=assistente
+        )
         log.debug(
             "Risposta del modello in %.1f s:\n%s",
             time.perf_counter() - inizio,
@@ -344,6 +349,12 @@ class LlmClient:
         messaggi = [{"role": "user", "content": testo}]
         return await self._chiama(sistema, messaggi, formato=None, redazione=True)
 
+    async def conversa(self, messaggi: list[dict]) -> str:
+        """Risposta dell'assistente a una conversazione (ruoli `user`/`assistant`). Usa il
+        timeout lungo: riassumere un testo esteso può superare quello della redazione."""
+        sistema = testo_prompt("assistente_sistema")
+        return await self._chiama(sistema, messaggi, formato=None, redazione=False, assistente=True)
+
 
 class ClientCompatibileOpenAI(LlmClient):
     """API `/chat/completions` compatibile OpenAI: Ollama, vLLM, llama.cpp, OpenAI, Gemini."""
@@ -357,6 +368,7 @@ class ClientCompatibileOpenAI(LlmClient):
         provider: str = "openai_compatibile",
         temperatura: float | None = 0.0,
         temperatura_redazione: float | None = 0.2,
+        temperatura_assistente: float | None = 0.3,
         http: httpx.AsyncClient | None = None,
         **opzioni,
     ):
@@ -364,6 +376,7 @@ class ClientCompatibileOpenAI(LlmClient):
         self.provider = provider
         self.temperatura = temperatura
         self.temperatura_redazione = temperatura_redazione
+        self.temperatura_assistente = temperatura_assistente
         self._url = base_url.rstrip("/") + "/chat/completions"
         intestazioni = {"Authorization": f"Bearer {api_key}"} if api_key else {}
         self._http = http or httpx.AsyncClient(timeout=self.timeout, headers=intestazioni)
@@ -378,12 +391,16 @@ class ClientCompatibileOpenAI(LlmClient):
         *,
         formato: type[BaseModel] | dict | None,
         redazione: bool,
+        assistente: bool = False,
     ) -> str:
         payload: dict = {
             "model": self.modello,
             "messages": [{"role": "system", "content": sistema}, *messaggi],
         }
-        temperatura = self.temperatura_redazione if redazione else self.temperatura
+        if assistente:
+            temperatura = self.temperatura_assistente
+        else:
+            temperatura = self.temperatura_redazione if redazione else self.temperatura
         if temperatura is not None:
             payload["temperature"] = temperatura
         if isinstance(formato, dict):  # schema JSON costruito al momento (es. trasparenza)
@@ -471,6 +488,7 @@ class ClientAnthropic(LlmClient):
         *,
         formato: type[BaseModel] | dict | None,
         redazione: bool,
+        assistente: bool = False,
     ) -> str:
         argomenti: dict = {
             "model": self.modello,
@@ -586,6 +604,7 @@ def crea_llm(settings: Settings) -> LlmClient:
         provider=provider,
         temperatura=settings.llm_temperatura if usa_temperatura else None,
         temperatura_redazione=settings.llm_temperatura_redazione if usa_temperatura else None,
+        temperatura_assistente=settings.llm_temperatura_assistente if usa_temperatura else None,
         **opzioni,
     )
 

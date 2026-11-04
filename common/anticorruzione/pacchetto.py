@@ -9,7 +9,7 @@ confronto a tre vie usa l'impronta del contenuto standard: codici e testi di pro
 attività, rischi e misure. Restano fuori, perché sono scelte dell'ente, le strutture
 responsabili e le valutazioni: la valutazione proposta entra solo nei rischi nuovi.
 Applicando un aggiornamento gli elementi si abbinano per codice: quelli con lo stesso codice
-si aggiornano (conservano monitoraggi e collegamenti agli obiettivi), i nuovi si aggiungono e
+si aggiornano (conservano i monitoraggi), i nuovi si aggiungono e
 quelli tolti dallo standard si eliminano.
 """
 
@@ -22,10 +22,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.anticorruzione.metodologia import Metodologia, chiave_naturale, standard, valuta
+from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.configurazione import impronta
 from common.models import (
-    AcArea, AcAttivita, AcMetodologia, AcMisura, AcObiettivoCollegamento, AcProcesso, AcRischio, nuovo_id,
+    AcArea, AcAttivita, AcMetodologia, AcMisura, AcProcesso, AcRischio, nuovo_id,
 )  # fmt: skip
 
 CARTELLA = "anticorruzione"
@@ -38,7 +38,6 @@ class AreaStd(BaseModel):
     codice: str = Field(min_length=1, max_length=20)
     descrizione: str = Field(min_length=1, max_length=500)
     descrizione_breve: str | None = Field(default=None, max_length=255)
-    ordine: int = 0
 
 
 class ValutazioneStd(BaseModel):
@@ -76,10 +75,13 @@ class AttivitaStd(BaseModel):
 
 class ProcessoStd(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
+    tipo: Literal["PROCESSO", "PROCEDIMENTO"] = "PROCESSO"
     denominazione: str = Field(min_length=1, max_length=500)
     descrizione: str | None = None
     tempi: str | None = None
     attori_esterni: str | None = None
+    termine_conclusione: str | None = None  # procedimento
+    norma_riferimento: str | None = None  # procedimento
     attivita: list[AttivitaStd] = []
 
 
@@ -89,9 +91,14 @@ class FileProcessi(BaseModel):
 
 
 def impronta_processo(p: ProcessoStd, area: str | None) -> str:
-    """Impronta del contenuto standard (senza valutazioni, che sono dell'ente)."""
-    return impronta({"area": area, **p.model_dump(mode="json", exclude={
-        "attivita": {"__all__": {"rischi": {"__all__": {"valutazione"}}}}})})  # fmt: skip
+    """Impronta del contenuto standard (senza valutazioni, che sono dell'ente). Tipo, termine e
+    norma entrano solo se diversi dal valore predefinito: i processi già distribuiti, che non li
+    hanno, mantengono l'impronta di prima."""
+    dati = p.model_dump(mode="json", exclude={"attivita": {"__all__": {"rischi": {"__all__": {"valutazione"}}}}})
+    for campo, predefinito in (("tipo", "PROCESSO"), ("termine_conclusione", None), ("norma_riferimento", None)):
+        if dati.get(campo) == predefinito:
+            del dati[campo]
+    return impronta({"area": area, **dati})
 
 
 def impronta_metodologia(m: Metodologia) -> str:
@@ -119,8 +126,10 @@ def leggi_processi(sorgente: str) -> FileProcessi:
 
 def sorgente_processo(p: ProcessoStd, area: str | None) -> str:
     """Un processo come file a sé (sorgente dell'oggetto del pacchetto)."""
-    return yaml.safe_dump({"area": area, "processi": [p.model_dump(mode="json", exclude_none=True)]},
-                          allow_unicode=True, sort_keys=False, width=100)  # fmt: skip
+    dati = p.model_dump(mode="json", exclude_none=True)
+    if dati.get("tipo") == "PROCESSO":
+        del dati["tipo"]  # predefinito: i processi senza tipo restano scritti come prima
+    return yaml.safe_dump({"area": area, "processi": [dati]}, allow_unicode=True, sort_keys=False, width=100)
 
 
 # --- stato nell'ente -------------------------------------------------------------------------
@@ -139,8 +148,9 @@ async def processo_ente(db: AsyncSession, ente_id: str, codice: str) -> tuple[Ac
     misure = sorted(await db.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))),
                     key=lambda x: chiave_naturale(x.codice))  # fmt: skip
     std = ProcessoStd(
-        codice=p.codice, denominazione=p.denominazione, descrizione=p.descrizione, tempi=p.tempi,
-        attori_esterni=p.attori_esterni,
+        codice=p.codice, tipo=p.tipo or "PROCESSO", denominazione=p.denominazione, descrizione=p.descrizione,
+        tempi=p.tempi, attori_esterni=p.attori_esterni, termine_conclusione=p.termine_conclusione,
+        norma_riferimento=p.norma_riferimento,
         attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, rischi=[
             RischioStd(codice=r.codice, evento=r.evento, fattore_abilitante=r.fattore_abilitante, misure=[
                 MisuraStd(codice=m.codice, descrizione=m.descrizione, tipo=m.tipo, categoria=m.categoria,
@@ -195,6 +205,7 @@ async def applica_processo(
         db.add(p)
     p.area_id = area_id
     p.denominazione, p.descrizione, p.tempi, p.attori_esterni = std.denominazione, std.descrizione, std.tempi, std.attori_esterni
+    p.tipo, p.termine_conclusione, p.norma_riferimento = std.tipo, std.termine_conclusione, std.norma_riferimento
     p.impronta = p.impronta_base = impronta_std
     p.pacchetto = pacchetto
 
@@ -211,7 +222,6 @@ async def applica_processo(
     via_m = [x.id for c, x in misure.items() if c not in tenute_m]
     await db.execute(delete(AcMisura).where(AcMisura.id.in_(via_m) | AcMisura.rischio_id.in_(via_r)))
     await db.execute(delete(AcRischio).where(AcRischio.id.in_(via_r)))
-    await db.execute(delete(AcObiettivoCollegamento).where(AcObiettivoCollegamento.attivita_id.in_(via_a)))
     await db.execute(delete(AcAttivita).where(AcAttivita.id.in_(via_a)))
 
     for a_std in std.attivita:
@@ -249,7 +259,7 @@ async def esporta(db: AsyncSession, ente_id: str) -> dict[str, str]:
     riga = await db.get(AcMetodologia, ente_id)
     if riga is not None:
         file[FILE_METODOLOGIA] = yaml.safe_dump(riga.dati, allow_unicode=True, sort_keys=False, width=100)
-    aree = sorted(await db.scalars(select(AcArea).where(AcArea.ente_id == ente_id)), key=lambda a: (a.ordine, chiave_naturale(a.codice)))
+    aree = sorted(await db.scalars(select(AcArea).where(AcArea.ente_id == ente_id)), key=chiave_area)
     if aree:
         file[FILE_AREE] = yaml.safe_dump(
             {"aree": [AreaStd.model_validate(a, from_attributes=True).model_dump(exclude_none=True) for a in aree]},

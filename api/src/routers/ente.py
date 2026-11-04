@@ -24,6 +24,10 @@ from deps import amministratore_ente, audit, autenticato, db, ente, risorse, ute
 from schemas import UtenteOut
 from web import ErroreApi, allegato, corpo, file_caricato, nessun_contenuto
 from common.models import Ente, OrigineUtente, Ruolo, Struttura, User
+from common import posta
+from common.cifratura import ErroreCifratura
+from common.cifratura import cifra as cifra_segreto
+from common.rag import RagClient, RagError, cifra
 
 log = logging.getLogger("atti_api.ente")
 
@@ -171,6 +175,174 @@ async def prova_accesso():
         "gruppi": trovato.gruppi,
         "ruoli": ruoli_da_gruppi(trovato.gruppi, dati.ldap.gruppi),
     }
+
+
+# --- collegamento al RAG -------------------------------------------------------------------
+
+
+class RagIn(BaseModel):
+    url: str = Field(min_length=1, max_length=500, pattern=r"^https?://\S+$")
+    chiave: str | None = Field(default=None, max_length=500)  # None o vuota: resta quella salvata
+
+
+def _rag(e: Ente) -> dict:
+    """La chiave non esce mai: si sa solo se c'è."""
+    r = e.rag_json or {}
+    return {"url": r.get("url"), "chiave_impostata": bool(r.get("chiave_cifrata"))}
+
+
+@bp.get("/rag")
+@amministratore_ente
+async def rag():
+    return _rag(await db().get(Ente, ente().id))
+
+
+@bp.put("/rag")
+@amministratore_ente
+async def aggiorna_rag():
+    """Indirizzo dell'API del RAG e chiave dell'ente (cifrata con CHIAVE_CIFRATURA)."""
+    dati = corpo(RagIn)
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    cifrata = (e.rag_json or {}).get("chiave_cifrata")
+    if dati.chiave and dati.chiave.strip():
+        try:
+            cifrata = cifra(dati.chiave.strip(), risorse().settings.chiave_cifratura)
+        except RagError as errore:
+            raise ErroreApi(HTTPStatus.SERVICE_UNAVAILABLE, str(errore)) from errore
+    if not cifrata:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Indica la chiave del RAG")
+    e.rag_json = {"url": dati.url.rstrip("/"), "chiave_cifrata": cifrata}
+    audit(sessione, utente(), "ente", e.id, "RAG", {"url": e.rag_json["url"], "chiave_cambiata": bool(dati.chiave)})
+    await sessione.commit()
+    return _rag(e)
+
+
+@bp.delete("/rag")
+@amministratore_ente
+async def elimina_rag():
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    e.rag_json = None
+    audit(sessione, utente(), "ente", e.id, "RAG", {"url": None})
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+@bp.post("/rag/prova")
+@amministratore_ente
+async def prova_rag():
+    """Prova il collegamento salvato: elenca i topic che la chiave consente di consultare."""
+    e = await db().get(Ente, ente().id)
+    try:
+        client = RagClient.dell_ente(risorse().rag_http, e.rag_json, risorse().settings.chiave_cifratura)
+        if client is None:
+            raise RagError("Collegamento al RAG non configurato")
+        topics = await client.topics()
+    except RagError as errore:
+        return {"esito": "ERRORE", "messaggio": str(errore)}
+    return {"esito": "OK", "topics": [{"id": t.get("id"), "descrizione": t.get("description")} for t in topics]}
+
+
+# --- posta in uscita ------------------------------------------------------------------------
+
+
+class PostaIn(BaseModel):
+    host: str = Field(min_length=1, max_length=255)
+    porta: int = Field(default=587, ge=1, le=65535)
+    sicurezza: str = Field(default="STARTTLS", pattern="^(STARTTLS|SSL|NESSUNA)$")
+    utente: str | None = Field(default=None, max_length=255)
+    password: str | None = Field(default=None, max_length=500)  # None o vuota: resta quella salvata
+    mittente: str = Field(min_length=3, max_length=255)
+    rispondi_a: str | None = Field(default=None, max_length=255)
+
+
+def _posta(e: Ente) -> dict:
+    """La password non esce mai: si sa solo se c'è."""
+    p = dict(e.smtp_json or {})
+    if not p:
+        return {"configurata": False}
+    return {
+        "configurata": True, "host": p.get("host"), "porta": p.get("porta"), "sicurezza": p.get("sicurezza"),
+        "utente": p.get("utente"), "password_impostata": bool(p.get("password_cifrata")),
+        "mittente": p.get("mittente"), "rispondi_a": p.get("rispondi_a"),
+    }  # fmt: skip
+
+
+@bp.get("/posta")
+@amministratore_ente
+async def configurazione_posta():
+    return _posta(await db().get(Ente, ente().id))
+
+
+@bp.put("/posta")
+@amministratore_ente
+async def aggiorna_posta():
+    """Server SMTP dell'ente per le notifiche; la password si salva cifrata con CHIAVE_CIFRATURA."""
+    dati = corpo(PostaIn)
+    for campo, valore in (("mittente", dati.mittente), ("rispondi_a", dati.rispondi_a)):
+        if valore and not posta.indirizzo_valido(valore):
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"Indirizzo non valido: {campo}")
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    utente_smtp = (dati.utente or "").strip() or None
+    cifrata = (e.smtp_json or {}).get("password_cifrata") if utente_smtp else None
+    if utente_smtp and dati.password and dati.password.strip():
+        try:
+            cifrata = cifra_segreto(dati.password, risorse().settings.chiave_cifratura)
+        except ErroreCifratura as errore:
+            raise ErroreApi(HTTPStatus.SERVICE_UNAVAILABLE, str(errore)) from errore
+    e.smtp_json = {
+        "host": dati.host.strip(), "porta": dati.porta, "sicurezza": dati.sicurezza, "utente": utente_smtp,
+        "password_cifrata": cifrata, "mittente": dati.mittente.strip(),
+        "rispondi_a": (dati.rispondi_a or "").strip() or None,
+    }  # fmt: skip
+    audit(sessione, utente(), "ente", e.id, "POSTA",
+          {"host": e.smtp_json["host"], "password_cambiata": bool(dati.password)})  # fmt: skip
+    await sessione.commit()
+    return _posta(e)
+
+
+@bp.delete("/posta")
+@amministratore_ente
+async def elimina_posta():
+    """Senza posta configurata le notifiche non si inviano."""
+    sessione = db()
+    e = await sessione.get(Ente, ente().id)
+    e.smtp_json = None
+    audit(sessione, utente(), "ente", e.id, "POSTA", {"host": None})
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+class ProvaPostaIn(BaseModel):
+    destinatario: str | None = Field(default=None, max_length=255)  # di solito l'amministratore
+
+
+@bp.post("/posta/prova")
+@amministratore_ente
+async def prova_posta():
+    """Invia subito un'email di prova con la configurazione salvata e dice com'è andata."""
+    dati = corpo(ProvaPostaIn)
+    e = await db().get(Ente, ente().id)
+    config = posta.config_ente(e.smtp_json)
+    destinatario = (dati.destinatario or utente().email or "").strip()
+    if config is None:
+        return {"esito": "ERRORE", "messaggio": "Posta in uscita non configurata"}
+    if not posta.indirizzo_valido(destinatario):
+        return {"esito": "ERRORE", "messaggio": "Indica l'indirizzo a cui inviare la prova"}
+    impostazioni = risorse().settings
+    try:
+        await asyncio.to_thread(
+            risorse().posta_invio, config, impostazioni.chiave_cifratura, destinatario,
+            f"Prova della posta in uscita - {e.nome}",
+            f"Questa è un'email di prova inviata da Atti PA per {e.nome}.\n"
+            "Se la ricevi, le notifiche (ad esempio le proposte dell'anticorruzione) arriveranno correttamente.\n",
+            impostazioni.posta_timeout,
+        )  # fmt: skip
+    except posta.ErrorePosta as errore:
+        return {"esito": "ERRORE", "messaggio": str(errore)}
+    return {"esito": "OK", "messaggio": f"Email di prova inviata a {destinatario}"}
 
 
 # --- strutture organizzative ---------------------------------------------------------------

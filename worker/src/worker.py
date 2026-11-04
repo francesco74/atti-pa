@@ -11,7 +11,8 @@ quindi un messaggio duplicato o più repliche del worker non elaborano due volte
 verifica. Ogni minuto il worker:
 - rimette in coda le verifiche "IN_CORSO" abbandonate (worker terminato);
 - reinvia sulle code i lavori fermi da più di WORKER_REINVIO_MINUTI (messaggio perso o
-  RabbitMQ non raggiungibile quando l'API ha provato a inviarlo).
+  RabbitMQ non raggiungibile quando l'API ha provato a inviarlo);
+- invia le email in coda (notifiche_email, common/posta.py) con l'SMTP di ogni ente.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ from sqlalchemy import DateTime, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import undefer
 
-from common import coda
+from common import coda, posta
 from common.coda import Coda
 from common.config import Settings
 from common.llm import LlmClient
@@ -381,6 +382,19 @@ class Worker:
                 log.warning("%d lavori fermi reinviati sulle code", reinviati)
         except Exception:
             log.exception("Errore nella manutenzione della coda")
+        await self.invia_email()
+
+    async def invia_email(self) -> None:
+        """Email in coda (notifiche_email) il cui momento è arrivato, con l'SMTP dell'ente."""
+        try:
+            inviate, fallite = await posta.invia_in_sospeso(
+                self.sessionmaker, self.settings.chiave_cifratura, tentativi=self.settings.posta_tentativi,
+                lotto=self.settings.posta_lotto, timeout=self.settings.posta_timeout,
+            )  # fmt: skip
+            if inviate or fallite:
+                log.info("Email: %d inviate, %d non riuscite", inviate, fallite)
+        except Exception:
+            log.exception("Errore nell'invio delle email in coda")
 
     # --- ciclo principale -------------------------------------------------------------------
 

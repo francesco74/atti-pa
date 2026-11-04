@@ -30,7 +30,7 @@ from deps import (
 )
 from schemas import UtenteOut
 from web import ErroreApi, corpo, nessun_contenuto
-from common.models import AuditLog, Ente, OrigineUtente, User
+from common.models import AuditLog, Ente, OrigineUtente, Struttura, User
 
 log = logging.getLogger("atti_api.auth")
 
@@ -239,21 +239,31 @@ async def me():
 class ProfiloIn(BaseModel):
     ufficio: str | None = Field(default=None, max_length=255)
     decreto_incarico: str | None = Field(default=None, max_length=255)
+    struttura_id: str | None = None  # solo se l'utente non ne ha ancora una
 
 
 @bp.put("/profilo")
 @autenticato(modulo=None)
 async def profilo():
     """Settore (se Active Directory non lo dà) e decreto di incarico dell'utente, usati per
-    precompilare gli atti."""
+    precompilare gli atti. La struttura organizzativa l'utente la sceglie una sola volta, se
+    non ce l'ha: da lei dipendono proposte e monitoraggio dell'anticorruzione, quindi poi la
+    cambia solo l'amministratore (Amministrazione → Utenti)."""
     dati = corpo(ProfiloIn)
     sessione = db()
     user = await sessione.merge(utente())
     user.ufficio = (dati.ufficio or "").strip() or None
     user.decreto_incarico = (dati.decreto_incarico or "").strip() or None
+    if dati.struttura_id and dati.struttura_id != user.struttura_id:
+        if user.struttura_id is not None:
+            raise ErroreApi(HTTPStatus.CONFLICT, "La struttura è già assegnata: per cambiarla rivolgiti all'amministratore")
+        s = await sessione.get(Struttura, dati.struttura_id)
+        if s is None or s.ente_id != g.ente.id or not s.attiva:
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Struttura non trovata")
+        user.struttura_id = s.id
     audit(
         sessione, user, "utente", user.id, "PROFILO",
-        {"ufficio": user.ufficio, "decreto_incarico": user.decreto_incarico},
+        {"ufficio": user.ufficio, "decreto_incarico": user.decreto_incarico, "struttura_id": user.struttura_id},
     )  # fmt: skip
     await sessione.commit()
     return dati_utente(user, g.ente)

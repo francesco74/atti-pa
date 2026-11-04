@@ -8,7 +8,7 @@ const _etichetteRuoli = {
   'CONTROLLORE': 'Controllore',
   'GESTORE_MODELLI': 'Gestore dei modelli',
   'TRASPARENZA': 'Operatore della trasparenza',
-  'ANTICORRUZIONE_REFERENTE': 'Referente anticorruzione',
+  'ANTICORRUZIONE_REFERENTE': 'Referente / dirigente anticorruzione',
   'ANTICORRUZIONE_RPCT': 'RPCT e staff anticorruzione',
   'ADMIN': 'Amministratore dell\'ente',
 };

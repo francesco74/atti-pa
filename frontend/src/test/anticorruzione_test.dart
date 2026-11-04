@@ -33,7 +33,7 @@ void main() {
   test('albero nel formato delle proposte', () {
     final albero = daAlbero({
       'id': 'p', 'codice': 'C.1', 'area_id': null, 'denominazione': 'Gare', 'descrizione': null, 'tempi': null,
-      'attori_esterni': null, 'struttura_id': null, 'obiettivi': [],
+      'attori_esterni': null, 'struttura_id': null, 'proponibile': true,
       'attivita': [
         {'id': 'a', 'codice': 'C.1.1', 'descrizione': 'Bando', 'rischi': [
           {'id': 'r', 'codice': 'C.1.1_R.1', 'evento': 'e', 'valori_probabilita': {'1': 'Alto'}, 'valori_impatto': {'1': 'Alto'},
@@ -46,5 +46,6 @@ void main() {
     expect((rischi[0]['valutazione'] as Map)['livello'], 'Rischio Alto');
     expect(rischi[1]['valutazione'], isNull);
     expect((albero['processo'] as Map)['codice'], 'C.1');
+    expect(albero['proponibile'], isTrue);
   });
 }

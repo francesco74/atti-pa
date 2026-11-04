@@ -1,8 +1,6 @@
 """Metodologia di valutazione del rischio: standard valida, moda con la parità risolta verso
 il valore più alto (PIAO, § 2.5, nota 6), matrice con "Critico" sotto "Alto", correzione dei
-valori, controlli sugli indicatori; codici successivi e ordinamento naturale; lettura del file
-degli obiettivi del Piano (righe di titolo saltate, tabella HTML con estensione .xls) e
-abbinamento del centro del Piano alla struttura.
+valori, controlli sugli indicatori; codici successivi e ordinamento naturale.
     python -m unittest common.tests.test_anticorruzione
 """
 
@@ -10,7 +8,6 @@ from __future__ import annotations
 
 import unittest
 
-from common.anticorruzione import obiettivi
 from common.anticorruzione.metodologia import Metodologia, chiave_naturale, moda, prossimo_codice, standard, valuta
 
 
@@ -60,37 +57,6 @@ class Valutazione(unittest.TestCase):
         self.assertEqual(prossimo_codice("A.1.", ["A.1.1", "A.1.3", "A.10.2", "A.1.2_R.1"]), "A.1.4")
         self.assertEqual(prossimo_codice("A.1.1_R.", []), "A.1.1_R.1")
         self.assertEqual(sorted(["A.10", "A.2", "B.1", "A.1"], key=chiave_naturale), ["A.1", "A.2", "A.10", "B.1"])
-
-
-
-class Obiettivi(unittest.TestCase):
-    def test_file_del_piano(self):
-        import io
-
-        from openpyxl import Workbook
-
-        libro = Workbook()
-        f = libro.active
-        f.append(["Piano della performance 2026"])
-        f.append(["Codice", "Titolo", "Tipo", "Anno", "Centro", "Descrizione", "Responsabile"])
-        f.append(["PERF_ORG_STAFF B", "Nomina del CUG", "Funzionamento", 2026, "STAFF B_NOV. 2024", "Segreteria", "Rossi"])
-        f.append(["PERF_ORG_STAFF B", "Doppione", "Funzionamento", 2026, "STAFF B", "", ""])
-        f.append(["OB.2", "Senza anno", "", "", "", "", ""])
-        dati = io.BytesIO()
-        libro.save(dati)
-        righe = obiettivi.leggi(dati.getvalue(), "piano.xlsx")
-        self.assertEqual([(r["codice"], r["anno"], r["titolo"]) for r in righe], [("PERF_ORG_STAFF B", 2026, "Nomina del CUG")])
-        html = (b"<html><table><tr><td>Codice</td></tr><tr><td>OB.1</td><td>Digitale</td><td>Operativo</td>"
-                b"<td>2026.0</td><td>SETTORE 6</td><td></td><td>Bianchi</td></tr></table></html>")
-        self.assertEqual(obiettivi.leggi(html, "esportato.xls")[0]["centro"], "SETTORE 6")
-        with self.assertRaises(obiettivi.FileNonLeggibile):
-            obiettivi.leggi(b"\xd0\xcf\x11\xe0binario", "vecchio.xls")
-
-    def test_abbinamento_struttura(self):
-        strutture = {"s1": "STAFF B", "s2": "SETTORE 6", "s3": "U.O. 6.1"}
-        self.assertEqual(obiettivi.abbina_struttura("STAFF B_NOV. 2024", strutture), "s1")
-        self.assertEqual(obiettivi.abbina_struttura("settore  6", strutture), "s2")
-        self.assertIsNone(obiettivi.abbina_struttura("SETTORE 9", strutture))
 
 
 if __name__ == "__main__":

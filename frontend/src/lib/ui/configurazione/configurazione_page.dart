@@ -198,9 +198,9 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
                 actions: [SizedBox.shrink()],
               ),
             TabBar(tabs: [
-              Tab(icon: const Icon(Icons.article_outlined), text: 'Modelli di atto (${modelli.length})'),
-              Tab(icon: const Icon(Icons.extension_outlined), text: 'Specificità (${moduli.length})'),
-              Tab(icon: const Icon(Icons.checklist), text: 'Checklist (${schede.length})'),
+              Scheda(const Icon(Icons.article_outlined), 'Modelli di atto (${modelli.length})'),
+              Scheda(const Icon(Icons.extension_outlined), 'Specificità (${moduli.length})'),
+              Scheda(const Icon(Icons.checklist), 'Checklist (${schede.length})'),
             ]),
             Expanded(
               child: TabBarView(children: [

@@ -18,6 +18,8 @@ x-comune: &comune
     PASSWORD_INIZIALE: ${PASSWORD_INIZIALE:-Cambiami-subito-1}
     COOKIE_SECURE: "false"
     JWT_SECRET: sviluppo-locale-non-usare-in-produzione
+    # cifra nel database le chiavi dei servizi collegati (es. il RAG di ogni ente)
+    CHIAVE_CIFRATURA: ${CHIAVE_CIFRATURA:-sviluppo-locale-non-usare-in-produzione}
     DOCUMENTI_URL: http://converter:8000
     RABBITMQ_URL: amqp://atti_pa:password@rabbitmq:5672/
     ARCHIVIO_DIR: /var/lib/atti-pa/archivio

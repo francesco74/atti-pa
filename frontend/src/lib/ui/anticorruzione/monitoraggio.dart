@@ -168,8 +168,6 @@ class _MonitoraggioTabState extends State<MonitoraggioTab> {
             subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _riga((v['contesto'] as Map).cast<String, dynamic>()),
               if (v['trasversale'] == true) const Text('Misura trasversale: la dichiara ogni struttura'),
-              if ((v['obiettivi'] as List? ?? const []).isNotEmpty)
-                Text('Obiettivi: ${(v['obiettivi'] as List).map((o) => o['codice']).join(', ')}'),
             ]),
             trailing: v['dichiarazione'] == null
                 ? const Text('Da dichiarare')

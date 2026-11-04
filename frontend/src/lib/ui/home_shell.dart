@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
 import 'anticorruzione/anticorruzione_page.dart';
+import 'assistente/assistente_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
 import 'bozze/bozze_page.dart';
@@ -39,17 +40,37 @@ class _HomeShellState extends State<HomeShell> {
   /// Cambia a ogni selezione del menu: la pagina viene ricreata e ricarica i dati.
   int _generazione = 0;
 
+  /// Le pagine aperte dalla voce del menu (dettagli, editor): stanno nell'area dei contenuti,
+  /// con il menu sempre visibile.
+  _PagineAperte _pagine = _PagineAperte();
+
+  /// La chat dell'assistente sta qui: resta cambiando voce del menu e si perde all'uscita.
+  final _conversazione = ConversazioneAssistente();
+
+  @override
+  void dispose() {
+    _conversazione.dispose();
+    super.dispose();
+  }
+
   Future<void> _seleziona(int i) async {
     if (!await _puoiLasciare()) return;
     setState(() {
       _indice = i;
       _generazione++;
+      _pagine = _PagineAperte();
     });
   }
 
   /// La pagina della trasparenza può avere un documento non salvato nell'editor: quelli già
   /// salvati si aggiornano da soli, per gli altri si chiede conferma.
   Future<bool> _puoiLasciare() async {
+    // una pagina aperta con modifiche da confermare (es. un editor) chiede lei cosa fare; se
+    // si esce, si resta sulla voce e il menu si può cliccare di nuovo
+    if (_pagine.rotte.any((r) => r.popDisposition == RoutePopDisposition.doNotPop)) {
+      await _pagine.navigator?.maybePop();
+      return false;
+    }
     await ResultManager.salvaModifiche?.call();
     if (!(ResultManager.modificheNonSalvate?.call() ?? false) || !mounted) return true;
     return conferma(
@@ -64,6 +85,7 @@ class _HomeShellState extends State<HomeShell> {
     final redazione = u.modulo('redazione'); // redazione e controllo degli atti
     final trasparenza = u.modulo('trasparenza'); // verifica di Amministrazione Trasparente
     final anticorruzione = u.modulo('anticorruzione'); // mappatura dei processi e rischi corruttivi
+    final assistente = u.modulo('assistente'); // chat con l'LLM, per tutti gli utenti dell'ente
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
       if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
@@ -74,8 +96,10 @@ class _HomeShellState extends State<HomeShell> {
       if (trasparenza && u.isTrasparenza) const _Voce('Trasparenza', Icons.visibility_outlined, TrasparenzaPage()),
       if (anticorruzione && u.isAnticorruzione)
         const _Voce('Anticorruzione', Icons.shield_outlined, AnticorruzionePage()),
+      if (assistente)
+        _Voce('Assistente', Icons.chat_outlined, AssistentePage(conversazione: _conversazione)),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (!redazione && !trasparenza && !anticorruzione && !u.isAdmin)
+      if (!redazione && !trasparenza && !anticorruzione && !assistente && !u.isAdmin)
         const _Voce('Benvenuto', Icons.home, _NessunModulo()),
     ];
   }
@@ -129,22 +153,59 @@ class _HomeShellState extends State<HomeShell> {
 
   String _iniziale(String nome) => nome.isEmpty ? '?' : nome.substring(0, 1).toUpperCase();
 
-  /// Settore e decreto di incarico dell'utente: precompilano gli atti.
+  /// Settore e decreto di incarico dell'utente (precompilano gli atti) e struttura
+  /// organizzativa: questa si sceglie una sola volta, poi la cambia l'amministratore.
   Future<void> _profilo() async {
-    final ufficio = TextEditingController(text: widget.utente.ufficio ?? '');
-    final decreto = TextEditingController(text: widget.utente.decretoIncarico ?? '');
+    final utente = context.read<AuthState>().utente ?? widget.utente;
+    final ufficio = TextEditingController(text: utente.ufficio ?? '');
+    final decreto = TextEditingController(text: utente.decretoIncarico ?? '');
+    var strutture = const <Map<String, dynamic>>[];
+    try {
+      strutture = ((await apiDi(context).get('/api/v1/ente/strutture')) as List).cast<Map<String, dynamic>>();
+    } catch (_) {
+      // senza l'elenco la struttura non si sceglie; il resto del profilo si modifica
+    }
+    if (!mounted) return;
+    String nome(Map<String, dynamic> s) => '${s['codice']} - ${s['descrizione']}';
+    final assegnata = strutture.where((s) => s['id'] == utente.strutturaId).firstOrNull;
+    String? scelta;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
         title: const Text('Il mio profilo'),
         content: SizedBox(
           width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(widget.utente.nomeCompleto),
-              subtitle: Text(widget.utente.username),
+              title: Text(utente.nomeCompleto),
+              subtitle: Text(utente.username),
             ),
+            if (utente.strutturaId != null)
+              InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Struttura organizzativa',
+                  helperText: 'Per cambiarla rivolgiti all\'amministratore.',
+                ),
+                child: Text(assegnata == null ? 'Assegnata' : nome(assegnata)),
+              )
+            else if (strutture.isNotEmpty)
+              DropdownButtonFormField<String?>(
+                initialValue: scelta,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Struttura organizzativa',
+                  helperText: 'Si sceglie una sola volta: per cambiarla poi serve l\'amministratore.',
+                  helperMaxLines: 2,
+                ),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('Non indicata')),
+                  for (final s in strutture.where((s) => s['attiva'] == true))
+                    DropdownMenuItem(value: s['id'] as String, child: Text(nome(s), overflow: TextOverflow.ellipsis)),
+                ],
+                onChanged: (v) => aggiorna(() => scelta = v),
+              ),
+            const SizedBox(height: 12),
             TextField(
               controller: ufficio,
               decoration: const InputDecoration(
@@ -170,13 +231,13 @@ class _HomeShellState extends State<HomeShell> {
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
           FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
         ],
-      ),
+      )),
     );
     if (ok == true && mounted) {
       try {
         await context
             .read<AuthState>()
-            .aggiornaProfilo(ufficio: ufficio.text.trim(), decretoIncarico: decreto.text.trim());
+            .aggiornaProfilo(ufficio: ufficio.text.trim(), decretoIncarico: decreto.text.trim(), strutturaId: scelta);
         if (mounted) mostraMessaggio(context, 'Profilo aggiornato');
       } catch (e) {
         if (mounted) mostraErrore(context, e);
@@ -191,6 +252,7 @@ class _HomeShellState extends State<HomeShell> {
     final voci = _voci;
     final indice = _indice.clamp(0, voci.length - 1);
     final largo = MediaQuery.sizeOf(context).width >= 900;
+    final piccolo = schermoPiccolo(context);
     final logo = context.select<AuthState, Uint8List?>((a) => a.logo);
 
     final menuUtente = PopupMenuButton<String>(
@@ -233,7 +295,11 @@ class _HomeShellState extends State<HomeShell> {
     );
 
     // Solo la pagina selezionata, con una chiave nuova a ogni selezione: niente dati vecchi
-    final contenuto = KeyedSubtree(key: ValueKey(_generazione), child: voci[indice].pagina);
+    final contenuto = Navigator(
+      key: ValueKey(_generazione),
+      observers: [_pagine],
+      onGenerateRoute: (impostazioni) => MaterialPageRoute(settings: impostazioni, builder: (_) => voci[indice].pagina),
+    );
 
     if (largo) {
       return Scaffold(
@@ -241,7 +307,7 @@ class _HomeShellState extends State<HomeShell> {
           NavigationRail(
             selectedIndex: indice,
             onDestinationSelected: _seleziona,
-            labelType: NavigationRailLabelType.all,
+            labelType: piccolo ? NavigationRailLabelType.none : NavigationRailLabelType.all,
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Tooltip(message: widget.utente.ente.nome, child: IconaEnte(logo: logo)),
@@ -254,7 +320,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             destinations: [
               for (final v in voci)
-                NavigationRailDestination(icon: Icon(v.icona), label: Text(v.etichetta)),
+                NavigationRailDestination(icon: Tooltip(message: v.etichetta, child: Icon(v.icona)), label: Text(v.etichetta)),
             ],
           ),
           const VerticalDivider(width: 1),
@@ -272,6 +338,7 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: voci.length < 2
           ? null
           : NavigationBar(
+              labelBehavior: piccolo ? NavigationDestinationLabelBehavior.alwaysHide : null,
               selectedIndex: indice,
               onDestinationSelected: _seleziona,
               destinations: [
@@ -279,6 +346,23 @@ class _HomeShellState extends State<HomeShell> {
               ],
             ),
     );
+  }
+}
+
+/// Tiene l'elenco delle pagine aperte nell'area dei contenuti.
+class _PagineAperte extends NavigatorObserver {
+  final rotte = <Route<dynamic>>[];
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => rotte.add(route);
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => rotte.remove(route);
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) => rotte.remove(route);
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    rotte.remove(oldRoute);
+    if (newRoute != null) rotte.add(newRoute);
   }
 }
 

@@ -5,6 +5,7 @@ la matrice probabilità × impatto. Regole comuni sui codici degli elementi."""
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from functools import cache
 from pathlib import Path
@@ -107,6 +108,13 @@ def valuta(
 
 
 # --- codici --------------------------------------------------------------------------------
+
+
+def chiave_area(area) -> tuple:
+    """Ordine delle aree di rischio: alfabetico della descrizione breve (o della descrizione,
+    se manca), senza distinguere maiuscole e accenti; a parità, il codice."""
+    testo = unicodedata.normalize("NFKD", area.descrizione_breve or area.descrizione or "")
+    return "".join(c for c in testo if not unicodedata.combining(c)).casefold(), chiave_naturale(area.codice)
 
 
 def chiave_naturale(codice: str) -> list:

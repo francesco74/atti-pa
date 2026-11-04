@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'albero.dart';
 import 'comune.dart';
-import 'proposte.dart';
 
 /// Area dei processi senza un'area di rischio.
 const _senzaArea = '';
 
-/// Mappatura, un livello alla volta con il percorso in alto: aree di rischio, processi
-/// dell'area, attività del processo, rischi e misure dell'attività. La ricerca trova un
-/// processo in tutte le aree. Il RPCT modifica direttamente, i referenti propongono.
+/// Mappatura, un livello alla volta con il percorso in alto: aree di rischio, processi e
+/// procedimenti dell'area, attività del processo, rischi e misure dell'attività. La ricerca
+/// trova un processo in tutte le aree. Il RPCT modifica direttamente; i referenti propongono
+/// con gli stessi pulsanti (aree, e tutto quanto riguarda i processi della loro struttura).
 class MappaturaTab extends StatefulWidget {
   const MappaturaTab({super.key, required this.onDatiCambiati});
 
@@ -26,7 +27,7 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   late Future<List<Map<String, dynamic>>> _processi;
   String? _area; // area aperta
   String? _processoId; // processo aperto
-  String? _struttura, _livello;
+  String? _struttura, _livello, _tipo;
   final _testo = TextEditingController();
 
   @override
@@ -48,11 +49,12 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
         _processi = apiDi(context).get('$apiAnticorruzione/processi', query: {
           'struttura': ?_struttura,
           'livello': ?_livello,
+          'tipo': ?_tipo,
         }).then((v) => (v as List).cast<Map<String, dynamic>>());
       });
 
   void _vaiAree() {
-    _processoId = _area = _struttura = _livello = null;
+    _processoId = _area = _struttura = _livello = _tipo = null;
     _testo.clear();
     _carica();
   }
@@ -68,54 +70,61 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
     _carica();
   }
 
-  Future<void> _modificaArea([Map<String, dynamic>? a]) async {
-    final v = await modificaCampi(context, titolo: a == null ? 'Nuova area di rischio' : 'Area ${a['codice']}', valori: a ?? const {}, campi: const [
-      Campo('codice', 'Codice', obbligatorio: true, aiuto: 'es. C'),
-      Campo('descrizione', 'Descrizione', righe: 3, obbligatorio: true),
-      Campo('descrizione_breve', 'Descrizione breve'),
-      Campo('ordine', 'Ordine'),
-    ]);
+  /// Proposta del referente: va subito al RPCT.
+  Future<void> _proponi(Map<String, dynamic> proposta) async {
+    await apiDi(context).post('$apiAnticorruzione/proposte', proposta);
+    if (mounted) propostaInviata(context);
+  }
+
+  Future<void> _modificaArea(bool rpct, [Map<String, dynamic>? a]) async {
+    final v = await modificaArea(context, a);
     if (v == null || !mounted) return;
-    final corpo = {...v, 'ordine': int.tryParse('${v['ordine'] ?? 0}') ?? 0};
     try {
       final api = apiDi(context);
-      if (a == null) {
-        await api.post('$apiAnticorruzione/aree', corpo);
+      if (!rpct) {
+        await _proponi({'tipo': a == null ? 'CREA' : 'MODIFICA', 'oggetto': 'AREA', 'elemento_id': ?a?['id'], 'dati': v});
+      } else if (a == null) {
+        await api.post('$apiAnticorruzione/aree', v);
       } else {
-        await api.put('$apiAnticorruzione/aree/${a['id']}', corpo);
+        await api.put('$apiAnticorruzione/aree/${a['id']}', v);
       }
-      widget.onDatiCambiati();
+      if (rpct) widget.onDatiCambiati();
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
   }
 
-  Future<void> _eliminaArea(Map<String, dynamic> a) async {
-    if (!await conferma(context, 'Eliminare l\'area ${a['codice']}?', 'Si può eliminare solo un\'area senza processi.')) return;
-    if (!mounted) return;
+  Future<void> _eliminaArea(bool rpct, Map<String, dynamic> a) async {
+    final ok = rpct
+        ? await conferma(context, 'Eliminare l\'area ${a['codice']}?', 'Si può eliminare solo un\'area senza processi.')
+        : await conferma(context, 'Proporre l\'eliminazione?', 'Si prepara la proposta di eliminare l\'area ${a['codice']} '
+            '(solo se non ha processi): decide il RPCT.');
+    if (!ok || !mounted) return;
     try {
-      await apiDi(context).delete('$apiAnticorruzione/aree/${a['id']}');
-      widget.onDatiCambiati();
+      if (rpct) {
+        await apiDi(context).delete('$apiAnticorruzione/aree/${a['id']}');
+        widget.onDatiCambiati();
+      } else {
+        await _proponi({'tipo': 'ELIMINA', 'oggetto': 'AREA', 'elemento_id': a['id']});
+      }
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
   }
 
   Future<void> _nuovoProcesso(DatiAnticorruzione dati, bool rpct) async {
-    final v = await modificaProcesso(context, dati, {'area_id': _area == _senzaArea ? null : _area});
+    final v = await modificaProcesso(context, dati, {
+      'area_id': _area == _senzaArea ? null : _area,
+      // il referente propone per la sua struttura
+      if (!rpct) 'struttura_id': context.read<AuthState>().utente?.strutturaId,
+    });
     if (v == null || !mounted) return;
     try {
-      final api = apiDi(context);
       if (rpct) {
-        final p = await api.post('$apiAnticorruzione/processi', v) as Map<String, dynamic>;
+        final p = await apiDi(context).post('$apiAnticorruzione/processi', v) as Map<String, dynamic>;
         if (mounted) setState(() => _processoId = p['id'] as String);
       } else {
-        final pr = await api.post('$apiAnticorruzione/proposte', {
-          'tipo': 'CREA',
-          'dati': {'processo': v, 'attivita': <Object>[]},
-        }) as Map<String, dynamic>;
-        if (mounted) await apriProposta(context, pr['id'] as String);
-        _carica();
+        await _proponi({'tipo': 'CREA', 'oggetto': 'PROCESSO', 'dati': {...v, 'attivita': <Object>[]}});
       }
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -125,9 +134,10 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   Widget _elencoProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi) => Column(children: [
         for (final p in processi)
           RigaVoce(
-            icona: Icons.account_tree_outlined,
+            icona: p['tipo'] == 'PROCEDIMENTO' ? Icons.gavel_outlined : Icons.account_tree_outlined,
             titolo: '${p['codice']} - ${p['denominazione']}',
             dettagli: [
+              etichettaTipo(p['tipo']),
               p['struttura_id'] == null ? 'Trasversale' : (dati.struttura(p['struttura_id']) ?? ''),
               '${p['attivita']} attività, ${p['rischi']} rischi, ${p['misure']} misure',
             ],
@@ -154,8 +164,13 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
             onChanged: (_) => setState(() {}),
           ),
         ),
-        if (rpct && cerca.isEmpty)
-          FilledButton.icon(onPressed: () => _modificaArea(), icon: const Icon(Icons.add), label: const Text('Nuova area')),
+        if (cerca.isEmpty)
+          FilledButton.icon(
+            onPressed: () => _modificaArea(rpct),
+            icon: const Icon(Icons.add),
+            label: Text(rpct ? 'Nuova area' : 'Proponi un\'area'),
+          ),
+        if (cerca.isEmpty && rpct) const PubblicazioneMappatura(),
       ]),
       const SizedBox(height: 16),
       if (cerca.isNotEmpty)
@@ -171,10 +186,8 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
               dettagli: [numero(quanti(a['id']))],
               onTap: () => _vaiArea(a['id'] as String),
               finale: [
-                if (rpct) ...[
-                  IconaAzione(Icons.edit_outlined, 'Modifica l\'area', () => _modificaArea(a)),
-                  IconaAzione(Icons.delete_outline, 'Elimina l\'area', () => _eliminaArea(a)),
-                ],
+                IconaAzione(Icons.edit_outlined, rpct ? 'Modifica l\'area' : 'Proponi la modifica dell\'area', () => _modificaArea(rpct, a)),
+                IconaAzione(Icons.delete_outline, rpct ? 'Elimina l\'area' : 'Proponi l\'eliminazione dell\'area', () => _eliminaArea(rpct, a)),
               ],
             ),
           if (senzaArea > 0)
@@ -209,6 +222,23 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
           ),
         ),
         SizedBox(
+          width: 180,
+          child: DropdownButtonFormField<String?>(
+            initialValue: _tipo,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Tipo', isDense: true),
+            items: const [
+              DropdownMenuItem(value: null, child: Text('Tutti')),
+              DropdownMenuItem(value: 'PROCESSO', child: Text('Processi')),
+              DropdownMenuItem(value: 'PROCEDIMENTO', child: Text('Procedimenti')),
+            ],
+            onChanged: (v) {
+              _tipo = v;
+              _carica();
+            },
+          ),
+        ),
+        SizedBox(
           width: 200,
           child: DropdownButtonFormField<String?>(
             initialValue: _livello,
@@ -226,11 +256,11 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
         FilledButton.icon(
           onPressed: () => _nuovoProcesso(dati, rpct),
           icon: const Icon(Icons.add),
-          label: Text(rpct ? 'Nuovo processo' : 'Proponi un processo'),
+          label: Text(rpct ? 'Nuovo processo o procedimento' : 'Proponi un processo o procedimento'),
         ),
       ]),
       const SizedBox(height: 16),
-      if (dellArea.isEmpty) const Center(child: Text('Nessun processo.')) else _elencoProcessi(dati, dellArea),
+      if (dellArea.isEmpty) const Center(child: Text('Nessun processo o procedimento.')) else _elencoProcessi(dati, dellArea),
     ];
   }
 
@@ -259,28 +289,9 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   }
 }
 
-/// Processo aperto da un'altra scheda (es. un obiettivo collegato), a tutta pagina.
-Future<void> apriProcesso(BuildContext context, String id) {
-  final dati = context.read<DatiAnticorruzione>();
-  return Navigator.of(context).push(MaterialPageRoute(
-    builder: (c) => Provider.value(
-      value: dati,
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Processo')),
-        body: VistaProcesso(
-          processoId: id,
-          onAree: () => Navigator.of(c).pop(),
-          onArea: (_) => Navigator.of(c).pop(),
-          onChiuso: () => Navigator.of(c).pop(),
-        ),
-      ),
-    ),
-  ));
-}
-
 /// Terzo e quarto livello: il processo con l'elenco delle attività e, aprendone una, i suoi
-/// rischi con le misure. Il RPCT modifica direttamente, i referenti propongono la modifica
-/// o l'eliminazione del processo.
+/// rischi con le misure. Il RPCT modifica direttamente; il referente, sui processi della sua
+/// struttura, con gli stessi pulsanti prepara una proposta per ogni modifica.
 class VistaProcesso extends StatefulWidget {
   const VistaProcesso({
     super.key,
@@ -315,29 +326,26 @@ class _VistaProcessoState extends State<VistaProcesso> {
             .then((v) => daAlbero(v as Map<String, dynamic>));
       });
 
-  Future<void> _proponi(String tipo) async {
-    if (tipo == 'ELIMINA' &&
-        !await conferma(context, 'Proporre l\'eliminazione?', 'La proposta va al RPCT, che decide se eliminare il processo.')) {
-      return;
-    }
-    if (!mounted) return;
-    try {
-      final pr = await apiDi(context).post('$apiAnticorruzione/proposte', {'tipo': tipo, 'processo_id': widget.processoId})
-          as Map<String, dynamic>;
-      if (mounted) await apriProposta(context, pr['id'] as String);
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+  void _inviata() {
+    if (mounted) propostaInviata(context);
+    _carica();
   }
 
-  Future<void> _elimina() async {
-    if (!await conferma(context, 'Eliminare il processo?', 'Si eliminano anche attività, rischi, misure e i collegamenti agli obiettivi.')) {
-      return;
-    }
-    if (!mounted) return;
+  Future<void> _elimina(OperazioniAlbero ops) async {
+    if (!await confermaEliminazione(context, 'il processo', proposta: ops.proposta) || !mounted) return;
     try {
-      await apiDi(context).delete('$apiAnticorruzione/processi/${widget.processoId}');
-      widget.onChiuso();
+      final api = apiDi(context);
+      if (ops.proposta) {
+        await api.post('$apiAnticorruzione/proposte', {
+          'tipo': 'ELIMINA',
+          'oggetto': 'PROCESSO',
+          'elemento_id': widget.processoId,
+        });
+        _inviata();
+      } else {
+        await api.delete('$apiAnticorruzione/processi/${widget.processoId}');
+        widget.onChiuso();
+      }
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
@@ -364,12 +372,12 @@ class _VistaProcessoState extends State<VistaProcesso> {
       finale: [
         LivelloChip(dati, _livelloMassimo(dati, rischi)),
         if (ops != null) ...[
-          IconaAzione(Icons.edit_outlined, 'Modifica l\'attività', () => eseguiOperazione(context, _carica, () async {
+          IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica l\'attività'), () => eseguiOperazione(context, _carica, () async {
                 final v = await modificaAttivita(context, a);
                 if (v != null) await ops.modificaAttivita(a, v);
               })),
-          IconaAzione(Icons.delete_outline, 'Elimina l\'attività', () => eseguiOperazione(context, _carica, () async {
-                if (await confermaEliminazione(context, 'l\'attività')) await ops.eliminaAttivita(a);
+          IconaAzione(Icons.delete_outline, etichettaAzione(ops, 'Elimina l\'attività'), () => eseguiOperazione(context, _carica, () async {
+                if (await confermaEliminazione(context, 'l\'attività', proposta: ops.proposta)) await ops.eliminaAttivita(a);
               })),
         ],
       ],
@@ -386,7 +394,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
           if (ops != null) ...[
             TextButton.icon(
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Modifica'),
+              label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
                 final v = await modificaAttivita(context, a);
                 if (v != null) await ops.modificaAttivita(a, v);
@@ -395,11 +403,11 @@ class _VistaProcessoState extends State<VistaProcesso> {
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
               icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text('Elimina'),
+              label: Text(etichettaAzione(ops, 'Elimina')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
-                if (await confermaEliminazione(context, 'l\'attività')) {
+                if (await confermaEliminazione(context, 'l\'attività', proposta: ops.proposta)) {
                   await ops.eliminaAttivita(a);
-                  _attivitaId = null;
+                  if (!ops.proposta) _attivitaId = null;
                 }
               }),
             ),
@@ -408,7 +416,6 @@ class _VistaProcessoState extends State<VistaProcesso> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${a['descrizione']}'),
           if (a['strutture_coinvolte'] != null) Text('Strutture coinvolte: ${a['strutture_coinvolte']}'),
-          chipObiettivi(a['obiettivi']),
         ]),
       ),
       Sezione(
@@ -417,7 +424,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
           if (ops != null)
             FilledButton.icon(
               icon: const Icon(Icons.add_alert_outlined, size: 18),
-              label: const Text('Aggiungi un rischio'),
+              label: Text(etichettaAzione(ops, 'Aggiungi un rischio')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
                 final v = await modificaRischio(context, dati);
                 if (v != null) await ops.aggiungiRischio(a, v);
@@ -433,19 +440,18 @@ class _VistaProcessoState extends State<VistaProcesso> {
   }
 
   /// Terzo livello: la scheda del processo e le sue attività.
-  List<Widget> _livelloProcesso(DatiAnticorruzione dati, Map<String, dynamic> albero, OperazioniAlbero? ops, bool rpct) {
+  List<Widget> _livelloProcesso(DatiAnticorruzione dati, Map<String, dynamic> albero, OperazioniAlbero? ops) {
     final processo = albero['processo'] as Map<String, dynamic>;
     final attivita = (albero['attivita'] as List).cast<Map<String, dynamic>>();
     return [
       IntestazioneProcesso(
         dati: dati,
         processo: processo,
-        obiettivi: albero['obiettivi'],
         azioni: [
           if (ops != null) ...[
             TextButton.icon(
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Modifica'),
+              label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
                 final v = await modificaProcesso(context, dati, processo);
                 if (v != null) await ops.processo(v);
@@ -454,13 +460,9 @@ class _VistaProcessoState extends State<VistaProcesso> {
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
               icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text('Elimina'),
-              onPressed: _elimina,
+              label: Text(etichettaAzione(ops, 'Elimina')),
+              onPressed: () => _elimina(ops),
             ),
-          ],
-          if (!rpct) ...[
-            TextButton.icon(onPressed: () => _proponi('MODIFICA'), icon: const Icon(Icons.edit_note), label: const Text('Proponi modifiche')),
-            TextButton.icon(onPressed: () => _proponi('ELIMINA'), icon: const Icon(Icons.delete_sweep_outlined), label: const Text('Proponi l\'eliminazione')),
           ],
         ],
       ),
@@ -469,7 +471,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
         if (ops != null)
           FilledButton.icon(
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Nuova attività'),
+            label: Text(etichettaAzione(ops, 'Nuova attività')),
             onPressed: () => eseguiOperazione(context, _carica, () async {
               final v = await modificaAttivita(context);
               if (v != null) await ops.aggiungiAttivita(v);
@@ -493,7 +495,11 @@ class _VistaProcessoState extends State<VistaProcesso> {
         final processo = albero['processo'] as Map<String, dynamic>;
         final attivita = (albero['attivita'] as List).cast<Map<String, dynamic>>();
         final aperta = attivita.where((a) => a['id'] == _attivitaId).firstOrNull;
-        final operazioni = rpct ? OperazioniDirette(apiDi(context), widget.processoId) : null;
+        final OperazioniAlbero? operazioni = rpct
+            ? OperazioniDirette(apiDi(context), widget.processoId)
+            : albero['proponibile'] == true
+                ? OperazioniProposte(apiDi(context), widget.processoId, _inviata)
+                : null;
         final nome = '${processo['codice']} ${processo['denominazione']}';
         return ListView(padding: const EdgeInsets.all(16), children: [
           Percorso([
@@ -506,9 +512,78 @@ class _VistaProcessoState extends State<VistaProcesso> {
           if (aperta != null)
             ..._livelloAttivita(dati, aperta, operazioni)
           else
-            ..._livelloProcesso(dati, albero, operazioni, rpct),
+            ..._livelloProcesso(dati, albero, operazioni),
         ]);
       },
     );
+  }
+}
+
+/// Interruttore del RPCT: la mappatura consultabile dai cittadini su /pubblico/mappatura,
+/// con il link da mettere sul sito dell'ente.
+class PubblicazioneMappatura extends StatefulWidget {
+  const PubblicazioneMappatura({super.key});
+
+  @override
+  State<PubblicazioneMappatura> createState() => _PubblicazioneMappaturaState();
+}
+
+class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
+  bool? _attiva; // null finché non si conosce lo stato
+  String _percorso = '/pubblico/mappatura';
+
+  @override
+  void initState() {
+    super.initState();
+    _leggi();
+  }
+
+  void _imposta(Object? v) {
+    if (v is! Map || !mounted) return;
+    setState(() {
+      _attiva = v['attiva'] == true;
+      _percorso = v['percorso'] as String? ?? _percorso;
+    });
+  }
+
+  Future<void> _leggi() async {
+    try {
+      _imposta(await apiDi(context).get('$apiAnticorruzione/pubblicazione'));
+    } catch (_) {
+      // senza lo stato l'interruttore non compare
+    }
+  }
+
+  Future<void> _cambia(bool attiva) async {
+    if (attiva &&
+        !await conferma(context, 'Pubblicare la mappatura?', 'Aree, processi, attività, rischi con il livello e misure '
+            'saranno consultabili da chiunque, senza accesso, all\'indirizzo ${_link()}. I valori degli indicatori e '
+            'le motivazioni delle correzioni restano riservati.')) {
+      return;
+    }
+    if (!mounted) return;
+    try {
+      _imposta(await apiDi(context).put('$apiAnticorruzione/pubblicazione', {'attiva': attiva}));
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
+  String _link() => '${Uri.base.origin}$_percorso';
+
+  @override
+  Widget build(BuildContext context) {
+    final attiva = _attiva;
+    if (attiva == null) return const SizedBox.shrink();
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Switch(value: attiva, onChanged: _cambia),
+      const SizedBox(width: 4),
+      Text(attiva ? 'Pubblicata per i cittadini' : 'Pubblica per i cittadini'),
+      if (attiva)
+        IconaAzione(Icons.link, 'Copia il link da mettere sul sito dell\'ente', () async {
+          await Clipboard.setData(ClipboardData(text: _link()));
+          if (context.mounted) mostraMessaggio(context, 'Link copiato: ${_link()}');
+        }),
+    ]);
   }
 }

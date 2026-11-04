@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../stato/auth_state.dart';
 import 'ente_accesso.dart';
+import 'ente_posta.dart';
+import 'ente_rag.dart';
 import 'pacchetti.dart';
 import 'profilo_ente.dart';
 import 'strutture.dart';
@@ -19,7 +21,7 @@ String provenienza(Map<String, dynamic> o) => o['pacchetto'] == null
         ? 'standard (${o['pacchetto']})'
         : 'standard modificato dall\'ente';
 
-/// Amministrazione dell'ente: profilo, accesso, strutture organizzative e utenti sempre; dati per gli atti, pacchetti
+/// Amministrazione dell'ente: profilo, accesso, strutture organizzative, utenti e collegamento al RAG sempre; dati per gli atti, pacchetti
 /// e aggiornamenti delle norme se l'ente usa la redazione degli atti.
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
@@ -28,15 +30,17 @@ class AdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final redazione = context.read<AuthState>().utente?.modulo('redazione') ?? false;
     final anticorruzione = context.read<AuthState>().utente?.modulo('anticorruzione') ?? false;
-    final schede = <(Tab, Widget)>[
-      const (Tab(icon: Icon(Icons.badge_outlined), text: 'Profilo dell\'ente'), ProfiloEntePage()),
-      const (Tab(icon: Icon(Icons.login), text: 'Accesso'), AccessoEntePage()),
-      const (Tab(icon: Icon(Icons.account_tree_outlined), text: 'Strutture organizzative'), StrutturePage()),
-      const (Tab(icon: Icon(Icons.people_outline), text: 'Utenti'), UtentiEntePage()),
-      if (redazione) const (Tab(icon: Icon(Icons.apartment), text: 'Dati per gli atti'), _ModelliEnte()),
+    final schede = <(Scheda, Widget)>[
+      const (Scheda(Icon(Icons.badge_outlined), 'Profilo dell\'ente'), ProfiloEntePage()),
+      const (Scheda(Icon(Icons.login), 'Accesso'), AccessoEntePage()),
+      const (Scheda(Icon(Icons.account_tree_outlined), 'Strutture organizzative'), StrutturePage()),
+      const (Scheda(Icon(Icons.people_outline), 'Utenti'), UtentiEntePage()),
+      const (Scheda(Icon(Icons.hub_outlined), 'Collegamento al RAG'), RagEntePage()),
+      const (Scheda(Icon(Icons.outgoing_mail), 'Posta in uscita'), PostaEntePage()),
+      if (redazione) const (Scheda(Icon(Icons.apartment), 'Dati per gli atti'), _ModelliEnte()),
       if (redazione || anticorruzione)
-        const (Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Pacchetti'), PacchettiPage()),
-      if (redazione) const (Tab(icon: Icon(Icons.sync), text: 'Aggiornamenti Normattiva'), _Aggiornamenti()),
+        const (Scheda(Icon(Icons.inventory_2_outlined), 'Pacchetti'), PacchettiPage()),
+      if (redazione) const (Scheda(Icon(Icons.sync), 'Aggiornamenti Normattiva'), _Aggiornamenti()),
     ];
     return DefaultTabController(
       length: schede.length,
