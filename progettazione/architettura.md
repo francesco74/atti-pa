@@ -11,6 +11,7 @@ Data: 27/10/2026, aggiornata il 30/10/2026.
 | 3. Modulo trasparenza | **backend e app fatti** (vedi `trasparenza.md`): catalogo, schede, documenti, verbale, esportazione, analisi ed estrazioni nel worker; app con le schede Analisi, Schede e Risultati (riprese da PApuntozeroIA); resta la migrazione dei dati |
 | Modulo assistente | **fatto**: chat con l'LLM configurato per il lavoro quotidiano (email, riassunti, riformulazioni), per tutti gli utenti dell'ente. Non legge atti né norme (per quello c'è il chatbot RAG, sezione 9). Le conversazioni restano in memoria nell'app, non sul server; con un LLM esterno la chat si apre con un avviso. Documenti allegati (pdf, docx, odt, xlsx, ods, txt, md, immagini) convertiti in testo dal RAG dell'ente (sezione 9), al massimo `ASSISTENTE_MAX_CARATTERI` per conversazione: un documento più lungo si rifiuta, non si tronca |
 | 4. Modulo anticorruzione | **backend, pacchetto standard e app fatti** (vedi `anticorruzione.md`, da Si.Ge.Ri.Co.): strutture organizzative nel nucleo, mappatura (aree, processi e procedimenti, attività, rischi con valutazione, misure; codici assegnati dal sistema) con valutazione, proposte dei referenti per singolo elemento limitate alla propria struttura, monitoraggio delle misure, allegati al PTPCT; PIAO e obiettivi tolti il 04/11/2026; restano i collegamenti con gli altri moduli |
+| 5. Modulo performance | **backend e app fatti** (vedi `performance.md`): PIAO triennali aperti e chiusi dall'amministratore della performance, obiettivi annuali per struttura dichiarati da dirigenti e responsabili, azioni e misure (dalla mappatura dei rischi) con impegno, completamento e scadenza, completamento calcolato, storico delle modifiche, riepilogo per struttura |
 
 Decisioni prese: dati di PApuntozeroIA conservati e migrati; installazione multi ente con
 accesso locale e AD; repository atti-pa; un dominio di quarto livello per ente (Provincia:
@@ -122,6 +123,7 @@ moduli/
   redazione/       redazione, controllo, modelli e checklist (oggi api/src/routers + parti di common)
   trasparenza/     schemi, analisi, verbale di validazione (da PApuntozeroIA)
   anticorruzione/  mappatura, proposte, monitoraggio (da Si.Ge.Ri.Co.)
+  performance/     PIAO, obiettivi delle strutture con azioni e misure
 servizi/
   api/             un'unica API: registra i blueprint dei moduli attivi
   converter/  worker/  estrattore/  normattiva-sync/  navigatore/

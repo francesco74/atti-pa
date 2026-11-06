@@ -1,7 +1,7 @@
 """Contenuti da dare all'LLM per l'analisi o l'estrazione: pagine web (con i PDF collegati e
 alcuni link del contenuto), fogli di calcolo come tabelle con i numeri come li vede l'utente,
 CSV come testo. PDF e documenti di testo li converte in Markdown il converter.
-Ripreso da PApuntozeroIA (app.py), su httpx asincrono.
+Su httpx asincrono.
 """
 
 from __future__ import annotations

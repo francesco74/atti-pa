@@ -20,7 +20,7 @@ void main() {
         if (r.url.path == '/api/v1/auth/ente') {
           return http.Response(
             jsonEncode({
-              'ente': {'codice': 'comune', 'nome': 'Comune di Prova'},
+              'ente': {'codice': 'comune', 'nome': 'Comune di Prova', 'assistenza': 'Scrivi a supporto@comune.it'},
               'dominio': 'atti.comune.it',
               'accesso_locale': true,
               'accesso_ldap': true,
@@ -52,6 +52,18 @@ void main() {
     await tester.enterText(find.byType(TextFormField).last, 'segreta');
     await tester.tap(find.text('Accedi').last);
     await tester.pumpAndSettle();
+    // la password si può vedere e nascondere
+    TextField campoPassword() => tester.widget<TextField>(find.byType(TextField).last);
+    expect(campoPassword().obscureText, isTrue);
+    await tester.tap(find.byTooltip('Mostra la password'));
+    await tester.pump();
+    expect(campoPassword().obscureText, isFalse);
+    await tester.tap(find.byTooltip('Nascondi la password'));
+    await tester.pump();
+    expect(campoPassword().obscureText, isTrue);
+    // testo di assistenza dell'ente, con l'indirizzo cliccabile
+    expect(find.text('Serve aiuto?'), findsOneWidget);
+    expect(find.text('supporto@comune.it'), findsOneWidget);
     expect(login?['modo'], 'locale');
     expect(login?['username'], 'mario');
     expect(find.textContaining('Credenziali non valide'), findsOneWidget);

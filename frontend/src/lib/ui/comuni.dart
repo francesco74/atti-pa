@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api_client.dart';
 
@@ -209,4 +210,39 @@ Future<bool> conferma(BuildContext context, String titolo, String testo) async {
     ),
   );
   return esito ?? false;
+}
+
+/// Testo per l'assistenza agli utenti configurato dall'ente (Amministrazione → Profilo): gli
+/// indirizzi email e i link diventano cliccabili.
+class TestoAssistenza extends StatelessWidget {
+  const TestoAssistenza(this.testo, {super.key, this.stile, this.allineamento = TextAlign.start});
+
+  final String testo;
+  final TextStyle? stile;
+  final TextAlign allineamento;
+
+  static final _collegamento = RegExp(r'(https?://[^\s<>"]+[^\s<>".,;:!?)]|[\w.+-]+@[\w-]+(?:\.[\w-]+)+)');
+
+  @override
+  Widget build(BuildContext context) {
+    final colore = Theme.of(context).colorScheme.primary;
+    final parti = <InlineSpan>[];
+    var inizio = 0;
+    for (final m in _collegamento.allMatches(testo)) {
+      if (m.start > inizio) parti.add(TextSpan(text: testo.substring(inizio, m.start)));
+      final valore = m.group(0)!;
+      final destinazione = valore.contains('@') && !valore.startsWith('http') ? Uri(scheme: 'mailto', path: valore) : Uri.parse(valore);
+      parti.add(WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: InkWell(
+          onTap: () => launchUrl(destinazione, webOnlyWindowName: '_blank'),
+          child: Text(valore, style: (stile ?? const TextStyle()).copyWith(color: colore, decoration: TextDecoration.underline)),
+        ),
+      ));
+      inizio = m.end;
+    }
+    if (inizio < testo.length) parti.add(TextSpan(text: testo.substring(inizio)));
+    return Text.rich(TextSpan(style: stile, children: parti), textAlign: allineamento);
+  }
 }

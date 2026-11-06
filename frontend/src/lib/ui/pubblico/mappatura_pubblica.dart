@@ -136,7 +136,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   String? _processoId; // processo aperto
   String? _attivitaId; // attività aperta
   String? _struttura, _livello, _tipo;
-  final _testo = TextEditingController();
+  final _testo = TextEditingController(); // ricerca in tutte le aree
+  final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
 
   @override
   void initState() {
@@ -147,6 +148,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   @override
   void dispose() {
     _testo.dispose();
+    _testoArea.dispose();
     super.dispose();
   }
 
@@ -161,6 +163,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   void _vaiAree() => setState(() {
         _processoId = _attivitaId = _area = _struttura = _livello = _tipo = null;
         _testo.clear();
+        _testoArea.clear();
         _carica();
       });
 
@@ -237,11 +240,27 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   /// Secondo livello: i processi dell'area, con i filtri.
   List<Widget> _livelloProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi) {
     final idAree = dati.aree.map((a) => a['id']).toSet();
-    final dellArea = processi.where((p) => _area == _senzaArea ? !idAree.contains(p['area_id']) : p['area_id'] == _area).toList();
+    final cerca = _testoArea.text.trim().toLowerCase();
+    final dellArea = processi
+        .where((p) => _area == _senzaArea ? !idAree.contains(p['area_id']) : p['area_id'] == _area)
+        .where((p) => '${p['codice']} ${p['denominazione']}'.toLowerCase().contains(cerca))
+        .toList();
     return [
       Percorso([('Aree di rischio', _vaiAree), (dati.area(_area) ?? 'Senza area', null)]),
       const SizedBox(height: 12),
       Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        SizedBox(
+          width: 320,
+          child: TextField(
+            controller: _testoArea,
+            decoration: const InputDecoration(
+              labelText: 'Cerca nell\'area (codice o denominazione)',
+              isDense: true,
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
         SizedBox(
           width: 260,
           child: DropdownButtonFormField<String?>(
@@ -293,7 +312,10 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
         ),
       ]),
       const SizedBox(height: 16),
-      if (dellArea.isEmpty) const Center(child: Text('Nessun processo o procedimento.')) else _elencoProcessi(dati, dellArea),
+      if (dellArea.isEmpty)
+        Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : 'Nessun processo trovato.'))
+      else
+        _elencoProcessi(dati, dellArea),
     ];
   }
 

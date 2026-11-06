@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
 import '../stato/auth_state.dart';
+import 'comuni.dart';
 
 /// Accesso all'ente del dominio: con l'account di dominio (Active Directory dell'ente) o con
 /// un utente dell'applicazione, secondo come l'ente è configurato.
@@ -18,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final _username = TextEditingController();
   final _password = TextEditingController();
   bool _inCorso = false;
+  bool _passwordVisibile = false;
   String? _errore;
 
   Map<String, dynamic>? _ente; // risposta di /auth/ente
@@ -146,11 +148,16 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _password,
-                          obscureText: true,
+                          obscureText: !_passwordVisibile,
                           autofillHints: const [AutofillHints.password],
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock),
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              tooltip: _passwordVisibile ? 'Nascondi la password' : 'Mostra la password',
+                              icon: Icon(_passwordVisibile ? Icons.visibility_off : Icons.visibility),
+                              onPressed: () => setState(() => _passwordVisibile = !_passwordVisibile),
+                            ),
                           ),
                           validator: (v) =>
                               (v == null || v.isEmpty) ? 'Inserire la password' : null,
@@ -171,6 +178,16 @@ class _LoginPageState extends State<LoginPage> {
                                 )
                               : const Text('Accedi'),
                         ),
+                        ],
+                        if ((ente?['assistenza'] as String?)?.trim().isNotEmpty ?? false) ...[
+                          const SizedBox(height: 24),
+                          Text('Serve aiuto?', textAlign: TextAlign.center, style: tema.textTheme.titleSmall),
+                          const SizedBox(height: 4),
+                          TestoAssistenza(
+                            (ente!['assistenza'] as String).trim(),
+                            stile: tema.textTheme.bodyMedium,
+                            allineamento: TextAlign.center,
+                          ),
                         ],
                       ],
                     ),

@@ -42,11 +42,15 @@ _FIRME_LOGO = {b"\x89PNG\r\n\x1a\n": "image/png", b"\xff\xd8\xff": "image/jpeg"}
 
 
 class ProfiloIn(BaseModel):
+    """Si aggiornano solo i campi presenti nel corpo."""
+
     caratteristiche: str | None = Field(default=None, max_length=10_000)
+    assistenza: str | None = Field(default=None, max_length=2_000)
 
 
 def _profilo(e: Ente) -> dict:
-    return {"nome": e.nome, "caratteristiche": e.caratteristiche, "logo": e.logo_mime is not None}
+    return {"nome": e.nome, "caratteristiche": e.caratteristiche, "assistenza": e.assistenza,
+            "logo": e.logo_mime is not None}  # fmt: skip
 
 
 @bp.get("/profilo")
@@ -62,8 +66,9 @@ async def aggiorna_profilo():
     dati = corpo(ProfiloIn)
     sessione = db()
     e = await sessione.get(Ente, ente().id)
-    e.caratteristiche = (dati.caratteristiche or "").strip() or None
-    audit(sessione, utente(), "ente", e.id, "PROFILO")
+    for campo in dati.model_fields_set:
+        setattr(e, campo, (getattr(dati, campo) or "").strip() or None)
+    audit(sessione, utente(), "ente", e.id, "PROFILO", {"campi": sorted(dati.model_fields_set)})
     await sessione.commit()
     return _profilo(e)
 

@@ -1,6 +1,6 @@
 """Installazione multi ente: l'ente si riconosce dal dominio prima del login e dal token
 dopo; utenti locali e Active Directory (simulata) per ente; dati separati; revoca delle
-sessioni; blocco dopo troppi tentativi; hash delle password di rag e PApuntozeroIA accettati
+sessioni; blocco dopo troppi tentativi; hash delle password ereditati (Werkzeug e bcrypt) accettati
 e rigenerati; enti creati con deploy/enti.py, con l'admin che deve cambiare la password.
     cd api/tests && python test_multi_ente_api.py
 """
@@ -77,7 +77,7 @@ class MultiEnte(unittest.TestCase):
                     EnteDominio(dominio="atti.comune.example.it", ente_id=b.id),
                     User(ente_id=a.id, username="admin", origine="LOCALE",
                          password_hash=pw.calcola(PASSWORD), ruoli=[Ruolo.ADMIN]),
-                    # hash ereditati: Werkzeug pbkdf2 (rag) e bcrypt (PApuntozeroIA)
+                    # hash ereditati: Werkzeug pbkdf2 e bcrypt
                     User(ente_id=a.id, username="revisore", origine="LOCALE",
                          password_hash=generate_password_hash(PASSWORD, method="pbkdf2:sha256"),
                          ruoli=[Ruolo.REDATTORE]),
@@ -258,6 +258,22 @@ class MultiEnte(unittest.TestCase):
         self.assertEqual(a.put("/api/v1/ente/profilo", base_url=A, json={}).status_code, 403)
         self.assertEqual(c.delete("/api/v1/ente/logo", base_url=A).status_code, 204)
         self.assertEqual(c.get("/api/v1/ente/logo", base_url=A).status_code, 404)
+
+    def test_testo_di_assistenza(self):
+        c, _ = self._login(A, "admin")
+        testo = "Per assistenza scrivi a supporto@provincia.example.it"
+        r = c.put("/api/v1/ente/profilo", base_url=A, json={"assistenza": f" {testo} "}).get_json()
+        self.assertEqual(r["assistenza"], testo)
+        # si aggiornano solo i campi inviati: le caratteristiche restano
+        c.put("/api/v1/ente/profilo", base_url=A, json={"caratteristiche": "Provincia"})
+        r = c.get("/api/v1/ente/profilo", base_url=A).get_json()
+        self.assertEqual((r["assistenza"], r["caratteristiche"]), (testo, "Provincia"))
+        # prima dell'accesso (pagina di login, normativa) e nei dati dell'utente; solo per l'ente
+        anonimo = self.app.test_client()
+        self.assertEqual(anonimo.get("/api/v1/auth/ente", base_url=A).get_json()["ente"]["assistenza"], testo)
+        self.assertIsNone(anonimo.get("/api/v1/auth/ente", base_url=B).get_json()["ente"]["assistenza"])
+        self.assertEqual(c.get("/api/v1/auth/me", base_url=A).get_json()["ente"]["assistenza"], testo)
+        self.assertIsNone(c.put("/api/v1/ente/profilo", base_url=A, json={"assistenza": "  "}).get_json()["assistenza"])
 
     def test_utenti_locali_dell_ente(self):
         c, _ = self._login(A, "admin")

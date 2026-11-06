@@ -101,8 +101,10 @@ class ApiClient {
     return _decodifica(r);
   }
 
-  Future<void> delete(String percorso) async {
-    final r = await _http.delete(uri(percorso), headers: _intestazioni(json: false));
+  /// [corpo] facoltativo (es. la nota di un'eliminazione, che resta nello storico).
+  Future<void> delete(String percorso, [Object? corpo]) async {
+    final r = await _http.delete(uri(percorso),
+        headers: _intestazioni(json: corpo != null), body: corpo == null ? null : jsonEncode(corpo));
     _decodifica(r);
   }
 

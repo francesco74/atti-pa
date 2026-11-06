@@ -1,7 +1,6 @@
 """
 Registro degli schemi di pubblicazione ANAC definiti come file YAML in schemi/: il catalogo
-è unico per tutti gli enti (le linee guida sono nazionali). Ripreso da PApuntozeroIA
-(schema_registry.py).
+è unico per tutti gli enti (le linee guida sono nazionali).
 
 Ogni file è l'unica fonte di uno schema: da qui derivano
 - la validazione dei dati inviati dal form di generazione (valida_dati);

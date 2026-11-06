@@ -2,7 +2,7 @@
 indirizzi pubblici, ogni redirect verificato, IP effettivamente contattato controllato
 (difesa dal DNS rebinding), dimensione massima. Impediscono di usare il worker per
 raggiungere la rete interna (database, servizi del cluster, metadata del cloud).
-Ripreso da PApuntozeroIA (security.py), su httpx asincrono.
+Su httpx asincrono.
 """
 
 from __future__ import annotations

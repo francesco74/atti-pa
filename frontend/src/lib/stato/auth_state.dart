@@ -9,12 +9,14 @@ class EnteUtente {
       : codice = j['codice'] as String,
         nome = j['nome'] as String,
         moduli = List<String>.from(j['moduli'] as List? ?? const []),
-        logo = j['logo'] == true;
+        logo = j['logo'] == true,
+        assistenza = (j['assistenza'] as String?)?.trim().isEmpty ?? true ? null : (j['assistenza'] as String).trim();
 
   final String codice;
   final String nome;
   final List<String> moduli;
   final bool logo;
+  final String? assistenza; // testo per l'assistenza agli utenti (null: non configurato)
 }
 
 class Utente {
@@ -53,6 +55,8 @@ class Utente {
   bool get isTrasparenza => isAdmin || ruoli.contains('TRASPARENZA');
   bool get isAnticorruzioneRpct => isAdmin || ruoli.contains('ANTICORRUZIONE_RPCT');
   bool get isAnticorruzione => isAnticorruzioneRpct || ruoli.contains('ANTICORRUZIONE_REFERENTE');
+  bool get isPerformanceAmministratore => isAdmin || ruoli.contains('PERFORMANCE_AMMINISTRATORE');
+  bool get isPerformance => isPerformanceAmministratore || ruoli.contains('PERFORMANCE_RESPONSABILE');
 }
 
 enum StatoAuth { verifica, anonimo, autenticato }

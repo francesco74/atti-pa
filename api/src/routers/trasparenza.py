@@ -51,7 +51,7 @@ async def _logo() -> str:
 
 
 def _schema_dei_dati(dati: dict[str, Any]):
-    """Schema indicato dai dati del form (campo pdf_type, come in PApuntozeroIA)."""
+    """Schema indicato dai dati del form (campo pdf_type)."""
     schema = get_schema(str(dati.get("pdf_type") or ""))
     if schema is None:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Schema di pubblicazione non previsto")

@@ -1,6 +1,6 @@
 """Difese dell'HTML della trasparenza: sanificazione di ciò che entra o esce (risposte
 dell'LLM, documenti generati, documenti salvati dall'editor, HTML da convertire) ed esito di
-validazione riportato in un report. Ripreso da PApuntozeroIA (security.py).
+validazione riportato in un report.
 """
 
 import re

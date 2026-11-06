@@ -51,10 +51,9 @@ class Settings(BaseSettings):
     llm_provider: Literal["ollama", "openai_compatibile", "openai", "gemini", "anthropic"] = (
         "ollama"
     )
-    # Vuoti = valori predefiniti del provider (indirizzo dell'API e modello, in llm.py)
+    # Indirizzo dell'API dell'LLM, per qualunque provider; vuoti = valori predefiniti del
+    # provider (indirizzo e modello, in llm.py; ollama: http://localhost:11434/v1)
     llm_base_url: str | None = None
-    # Indirizzo di Ollama quando LLM_BASE_URL è vuoto (in docker compose: il computer host)
-    llm_ollama_url: str = "http://localhost:11434/v1"
     llm_model: str | None = None
     # Obbligatoria per openai e gemini; per anthropic, se vuota, vale ANTHROPIC_API_KEY
     llm_api_key: str = ""

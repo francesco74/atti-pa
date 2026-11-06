@@ -166,4 +166,44 @@ void main() {
     expect(find.text('Per cambiarla rivolgiti all\'amministratore.'), findsOneWidget);
     expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
   });
+
+  testWidgets('la voce Assistenza del menu mostra il testo dell\'ente', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final api = ApiClient(
+      'http://api.test',
+      client: MockClient((r) async => http.Response(jsonEncode([]), 200, headers: {'content-type': 'application/json'})),
+    );
+    Utente utenteCon(String? assistenza) => Utente.daJson({
+          'id': 'u1', 'username': 'prova', 'nome_completo': 'Utente di prova', 'ruoli': ['CONTROLLORE'],
+          'ente': {'codice': 'prova', 'nome': 'Ente di prova', 'moduli': ['redazione'], 'assistenza': assistenza},
+        });
+    Future<void> apri(Utente utente) async {
+      final auth = AuthState(api)
+        ..utente = utente
+        ..stato = StatoAuth.autenticato;
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          Provider<ApiClient>.value(value: api),
+          ChangeNotifierProvider<AuthState>.value(value: auth),
+        ],
+        child: MaterialApp(home: HomeShell(key: UniqueKey(), utente: utente)),
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Utente di prova'));
+      await tester.pumpAndSettle();
+    }
+
+    await apri(utenteCon('Chiama l\'interno 1234 o scrivi a help@ente.it'));
+    await tester.tap(find.text('Assistenza'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('interno 1234'), findsOneWidget);
+    expect(find.text('help@ente.it'), findsOneWidget);
+    await tester.tap(find.text('Chiudi'));
+    await tester.pumpAndSettle();
+
+    await apri(utenteCon('  '));
+    expect(find.text('Assistenza'), findsNothing); // non configurato: niente voce
+  });
 }

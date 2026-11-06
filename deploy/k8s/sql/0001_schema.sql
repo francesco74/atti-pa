@@ -28,6 +28,7 @@ CREATE TABLE enti (
     logo_mime             VARCHAR(50),            -- profilo dell'ente: logo nei documenti
     logo                  LONGBLOB,
     caratteristiche       TEXT,                   -- caratteristiche dell'amministrazione (contesto per l'LLM)
+    assistenza            TEXT,                   -- testo per l'assistenza agli utenti (login, menu, aiuto)
     accesso_locale        BOOLEAN NOT NULL DEFAULT TRUE,
     ldap_json             JSON,                   -- url, dominio, base_dn, ca_pem, gruppi...
     rag_json              JSON,                   -- collegamento al RAG: url, chiave_cifrata
@@ -628,6 +629,79 @@ CREATE TABLE ac_monitoraggi (
     FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE SET NULL,
     FOREIGN KEY (dichiarato_da) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (verificato_da) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- Modulo performance: PIAO triennali, obiettivi annuali per struttura con azioni e
+-- misure (della mappatura dei rischi), storico delle modifiche
+-- ---------------------------------------------------------------------------
+CREATE TABLE pf_piao (
+    id           CHAR(36) PRIMARY KEY,
+    ente_id      CHAR(36) NOT NULL,
+    anno_inizio  INT NOT NULL,                    -- triennio: anno_inizio .. anno_inizio + 2
+    titolo       VARCHAR(255) NOT NULL,
+    atto         VARCHAR(255),                    -- es. DGC n. 59 del 26/03/2026
+    stato        VARCHAR(10) NOT NULL DEFAULT 'APERTO', -- CHIUSO: sola lettura
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_pf_piao (ente_id, anno_inizio),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE pf_obiettivi (
+    id            CHAR(36) PRIMARY KEY,
+    ente_id       CHAR(36) NOT NULL,
+    piao_id       CHAR(36) NOT NULL,
+    anno          INT NOT NULL,
+    struttura_id  CHAR(36) NOT NULL,
+    codice        VARCHAR(100),                   -- codice nel PIAO
+    titolo        VARCHAR(500) NOT NULL,
+    descrizione   TEXT,
+    tipo          VARCHAR(20) NOT NULL DEFAULT 'OPERATIVO', -- FUNZIONAMENTO, MIGLIORAMENTO
+    impegno       INT NOT NULL DEFAULT 0,         -- % sugli obiettivi della struttura nell'anno
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY ix_pf_obiettivi (piao_id, anno, struttura_id),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (piao_id) REFERENCES pf_piao(id) ON DELETE CASCADE,
+    FOREIGN KEY (struttura_id) REFERENCES strutture(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE pf_elementi (
+    id             CHAR(36) PRIMARY KEY,
+    ente_id        CHAR(36) NOT NULL,
+    obiettivo_id   CHAR(36) NOT NULL,
+    tipo           VARCHAR(10) NOT NULL,          -- AZIONE, MISURA
+    descrizione    TEXT NOT NULL,                 -- dell'azione, o copia di quella della misura
+    misura_id      CHAR(36),
+    misura_codice  VARCHAR(70),
+    impegno        INT NOT NULL DEFAULT 0,        -- % sulle azioni e misure dell'obiettivo
+    completamento  INT NOT NULL DEFAULT 0,        -- %
+    scadenza       DATE NOT NULL,
+    ordine         INT NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (obiettivo_id) REFERENCES pf_obiettivi(id) ON DELETE CASCADE,
+    FOREIGN KEY (misura_id) REFERENCES ac_misure(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE pf_modifiche (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ente_id       CHAR(36) NOT NULL,
+    piao_id       CHAR(36),
+    obiettivo_id  CHAR(36),                       -- anche per azioni e misure
+    oggetto       VARCHAR(10) NOT NULL,           -- PIAO, OBIETTIVO, AZIONE, MISURA
+    oggetto_id    CHAR(36) NOT NULL,
+    azione        VARCHAR(15) NOT NULL,           -- CREATO, MODIFICATO, ELIMINATO
+    descrizione   VARCHAR(500) NOT NULL,
+    campi         JSON,                           -- {campo: [prima, dopo]}
+    nota          TEXT,
+    utente_id     CHAR(36),
+    utente_nome   VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY ix_pf_modifiche_obiettivo (obiettivo_id, created_at),
+    KEY ix_pf_modifiche_piao (piao_id, created_at),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (utente_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------

@@ -546,6 +546,7 @@ PROVIDER_ESTERNI = {"openai", "gemini", "anthropic"}
 
 # Indirizzi delle API dei provider (sovrascrivibili con LLM_BASE_URL)
 BASE_URL_PREDEFINITI = {
+    "ollama": "http://localhost:11434/v1",
     "openai": "https://api.openai.com/v1",
     "gemini": "https://generativelanguage.googleapis.com/v1beta/openai",
 }
@@ -589,8 +590,7 @@ def crea_llm(settings: Settings) -> LlmClient:
             **opzioni,
         )
 
-    predefinito = settings.llm_ollama_url if provider == "ollama" else None
-    base_url = settings.llm_base_url or predefinito or BASE_URL_PREDEFINITI.get(provider)
+    base_url = settings.llm_base_url or BASE_URL_PREDEFINITI.get(provider)
     if not base_url:
         raise ValueError(f"LLM_BASE_URL è obbligatorio con LLM_PROVIDER={provider}")
     if provider in ("openai", "gemini") and not settings.llm_api_key:

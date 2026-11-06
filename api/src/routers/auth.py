@@ -55,7 +55,7 @@ async def ente_pubblico():
         return {"ente": None, "dominio": dominio_richiesta(), "accesso_locale": False, "accesso_ldap": False}
     ldap = config_ldap(ente)
     return {
-        "ente": {"codice": ente.codice, "nome": ente.nome},
+        "ente": {"codice": ente.codice, "nome": ente.nome, "assistenza": ente.assistenza},
         "dominio": dominio_richiesta(),
         "accesso_locale": ente.accesso_locale,
         "accesso_ldap": ldap is not None,
@@ -155,7 +155,7 @@ async def _login_locale(sessione, ente: Ente, dati: LoginIn) -> User | None:
         return None
     if not user.attivo:
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Utente disattivato")
-    if da_rigenerare:  # hash di rag o PApuntozeroIA: si porta al formato attuale
+    if da_rigenerare:  # hash ereditato (Werkzeug o bcrypt): si porta al formato attuale
         user.password_hash = pw.calcola(dati.password)
     return user
 
@@ -171,6 +171,7 @@ def dati_utente(user: User, ente: Ente) -> dict:
             "nome": ente.nome,
             "moduli": ente.moduli_json or [],
             "logo": ente.logo_mime is not None,  # l'app lo usa come icona e come sfondo
+            "assistenza": ente.assistenza,  # testo per l'assistenza agli utenti
         },
     }
 

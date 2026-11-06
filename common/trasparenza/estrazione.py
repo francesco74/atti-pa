@@ -12,7 +12,7 @@ formato non conforme.
 La chiamata al modello è passata come funzione asincrona `genera(prompt, schema_json)`
 così da poter verificare la logica senza il modello. Lo schema è scritto nello stile di
 Gemini (nullable, format enum); `json_schema` lo traduce nel JSON Schema standard accettato
-da tutti i provider. Ripreso da PApuntozeroIA (estrazione.py).
+da tutti i provider.
 """
 import re
 from datetime import date

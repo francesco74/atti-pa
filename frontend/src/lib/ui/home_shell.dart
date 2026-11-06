@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
 import 'anticorruzione/anticorruzione_page.dart';
+import 'performance/performance_page.dart';
 import 'assistente/assistente_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
@@ -85,6 +86,7 @@ class _HomeShellState extends State<HomeShell> {
     final redazione = u.modulo('redazione'); // redazione e controllo degli atti
     final trasparenza = u.modulo('trasparenza'); // verifica di Amministrazione Trasparente
     final anticorruzione = u.modulo('anticorruzione'); // mappatura dei processi e rischi corruttivi
+    final performance = u.modulo('performance'); // obiettivi del PIAO per struttura
     final assistente = u.modulo('assistente'); // chat con l'LLM, per tutti gli utenti dell'ente
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
@@ -96,13 +98,26 @@ class _HomeShellState extends State<HomeShell> {
       if (trasparenza && u.isTrasparenza) const _Voce('Trasparenza', Icons.visibility_outlined, TrasparenzaPage()),
       if (anticorruzione && u.isAnticorruzione)
         const _Voce('Anticorruzione', Icons.shield_outlined, AnticorruzionePage()),
+      if (performance && u.isPerformance) const _Voce('Performance', Icons.flag_outlined, PerformancePage()),
       if (assistente)
         _Voce('Assistente', Icons.chat_outlined, AssistentePage(conversazione: _conversazione)),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (!redazione && !trasparenza && !anticorruzione && !assistente && !u.isAdmin)
+      if (!redazione && !trasparenza && !anticorruzione && !performance && !assistente && !u.isAdmin)
         const _Voce('Benvenuto', Icons.home, _NessunModulo()),
     ];
   }
+
+  /// Testo per l'assistenza configurato dall'ente.
+  void _assistenza() => showDialog<void>(
+        context: context,
+        builder: (c) => PointerInterceptor(
+          child: AlertDialog(
+            title: const Text('Assistenza'),
+            content: SizedBox(width: 480, child: TestoAssistenza(widget.utente.ente.assistenza!)),
+            actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Chiudi'))],
+          ),
+        ),
+      );
 
   /// Cambio della password (solo utenti dell'app: quelle di dominio si cambiano in AD).
   Future<void> _cambiaPassword() async {
@@ -271,6 +286,7 @@ class _HomeShellState extends State<HomeShell> {
         ),
         for (final (valore, testo) in [
           ('profilo', 'Il mio profilo'),
+          if (widget.utente.ente.assistenza != null) ('assistenza', 'Assistenza'),
           if (widget.utente.locale) ('password', 'Cambia la password'),
           ('esci', 'Esci'),
         ])
@@ -290,6 +306,7 @@ class _HomeShellState extends State<HomeShell> {
       onSelected: (v) async {
         if (v == 'esci' && await _puoiLasciare() && context.mounted) context.read<AuthState>().logout();
         if (v == 'profilo') _profilo();
+        if (v == 'assistenza') _assistenza();
         if (v == 'password') _cambiaPassword();
       },
     );

@@ -12,7 +12,7 @@ import 'tabs/analisi_avviate_tab.dart';
 import 'tabs/pdf_generator_tab.dart';
 import 'tabs/result_tab.dart';
 
-/// Modulo trasparenza (ripreso da PApuntozeroIA): analisi con l'IA delle pubblicazioni di
+/// Modulo trasparenza: analisi con l'IA delle pubblicazioni di
 /// Amministrazione Trasparente, schede generate dagli schemi ANAC, risultati con l'editor,
 /// l'archivio dei documenti e il verbale di validazione. Le analisi avviate girano in
 /// background e si seguono nella loro scheda.

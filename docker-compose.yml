@@ -2,7 +2,8 @@
 #   docker compose up --build
 # Applicazione: http://localhost:8080   API (Flask): http://localhost:8000/api/v1/health
 #
-# L'LLM non è incluso. Predefinito: Ollama sul computer (host.docker.internal:11434).
+# L'LLM non è incluso. Ollama sul computer: nel .env LLM_PROVIDER=ollama e
+# LLM_BASE_URL=http://host.docker.internal:11434/v1.
 # Altri provider: LLM_PROVIDER=openai|gemini|anthropic LLM_API_KEY=... docker compose up
 #
 # Container con nomi fissi (atti-pa-api, atti-pa-worker, atti-pa-mysql...), es.
@@ -25,7 +26,8 @@ x-comune: &comune
     ARCHIVIO_DIR: /var/lib/atti-pa/archivio
     LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
     # Ollama gira sul computer che ospita i container; gli altri provider usano il proprio
-    LLM_OLLAMA_URL: ${LLM_OLLAMA_URL:-http://host.docker.internal:11434/v1}
+    # vuoto = predefinito del provider; per Ollama sul computer host:
+    # LLM_BASE_URL=http://host.docker.internal:11434/v1
     LLM_BASE_URL: ${LLM_BASE_URL:-}
     LLM_MODEL: ${LLM_MODEL:-}
     LLM_API_KEY: ${LLM_API_KEY:-}

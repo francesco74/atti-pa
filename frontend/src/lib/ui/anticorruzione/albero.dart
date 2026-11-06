@@ -241,7 +241,7 @@ Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticor
       const Campo('tipo', 'Tipo', scelte: [('PROCESSO', 'Processo'), ('PROCEDIMENTO', 'Procedimento')]),
       Campo('area_id', 'Area di rischio', scelte: [
         (null, 'Nessuna'),
-        for (final a in d.aree) (a['id'] as String, '${a['codice']}) ${a['descrizione_breve'] ?? a['descrizione']}'),
+        for (final a in d.aree) (a['id'] as String, '${a['codice']} - ${a['descrizione_breve'] ?? a['descrizione']}'),
       ]),
       const Campo('denominazione', 'Denominazione', righe: 2, obbligatorio: true),
       const Campo('descrizione', 'Descrizione', righe: 4),

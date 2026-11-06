@@ -12,8 +12,8 @@ import time
 from http import HTTPStatus
 
 from routers import (
-    anticorruzione, assistente, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, pubblico,
-    trasparenza,
+    anticorruzione, assistente, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, performance,
+    pubblico, trasparenza,
 )  # fmt: skip
 import httpx
 from flask import g, request
@@ -170,7 +170,7 @@ def create_app(
 
     for modulo in (
         auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
-        verifiche, controllo, trasparenza, anticorruzione, assistente, pubblico,
+        verifiche, controllo, trasparenza, anticorruzione, performance, assistente, pubblico,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 

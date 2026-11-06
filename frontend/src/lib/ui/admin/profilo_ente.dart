@@ -7,8 +7,9 @@ import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import '../../util/scelta_file.dart';
 
-/// Profilo dell'ente, comune a tutti i moduli: logo nei documenti generati e
-/// caratteristiche dell'amministrazione, date all'LLM come contesto delle analisi.
+/// Profilo dell'ente, comune a tutti i moduli: logo nei documenti generati,
+/// caratteristiche dell'amministrazione, date all'LLM come contesto delle analisi, e testo per
+/// l'assistenza agli utenti (pagina di accesso, menu dell'app, pagine di aiuto).
 class ProfiloEntePage extends StatefulWidget {
   const ProfiloEntePage({super.key});
 
@@ -20,6 +21,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   late Future<Map<String, dynamic>> _profilo;
   Future<Uint8List>? _logo;
   final _caratteristiche = TextEditingController();
+  final _assistenza = TextEditingController();
   bool _salvataggio = false;
 
   @override
@@ -31,6 +33,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   @override
   void dispose() {
     _caratteristiche.dispose();
+    _assistenza.dispose();
     super.dispose();
   }
 
@@ -40,16 +43,18 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
       _profilo = api.get('/api/v1/ente/profilo').then((v) {
         final p = v as Map<String, dynamic>;
         _caratteristiche.text = p['caratteristiche'] as String? ?? '';
+        _assistenza.text = p['assistenza'] as String? ?? '';
         _logo = p['logo'] == true ? api.getBytes('/api/v1/ente/logo') : null;
         return p;
       });
     });
   }
 
-  Future<void> _salva() async {
+  /// Salva solo i campi indicati (gli altri restano come sono).
+  Future<void> _salva(Map<String, String> campi) async {
     setState(() => _salvataggio = true);
     try {
-      await apiDi(context).put('/api/v1/ente/profilo', {'caratteristiche': _caratteristiche.text});
+      await apiDi(context).put('/api/v1/ente/profilo', campi);
       if (mounted) mostraMessaggio(context, 'Profilo dell\'ente salvato');
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -139,7 +144,34 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
             Align(
               alignment: Alignment.centerLeft,
               child: FilledButton.icon(
-                onPressed: _salvataggio ? null : _salva,
+                onPressed: _salvataggio ? null : () => _salva({'caratteristiche': _caratteristiche.text}),
+                icon: const Icon(Icons.save),
+                label: const Text('Salva'),
+              ),
+            ),
+          ]),
+        ),
+        Sezione(
+          titolo: 'Assistenza agli utenti',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('Frase mostrata dove l\'utente può aver bisogno di aiuto: pagina di accesso ("Serve aiuto?"), '
+                'voce Assistenza del menu dell\'utente, pagina della normativa della trasparenza. Indirizzi email e '
+                'link diventano cliccabili. Vuoto: non compare da nessuna parte.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _assistenza,
+              minLines: 2,
+              maxLines: 6,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                labelText: 'Testo per l\'assistenza',
+                hintText: 'es. Per assistenza scrivi a supporto@ente.it o chiama l\'interno 1234',
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: _salvataggio ? null : () => _salva({'assistenza': _assistenza.text}),
                 icon: const Icon(Icons.save),
                 label: const Text('Salva'),
               ),

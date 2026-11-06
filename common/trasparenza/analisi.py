@@ -1,7 +1,7 @@
 """Analisi e estrazione del modulo trasparenza, senza database: preparazione dei contenuti
 (pagina web, documento da URL, file caricati), prompt dell'analisi generato dallo schema o dal
 controllo scelto, chiamata all'LLM, report HTML composto dalla risposta JSON. Le esegue il worker
-(lavori della tabella trasparenza_lavori). Ripreso da PApuntozeroIA (app.py).
+(lavori della tabella trasparenza_lavori).
 
 I documenti arrivano all'LLM come testo: PDF e documenti di testo convertiti in Markdown dal
 converter, fogli di calcolo come tabelle, CSV come sono, pagine web come HTML del contenuto.

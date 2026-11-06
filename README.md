@@ -240,7 +240,9 @@ con phpMyAdmin su http://localhost:8081; per ripartire da zero: `docker compose 
 
 Il sistema parte vuoto: per avere i modelli standard crea lo zip (`python deploy/pacchetto.py
 crea`) e caricalo in Amministrazione → Pacchetti. L'LLM predefinito è Ollama sul computer
-(`ollama serve`, modello `mistral-small`); per usare un altro provider:
+(`ollama serve`, modello `mistral-small`): con docker compose va indicato nel `.env`
+`LLM_BASE_URL=http://host.docker.internal:11434/v1` (dal container `localhost` non è il
+computer). Per usare un altro provider (con `LLM_BASE_URL` vuoto):
 
 ```bash
 LLM_PROVIDER=anthropic LLM_API_KEY=sk-ant-... docker compose up     # Claude
@@ -252,7 +254,7 @@ LLM_PROVIDER=gemini    LLM_API_KEY=...        docker compose up     # Gemini
 
 | `LLM_PROVIDER` | Dove gira | Indirizzo e modello predefiniti | Note |
 |---|---|---|---|
-| `ollama` (predefinito) | nell'ente | `LLM_OLLAMA_URL` (localhost:11434), `mistral-small` | nessun dato esce |
+| `ollama` (predefinito) | nell'ente | `LLM_BASE_URL` (predefinito localhost:11434), `mistral-small` | nessun dato esce |
 | `openai_compatibile` | nell'ente | da indicare: `LLM_BASE_URL`, `LLM_MODEL` | vLLM, llama.cpp server... |
 | `openai` | OpenAI | `api.openai.com`, `gpt-5-mini` | `LLM_API_KEY` obbligatoria |
 | `gemini` | Google | endpoint compatibile OpenAI di Gemini, `gemini-2.5-flash` | `LLM_API_KEY` obbligatoria |

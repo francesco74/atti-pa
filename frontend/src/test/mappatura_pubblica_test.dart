@@ -68,17 +68,17 @@ void main() {
   testWidgets('dalle aree alle misure, in sola lettura', (tester) async {
     final chiamate = await apri(tester);
     expect(find.text('Comune di Prova'), findsOneWidget);
-    expect(find.text('C) Contratti pubblici'), findsOneWidget);
+    expect(find.text('C - Contratti pubblici'), findsOneWidget);
 
     // la ricerca trova il processo in tutte le aree
     await tester.enterText(find.byType(TextField), 'conc');
     await tester.pump();
     expect(find.text('D.1 - Concorsi'), findsOneWidget);
-    expect(find.text('C) Contratti pubblici'), findsNothing);
+    expect(find.text('C - Contratti pubblici'), findsNothing);
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
 
-    await tester.tap(find.text('C) Contratti pubblici'));
+    await tester.tap(find.text('C - Contratti pubblici'));
     await tester.pumpAndSettle();
     expect(find.text('C.1 - Gare'), findsOneWidget);
     expect(find.text('D.1 - Concorsi'), findsNothing);
@@ -101,7 +101,7 @@ void main() {
     // il percorso riporta alle aree
     await tester.tap(find.text('Aree di rischio'));
     await tester.pumpAndSettle();
-    expect(find.text('D) Personale'), findsOneWidget);
+    expect(find.text('D - Personale'), findsOneWidget);
   });
 
   testWidgets('mappatura non pubblicata', (tester) async {

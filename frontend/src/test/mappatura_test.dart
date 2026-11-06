@@ -59,21 +59,30 @@ void main() {
     await tester.pumpAndSettle();
 
     // aree: nessun processo in vista finché non si apre un'area
-    expect(find.text('C) Contratti pubblici'), findsOneWidget);
+    expect(find.text('C - Contratti pubblici'), findsOneWidget);
     expect(find.text('C.1 - Gare'), findsNothing);
 
     // la ricerca trova il processo in tutte le aree
     await tester.enterText(find.byType(TextField), 'conc');
     await tester.pump();
     expect(find.text('D.1 - Concorsi'), findsOneWidget);
-    expect(find.text('C) Contratti pubblici'), findsNothing);
+    expect(find.text('C - Contratti pubblici'), findsNothing);
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
 
-    await tester.tap(find.text('C) Contratti pubblici'));
+    await tester.tap(find.text('C - Contratti pubblici'));
     await tester.pumpAndSettle();
     expect(find.text('C.1 - Gare'), findsOneWidget);
     expect(find.text('D.1 - Concorsi'), findsNothing);
+
+    // ricerca nei processi dell'area aperta
+    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area (codice o denominazione)'), 'xyz');
+    await tester.pump();
+    expect(find.text('C.1 - Gare'), findsNothing);
+    expect(find.text('Nessun processo trovato.'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area (codice o denominazione)'), 'gar');
+    await tester.pump();
+    expect(find.text('C.1 - Gare'), findsOneWidget);
 
     await tester.tap(find.text('C.1 - Gare'));
     await tester.pumpAndSettle();
@@ -89,12 +98,12 @@ void main() {
     await tester.tap(find.text('C.1 Gare'));
     await tester.pumpAndSettle();
     expect(find.text('Bando su misura'), findsNothing);
-    await tester.tap(find.text('C) Contratti pubblici'));
+    await tester.tap(find.text('C - Contratti pubblici'));
     await tester.pumpAndSettle();
     expect(find.text('C.1 - Gare'), findsOneWidget);
     await tester.tap(find.text('Aree di rischio'));
     await tester.pumpAndSettle();
-    expect(find.text('D) Personale'), findsOneWidget);
+    expect(find.text('D - Personale'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

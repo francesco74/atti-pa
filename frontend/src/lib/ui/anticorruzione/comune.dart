@@ -48,7 +48,7 @@ class DatiAnticorruzione {
 
   String? area(Object? id) {
     for (final a in aree) {
-      if (a['id'] == id) return '${a['codice']}) ${a['descrizione_breve'] ?? a['descrizione']}';
+      if (a['id'] == id) return '${a['codice']} - ${a['descrizione_breve'] ?? a['descrizione']}';
     }
     return null;
   }

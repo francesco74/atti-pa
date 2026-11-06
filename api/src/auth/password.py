@@ -1,8 +1,7 @@
 """Password degli utenti locali.
 
 Le nuove password usano l'hash scrypt di Werkzeug. Si accettano anche gli hash dei sistemi
-che confluiscono nell'installazione (Werkzeug pbkdf2/scrypt della revisione di rag, bcrypt
-di PApuntozeroIA): al primo accesso riuscito l'hash viene rigenerato nel formato attuale,
+che confluiscono nell'installazione (Werkzeug pbkdf2/scrypt, bcrypt): al primo accesso riuscito l'hash viene rigenerato nel formato attuale,
 così nessuno deve cambiare password dopo la migrazione.
 """
 

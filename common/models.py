@@ -48,9 +48,15 @@ class Ruolo:
     # struttura; il RPCT (e il suo staff) modifica, approva e verifica
     ANTICORRUZIONE_REFERENTE = "ANTICORRUZIONE_REFERENTE"
     ANTICORRUZIONE_RPCT = "ANTICORRUZIONE_RPCT"
+    # modulo performance: il responsabile (dirigente di un servizio o responsabile di un
+    # ufficio) dichiara e aggiorna gli obiettivi della sua struttura; l'amministratore apre e
+    # chiude i PIAO e vede e corregge tutto
+    PERFORMANCE_RESPONSABILE = "PERFORMANCE_RESPONSABILE"
+    PERFORMANCE_AMMINISTRATORE = "PERFORMANCE_AMMINISTRATORE"
     TUTTI = (
         REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA,
-        ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT, ADMIN,
+        ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT,
+        PERFORMANCE_RESPONSABILE, PERFORMANCE_AMMINISTRATORE, ADMIN,
     )  # fmt: skip
 
 
@@ -61,7 +67,8 @@ class Modulo:
     TRASPARENZA = "trasparenza"  # verifica e schede di Amministrazione Trasparente
     ANTICORRUZIONE = "anticorruzione"  # mappatura dei processi e gestione del rischio corruttivo
     ASSISTENTE = "assistente"  # chat con l'LLM per il lavoro quotidiano (email, riassunti...)
-    TUTTI = (REDAZIONE, TRASPARENZA, ANTICORRUZIONE, ASSISTENTE)
+    PERFORMANCE = "performance"  # obiettivi del PIAO per struttura, con azioni e misure
+    TUTTI = (REDAZIONE, TRASPARENZA, ANTICORRUZIONE, PERFORMANCE, ASSISTENTE)
 
 
 UTENTE_ADMIN = "admin"  # amministratore creato con l'ente (deploy/enti.py)
@@ -99,6 +106,9 @@ class Ente(Base):
     logo_mime: Mapped[str | None] = mapped_column(String(50))
     logo: Mapped[bytes | None] = mapped_column(FileBinario, deferred=True)
     caratteristiche: Mapped[str | None] = mapped_column(Text)
+    # testo per l'assistenza agli utenti (login, menu dell'app, pagine di aiuto), es. a chi
+    # scrivere o chi chiamare
+    assistenza: Mapped[str | None] = mapped_column(Text)
     # accesso: utenti locali e/o Active Directory (url, dominio, base_dn, ca_pem,
     # verifica_certificato, timeout, gruppi {ruolo: gruppo})
     accesso_locale: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -789,6 +799,91 @@ class AcMonitoraggio(Base):
     verificato_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     verificato_il: Mapped[datetime | None] = mapped_column(DateTime)
 
+
+
+# --- performance ---------------------------------------------------------------------------
+
+
+class PfPiao(Base):
+    """PIAO triennale (anno_inizio, +1, +2) aperto dall'amministratore della performance. Gli
+    obiettivi si dichiarano e si aggiornano solo con il PIAO APERTO; CHIUSO è in sola lettura
+    (l'amministratore può riaprirlo)."""
+
+    __tablename__ = "pf_piao"
+    __table_args__ = (UniqueConstraint("ente_id", "anno_inizio", name="uq_pf_piao"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    anno_inizio: Mapped[int] = mapped_column(Integer)
+    titolo: Mapped[str] = mapped_column(String(255))
+    atto: Mapped[str | None] = mapped_column(String(255))  # es. DGC n. 59 del 26/03/2026
+    stato: Mapped[str] = mapped_column(String(10), default="APERTO")  # APERTO, CHIUSO
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PfObiettivo(Base):
+    """Obiettivo annuale di una struttura (servizio o ufficio) nel PIAO, con la percentuale di
+    impegno rispetto agli altri obiettivi della struttura nello stesso anno (in totale 100). Il
+    completamento si calcola dalle azioni e dalle misure (common/performance)."""
+
+    __tablename__ = "pf_obiettivi"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    piao_id: Mapped[str] = mapped_column(ForeignKey("pf_piao.id", ondelete="CASCADE"))
+    anno: Mapped[int] = mapped_column(Integer)
+    struttura_id: Mapped[str] = mapped_column(ForeignKey("strutture.id", ondelete="RESTRICT"))
+    codice: Mapped[str | None] = mapped_column(String(100))  # codice nel PIAO, es. P2_OS3_OO1_OG1_26_2
+    titolo: Mapped[str] = mapped_column(String(500))
+    descrizione: Mapped[str | None] = mapped_column(Text)
+    tipo: Mapped[str] = mapped_column(String(20), default="OPERATIVO")  # OPERATIVO, FUNZIONAMENTO, MIGLIORAMENTO
+    impegno: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class PfElemento(Base):
+    """Azione (descrittiva) o misura (della mappatura dei rischi) di un obiettivo, con la
+    percentuale di impegno rispetto alle altre dello stesso obiettivo (in totale 100), quella di
+    completamento e la data massima di completamento. Della misura si tiene una copia di codice e
+    descrizione: il riferimento resta anche se la mappatura cambia."""
+
+    __tablename__ = "pf_elementi"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    obiettivo_id: Mapped[str] = mapped_column(ForeignKey("pf_obiettivi.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(10))  # AZIONE, MISURA
+    descrizione: Mapped[str] = mapped_column(Text)  # dell'azione, o copia di quella della misura
+    misura_id: Mapped[str | None] = mapped_column(ForeignKey("ac_misure.id", ondelete="SET NULL"))
+    misura_codice: Mapped[str | None] = mapped_column(String(70))
+    impegno: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
+    completamento: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
+    scadenza: Mapped[date] = mapped_column(Date)
+    ordine: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PfModifica(Base):
+    """Storico delle modifiche alla performance: creazione, modifica (campi con il valore prima
+    e dopo) ed eliminazione di PIAO, obiettivi, azioni e misure, con chi e quando e una nota
+    facoltativa. Resta anche dopo l'eliminazione dell'elemento."""
+
+    __tablename__ = "pf_modifiche"
+
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    piao_id: Mapped[str | None] = mapped_column(String(36))
+    obiettivo_id: Mapped[str | None] = mapped_column(String(36))  # anche per azioni e misure
+    oggetto: Mapped[str] = mapped_column(String(10))  # PIAO, OBIETTIVO, AZIONE, MISURA
+    oggetto_id: Mapped[str] = mapped_column(String(36))
+    azione: Mapped[str] = mapped_column(String(15))  # CREATO, MODIFICATO, ELIMINATO
+    descrizione: Mapped[str] = mapped_column(String(500))  # dell'elemento, al momento della modifica
+    campi: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # {campo: [prima, dopo]}
+    nota: Mapped[str | None] = mapped_column(Text)
+    utente_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    utente_nome: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class NotificaEmail(Base):
