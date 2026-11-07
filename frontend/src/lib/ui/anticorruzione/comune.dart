@@ -99,15 +99,21 @@ class LivelloChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colore = dati.colore(livello);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: colore.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colore.withValues(alpha: 0.7)),
+    // il colore è solo un aiuto: il livello è sempre scritto (WCAG 1.4.1), con il testo scuro
+    // per il contrasto (1.4.3: i toni di giallo e arancio sul fondo chiaro non bastano)
+    return Semantics(
+      label: 'Livello di rischio: ${livello ?? 'non valutato'}',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: colore.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colore.shade800, width: 1.5),
+        ),
+        child: Text(livello ?? 'Non valutato',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.w600)),
       ),
-      child: Text(livello ?? 'Non valutato',
-          style: TextStyle(color: colore.shade800, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -127,17 +133,28 @@ class RigaVoce extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-        leading: Icon(icona),
-        title: Text(titolo),
-        subtitle: dettagli.isEmpty ? null : Text(dettagli.join(' · ')),
-        trailing: finale.isEmpty
-            ? null
-            : Row(mainAxisSize: MainAxisSize.min, children: [
-                for (final f in finale) Padding(padding: const EdgeInsets.only(left: 4), child: f),
-              ]),
-        onTap: onTap,
-      );
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, vincoli) {
+        // spazio stretto (telefono, zoom, testo ingrandito): stato e azioni vanno sotto il
+        // testo invece che a destra, così la riga non esce dalla pagina (WCAG 1.4.10)
+        final stretto = vincoli.maxWidth < 360 * MediaQuery.textScalerOf(context).scale(1);
+        final dettaglio = dettagli.isEmpty ? null : Text(dettagli.join(' · '));
+        return ListTile(
+          leading: Icon(icona),
+          title: Text(titolo),
+          subtitle: stretto && finale.isNotEmpty
+              ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ?dettaglio,
+                  Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: finale),
+                ])
+              : dettaglio,
+          trailing: finale.isEmpty || stretto
+              ? null
+              : Row(mainAxisSize: MainAxisSize.min, children: [
+                  for (final f in finale) Padding(padding: const EdgeInsets.only(left: 4), child: f),
+                ]),
+          onTap: onTap,
+        );
+      });
 }
 
 /// Azione con la sola icona, per le righe degli elenchi.
@@ -162,21 +179,42 @@ class Percorso extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
+    // per i lettori di schermo: un gruppo "Percorso", voci come link, l'ultima è la pagina
+    // corrente; le frecce sono decorative. Le voci sono alte almeno 48 px (bersagli ampi).
     Widget voce(String testo, VoidCallback? azione) => ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 320),
+          constraints: const BoxConstraints(maxWidth: 320, minHeight: 48),
           child: azione == null
-              ? Text(testo, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))
-              : InkWell(
-                  onTap: azione,
-                  child: Text(testo, overflow: TextOverflow.ellipsis, style: TextStyle(color: colori.primary)),
+              ? Semantics(
+                  label: '$testo, pagina corrente',
+                  excludeSemantics: true,
+                  child: Align(
+                    widthFactor: 1,
+                    child: Text(testo, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                )
+              : Semantics(
+                  link: true,
+                  child: InkWell(
+                    onTap: azione,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                      child: Text(testo,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: colori.primary, decoration: TextDecoration.underline)),
+                    ),
+                  ),
                 ),
         );
-    return Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 4, runSpacing: 4, children: [
-      for (var i = 0; i < voci.length; i++) ...[
-        if (i > 0) Icon(Icons.chevron_right, size: 18, color: colori.outline),
-        voce(voci[i].$1, voci[i].$2),
-      ],
-    ]);
+    return Semantics(
+      container: true,
+      label: 'Percorso',
+      child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 4, runSpacing: 0, children: [
+        for (var i = 0; i < voci.length; i++) ...[
+          if (i > 0) ExcludeSemantics(child: Icon(Icons.chevron_right, size: 18, color: colori.outline)),
+          voce(voci[i].$1, voci[i].$2),
+        ],
+      ]),
+    );
   }
 }
 

@@ -112,6 +112,9 @@ class Ente(Base):
     # testo per l'assistenza agli utenti (login, menu dell'app, pagine di aiuto), es. a chi
     # scrivere o chi chiamare
     assistenza: Mapped[str | None] = mapped_column(Text)
+    # indirizzo della dichiarazione di accessibilità dell'ente (AgID, form.agid.gov.it),
+    # linkata in fondo alle pagine pubbliche
+    dichiarazione_accessibilita: Mapped[str | None] = mapped_column(String(500))
     # accesso: utenti locali e/o Active Directory (url, dominio, base_dn, ca_pem,
     # verifica_certificato, timeout, gruppi {ruolo: gruppo})
     accesso_locale: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -966,8 +969,11 @@ class RicercaRegistrata(Base):
 
 
 class RicercaFeedback(Base):
-    """Feedback facoltativo: sui risultati di una ricerca (RICERCA, con la ricerca) o su una
-    scheda (SCHEDA, es. un procedimento pubblico). Commento con i dati personali oscurati."""
+    """Feedback facoltativo: sui risultati di una ricerca (RICERCA, con la ricerca), su una
+    scheda (SCHEDA, es. un procedimento pubblico) o segnalazione di un problema di
+    accessibilità di una pagina (ACCESSIBILITA, meccanismo di feedback richiesto dalle linee
+    guida AgID), con l'email facoltativa per la risposta (`contatto`). Commento con i dati
+    personali oscurati."""
 
     __tablename__ = "ricerche_feedback"
 
@@ -975,13 +981,14 @@ class RicercaFeedback(Base):
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     ambito: Mapped[str] = mapped_column(String(50))
     pubblica: Mapped[bool] = mapped_column(Boolean)
-    tipo: Mapped[str] = mapped_column(String(20))  # RICERCA, SCHEDA
+    tipo: Mapped[str] = mapped_column(String(20))  # RICERCA, SCHEDA, ACCESSIBILITA
     ricerca_id: Mapped[str | None] = mapped_column(ForeignKey("ricerche_registro.id", ondelete="SET NULL"))
     testo: Mapped[str | None] = mapped_column(String(300))  # della ricerca
     riferimento_id: Mapped[str | None] = mapped_column(String(36))  # della scheda
     riferimento: Mapped[str | None] = mapped_column(String(500))  # titolo della scheda allora
     utile: Mapped[bool] = mapped_column(Boolean)
     commento: Mapped[str | None] = mapped_column(Text)
+    contatto: Mapped[str | None] = mapped_column(String(255))  # ACCESSIBILITA: email per la risposta
     gestito_il: Mapped[datetime | None] = mapped_column(DateTime)
     gestito_da: Mapped[str | None] = mapped_column(String(255))
     nota: Mapped[str | None] = mapped_column(Text)

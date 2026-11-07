@@ -83,7 +83,7 @@ class SchedaArt35 extends StatelessWidget {
     Widget sezione(String titolo, List<Widget> righe) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titolo, style: tema.textTheme.titleSmall),
+            Semantics(header: true, headingLevel: 3, child: Text(titolo, style: tema.textTheme.titleSmall)),
             const SizedBox(height: 6),
             ...righe,
           ]),

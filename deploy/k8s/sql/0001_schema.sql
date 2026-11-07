@@ -29,6 +29,7 @@ CREATE TABLE enti (
     logo                  LONGBLOB,
     caratteristiche       TEXT,                   -- caratteristiche dell'amministrazione (contesto per l'LLM)
     assistenza            TEXT,                   -- testo per l'assistenza agli utenti (login, menu, aiuto)
+    dichiarazione_accessibilita VARCHAR(500),     -- link alla dichiarazione AgID, nelle pagine pubbliche
     accesso_locale        BOOLEAN NOT NULL DEFAULT TRUE,
     ldap_json             JSON,                   -- url, dominio, base_dn, ca_pem, gruppi...
     rag_json              JSON,                   -- collegamento al RAG: url, chiave_cifrata
@@ -756,13 +757,14 @@ CREATE TABLE ricerche_feedback (
     ente_id         CHAR(36) NOT NULL,
     ambito          VARCHAR(50) NOT NULL,
     pubblica        BOOLEAN NOT NULL,
-    tipo            VARCHAR(20) NOT NULL,          -- RICERCA, SCHEDA
+    tipo            VARCHAR(20) NOT NULL,          -- RICERCA, SCHEDA, ACCESSIBILITA
     ricerca_id      CHAR(36),
     testo           VARCHAR(300),
     riferimento_id  CHAR(36),
     riferimento     VARCHAR(500),
     utile           BOOLEAN NOT NULL,
     commento        TEXT,
+    contatto        VARCHAR(255),                  -- ACCESSIBILITA: email per la risposta, facoltativa
     gestito_il      DATETIME,
     gestito_da      VARCHAR(255),
     nota            TEXT,

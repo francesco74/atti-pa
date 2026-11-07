@@ -332,11 +332,18 @@ class _FeedbackState extends State<_Feedback> {
           for (final f in elenco)
             Card(
               child: ListTile(
-                leading: Icon(f['utile'] == true ? Icons.thumb_up_outlined : Icons.thumb_down_outlined,
-                    color: f['utile'] == true ? Colors.green.shade700 : Colors.orange.shade800),
-                title: Text(f['tipo'] == 'RICERCA' ? 'Ricerca: «${f['testo']}»' : 'Pagina: ${f['riferimento'] ?? f['riferimento_id']}'),
+                leading: f['tipo'] == 'ACCESSIBILITA'
+                    ? Icon(Icons.accessibility_new, color: Colors.orange.shade900)
+                    : Icon(f['utile'] == true ? Icons.thumb_up_outlined : Icons.thumb_down_outlined,
+                        color: f['utile'] == true ? Colors.green.shade700 : Colors.orange.shade800),
+                title: Text(switch (f['tipo']) {
+                  'RICERCA' => 'Ricerca: «${f['testo']}»',
+                  'ACCESSIBILITA' => 'Problema di accessibilità: ${f['riferimento'] ?? ''}',
+                  _ => 'Pagina: ${f['riferimento'] ?? f['riferimento_id']}',
+                }),
                 subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   if (f['commento'] != null) Text('«${f['commento']}»'),
+                  if (f['contatto'] != null) Text('Rispondere a: ${f['contatto']}'),
                   Text([
                     widget.ambiti[f['ambito']] ?? '${f['ambito']}',
                     f['pubblica'] == true ? 'cittadino' : 'utente interno',

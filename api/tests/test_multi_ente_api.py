@@ -274,6 +274,11 @@ class MultiEnte(unittest.TestCase):
         self.assertIsNone(anonimo.get("/api/v1/auth/ente", base_url=B).get_json()["ente"]["assistenza"])
         self.assertEqual(c.get("/api/v1/auth/me", base_url=A).get_json()["ente"]["assistenza"], testo)
         self.assertIsNone(c.put("/api/v1/ente/profilo", base_url=A, json={"assistenza": "  "}).get_json()["assistenza"])
+        # dichiarazione di accessibilità: solo un indirizzo web
+        url = "https://form.agid.gov.it/view/abc"
+        r = c.put("/api/v1/ente/profilo", base_url=A, json={"dichiarazione_accessibilita": url}).get_json()
+        self.assertEqual(r["dichiarazione_accessibilita"], url)
+        self.assertEqual(c.put("/api/v1/ente/profilo", base_url=A, json={"dichiarazione_accessibilita": "ftp://x"}).status_code, 422)
 
     def test_utenti_locali_dell_ente(self):
         c, _ = self._login(A, "admin")

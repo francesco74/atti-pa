@@ -114,7 +114,13 @@ class Sezione extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Expanded(child: Text(titolo, style: Theme.of(context).textTheme.titleMedium)),
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  headingLevel: 2,
+                  child: Text(titolo, style: Theme.of(context).textTheme.titleMedium),
+                ),
+              ),
               ...?azioni,
             ]),
             const SizedBox(height: 8),
@@ -174,13 +180,14 @@ class Caricamento<T> extends StatelessWidget {
         if (snap.connectionState != ConnectionState.done) {
           return const Center(child: Padding(
             padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(semanticsLabel: 'Caricamento in corso'),
           ));
         }
         if (snap.hasError) {
           return Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text(snap.error.toString(), textAlign: TextAlign.center),
+              // annunciato ai lettori di schermo (WCAG 4.1.3)
+              Semantics(liveRegion: true, child: Text(snap.error.toString(), textAlign: TextAlign.center)),
               if (riprova != null)
                 TextButton.icon(
                     onPressed: riprova, icon: const Icon(Icons.refresh), label: const Text('Riprova')),
@@ -235,9 +242,13 @@ class TestoAssistenza extends StatelessWidget {
       parti.add(WidgetSpan(
         alignment: PlaceholderAlignment.baseline,
         baseline: TextBaseline.alphabetic,
-        child: InkWell(
-          onTap: () => launchUrl(destinazione, webOnlyWindowName: '_blank'),
-          child: Text(valore, style: (stile ?? const TextStyle()).copyWith(color: colore, decoration: TextDecoration.underline)),
+        child: Semantics(
+          link: true,
+          hint: 'si apre in una nuova finestra',
+          child: InkWell(
+            onTap: () => launchUrl(destinazione, webOnlyWindowName: '_blank'),
+            child: Text(valore, style: (stile ?? const TextStyle()).copyWith(color: colore, decoration: TextDecoration.underline)),
+          ),
         ),
       ));
       inizio = m.end;

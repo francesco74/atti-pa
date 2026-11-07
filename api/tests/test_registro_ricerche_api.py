@@ -159,6 +159,19 @@ class RegistroRicercheApi(unittest.TestCase):
         self.assertEqual(cittadino.post(f"{percorso}/feedback", base_url=ENTE, json={
             "ambito": "PROCEDIMENTI", "tipo": "SCHEDA", "utile": True}).status_code, 422)  # fmt: skip
 
+        # segnalazione di accessibilità: descrizione obbligatoria, email facoltativa e non oscurata
+        corpo = {"ambito": "PROCEDIMENTI", "tipo": "ACCESSIBILITA", "riferimento": "Tipologie di procedimento", "utile": False}
+        self.assertEqual(cittadino.post(f"{percorso}/feedback", base_url=ENTE, json=corpo).status_code, 422)
+        self.assertEqual(cittadino.post(f"{percorso}/feedback", base_url=ENTE, json={
+            **corpo, "commento": "x", "contatto": "non-email"}).status_code, 422)  # fmt: skip
+        fid = self._ok(cittadino.post(f"{percorso}/feedback", base_url=ENTE, json={
+            **corpo, "commento": "Il lettore di schermo non legge la tabella", "contatto": "mario@esempio.it"}), 201)["id"]  # fmt: skip
+        f = self._sql(lambda db: db.get(RicercaFeedback, fid))
+        self.assertEqual((f.tipo, f.contatto, f.riferimento, f.utile),
+                         ("ACCESSIBILITA", "mario@esempio.it", "Tipologie di procedimento", False))  # fmt: skip
+        elenco = self._ok(self._client("statistica").get(f"{API}/feedback", base_url=ENTE, query_string={"tipo": "ACCESSIBILITA"}))
+        self.assertEqual([x["contatto"] for x in elenco], ["mario@esempio.it"])
+
     def test_limite_pubblico(self):
         import routers.pubblico as pubblico
         from ricerca import LimiteRichieste

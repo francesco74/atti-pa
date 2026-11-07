@@ -69,7 +69,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Contributo affitto'), findsOneWidget);
     expect(find.text('Accesso agli atti'), findsNothing);
-    expect(find.text('In ordine di pertinenza: per parole e sinonimi.'), findsOneWidget);
+    expect(find.text('1 risultato. In ordine di pertinenza: per parole e sinonimi.'), findsOneWidget);
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
 

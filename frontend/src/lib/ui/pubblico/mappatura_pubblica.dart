@@ -6,6 +6,7 @@ import '../anticorruzione/albero.dart' show IntestazioneProcesso, etichettaTipo;
 import '../anticorruzione/comune.dart';
 import '../comuni.dart';
 import '../ricerca.dart';
+import 'accessibile.dart';
 import 'comune.dart';
 
 /// Percorso della pagina pubblica nell'app (il link da mettere sul sito dell'ente).
@@ -26,7 +27,8 @@ class MappaturaPubblicaPage extends StatefulWidget {
 }
 
 class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
-  late Future<(String, DatiAnticorruzione)> _dati;
+  late Future<(Map<String, dynamic>, DatiAnticorruzione)> _dati;
+  late final _registro = RegistroRicerche(apiDi(context).post, '$apiPubblico/ricerche', 'MAPPATURA');
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
         _dati = _caricaDati();
       });
 
-  Future<(String, DatiAnticorruzione)> _caricaDati() async {
+  Future<(Map<String, dynamic>, DatiAnticorruzione)> _caricaDati() async {
     final api = apiDi(context);
     final Map<String, dynamic> d;
     try {
@@ -51,7 +53,7 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
     if (mounted) caricaLogoPubblico(context, ente);
     List<Map<String, dynamic>> lista(Object? v) => (v as List).cast<Map<String, dynamic>>();
     return (
-      ente['nome'] as String,
+      ente,
       DatiAnticorruzione(
         metodologia: {'scala': const <String>[], 'livelli': d['livelli']},
         aree: lista(d['aree']),
@@ -65,7 +67,7 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Caricamento<(String, DatiAnticorruzione)>(
+        child: Caricamento<(Map<String, dynamic>, DatiAnticorruzione)>(
           future: _dati,
           riprova: _carica,
           builder: (context, valore) {
@@ -74,11 +76,12 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
               value: dati,
               child: PaginaPubblica(
                 ente: ente,
+                registro: _registro,
                 titolo: 'Mappatura dei processi e valutazione del rischio corruttivo',
                 introduzione: 'Processi e procedimenti dell\'ente raggruppati per area di rischio: per ciascuno le attività, '
                     'i possibili eventi rischiosi con il livello di rischio valutato e le misure adottate per '
                     'prevenirli (Piano triennale per la prevenzione della corruzione e la trasparenza).',
-                child: const MappaturaPubblica(),
+                child: MappaturaPubblica(ente: '${ente['nome']}'),
               ),
             );
           },
@@ -90,7 +93,9 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
 
 /// Navigazione della mappatura pubblica, un livello alla volta con il percorso in alto.
 class MappaturaPubblica extends StatefulWidget {
-  const MappaturaPubblica({super.key});
+  const MappaturaPubblica({super.key, required this.ente});
+
+  final String ente; // nome, per il titolo della scheda del browser
 
   @override
   State<MappaturaPubblica> createState() => _MappaturaPubblicaState();
@@ -101,6 +106,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   Future<Map<String, dynamic>>? _albero;
   String? _area; // area aperta
   String? _processoId; // processo aperto
+  String _nomeProcesso = ''; // per il titolo della scheda del browser
   String? _attivitaId; // attività aperta
   String? _struttura, _livello, _tipo;
   final _testo = TextEditingController(); // ricerca in tutte le aree
@@ -168,6 +174,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             finale: [LivelloChip(dati, p['livello_massimo'] as String?)],
             onTap: () {
               ricerca?.aperto(p['id'] as String);
+              _nomeProcesso = '${p['codice']} ${p['denominazione']}';
               _apriProcesso(p['id'] as String);
             },
           ),
@@ -184,10 +191,11 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
     return [
       Align(
         alignment: Alignment.centerLeft,
-        child: SizedBox(
-          width: 360,
+        child: LarghezzaMassima(
+          360,
           child: TextField(
             controller: _testo,
+            textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               labelText: 'Cerca un processo o procedimento',
               hintText: 'Codice, parole o una domanda',
@@ -198,7 +206,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           ),
         ),
       ),
-      NotaRicerca(_ricerca),
+      NotaRicerca(_ricerca, risultati: cerca.isEmpty ? null : trovati.length),
       const SizedBox(height: 16),
       if (cerca.isNotEmpty)
         trovati.isEmpty
@@ -207,7 +215,9 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       if (cerca.isNotEmpty) FeedbackRicerca(_ricerca)
       else if (dati.aree.isEmpty && senzaArea == 0)
         const Center(child: Text('Nessun processo pubblicato.'))
-      else
+      else ...[
+        const Intestazione('Aree di rischio'),
+        const SizedBox(height: 4),
         Column(children: [
           for (final a in dati.aree)
             RigaVoce(
@@ -219,6 +229,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           if (senzaArea > 0)
             RigaVoce(icona: Icons.folder_off_outlined, titolo: 'Senza area', dettagli: [numero(senzaArea)], onTap: () => _vaiArea(null)),
         ]),
+      ],
     ];
   }
 
@@ -232,10 +243,11 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       Percorso([('Aree di rischio', _vaiAree), (dati.area(_area) ?? 'Senza area', null)]),
       const SizedBox(height: 12),
       Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        SizedBox(
-          width: 320,
+        LarghezzaMassima(
+          320,
           child: TextField(
             controller: _testoArea,
+            textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               labelText: 'Cerca nell\'area',
               hintText: 'Codice, parole o una domanda',
@@ -245,8 +257,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             onChanged: _ricercaArea.cambia,
           ),
         ),
-        SizedBox(
-          width: 260,
+        LarghezzaMassima(
+          260,
           child: DropdownButtonFormField<String?>(
             initialValue: _struttura,
             isExpanded: true,
@@ -262,8 +274,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             },
           ),
         ),
-        SizedBox(
-          width: 180,
+        LarghezzaMassima(
+          180,
           child: DropdownButtonFormField<String?>(
             initialValue: _tipo,
             isExpanded: true,
@@ -279,10 +291,11 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             },
           ),
         ),
-        SizedBox(
-          width: 200,
+        LarghezzaMassima(
+          200,
           child: DropdownButtonFormField<String?>(
             initialValue: _livello,
+            isExpanded: true,
             decoration: const InputDecoration(labelText: 'Livello più alto', isDense: true),
             items: [
               const DropdownMenuItem(value: null, child: Text('Tutti')),
@@ -295,8 +308,10 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           ),
         ),
       ]),
-      NotaRicerca(_ricercaArea),
+      NotaRicerca(_ricercaArea, risultati: cerca.isEmpty ? null : dellArea.length),
       const SizedBox(height: 16),
+      Intestazione(dati.area(_area) ?? 'Senza area'),
+      const SizedBox(height: 4),
       if (dellArea.isEmpty)
         Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
       else
@@ -331,7 +346,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       const SizedBox(height: 12),
       if (aperta == null) ...[
         IntestazioneProcesso(dati: dati, processo: processo),
-        Text('Attività', style: Theme.of(context).textTheme.titleMedium),
+        Intestazione('Attività', stile: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         if (attivita.isEmpty) const Text('Nessuna attività.'),
         for (final a in attivita)
@@ -369,20 +384,28 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   Widget build(BuildContext context) {
     final dati = context.watch<DatiAnticorruzione>();
     final albero = _albero;
-    if (_processoId != null && albero != null) {
-      return Caricamento<Map<String, dynamic>>(
-        future: albero,
-        riprova: () => _apriProcesso(_processoId!),
-        builder: (context, processo) => _vistaProcesso(dati, processo),
-      );
-    }
-    return Caricamento<List<Map<String, dynamic>>>(
-      future: _processi,
-      riprova: _carica,
-      builder: (context, processi) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: _area == null ? _livelloAree(dati, processi) : _livelloProcessi(dati, processi),
-      ),
+    final String? vista = _processoId != null
+        ? _nomeProcesso
+        : _area != null
+            ? (dati.area(_area) ?? 'Senza area')
+            : null;
+    return VistaPubblica(
+      titolo: [?vista, 'Mappatura dei processi', widget.ente].join(' – '),
+      chiave: (_area, _processoId, _attivitaId),
+      child: _processoId != null && albero != null
+          ? Caricamento<Map<String, dynamic>>(
+              future: albero,
+              riprova: () => _apriProcesso(_processoId!),
+              builder: (context, processo) => _vistaProcesso(dati, processo),
+            )
+          : Caricamento<List<Map<String, dynamic>>>(
+              future: _processi,
+              riprova: _carica,
+              builder: (context, processi) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: _area == null ? _livelloAree(dati, processi) : _livelloProcessi(dati, processi),
+              ),
+            ),
     );
   }
 }

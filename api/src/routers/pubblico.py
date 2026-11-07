@@ -61,6 +61,11 @@ async def _cerca(e: Ente, tipo: str | None) -> dict:
     return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), tipo), ente_id=e.id, semantica=semantica)
 
 
+def _ente(e: Ente) -> dict:
+    """Intestazione delle pagine pubbliche: nome, logo e dichiarazione di accessibilità."""
+    return {"nome": e.nome, "logo": bool(e.logo_mime), "dichiarazione_accessibilita": e.dichiarazione_accessibilita}
+
+
 def _solo(dati: dict, campi: tuple[str, ...]) -> dict:
     return {k: dati.get(k) for k in campi}
 
@@ -86,7 +91,7 @@ async def mappatura():
         select(Struttura).where(Struttura.ente_id == e.id).order_by(Struttura.ordine, Struttura.codice)
     )
     return {
-        "ente": {"nome": e.nome, "logo": bool(e.logo_mime)},
+        "ente": _ente(e),
         "livelli": m.livelli,
         "aree": [
             {"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "descrizione_breve": a.descrizione_breve}
@@ -156,7 +161,7 @@ async def procedimenti():
     ]  # fmt: skip
     usate = {p["struttura_id"] for p in elenco}
     return {
-        "ente": {"nome": e.nome, "logo": bool(e.logo_mime)},
+        "ente": _ente(e),
         "strutture": [{"id": s.id, "codice": s.codice, "descrizione": s.descrizione}
                       for s in strutture.values() if s.id in usate],  # fmt: skip
         "procedimenti": elenco,

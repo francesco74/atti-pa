@@ -22,6 +22,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   Future<Uint8List>? _logo;
   final _caratteristiche = TextEditingController();
   final _assistenza = TextEditingController();
+  final _dichiarazione = TextEditingController();
   bool _salvataggio = false;
 
   @override
@@ -34,6 +35,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   void dispose() {
     _caratteristiche.dispose();
     _assistenza.dispose();
+    _dichiarazione.dispose();
     super.dispose();
   }
 
@@ -44,6 +46,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
         final p = v as Map<String, dynamic>;
         _caratteristiche.text = p['caratteristiche'] as String? ?? '';
         _assistenza.text = p['assistenza'] as String? ?? '';
+        _dichiarazione.text = p['dichiarazione_accessibilita'] as String? ?? '';
         _logo = p['logo'] == true ? api.getBytes('/api/v1/ente/logo') : null;
         return p;
       });
@@ -172,6 +175,32 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
               alignment: Alignment.centerLeft,
               child: FilledButton.icon(
                 onPressed: _salvataggio ? null : () => _salva({'assistenza': _assistenza.text}),
+                icon: const Icon(Icons.save),
+                label: const Text('Salva'),
+              ),
+            ),
+          ]),
+        ),
+        Sezione(
+          titolo: 'Dichiarazione di accessibilità',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('Indirizzo della dichiarazione di accessibilità dell\'ente (compilata su form.agid.gov.it): '
+                'compare in fondo alle pagine pubbliche per i cittadini, insieme al modulo per segnalare un problema '
+                'di accessibilità. Le segnalazioni arrivano in "Ricerche e feedback".'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _dichiarazione,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: 'Indirizzo della dichiarazione',
+                hintText: 'https://form.agid.gov.it/view/...',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: _salvataggio ? null : () => _salva({'dichiarazione_accessibilita': _dichiarazione.text.trim()}),
                 icon: const Icon(Icons.save),
                 label: const Text('Salva'),
               ),

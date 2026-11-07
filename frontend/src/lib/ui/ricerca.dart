@@ -269,9 +269,13 @@ class _FeedbackState extends State<_Feedback> {
   Widget build(BuildContext context) {
     final stile = Theme.of(context).textTheme.bodySmall;
     if (_inviato || widget.inviato) {
-      return Padding(padding: const EdgeInsets.only(top: 8), child: Text('Grazie per la segnalazione.', style: stile));
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Semantics(liveRegion: true, child: Text('Grazie per la segnalazione.', style: stile)),
+      );
     }
-    final piccolo = TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8));
+    // bersagli di almeno 48 px anche se il testo è corto (Sì, No)
+    final piccolo = TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 12));
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -308,28 +312,40 @@ class _FeedbackState extends State<_Feedback> {
 
 /// Riga sotto la casella di ricerca: ricerca in corso o come sono ordinati i risultati.
 class NotaRicerca extends StatelessWidget {
-  const NotaRicerca(this.ricerca, {super.key});
+  const NotaRicerca(this.ricerca, {super.key, this.risultati});
 
   final RicercaTesto ricerca;
+  final int? risultati; // quanti ne mostra la pagina (annunciati ai lettori di schermo)
 
   @override
   Widget build(BuildContext context) {
     if (ricerca.testo.isEmpty) return const SizedBox.shrink();
     final stile = Theme.of(context).textTheme.bodySmall;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: ricerca.inCorso
-          ? Row(children: [
-              const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
-              const SizedBox(width: 8),
-              Text('Ricerca in corso…', style: stile),
-            ])
-          : Text(
-              ricerca.semantica
-                  ? 'In ordine di pertinenza: per parole, sinonimi e significato.'
-                  : 'In ordine di pertinenza: per parole e sinonimi.',
-              style: stile,
-            ),
+    final quanti = switch (risultati) {
+      null => '',
+      0 => 'Nessun risultato. ',
+      1 => '1 risultato. ',
+      final n => '$n risultati. ',
+    };
+    // regione "live": il lettore di schermo legge il messaggio quando cambia (WCAG 4.1.3)
+    return Semantics(
+      liveRegion: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: ricerca.inCorso
+            ? Row(children: [
+                const ExcludeSemantics(child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))),
+                const SizedBox(width: 8),
+                Text('Ricerca in corso…', style: stile),
+              ])
+            : Text(
+                quanti +
+                    (ricerca.semantica
+                        ? 'In ordine di pertinenza: per parole, sinonimi e significato.'
+                        : 'In ordine di pertinenza: per parole e sinonimi.'),
+                style: stile,
+              ),
+      ),
     );
   }
 }

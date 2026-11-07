@@ -115,7 +115,7 @@ class MappaturaPubblicaApi(unittest.TestCase):
                          (True, "/pubblico/mappatura", False))  # fmt: skip
 
         dati = self._ok(cittadino.get(f"{PUBBLICO}/mappatura", base_url=ENTE))
-        self.assertEqual(dati["ente"], {"nome": "Comune di Lucca", "logo": False})
+        self.assertEqual(dati["ente"], {"nome": "Comune di Lucca", "logo": False, "dichiarazione_accessibilita": None})
         self.assertEqual([x["id"] for x in dati["aree"]], [area["id"]])
         self.assertEqual(dati["strutture"], [{"id": self.uo, "codice": "U.O. 2.1", "descrizione": "Personale"}])
         self.assertEqual(dati["livelli"], met["livelli"])

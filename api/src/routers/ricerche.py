@@ -45,12 +45,14 @@ class RicercaIn(BaseModel):
 
 class FeedbackIn(BaseModel):
     ambito: str = Field(max_length=50)
-    tipo: Literal["RICERCA", "SCHEDA"]
+    tipo: Literal["RICERCA", "SCHEDA", "ACCESSIBILITA"]
     ricerca_id: str | None = Field(default=None, max_length=36)  # RICERCA
     riferimento_id: str | None = Field(default=None, max_length=36)  # SCHEDA
     riferimento: str | None = Field(default=None, max_length=500)  # titolo della scheda
     utile: bool
-    commento: str | None = Field(default=None, max_length=500)
+    commento: str | None = Field(default=None, max_length=2000)
+    # ACCESSIBILITA: email per la risposta (facoltativa, non oscurata: la lascia chi segnala)
+    contatto: str | None = Field(default=None, max_length=255, pattern=r"^([^@\s]+@[^@\s]+\.[^@\s]+)?$")
 
 
 async def registra_ricerca(ente_id_: str, ambiti: dict, pubblica: bool, dati: RicercaIn) -> dict:
@@ -76,15 +78,18 @@ async def registra_feedback(ente_id_: str, ambiti: dict, pubblica: bool, dati: F
         if await sessione.scalar(select(RicercaFeedback.id).where(RicercaFeedback.ricerca_id == r.id)):
             raise ErroreApi(HTTPStatus.CONFLICT, "Feedback già inviato")
         testo = r.testo
-    elif not dati.riferimento_id:
+    elif dati.tipo == "SCHEDA" and not dati.riferimento_id:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scheda non indicata")
+    elif dati.tipo == "ACCESSIBILITA" and not (dati.commento or "").strip():
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi il problema")
     commento = reg.oscura(dati.commento.strip()) if dati.commento and dati.commento.strip() else None
     f = RicercaFeedback(
         ente_id=ente_id_, ambito=dati.ambito, pubblica=pubblica, tipo=dati.tipo,
         ricerca_id=dati.ricerca_id if dati.tipo == "RICERCA" else None, testo=testo,
         riferimento_id=dati.riferimento_id if dati.tipo == "SCHEDA" else None,
-        riferimento=dati.riferimento if dati.tipo == "SCHEDA" else None,
-        utile=dati.utile, commento=commento,
+        riferimento=dati.riferimento if dati.tipo != "RICERCA" else None,
+        utile=dati.utile and dati.tipo != "ACCESSIBILITA", commento=commento,
+        contatto=(dati.contatto or "").strip() or None if dati.tipo == "ACCESSIBILITA" else None,
     )  # fmt: skip
     sessione.add(f)
     await sessione.commit()
@@ -117,6 +122,7 @@ class Filtri(BaseModel):
 
 class FiltriFeedback(Filtri):
     utile: bool | None = None
+    tipo: Literal["RICERCA", "SCHEDA", "ACCESSIBILITA"] | None = None
 
 
 def _filtra(q, modello, f: Filtri):
@@ -212,7 +218,7 @@ def _feedback(x: RicercaFeedback) -> dict:
     return {
         "id": x.id, "ambito": x.ambito, "pubblica": x.pubblica, "tipo": x.tipo, "testo": x.testo,
         "riferimento_id": x.riferimento_id, "riferimento": x.riferimento, "utile": x.utile,
-        "commento": x.commento, "quando": _data(x.created_at), "gestito_il": _data(x.gestito_il),
+        "commento": x.commento, "contatto": x.contatto, "quando": _data(x.created_at), "gestito_il": _data(x.gestito_il),
         "gestito_da": x.gestito_da, "nota": x.nota,
     }  # fmt: skip
 
@@ -221,6 +227,8 @@ async def _elenco_feedback(f: FiltriFeedback) -> list[RicercaFeedback]:
     q = _filtra(select(RicercaFeedback), RicercaFeedback, f)
     if f.utile is not None:
         q = q.where(RicercaFeedback.utile == f.utile)
+    if f.tipo:
+        q = q.where(RicercaFeedback.tipo == f.tipo)
     if not f.gestite:
         q = q.where(RicercaFeedback.gestito_il.is_(None))
     return list(await db().scalars(q.order_by(RicercaFeedback.created_at.desc()).limit(2000)))
@@ -296,6 +304,7 @@ async def esporta_senza_risposta():
 async def esporta_feedback():
     elenco = await _elenco_feedback(parametri(FiltriFeedback))
     righe = [[x.ambito, "cittadino" if x.pubblica else "interno", x.tipo, x.testo or x.riferimento or "",
-              "sì" if x.utile else "no", x.commento or "", _data(x.created_at), x.nota or ""] for x in elenco]  # fmt: skip
-    intestazioni = ["Ambito", "Da", "Su", "Ricerca o scheda", "Utile", "Commento", "Quando", "Nota"]
+              "sì" if x.utile else "no", x.commento or "", x.contatto or "", _data(x.created_at), x.nota or ""]
+             for x in elenco]  # fmt: skip
+    intestazioni = ["Ambito", "Da", "Su", "Ricerca o pagina", "Utile", "Commento", "Contatto", "Quando", "Nota"]
     return allegato(_csv(intestazioni, righe), "text/csv; charset=utf-8", "feedback.csv")

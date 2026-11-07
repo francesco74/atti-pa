@@ -5,6 +5,7 @@ import '../anticorruzione/art35.dart';
 import '../anticorruzione/comune.dart' show Percorso, RigaVoce;
 import '../comuni.dart';
 import '../ricerca.dart';
+import 'accessibile.dart';
 import 'comune.dart';
 
 /// Percorso della pagina pubblica dei procedimenti (da collegare nella sezione Amministrazione
@@ -103,10 +104,11 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
     return [
       Align(
         alignment: Alignment.centerLeft,
-        child: SizedBox(
-          width: 360,
+        child: LarghezzaMassima(
+          360,
           child: TextField(
             controller: _testo,
+            textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               labelText: 'Cerca un procedimento',
               hintText: 'Es. come chiedo il contributo per l\'affitto?',
@@ -117,7 +119,7 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
           ),
         ),
       ),
-      NotaRicerca(_ricerca),
+      NotaRicerca(_ricerca, risultati: cerca.isEmpty ? null : trovati.length),
       const SizedBox(height: 16),
       if (cerca.isNotEmpty)
         trovati.isEmpty
@@ -126,7 +128,9 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
       if (cerca.isNotEmpty) FeedbackRicerca(_ricerca)
       else if (procedimenti.isEmpty)
         const Center(child: Text('Nessun procedimento pubblicato.'))
-      else
+      else ...[
+        const Intestazione('Strutture responsabili'),
+        const SizedBox(height: 4),
         Column(children: [
           for (final s in (d['strutture'] as List).cast<Map<String, dynamic>>())
             RigaVoce(
@@ -143,6 +147,7 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
               onTap: () => setState(() => _struttura = _senzaStruttura),
             ),
         ]),
+      ],
     ];
   }
 
@@ -184,17 +189,30 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
                 contenuto = ListView(padding: const EdgeInsets.all(16), children: [
                   Percorso([('Strutture', _vaiStrutture), (_nomeStruttura(d, _struttura), null)]),
                   const SizedBox(height: 12),
+                  Intestazione(_nomeStruttura(d, _struttura)),
+                  const SizedBox(height: 4),
                   _elenco(d, procedimenti.where((p) => (p['struttura_id'] ?? _senzaStruttura) == _struttura).toList()),
                 ]);
               } else {
                 contenuto = ListView(padding: const EdgeInsets.all(16), children: _livelloStrutture(d, procedimenti));
               }
+              final ente = (d['ente'] as Map).cast<String, dynamic>();
+              final vista = aperto != null
+                  ? '${aperto['denominazione']}'
+                  : _struttura != null
+                      ? _nomeStruttura(d, _struttura)
+                      : null;
               return PaginaPubblica(
-                ente: (d['ente'] as Map)['nome'] as String,
+                ente: ente,
+                registro: _registro,
                 titolo: 'Tipologie di procedimento',
                 introduzione: 'Procedimenti amministrativi dell\'ente per struttura responsabile: per ciascuno uffici, '
                     'recapiti, modulistica, termini, strumenti di tutela e potere sostitutivo (art. 35 d.lgs. 33/2013).',
-                child: contenuto,
+                child: VistaPubblica(
+                  titolo: [?vista, 'Tipologie di procedimento', '${ente['nome']}'].join(' – '),
+                  chiave: (_struttura, _procedimentoId),
+                  child: contenuto,
+                ),
               );
             },
           ),

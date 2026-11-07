@@ -46,11 +46,12 @@ class ProfiloIn(BaseModel):
 
     caratteristiche: str | None = Field(default=None, max_length=10_000)
     assistenza: str | None = Field(default=None, max_length=2_000)
+    dichiarazione_accessibilita: str | None = Field(default=None, max_length=500, pattern=r"^(https?://\S+)?$")
 
 
 def _profilo(e: Ente) -> dict:
     return {"nome": e.nome, "caratteristiche": e.caratteristiche, "assistenza": e.assistenza,
-            "logo": e.logo_mime is not None}  # fmt: skip
+            "dichiarazione_accessibilita": e.dichiarazione_accessibilita, "logo": e.logo_mime is not None}  # fmt: skip
 
 
 @bp.get("/profilo")

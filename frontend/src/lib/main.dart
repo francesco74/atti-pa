@@ -9,6 +9,7 @@ import 'ui/cambio_password_page.dart';
 import 'ui/home_shell.dart';
 import 'ui/login_page.dart';
 import 'ui/logo_ente.dart';
+import 'ui/pubblico/accessibile.dart';
 import 'ui/pubblico/mappatura_pubblica.dart';
 import 'ui/pubblico/procedimenti_pubblici.dart';
 
@@ -23,6 +24,8 @@ Future<void> main() async {
     percorsoProcedimentiPubblici => const ProcedimentiPubbliciPage(),
     _ => null,
   };
+  // pagine per i cittadini: albero di accessibilità sempre attivo per i lettori di schermo
+  if (pubblica != null) attivaAccessibilita();
   runApp(MultiProvider(
     providers: [
       Provider<ApiClient>.value(value: api),
