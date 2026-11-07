@@ -21,10 +21,13 @@ Map<String, dynamic> daAlbero(Map<String, dynamic> albero) {
     'processo': {
       for (final k in const [
         'id', 'codice', 'tipo', 'area_id', 'denominazione', 'descrizione', 'tempi', 'attori_esterni',
-        'termine_conclusione', 'norma_riferimento', 'struttura_id',
+        'termine_conclusione', 'norma_riferimento', 'art35', 'struttura_id',
       ])
         k: albero[k],
     },
+    // procedimento: scheda art. 35 (formato dello schema della trasparenza) e dati mancanti
+    'scheda_art35': albero['scheda_art35'],
+    'art35_mancanti': albero['art35_mancanti'],
     'proponibile': albero['proponibile'] == true, // processo della struttura del referente
     'attivita': [
       for (final a in (albero['attivita'] as List).cast<Map<String, dynamic>>())

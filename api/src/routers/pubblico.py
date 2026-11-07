@@ -1,5 +1,8 @@
 """Pagine pubbliche, senza accesso: la mappatura dei processi dell'anticorruzione, che i
-cittadini consultano su /pubblico/mappatura (il link si mette nel sito dell'ente).
+cittadini consultano su /pubblico/mappatura, e i procedimenti con i dati dell'art. 35 d.lgs.
+33/2013 (allegato 11 alla delibera ANAC 495/2024) su /pubblico/procedimenti, da collegare nella
+sezione Amministrazione trasparente (Attività e procedimenti > Tipologie di procedimento).
+Ciascuna ha il suo interruttore (Ente.mappatura_pubblica, Ente.procedimenti_pubblici).
 
 L'ente si riconosce dal dominio della richiesta. Le API rispondono solo se l'ente ha il modulo
 anticorruzione e il RPCT ha acceso la pubblicazione (Ente.mappatura_pubblica); altrimenti 404,
@@ -17,9 +20,11 @@ from deps import db, ente_richiesta
 from routers.anticorruzione import (
     FiltriProcessi, albero_processo, elenco_processi, metodologia_ente, processo_dell_ente,
 )  # fmt: skip
+from common.anticorruzione import art35 as dati_art35
+from common.anticorruzione.metodologia import chiave_naturale
 from web import ErroreApi, allegato, parametri
 from common.anticorruzione.metodologia import chiave_area
-from common.models import AcArea, Ente, Modulo, Struttura
+from common.models import AcArea, AcProcesso, Ente, Modulo, Struttura
 
 bp = Blueprint("pubblico", __name__, url_prefix="/api/v1/pubblico")
 
@@ -98,10 +103,58 @@ async def processo(processo_id: str):
     }  # fmt: skip
 
 
+async def _ente_con_procedimenti() -> Ente:
+    """Ente del dominio con i procedimenti pubblicati (dati della mappatura dell'anticorruzione)."""
+    e = await ente_richiesta()
+    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE) or not e.procedimenti_pubblici:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimenti non pubblicati")
+    g.ente = e
+    return e
+
+
+async def _strutture(e: Ente) -> dict[str, Struttura]:
+    righe = await db().scalars(select(Struttura).where(Struttura.ente_id == e.id).order_by(Struttura.ordine, Struttura.codice))
+    return {s.id: s for s in righe}
+
+
+@bp.get("/procedimenti")
+async def procedimenti():
+    """Tipologie di procedimento (art. 35 d.lgs. 33/2013) con la struttura responsabile, per la
+    pagina pubblica: ente, strutture che hanno procedimenti, elenco."""
+    e = await _ente_con_procedimenti()
+    strutture = await _strutture(e)
+    righe = await db().scalars(select(AcProcesso).where(AcProcesso.ente_id == e.id, AcProcesso.tipo == "PROCEDIMENTO"))
+    elenco = [
+        {"id": p.id, "codice": p.codice, "denominazione": p.denominazione,
+         "tipologia": (p.art35 or {}).get("tipologia"), "struttura_id": p.struttura_id}
+        for p in sorted(righe, key=lambda p: chiave_naturale(p.codice))
+    ]  # fmt: skip
+    usate = {p["struttura_id"] for p in elenco}
+    return {
+        "ente": {"nome": e.nome, "logo": bool(e.logo_mime)},
+        "strutture": [{"id": s.id, "codice": s.codice, "descrizione": s.descrizione}
+                      for s in strutture.values() if s.id in usate],  # fmt: skip
+        "procedimenti": elenco,
+    }
+
+
+@bp.get("/procedimenti/<procedimento_id>")
+async def procedimento(procedimento_id: str):
+    """Tutti i dati dell'allegato 11 (schema ART_35) del procedimento, con i recapiti degli uffici."""
+    e = await _ente_con_procedimenti()
+    p = await db().get(AcProcesso, procedimento_id)
+    if p is None or p.ente_id != e.id or p.tipo != "PROCEDIMENTO":
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimento non trovato")
+    return {"id": p.id, "codice": p.codice, "struttura_id": p.struttura_id,
+            "scheda": dati_art35.scheda(p, await _strutture(e))}  # fmt: skip
+
+
 @bp.get("/logo")
 async def logo():
-    """Logo dell'ente, per l'intestazione della pagina pubblica."""
-    e = await _ente_con_mappatura()
+    """Logo dell'ente, per l'intestazione delle pagine pubbliche."""
+    e = await ente_richiesta()
+    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE) or not (e.mappatura_pubblica or e.procedimenti_pubblici):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Pagine pubbliche non attive")
     e = await db().scalar(select(Ente).where(Ente.id == e.id).options(undefer(Ente.logo)))
     if not e.logo:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Logo non caricato")

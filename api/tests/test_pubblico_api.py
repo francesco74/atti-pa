@@ -111,7 +111,8 @@ class MappaturaPubblicaApi(unittest.TestCase):
         referente = self._client("referente")
         self.assertEqual(referente.put(f"{API}/pubblicazione", base_url=ENTE, json={"attiva": True}).status_code, 403)
         stato = self._ok(rpct.put(f"{API}/pubblicazione", base_url=ENTE, json={"attiva": True}))
-        self.assertEqual(stato, {"attiva": True, "percorso": "/pubblico/mappatura"})
+        self.assertEqual((stato["attiva"], stato["percorso"], stato["procedimenti_attiva"]),
+                         (True, "/pubblico/mappatura", False))  # fmt: skip
 
         dati = self._ok(cittadino.get(f"{PUBBLICO}/mappatura", base_url=ENTE))
         self.assertEqual(dati["ente"], {"nome": "Comune di Lucca", "logo": False})

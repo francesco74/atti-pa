@@ -34,6 +34,7 @@ CREATE TABLE enti (
     rag_json              JSON,                   -- collegamento al RAG: url, chiave_cifrata
     smtp_json             JSON,                   -- posta in uscita: host, porta, utente, password_cifrata, mittente...
     mappatura_pubblica    BOOLEAN NOT NULL DEFAULT FALSE, -- mappatura consultabile su /pubblico/mappatura
+    procedimenti_pubblici BOOLEAN NOT NULL DEFAULT FALSE, -- procedimenti consultabili su /pubblico/procedimenti
     created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -56,6 +57,14 @@ CREATE TABLE strutture (
     padre_id     CHAR(36),                      -- struttura superiore
     ordine       INT NOT NULL DEFAULT 0,
     attiva       BOOLEAN NOT NULL DEFAULT TRUE, -- soppressa: resta per lo storico
+    -- recapiti istituzionali (procedimenti, art. 35 d.lgs. 33/2013)
+    telefono     VARCHAR(50),
+    peo          VARCHAR(255),
+    pec          VARCHAR(255),
+    sede         VARCHAR(255),                  -- indirizzo
+    orari        JSON,                          -- [{giorni, ora_inizio, ora_fine}]
+    responsabile VARCHAR(255),                  -- nominativo
+    qualifica    VARCHAR(255),                  -- del responsabile
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_struttura_ente (ente_id, codice),
     FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
@@ -502,6 +511,7 @@ CREATE TABLE ac_processi (
     attori_esterni  TEXT,
     termine_conclusione  VARCHAR(255),      -- procedimento
     norma_riferimento    TEXT,              -- procedimento
+    art35           JSON,                   -- procedimento: dati propri dell'art. 35 d.lgs. 33/2013
     struttura_id    CHAR(36),               -- responsabile; vuota: trasversale
     impronta        VARCHAR(64),
     pacchetto       VARCHAR(150),

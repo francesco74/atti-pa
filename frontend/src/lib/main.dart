@@ -10,19 +10,25 @@ import 'ui/home_shell.dart';
 import 'ui/login_page.dart';
 import 'ui/logo_ente.dart';
 import 'ui/pubblico/mappatura_pubblica.dart';
+import 'ui/pubblico/procedimenti_pubblici.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Config.carica();
   final api = ApiClient(Config.apiUrl);
-  // pagina pubblica (link dal sito dell'ente): si apre senza accesso
-  final pubblica = Uri.base.path.replaceFirst(RegExp(r'/+$'), '') == percorsoMappaturaPubblica;
+  // pagine pubbliche (link dal sito dell'ente): si aprono senza accesso
+  final percorso = Uri.base.path.replaceFirst(RegExp(r'/+$'), '');
+  final Widget? pubblica = switch (percorso) {
+    percorsoMappaturaPubblica => const MappaturaPubblicaPage(),
+    percorsoProcedimentiPubblici => const ProcedimentiPubbliciPage(),
+    _ => null,
+  };
   runApp(MultiProvider(
     providers: [
       Provider<ApiClient>.value(value: api),
       ChangeNotifierProvider(create: (_) {
         final auth = AuthState(api);
-        if (!pubblica) auth.avvia();
+        if (pubblica == null) auth.avvia();
         return auth;
       }),
     ],
@@ -31,15 +37,15 @@ Future<void> main() async {
 }
 
 class AttiPaApp extends StatelessWidget {
-  const AttiPaApp({super.key, this.pubblica = false});
+  const AttiPaApp({super.key, this.pubblica});
 
-  final bool pubblica; // mappatura pubblica dell'anticorruzione al posto dell'app
+  final Widget? pubblica; // pagina pubblica (mappatura, procedimenti) al posto dell'app
 
   @override
   Widget build(BuildContext context) {
     final tema = ColorScheme.fromSeed(seedColor: const Color(0xFF1F4E79));
     return MaterialApp(
-      title: pubblica ? 'Mappatura dei processi' : 'Atti PA',
+      title: pubblica == null ? 'Atti PA' : 'Amministrazione trasparente',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: tema,
@@ -64,7 +70,7 @@ class AttiPaApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: pubblica ? const MappaturaPubblicaPage() : const _Radice(),
+      home: pubblica ?? const _Radice(),
     );
   }
 }

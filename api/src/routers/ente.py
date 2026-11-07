@@ -355,19 +355,48 @@ async def prova_posta():
 IMPORTAZIONE_MAX_BYTE = 2 * 1024 * 1024
 
 
+class Orario(BaseModel):
+    """Fascia oraria di apertura al pubblico (es. "Lunedì e giovedì", "09:00", "12:30")."""
+
+    giorni: str = Field(min_length=1, max_length=100)
+    ora_inizio: str = Field(pattern=r"^\d{1,2}[:.]\d{2}$")
+    ora_fine: str = Field(pattern=r"^\d{1,2}[:.]\d{2}$")
+
+
 class StrutturaIn(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
     descrizione: str = Field(min_length=1, max_length=255)
     padre_id: str | None = None
     ordine: int = 0
     attiva: bool = True
+    # recapiti istituzionali (procedimenti, art. 35): facoltativi
+    telefono: str | None = Field(default=None, max_length=50)
+    peo: str | None = Field(default=None, max_length=255)
+    pec: str | None = Field(default=None, max_length=255)
+    sede: str | None = Field(default=None, max_length=255)
+    orari: list[Orario] = Field(default_factory=list, max_length=20)
+    responsabile: str | None = Field(default=None, max_length=255)
+    qualifica: str | None = Field(default=None, max_length=255)
+
+
+_RECAPITI = ("telefono", "peo", "pec", "sede", "responsabile", "qualifica")
 
 
 def _struttura_out(s: Struttura) -> dict:
     return {
         "id": s.id, "codice": s.codice, "descrizione": s.descrizione,
         "padre_id": s.padre_id, "ordine": s.ordine, "attiva": s.attiva,
+        **{k: getattr(s, k) for k in _RECAPITI}, "orari": s.orari or [],
     }  # fmt: skip
+
+
+def _imposta_recapiti(s: Struttura, dati: StrutturaIn) -> None:
+    for campo, valore in (("peo", dati.peo), ("pec", dati.pec)):
+        if valore and valore.strip() and not posta.indirizzo_valido(valore.strip()):
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"{campo.upper()}: indirizzo email non valido")
+    for k in _RECAPITI:
+        setattr(s, k, (getattr(dati, k) or "").strip() or None)
+    s.orari = [o.model_dump() for o in dati.orari] or None
 
 
 async def _strutture(sessione) -> list[Struttura]:
@@ -420,6 +449,7 @@ async def crea_struttura():
     sessione = db()
     s = Struttura(ente_id=ente().id, codice=dati.codice.strip(), descrizione=dati.descrizione.strip(),
                   ordine=dati.ordine, attiva=dati.attiva)  # fmt: skip
+    _imposta_recapiti(s, dati)
     await _codice_libero(sessione, s.codice)
     await _controlla_padre(sessione, s, dati.padre_id)
     s.padre_id = dati.padre_id
@@ -440,6 +470,7 @@ async def aggiorna_struttura(struttura_id: str):
     await _controlla_padre(sessione, s, dati.padre_id)
     s.codice, s.descrizione = dati.codice.strip(), dati.descrizione.strip()
     s.padre_id, s.ordine, s.attiva = dati.padre_id, dati.ordine, dati.attiva
+    _imposta_recapiti(s, dati)
     audit(sessione, utente(), "struttura", s.id, "AGGIORNATA", {"codice": s.codice, "attiva": s.attiva})
     await sessione.commit()
     return _struttura_out(s)

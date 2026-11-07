@@ -133,3 +133,13 @@ frontend/src/lib/moduli/trasparenza/   pagine dell'app
 6. **Playwright**: resta, nel worker.
 7. **DOCX**: con LibreOffice del converter al posto di pandoc; da verificare la resa delle
    tabelle.
+
+## Procedimenti dalla mappatura (07/11/2026)
+
+La scheda Art. 35 (sezione Procedimenti) si può compilare importando i procedimenti della
+mappatura dell'anticorruzione (`GET /api/v1/trasparenza/procedimenti-mappatura`, pulsante
+"Importa dalla mappatura dei procedimenti" nel modulo, solo con il modulo anticorruzione attivo):
+gli elementi arrivano già nel formato dello schema, con i recapiti degli uffici presi dalle
+strutture organizzative, e restano modificabili; la compilazione da zero resta possibile. Vedi
+`anticorruzione.md`, decisione 20.
+

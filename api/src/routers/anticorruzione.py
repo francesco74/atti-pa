@@ -25,6 +25,7 @@ from sqlalchemy import delete, select
 from deps import audit, autenticato, db, ente_id, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
+from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione import excel
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
@@ -106,29 +107,36 @@ async def ripristina_metodologia():
 
 
 class PubblicazioneIn(BaseModel):
-    attiva: bool
+    attiva: bool | None = None  # mappatura (processi e rischi)
+    procedimenti_attiva: bool | None = None  # procedimenti (art. 35)
 
 
 def _pubblicazione(e: Ente) -> dict:
-    return {"attiva": bool(e.mappatura_pubblica), "percorso": "/pubblico/mappatura"}
+    return {"attiva": bool(e.mappatura_pubblica), "percorso": "/pubblico/mappatura",
+            "procedimenti_attiva": bool(e.procedimenti_pubblici), "percorso_procedimenti": "/pubblico/procedimenti"}
 
 
 @bp.get("/pubblicazione")
 @lettore
 async def pubblicazione():
-    """Se la mappatura è consultabile dai cittadini e il percorso della pagina pubblica."""
+    """Se mappatura e procedimenti sono consultabili dai cittadini e i percorsi delle pagine."""
     return _pubblicazione(await db().get(Ente, ente_id()))
 
 
 @bp.put("/pubblicazione")
 @rpct
 async def aggiorna_pubblicazione():
-    """Accende o spegne la pagina pubblica della mappatura."""
+    """Accende o spegne le pagine pubbliche della mappatura e dei procedimenti (campi presenti)."""
     dati = corpo(PubblicazioneIn)
     sessione = db()
     e = await sessione.get(Ente, ente_id())
-    e.mappatura_pubblica = dati.attiva
-    audit(sessione, utente(), "ente", e.id, "MAPPATURA_PUBBLICA" if dati.attiva else "MAPPATURA_RISERVATA")
+    if dati.attiva is not None:
+        e.mappatura_pubblica = dati.attiva
+        audit(sessione, utente(), "ente", e.id, "MAPPATURA_PUBBLICA" if dati.attiva else "MAPPATURA_RISERVATA")
+    if dati.procedimenti_attiva is not None:
+        e.procedimenti_pubblici = dati.procedimenti_attiva
+        audit(sessione, utente(), "ente", e.id,
+              "PROCEDIMENTI_PUBBLICI" if dati.procedimenti_attiva else "PROCEDIMENTI_RISERVATI")  # fmt: skip
     await sessione.commit()
     return _pubblicazione(e)
 
@@ -292,7 +300,8 @@ def _processo(p: AcProcesso) -> dict:
         "id": p.id, "codice": p.codice, "tipo": p.tipo or "PROCESSO", "area_id": p.area_id,
         "denominazione": p.denominazione, "descrizione": p.descrizione, "tempi": p.tempi,
         "attori_esterni": p.attori_esterni, "termine_conclusione": p.termine_conclusione,
-        "norma_riferimento": p.norma_riferimento, "struttura_id": p.struttura_id, "pacchetto": p.pacchetto,
+        "norma_riferimento": p.norma_riferimento, "art35": p.art35, "struttura_id": p.struttura_id,
+        "pacchetto": p.pacchetto,
         "updated_at": p.updated_at.isoformat() if p.updated_at else None,
     }  # fmt: skip
 
@@ -372,6 +381,7 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
         if c is not None:
             c["misure"] += 1
     testo = (f.testo or "").strip().lower()
+    strutture = await _strutture_ente(sessione) if any(p.tipo == "PROCEDIMENTO" for p in elenco) else {}
     risultato = []
     for p in _per_codice(elenco):
         c = conteggi.get(p.id, {"attivita": 0, "rischi": 0, "misure": 0, "livelli": []})
@@ -384,6 +394,8 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
             continue
         risultato.append({**_processo(p), "attivita": c["attivita"], "rischi": c["rischi"],
                           "misure": c["misure"], "livello_massimo": livello})  # fmt: skip
+        if p.tipo == "PROCEDIMENTO":  # quanti dati dell'art. 35 mancano (0: completi)
+            risultato[-1]["art35_mancanti"] = len(dati_art35.mancanti(dati_art35.scheda(p, strutture)))
     return risultato
 
 
@@ -402,7 +414,11 @@ async def processo(processo_id: str):
     sessione = db()
     p = await processo_dell_ente(sessione, processo_id)
     ammesse = await _strutture_dell_utente(sessione)
-    return {**await albero_processo(sessione, p), "proponibile": ammesse is not None and p.struttura_id in ammesse}
+    risultato = {**await albero_processo(sessione, p), "proponibile": ammesse is not None and p.struttura_id in ammesse}
+    if p.tipo == "PROCEDIMENTO":
+        elemento = dati_art35.scheda(p, await _strutture_ente(sessione))
+        risultato |= {"scheda_art35": elemento, "art35_mancanti": dati_art35.mancanti(elemento)}
+    return risultato
 
 
 async def albero_processo(sessione, p: AcProcesso) -> dict:
@@ -450,6 +466,7 @@ class ProcessoIn(BaseModel):
     attori_esterni: str | None = None
     termine_conclusione: str | None = Field(default=None, max_length=255)  # procedimento
     norma_riferimento: str | None = None  # procedimento
+    art35: dati_art35.DatiArt35 | None = None  # procedimento: dati propri dell'art. 35
     struttura_id: str | None = None  # vuota: processo trasversale
 
 
@@ -506,14 +523,20 @@ class RischioModificato(RischioIn):
 
 async def _verifica_processo(sessione, dati: ProcessoIn) -> AcArea | None:
     await _struttura_valida(sessione, dati.struttura_id)
+    if dati.art35 is not None:
+        for campo in dati_art35.STRUTTURE:
+            await _struttura_valida(sessione, getattr(dati.art35, campo))
     return await _area_dell_ente(sessione, dati.area_id) if dati.area_id else None
 
 
 def _imposta_processo(p: AcProcesso, dati: ProcessoIn) -> None:
-    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields)).items():
+    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields) - {"art35"}).items():
         setattr(p, campo, valore)
+    # dati dell'art. 35: un oggetto li sostituisce, null o assenti li lasciano come sono
+    if dati.art35 is not None:
+        p.art35 = dati.art35.model_dump(exclude_none=True) or None
     if p.tipo == "PROCESSO":
-        p.termine_conclusione = p.norma_riferimento = None
+        p.termine_conclusione = p.norma_riferimento = p.art35 = None
     p.updated_at = datetime.now()
 
 

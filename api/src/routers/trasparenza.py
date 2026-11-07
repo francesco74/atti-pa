@@ -23,8 +23,10 @@ from deps import audit, autenticato, db, ente_id, impostazioni, notifica, risors
 from web import ErroreApi, allegato, corpo, nessun_contenuto
 from common import archivio, coda
 from common.documenti import DocumentiError
+from common.anticorruzione import art35 as dati_art35
+from common.anticorruzione.metodologia import chiave_naturale
 from common.models import (
-    Ente, Modulo, Ruolo, StatoVerifica, TrasparenzaDocumento, TrasparenzaLavoro, User,
+    AcProcesso, Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaDocumento, TrasparenzaLavoro, User,
 )  # fmt: skip
 from common.trasparenza import documenti as doc
 from common.trasparenza.analisi import ANALISI, ESTRAZIONE
@@ -66,6 +68,30 @@ def _schema_dei_dati(dati: dict[str, Any]):
 async def schemi():
     """Definizioni degli schemi, con cui l'app costruisce i form."""
     return [s.per_frontend() for s in SCHEMI.values()]
+
+
+@bp.get("/procedimenti-mappatura")
+@operatore
+async def procedimenti_mappatura():
+    """Procedimenti della mappatura dell'anticorruzione nel formato della sezione PROCEDIMENTI
+    dello schema ART_35, da importare nella scheda (con i dati mancanti). Vuoto se l'ente non ha
+    il modulo anticorruzione."""
+    e = await db().get(Ente, ente_id())
+    if not e.modulo_attivo(Modulo.ANTICORRUZIONE):
+        return []
+    sessione = db()
+    strutture = {s.id: s for s in await sessione.scalars(select(Struttura).where(Struttura.ente_id == e.id))}
+    procedimenti = await sessione.scalars(
+        select(AcProcesso).where(AcProcesso.ente_id == e.id, AcProcesso.tipo == "PROCEDIMENTO")
+    )
+    risultato = []
+    for p in sorted(procedimenti, key=lambda p: chiave_naturale(p.codice)):
+        elemento = dati_art35.scheda(p, strutture)
+        s = strutture.get(p.struttura_id)
+        risultato.append({"id": p.id, "codice": p.codice, "denominazione": p.denominazione,
+                          "struttura": f"{s.codice} - {s.descrizione}" if s else None,
+                          "elemento": elemento, "mancanti": dati_art35.mancanti(elemento)})  # fmt: skip
+    return risultato
 
 
 @bp.post("/schede")

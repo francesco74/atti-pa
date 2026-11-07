@@ -585,6 +585,21 @@ def _valida_elementi(campi, elementi, parametri, prefisso, almeno_uno, errori):
                     errori.append(f"{nome}: compilare almeno uno tra {etichette}")
 
 
+def valida_elemento(schema: Schema, sezione_id: str, elemento: dict, parametri: dict | None = None) -> list[str]:
+    """Errori di un singolo elemento di una sezione (es. un procedimento dell'art. 35), con le
+    stesse regole del form: obbligatori, campi visibili secondo le condizioni, formati,
+    "almeno uno tra". I messaggi non hanno il prefisso con il numero dell'elemento."""
+    sezione = schema.sezione(sezione_id)
+    if sezione is None:
+        raise ValueError(f"Sezione {sezione_id} non presente nello schema {schema.id}")
+    errori: list[str] = []
+    prefisso = sezione.etichetta_elemento
+    _valida_elementi(sezione.campi, [elemento], parametri or {}, prefisso, sezione.almeno_uno, errori)
+    nome = f"{prefisso} 1"
+    return [e[len(nome) + 3:] if e.startswith(f"{nome} - ") else e[len(nome) + 2:] if e.startswith(f"{nome}: ") else e
+            for e in errori]  # fmt: skip
+
+
 def valida_dati(schema: Schema, dati: dict) -> list:
     """Verifica i dati inviati dal form. Restituisce l'elenco degli errori (vuoto se validi)."""
     errori = []

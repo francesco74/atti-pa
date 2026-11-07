@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'albero.dart';
+import 'art35.dart';
 import 'comune.dart';
 
 const _etichetteStato = {
@@ -499,8 +500,24 @@ class TabellaCampi extends StatelessWidget {
   final Map<String, dynamic> valori;
   final Map<String, dynamic>? prima;
 
+  /// I dati art. 35 del procedimento si mostrano campo per campo ("art35.tipologia"...).
+  static Map<String, dynamic> _piatti(Map<String, dynamic> valori) => {
+        for (final e in valori.entries)
+          if (e.key == 'art35')
+            for (final k in etichetteArt35.keys) 'art35.$k': (e.value as Map?)?[k]
+          else
+            e.key: e.value,
+      };
+
+  static String? _etichetta(String campo) =>
+      campo.startsWith('art35.') ? 'Art. 35 - ${etichetteArt35[campo.substring(6)]}' : _etichetteCampi[campo];
+
   String _testo(String campo, Object? v) {
     if (v == null || v == '') return '—';
+    if (campo.startsWith('art35.')) {
+      if (campo.endsWith('_struttura_id')) return dati.struttura(v) ?? '—';
+      return const {'SI': 'Sì', 'NO': 'No'}[v] ?? '$v';
+    }
     return switch (campo) {
       'area_id' => dati.area(v) ?? '—',
       'struttura_id' => dati.struttura(v) ?? '—',
@@ -519,10 +536,13 @@ class TabellaCampi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final campi = _etichetteCampi.keys.where((c) => valori.containsKey(c) || (prima?.containsKey(c) ?? false));
+    final valori = _piatti(this.valori);
+    final prima = this.prima == null ? null : _piatti(this.prima!);
+    final campi = [..._etichetteCampi.keys, for (final k in etichetteArt35.keys) 'art35.$k']
+        .where((c) => valori.containsKey(c) || (prima?.containsKey(c) ?? false));
     final righe = [
       for (final c in campi)
-        if (prima == null || _confronto(c, prima![c]) != _confronto(c, valori[c])) c,
+        if (prima == null ? valori[c] != null || !c.startsWith('art35.') : _confronto(c, prima[c]) != _confronto(c, valori[c])) c,
     ];
     if (righe.isEmpty) return const Text('Nessuna differenza rispetto all\'elemento attuale.');
     final grassetto = const TextStyle(fontWeight: FontWeight.w600);
@@ -532,8 +552,8 @@ class TabellaCampi extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_etichetteCampi[c]!, style: grassetto),
-            if (prima != null) Text(_testo(c, prima![c]), style: barrato),
+            Text(_etichetta(c)!, style: grassetto),
+            if (prima != null) Text(_testo(c, prima[c]), style: barrato),
             Text(_testo(c, valori[c])),
             if (c == 'valutazione' && valori[c] is Map)
               Padding(

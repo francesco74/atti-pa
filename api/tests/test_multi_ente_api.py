@@ -320,6 +320,18 @@ class MultiEnte(unittest.TestCase):
                   json={"codice": "SETTORE 2", "descrizione": "Risorse umane", "padre_id": uo["id"]})
         self.assertEqual(r.status_code, 422)
 
+        # recapiti istituzionali (art. 35): email controllate, orari per fasce
+        recapiti = {"codice": "U.O. 2.2", "descrizione": "Trattamento economico", "padre_id": settore["id"],
+                    "telefono": "0583 1234", "peo": "personale@ente.it", "pec": "ente@pec.it", "sede": "Via Roma 1",
+                    "responsabile": "Mario Rossi", "qualifica": "Funzionario",
+                    "orari": [{"giorni": "Lunedì e giovedì", "ora_inizio": "09:00", "ora_fine": "12:30"}]}  # fmt: skip
+        r = c.put(f"/api/v1/ente/strutture/{uo2['id']}", base_url=A, json=recapiti).get_json()
+        self.assertEqual((r["peo"], r["orari"][0]["ora_fine"], r["responsabile"]), ("personale@ente.it", "12:30", "Mario Rossi"))
+        self.assertEqual(c.put(f"/api/v1/ente/strutture/{uo2['id']}", base_url=A,
+                               json={**recapiti, "pec": "non valida"}).status_code, 422)  # fmt: skip
+        self.assertEqual(c.put(f"/api/v1/ente/strutture/{uo2['id']}", base_url=A, json={
+            **recapiti, "orari": [{"giorni": "Lun", "ora_inizio": "mattina", "ora_fine": "12:30"}]}).status_code, 422)  # fmt: skip
+
         # struttura dell'utente; una struttura con utenti non si elimina, si disattiva
         r = c.post("/api/v1/ente/utenti", base_url=A, json={
             "username": "referente", "ruoli": ["ANTICORRUZIONE_REFERENTE"], "password": PASSWORD,

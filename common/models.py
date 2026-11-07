@@ -120,6 +120,8 @@ class Ente(Base):
     smtp_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     # anticorruzione: la mappatura è consultabile dai cittadini su /pubblico/mappatura
     mappatura_pubblica: Mapped[bool] = mapped_column(Boolean, default=False)
+    # i procedimenti (art. 35) sono consultabili dai cittadini su /pubblico/procedimenti
+    procedimenti_pubblici: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
@@ -153,6 +155,15 @@ class Struttura(Base):
     padre_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="RESTRICT"))
     ordine: Mapped[int] = mapped_column(Integer, default=0)
     attiva: Mapped[bool] = mapped_column(Boolean, default=True)
+    # recapiti istituzionali (procedimenti, art. 35 d.lgs. 33/2013): ufficio responsabile, ufficio
+    # del provvedimento finale, ufficio per le istanze, potere sostitutivo
+    telefono: Mapped[str | None] = mapped_column(String(50))
+    peo: Mapped[str | None] = mapped_column(String(255))
+    pec: Mapped[str | None] = mapped_column(String(255))
+    sede: Mapped[str | None] = mapped_column(String(255))  # indirizzo
+    orari: Mapped[list[Any] | None] = mapped_column(JSON)  # [{giorni, ora_inizio, ora_fine}]
+    responsabile: Mapped[str | None] = mapped_column(String(255))  # nominativo
+    qualifica: Mapped[str | None] = mapped_column(String(255))  # del responsabile
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -657,6 +668,8 @@ class AcProcesso(Base):
     attori_esterni: Mapped[str | None] = mapped_column(Text)
     termine_conclusione: Mapped[str | None] = mapped_column(String(255))  # procedimento
     norma_riferimento: Mapped[str | None] = mapped_column(Text)  # procedimento
+    # procedimento: dati propri dell'art. 35 d.lgs. 33/2013 (common/anticorruzione/art35.py)
+    art35: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
     impronta: Mapped[str | None] = mapped_column(String(64))
     pacchetto: Mapped[str | None] = mapped_column(String(150))

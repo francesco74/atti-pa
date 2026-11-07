@@ -223,3 +223,25 @@ Decisioni del 04/11/2026:
     indirizzo del destinatario non si invia nulla e la proposta funziona come prima. L'API le
     mette in coda (`notifiche_email`) nella stessa transazione della proposta e il worker le
     invia entro un minuto, riprovando se il server non risponde (`common/posta.py`).
+20. **Procedimenti e art. 35 d.lgs. 33/2013** (07/11/2026): processo e procedimento restano lo
+    stesso oggetto della mappatura, ma il procedimento ha in più i dati dell'allegato 11 alla
+    delibera ANAC 495/2024, coerenti con lo schema `ART_35` del modulo trasparenza (stessi
+    campi e stesse regole, `common/trasparenza/schemi/ART_35.yaml`). Corrispondenze: denominazione,
+    descrizione, riferimenti normativi (`norma_riferimento`), termine di conclusione e unità
+    responsabile dell'istruttoria (struttura responsabile) sono i campi comuni; il resto è in
+    `ac_processi.art35` (`common/anticorruzione/art35.py`): tipologia, ufficio responsabile
+    (vuoto: la struttura responsabile), ufficio del provvedimento finale se diverso, istanza di
+    parte con l'ufficio e la modulistica, modalità di informazione, dichiarazione sostitutiva,
+    silenzio assenso, strumenti di tutela, servizio online, pagamenti, ufficio del titolare del
+    potere sostitutivo e modalità di attivazione. Gli **uffici sono strutture organizzative**,
+    con i recapiti (telefono, PEO, PEC, sede, orari, responsabile e qualifica) gestiti in
+    Amministrazione → Strutture e letti al momento: cambiano in tutti i procedimenti. I dati non
+    sono obbligatori per salvare: il procedimento mostra se sono completi o quanti ne mancano
+    (stessi controlli della trasparenza). Un `art35` assente o nullo in una modifica lascia i
+    dati come sono. Le proposte dei referenti li comprendono. Nella scheda Art. 35 della
+    trasparenza "Importa dalla mappatura dei procedimenti" ne ricava gli elementi (ancora
+    modificabili; si può sempre compilare da zero, anche senza il modulo anticorruzione). I
+    procedimenti hanno una **pagina pubblica** propria, `/pubblico/procedimenti` (strutture →
+    procedimenti → scheda con tutti i dati dell'allegato 11), da collegare nella sezione
+    Amministrazione trasparente (Attività e procedimenti → Tipologie di procedimento), con un
+    interruttore del RPCT separato da quello della mappatura (`enti.procedimenti_pubblici`).

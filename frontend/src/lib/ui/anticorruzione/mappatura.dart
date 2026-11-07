@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'albero.dart';
+import 'art35.dart';
 import 'comune.dart';
 
 /// Area dei processi senza un'area di rischio.
@@ -144,7 +145,10 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
               p['struttura_id'] == null ? 'Trasversale' : (dati.struttura(p['struttura_id']) ?? ''),
               '${p['attivita']} attività, ${p['rischi']} rischi, ${p['misure']} misure',
             ],
-            finale: [LivelloChip(dati, p['livello_massimo'] as String?)],
+            finale: [
+              if (p['art35_mancanti'] != null) CompletezzaArt35(p['art35_mancanti'] as int),
+              LivelloChip(dati, p['livello_massimo'] as String?),
+            ],
             onTap: () => setState(() => _processoId = p['id'] as String),
           ),
       ]);
@@ -488,6 +492,18 @@ class _VistaProcessoState extends State<VistaProcesso> {
           ],
         ],
       ),
+      if (processo['tipo'] == 'PROCEDIMENTO' && albero['scheda_art35'] != null)
+        SezioneArt35(
+          scheda: (albero['scheda_art35'] as Map).cast<String, dynamic>(),
+          mancanti: List<String>.from(albero['art35_mancanti'] as List? ?? const []),
+          etichettaModifica: ops == null ? 'Modifica' : etichettaAzione(ops, 'Modifica'),
+          onModifica: ops == null
+              ? null
+              : () => eseguiOperazione(context, _carica, () async {
+                    final v = await modificaArt35(context, dati, (processo['art35'] as Map?)?.cast<String, dynamic>());
+                    if (v != null) await ops.processo({...processo, 'art35': v});
+                  }),
+        ),
       Row(children: [
         Expanded(child: Text('Attività', style: Theme.of(context).textTheme.titleMedium)),
         if (ops != null)
@@ -541,8 +557,9 @@ class _VistaProcessoState extends State<VistaProcesso> {
   }
 }
 
-/// Interruttore del RPCT: la mappatura consultabile dai cittadini su /pubblico/mappatura,
-/// con il link da mettere sul sito dell'ente.
+/// Interruttori del RPCT: la mappatura (/pubblico/mappatura) e i procedimenti con i dati
+/// dell'art. 35 (/pubblico/procedimenti) consultabili dai cittadini, con i link da mettere sul
+/// sito dell'ente.
 class PubblicazioneMappatura extends StatefulWidget {
   const PubblicazioneMappatura({super.key});
 
@@ -551,8 +568,7 @@ class PubblicazioneMappatura extends StatefulWidget {
 }
 
 class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
-  bool? _attiva; // null finché non si conosce lo stato
-  String _percorso = '/pubblico/mappatura';
+  Map<String, dynamic>? _stato; // null finché non si conosce
 
   @override
   void initState() {
@@ -561,51 +577,59 @@ class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
   }
 
   void _imposta(Object? v) {
-    if (v is! Map || !mounted) return;
-    setState(() {
-      _attiva = v['attiva'] == true;
-      _percorso = v['percorso'] as String? ?? _percorso;
-    });
+    if (v is Map<String, dynamic> && mounted) setState(() => _stato = v);
   }
 
   Future<void> _leggi() async {
     try {
       _imposta(await apiDi(context).get('$apiAnticorruzione/pubblicazione'));
     } catch (_) {
-      // senza lo stato l'interruttore non compare
+      // senza lo stato gli interruttori non compaiono
     }
   }
 
-  Future<void> _cambia(bool attiva) async {
+  String _link(String percorso) => '${Uri.base.origin}$percorso';
+
+  Future<void> _cambia(String campo, bool attiva, String cosa, String percorso) async {
     if (attiva &&
-        !await conferma(context, 'Pubblicare la mappatura?', 'Aree, processi, attività, rischi con il livello e misure '
-            'saranno consultabili da chiunque, senza accesso, all\'indirizzo ${_link()}. I valori degli indicatori e '
-            'le motivazioni delle correzioni restano riservati.')) {
+        !await conferma(context, 'Pubblicare $cosa?', campo == 'attiva'
+            ? 'Aree, processi, attività, rischi con il livello e misure saranno consultabili da chiunque, senza accesso, '
+                'all\'indirizzo ${_link(percorso)}. I valori degli indicatori e le motivazioni delle correzioni restano riservati.'
+            : 'I procedimenti con i dati dell\'art. 35 (uffici, recapiti, modulistica, termini, tutele, potere sostitutivo) '
+                'saranno consultabili da chiunque, senza accesso, all\'indirizzo ${_link(percorso)}.')) {
       return;
     }
     if (!mounted) return;
     try {
-      _imposta(await apiDi(context).put('$apiAnticorruzione/pubblicazione', {'attiva': attiva}));
+      _imposta(await apiDi(context).put('$apiAnticorruzione/pubblicazione', {campo: attiva}));
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
   }
 
-  String _link() => '${Uri.base.origin}$_percorso';
+  Widget _interruttore(String campo, String percorso, String cosa, String spenta, String accesa) {
+    final attiva = _stato![campo] == true;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Switch(value: attiva, onChanged: (v) => _cambia(campo, v, cosa, percorso)),
+      const SizedBox(width: 4),
+      Text(attiva ? accesa : spenta),
+      if (attiva)
+        IconaAzione(Icons.link, 'Copia il link da mettere sul sito dell\'ente', () async {
+          await Clipboard.setData(ClipboardData(text: _link(percorso)));
+          if (mounted) mostraMessaggio(context, 'Link copiato: ${_link(percorso)}');
+        }),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final attiva = _attiva;
-    if (attiva == null) return const SizedBox.shrink();
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Switch(value: attiva, onChanged: _cambia),
-      const SizedBox(width: 4),
-      Text(attiva ? 'Pubblicata per i cittadini' : 'Pubblica per i cittadini'),
-      if (attiva)
-        IconaAzione(Icons.link, 'Copia il link da mettere sul sito dell\'ente', () async {
-          await Clipboard.setData(ClipboardData(text: _link()));
-          if (context.mounted) mostraMessaggio(context, 'Link copiato: ${_link()}');
-        }),
+    final stato = _stato;
+    if (stato == null) return const SizedBox.shrink();
+    return Wrap(spacing: 16, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      _interruttore('attiva', stato['percorso'] as String? ?? '/pubblico/mappatura', 'la mappatura',
+          'Pubblica la mappatura', 'Mappatura pubblicata'),
+      _interruttore('procedimenti_attiva', stato['percorso_procedimenti'] as String? ?? '/pubblico/procedimenti',
+          'i procedimenti', 'Pubblica i procedimenti (art. 35)', 'Procedimenti pubblicati'),
     ]);
   }
 }

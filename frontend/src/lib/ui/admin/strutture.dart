@@ -118,6 +118,17 @@ class _StrutturePageState extends State<StrutturePage> {
     final ordine = TextEditingController(text: '${s?['ordine'] ?? 0}');
     var padreId = nuova ? padre : s['padre_id'] as String?;
     var attiva = s?['attiva'] != false;
+    // recapiti istituzionali (procedimenti, art. 35)
+    final recapiti = {
+      for (final k in const ['telefono', 'peo', 'pec', 'sede', 'responsabile', 'qualifica'])
+        k: TextEditingController(text: s?[k] as String? ?? ''),
+    };
+    final orari = [
+      for (final o in (s?['orari'] as List? ?? const []).cast<Map<String, dynamic>>())
+        [for (final k in const ['giorni', 'ora_inizio', 'ora_fine']) TextEditingController(text: '${o[k] ?? ''}')],
+    ];
+    Widget campo(String k, String etichetta, {String? aiuto}) =>
+        TextField(controller: recapiti[k], decoration: InputDecoration(labelText: etichetta, hintText: aiuto));
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -154,6 +165,42 @@ class _StrutturePageState extends State<StrutturePage> {
                     value: attiva,
                     onChanged: (v) => aggiorna(() => attiva = v),
                   ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Recapiti istituzionali', style: Theme.of(c).textTheme.titleSmall),
+                ),
+                const Text('Usati per i procedimenti (art. 35 d.lgs. 33/2013): ufficio responsabile, ufficio del '
+                    'provvedimento finale, ufficio per le istanze, potere sostitutivo.'),
+                campo('telefono', 'Telefono'),
+                campo('peo', 'PEO (posta elettronica ordinaria)'),
+                campo('pec', 'PEC'),
+                campo('sede', 'Sede (indirizzo)'),
+                campo('responsabile', 'Responsabile (nome e cognome)'),
+                campo('qualifica', 'Qualifica del responsabile', aiuto: 'es. Dirigente, Segretario generale'),
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerLeft, child: Text('Orari di apertura al pubblico', style: Theme.of(c).textTheme.titleSmall)),
+                for (final (i, o) in orari.indexed)
+                  Row(children: [
+                    Expanded(flex: 3, child: TextField(controller: o[0], decoration: const InputDecoration(labelText: 'Giorni'))),
+                    const SizedBox(width: 8),
+                    Expanded(child: TextField(controller: o[1], decoration: const InputDecoration(labelText: 'Dalle', hintText: '09:00'))),
+                    const SizedBox(width: 8),
+                    Expanded(child: TextField(controller: o[2], decoration: const InputDecoration(labelText: 'Alle', hintText: '12:30'))),
+                    IconButton(
+                      tooltip: 'Togli la fascia oraria',
+                      icon: const IconaElimina(size: 18),
+                      onPressed: () => aggiorna(() => orari.removeAt(i)),
+                    ),
+                  ]),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Fascia oraria'),
+                    onPressed: () => aggiorna(() => orari.add([TextEditingController(), TextEditingController(), TextEditingController()])),
+                  ),
+                ),
               ]),
             ),
           ),
@@ -170,8 +217,14 @@ class _StrutturePageState extends State<StrutturePage> {
       'padre_id': padreId,
       'ordine': int.tryParse(ordine.text.trim()) ?? 0,
       'attiva': attiva,
+      for (final e in recapiti.entries) e.key: e.value.text.trim().isEmpty ? null : e.value.text.trim(),
+      'orari': [
+        for (final o in orari)
+          if (o.any((c) => c.text.trim().isNotEmpty))
+            {'giorni': o[0].text.trim(), 'ora_inizio': o[1].text.trim(), 'ora_fine': o[2].text.trim()},
+      ],
     };
-    for (final c in [codice, descrizione, ordine]) {
+    for (final c in [codice, descrizione, ordine, ...recapiti.values, for (final o in orari) ...o]) {
       c.dispose();
     }
     if (ok != true || !mounted) return;

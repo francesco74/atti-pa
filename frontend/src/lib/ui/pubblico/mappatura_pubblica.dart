@@ -1,16 +1,11 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
-import '../../stato/auth_state.dart';
 import '../anticorruzione/albero.dart' show IntestazioneProcesso, etichettaTipo;
 import '../anticorruzione/comune.dart';
 import '../comuni.dart';
-import '../logo_ente.dart';
-
-const apiPubblico = '/api/v1/pubblico';
+import 'comune.dart';
 
 /// Percorso della pagina pubblica nell'app (il link da mettere sul sito dell'ente).
 const percorsoMappaturaPubblica = '/pubblico/mappatura';
@@ -44,7 +39,6 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
 
   Future<(String, DatiAnticorruzione)> _caricaDati() async {
     final api = apiDi(context);
-    final auth = context.read<AuthState>();
     final Map<String, dynamic> d;
     try {
       d = await api.get('$apiPubblico/mappatura') as Map<String, dynamic>;
@@ -53,10 +47,7 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
       rethrow;
     }
     final ente = d['ente'] as Map<String, dynamic>;
-    if (ente['logo'] == true) {
-      // logo come fondo della pagina e icona della scheda del browser, come nell'app
-      api.getBytes('$apiPubblico/logo').then(auth.impostaLogo, onError: (_) {});
-    }
+    if (mounted) caricaLogoPubblico(context, ente);
     List<Map<String, dynamic>> lista(Object? v) => (v as List).cast<Map<String, dynamic>>();
     return (
       ente['nome'] as String,
@@ -71,7 +62,6 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
     return Scaffold(
       body: SafeArea(
         child: Caricamento<(String, DatiAnticorruzione)>(
@@ -81,37 +71,13 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
             final (ente, dati) = valore;
             return Provider<DatiAnticorruzione>.value(
               value: dati,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1100),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Row(children: [
-                        IconaEnte(logo: context.select<AuthState, Uint8List?>((a) => a.logo), dimensione: 48),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(ente, style: tema.textTheme.titleSmall?.copyWith(color: tema.colorScheme.onSurfaceVariant)),
-                            Text('Mappatura dei processi e valutazione del rischio corruttivo',
-                                style: tema.textTheme.titleLarge),
-                          ]),
-                        ),
-                      ]),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text(
-                        'Processi e procedimenti dell\'ente raggruppati per area di rischio: per ciascuno le attività, '
-                        'i possibili eventi rischiosi con il livello di rischio valutato e le misure adottate per '
-                        'prevenirli (Piano triennale per la prevenzione della corruzione e la trasparenza).',
-                        style: tema.textTheme.bodyMedium,
-                      ),
-                    ),
-                    const Expanded(child: MappaturaPubblica()),
-                  ]),
-                ),
+              child: PaginaPubblica(
+                ente: ente,
+                titolo: 'Mappatura dei processi e valutazione del rischio corruttivo',
+                introduzione: 'Processi e procedimenti dell\'ente raggruppati per area di rischio: per ciascuno le attività, '
+                    'i possibili eventi rischiosi con il livello di rischio valutato e le misure adottate per '
+                    'prevenirli (Piano triennale per la prevenzione della corruzione e la trasparenza).',
+                child: const MappaturaPubblica(),
               ),
             );
           },

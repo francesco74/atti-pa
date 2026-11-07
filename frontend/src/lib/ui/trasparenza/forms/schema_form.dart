@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../stato/auth_state.dart';
+import '../../comuni.dart' show apiDi, mostraErrore, mostraMessaggio;
 import '../utils/data_formatter.dart';
+import '../widgets/importa_procedimenti.dart';
 import '../widgets/modulo.dart';
 import '../widgets/selettore_schema.dart' show maiuscola;
 import './form_helpers.dart';
@@ -189,6 +193,38 @@ class SchemaFormState extends State<SchemaForm> {
       for (final r in _righe) {
         r.espansa = false;
       }
+    }
+  }
+
+  /// Scheda art. 35, sezione dei procedimenti, con il modulo anticorruzione attivo: gli
+  /// elementi si possono importare dai procedimenti della mappatura (o inserire da zero).
+  bool _importaProcedimenti(Json sezione) {
+    if (widget.schema['id'] != 'ART_35' || sezione['id'] != 'PROCEDIMENTI') return false;
+    try {
+      return context.read<AuthState>().utente?.modulo('anticorruzione') ?? false;
+    } catch (_) {
+      return false; // senza stato dell'accesso (es. nei test del solo form)
+    }
+  }
+
+  Future<void> _importa(List<Json> campi) async {
+    try {
+      final scelti = await scegliProcedimenti(context, apiDi(context));
+      if (scelti == null || scelti.isEmpty || !mounted) return;
+      setState(() {
+        final vuote = _righe.where((r) => r.isEmpty).toList();
+        _righe.removeWhere((r) => r.isEmpty);
+        disponiRighe(vuote);
+        _righe.addAll([for (final e in scelti) _rigaDa(e, campi)]);
+        if (_righe.length > 3) {
+          for (final r in _righe) {
+            r.espansa = false;
+          }
+        }
+      });
+      mostraMessaggio(context, scelti.length == 1 ? 'Importato 1 procedimento' : 'Importati ${scelti.length} procedimenti');
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
     }
   }
 
@@ -936,6 +972,18 @@ class SchemaFormState extends State<SchemaForm> {
           nota: sezione['nota'] as String?,
         ),
         const SizedBox(height: 16),
+        if (_importaProcedimenti(sezione))
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('Importa dalla mappatura dei procedimenti'),
+                onPressed: () => _importa(campi),
+              ),
+            ),
+          ),
         if (sezione['ripetibile'] == true)
           _elenco(
             _righe,
