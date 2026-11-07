@@ -119,7 +119,7 @@ class AnticorruzioneApi(unittest.TestCase):
         self._ok(c.post(f"{API}/rischi/{r['id']}/misure", base_url=ENTE, json={
             "descrizione": "Pubblicazione dei bandi", "categoria": "Trasparenza", "obbligo_trasparenza": "ART_23"}), 201)  # fmt: skip
 
-        # valutazione: 4 Alto, 4 Medio, 1 Basso -> Alto (parità); impatto Medio -> Critico
+        # valutazione: 4 Alto, 4 Medio, 1 Basso -> Alto (parità); impatto Medio -> Alto
         met = self._ok(c.get(f"{API}/metodologia", base_url=ENTE))
         self.assertTrue(met["standard"])
         prob = {i["id"]: "Alto" if int(i["id"]) <= 4 else "Medio" if int(i["id"]) <= 8 else "Basso"
@@ -127,7 +127,7 @@ class AnticorruzioneApi(unittest.TestCase):
         imp = {i["id"]: "Medio" for i in met["indicatori_impatto"]}
         v = self._ok(c.put(f"{API}/rischi/{r['id']}/valutazione", base_url=ENTE,
                            json={"valori_probabilita": prob, "valori_impatto": imp}))  # fmt: skip
-        self.assertEqual((v["probabilita"], v["livello"]), ("Alto", "Rischio Critico"))
+        self.assertEqual((v["probabilita"], v["livello"]), ("Alto", "Rischio Alto"))
         corpo = {"valori_probabilita": prob, "valori_impatto": imp, "probabilita": "Medio"}
         self.assertEqual(c.put(f"{API}/rischi/{r['id']}/valutazione", base_url=ENTE, json=corpo).status_code, 422)
         v = self._ok(c.put(f"{API}/rischi/{r['id']}/valutazione", base_url=ENTE,
@@ -246,7 +246,7 @@ class AnticorruzioneApi(unittest.TestCase):
             ]},
         ]}  # fmt: skip
         pr = self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "CREA", "oggetto": "PROCESSO", "dati": nuovo}), 201)
-        self.assertEqual(pr["dati"]["attivita"][0]["rischi"][0]["valutazione"]["livello"], "Rischio Alto")
+        self.assertEqual(pr["dati"]["attivita"][0]["rischi"][0]["valutazione"]["livello"], "Rischio Critico")
         self.assertEqual(pr["percorso"][0].split()[0], area["codice"])
         # va subito al RPCT; finché non decide il referente la corregge
         self.assertEqual((pr["stato"], pr["inviata_il"] is not None), ("INVIATA", True))
@@ -266,7 +266,7 @@ class AnticorruzioneApi(unittest.TestCase):
         cp = albero["codice"]
         self.assertEqual((cp, esito["codice"], albero["proponibile"]), (f"{area['codice']}.1", cp, True))
         rischio = albero["attivita"][0]["rischi"][0]
-        self.assertEqual((rischio["codice"], rischio["livello"]), (f"{cp}.1_R.1", "Rischio Alto"))
+        self.assertEqual((rischio["codice"], rischio["livello"]), (f"{cp}.1_R.1", "Rischio Critico"))
         self.assertEqual(rischio["misure"][0]["codice"], f"{cp}.1_R.1_M.1")
 
         # nuova attività con il suo rischio, proposta dal dirigente del settore (la U.O. è sotto)
@@ -281,7 +281,7 @@ class AnticorruzioneApi(unittest.TestCase):
         r0 = albero["attivita"][0]["rischi"][0]
         pv = self._proponi(ref, tipo="MODIFICA", oggetto="RISCHIO", elemento_id=r0["id"],
                            dati={"evento": r0["evento"], "valutazione": self._valutazione(ref, "Basso")})  # fmt: skip
-        self.assertEqual(pv["prima"]["valutazione"]["livello"], "Rischio Alto")
+        self.assertEqual(pv["prima"]["valutazione"]["livello"], "Rischio Critico")
         self.assertEqual(pv["dati"]["valutazione"]["livello"], "Rischio Minimo")
         pm = self._proponi(ref, tipo="CREA", oggetto="MISURA", padre_id=r0["id"], dati={"descrizione": "Rotazione"})
         self._approva(rpct, pv)
@@ -411,7 +411,7 @@ class AnticorruzioneApi(unittest.TestCase):
         # riepilogo e allegati al PTPCT
         riep = self._ok(ref.get(f"{API}/riepilogo", base_url=ENTE))
         self.assertGreaterEqual(riep["totali"]["misure"], 2)
-        self.assertEqual(riep["livelli"][0], "Rischio Alto")  # dal più grave
+        self.assertEqual(riep["livelli"][0], "Rischio Critico")  # dal più grave
         self.assertGreaterEqual(riep["per_livello"]["None"], 2)  # rischi non valutati
         x = ref.get(f"{API}/esporta/ptpct", base_url=ENTE)
         self.assertEqual(x.status_code, 200)

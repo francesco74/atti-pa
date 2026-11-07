@@ -25,7 +25,8 @@ FOGLI = {"xls", "xlsx", "ods"}
 TESTI = {"csv"}
 ESTENSIONI = DOCUMENTI | FOGLI | TESTI
 
-MAX_LINK = 5  # link del contenuto seguiti in una pagina
+MAX_LINK = 5  # link del contenuto seguiti in una pagina, se non indicato
+MAX_LINK_MASSIMO = 15  # limite al numero di link scelto dall'utente
 MAX_PDF = 5  # PDF collegati scaricati da una pagina
 MAX_IFRAME = 3
 _RE_PDF = re.compile(r"\.pdf(\?.*)?$", re.IGNORECASE)
@@ -100,10 +101,17 @@ async def _rendering_js(url: str, timeout_ms: int = 20_000) -> str:
 
 
 async def pagina(
-    url: str, *, analizza_pdf: bool = False, segui_link: bool = False, client: httpx.AsyncClient | None = None
+    url: str,
+    *,
+    analizza_pdf: bool = False,
+    segui_link: bool = False,
+    max_link: int = MAX_LINK,
+    client: httpx.AsyncClient | None = None,
 ) -> Pagina:
     """Scarica la pagina; con `analizza_pdf` anche i PDF collegati (segnati nel testo con
-    [FILE ALLEGATO: nome]), con `segui_link` alcune pagine collegate dal contenuto."""
+    [FILE ALLEGATO: nome]), con `segui_link` fino a `max_link` pagine collegate dal contenuto
+    (al più MAX_LINK_MASSIMO)."""
+    max_link = max(1, min(max_link, MAX_LINK_MASSIMO))
     await asyncio.to_thread(verifica_url, url)
     async with client or httpx.AsyncClient() as client:
         sorgente: str | bytes | None = None
@@ -144,7 +152,7 @@ async def pagina(
         if segui_link:
             visti = {url}
             for a in soup.find_all("a", href=True):
-                if len(correlate) >= MAX_LINK:
+                if len(correlate) >= max_link:
                     break
                 href = a.get("href").strip()
                 if (

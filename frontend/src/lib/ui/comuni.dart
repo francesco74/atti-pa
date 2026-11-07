@@ -246,3 +246,78 @@ class TestoAssistenza extends StatelessWidget {
     return Text.rich(TextSpan(style: stile, children: parti), textAlign: allineamento);
   }
 }
+
+/// Controlli oggettivi (proposte dell'anticorruzione, obiettivi della performance): avvisi
+/// in arancio, informazioni in grigio. Calcolati dal server sulle regole, senza modello.
+class ElencoControlli extends StatelessWidget {
+  const ElencoControlli(this.controlli, {super.key});
+
+  final List<Map<String, dynamic>> controlli;
+
+  @override
+  Widget build(BuildContext context) {
+    final grigio = Theme.of(context).colorScheme.onSurfaceVariant;
+    if (controlli.isEmpty) {
+      return const Row(children: [
+        Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+        SizedBox(width: 8),
+        Expanded(child: Text('Nessun problema trovato dai controlli.')),
+      ]);
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      for (final c in controlli)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(c['livello'] == 'AVVISO' ? Icons.warning_amber_rounded : Icons.info_outline,
+                size: 20, color: c['livello'] == 'AVVISO' ? Colors.orange.shade800 : grigio),
+            const SizedBox(width: 8),
+            Expanded(child: Text('${c['testo']}')),
+          ]),
+        ),
+    ]);
+  }
+}
+
+/// Link della pagina da seguire nella lettura di una fonte web (default e limite del server).
+const linkPredefiniti = 5;
+const linkMassimi = 15;
+
+/// Casella "segui i link" con il numero massimo di pagine collegate da leggere (5-15): più
+/// link rendono la lettura più completa ma più lunga.
+class SceltaLink extends StatelessWidget {
+  const SceltaLink({
+    super.key,
+    required this.titolo,
+    required this.segui,
+    required this.numero,
+    required this.onSegui,
+    required this.onNumero,
+    this.dense = false,
+  });
+
+  final String titolo;
+  final bool segui;
+  final int numero;
+  final ValueChanged<bool>? onSegui; // null: disabilitata
+  final ValueChanged<int> onNumero;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) => CheckboxListTile(
+        title: Text(titolo),
+        value: segui,
+        onChanged: onSegui == null ? null : (v) => onSegui!(v ?? false),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: EdgeInsets.zero,
+        dense: dense,
+        secondary: DropdownButton<int>(
+          value: numero,
+          underline: const SizedBox.shrink(),
+          items: [
+            for (var n = linkPredefiniti; n <= linkMassimi; n++) DropdownMenuItem(value: n, child: Text('fino a $n link')),
+          ],
+          onChanged: segui && onSegui != null ? (v) => onNumero(v ?? numero) : null,
+        ),
+      );
+}

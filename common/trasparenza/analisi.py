@@ -311,7 +311,7 @@ class Contenuti:
 
 
 async def contenuti(
-    url: str, files: list[File], documenti, *, analizza_pdf=False, segui_link=False, client=None
+    url: str, files: list[File], documenti, *, analizza_pdf=False, segui_link=False, max_link=fonti.MAX_LINK, client=None
 ) -> Contenuti:
     """Pagina web (con PDF e link collegati), documento indicato da un URL o file caricati.
     `client`: client HTTP da usare (nei test)."""
@@ -322,7 +322,9 @@ async def contenuti(
             nome, dati = await fonti.documento_da_url(url, client)
             files = [File(nome if fonti.estensione(nome) == est else f"documento.{est}", dati)]
         else:
-            pagina = await fonti.pagina(url, analizza_pdf=analizza_pdf, segui_link=segui_link, client=client)
+            pagina = await fonti.pagina(
+                url, analizza_pdf=analizza_pdf, segui_link=segui_link, max_link=max_link, client=client
+            )
             parti = [_intestato(f"CONTENUTO DELLA PAGINA WEB ({url})", pagina.html)]
             for nome, dati in pagina.pdf:
                 try:
@@ -370,7 +372,7 @@ async def analizza(controllo: str, c: Contenuti, contesto: Contesto, llm) -> dic
     return {"html": componi_report(report, titolo, c.fonte or c.url)}
 
 
-async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm) -> dict:
+async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm, sezione_id: str = "") -> dict:
     """Dati per precompilare il form dello schema, con gli avvisi su ciò che manca."""
     _controlla_lunghezza(c)
     schema = get_schema(schema_id)
@@ -381,4 +383,4 @@ async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm) -> di
     async def genera(prompt: str, schema_risposta: dict) -> dict:
         return await llm.dati_json(SISTEMA_ESTRAZIONE, f"{prompt}\n\n{c.testo}", json_schema(schema_risposta))
 
-    return await estrai(schema, variante, genera)
+    return await estrai(schema, variante, genera, sezione_id)

@@ -12,19 +12,23 @@ fattore abilitante e livello, non i valori degli indicatori né le correzioni mo
 
 from http import HTTPStatus
 
-from flask import Blueprint, g
+from flask import Blueprint, g, request
 from sqlalchemy import select
 from sqlalchemy.orm import undefer
 
-from deps import db, ente_richiesta
+import ricerca as servizio_ricerca
+from deps import db, ente_richiesta, impostazioni
 from routers.anticorruzione import (
-    FiltriProcessi, albero_processo, elenco_processi, metodologia_ente, processo_dell_ente,
+    FiltriProcessi, RicercaIn, albero_processo, documenti_ricerca, elenco_processi, metodologia_ente,
+    processo_dell_ente,
 )  # fmt: skip
 from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione.metodologia import chiave_naturale
-from web import ErroreApi, allegato, parametri
+from web import ErroreApi, allegato, corpo, parametri
 from common.anticorruzione.metodologia import chiave_area
+from common import registro_ricerche as reg
 from common.models import AcArea, AcProcesso, Ente, Modulo, Struttura
+from routers.ricerche import FeedbackIn, RicercaIn as RicercaConclusaIn, registra_feedback, registra_ricerca
 
 bp = Blueprint("pubblico", __name__, url_prefix="/api/v1/pubblico")
 
@@ -40,6 +44,21 @@ _MISURA = (
     "id", "codice", "descrizione", "tipo", "categoria", "obbligo_trasparenza", "fasi", "tempi",
     "struttura_id", "indicatore", "target",
 )  # fmt: skip
+
+
+# ricerche per significato per indirizzo IP (RICERCA_LIMITE_PUBBLICO al minuto); creato alla
+# prima ricerca, con il limite della configurazione
+_limite: servizio_ricerca.LimiteRichieste | None = None
+
+
+async def _cerca(e: Ente, tipo: str | None) -> dict:
+    """Ricerca dei cittadini: oltre il limite di richieste solo per parole, senza modello."""
+    global _limite
+    if _limite is None:
+        _limite = servizio_ricerca.LimiteRichieste(impostazioni().ricerca_limite_pubblico)
+    f = parametri(RicercaIn)
+    semantica = _limite.consenti(request.remote_addr or "")
+    return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), tipo), ente_id=e.id, semantica=semantica)
 
 
 def _solo(dati: dict, campi: tuple[str, ...]) -> dict:
@@ -103,6 +122,12 @@ async def processo(processo_id: str):
     }  # fmt: skip
 
 
+@bp.get("/mappatura/ricerca")
+async def ricerca_mappatura():
+    """Ricerca in linguaggio naturale nei processi e procedimenti pubblicati."""
+    return await _cerca(await _ente_con_mappatura(), None)
+
+
 async def _ente_con_procedimenti() -> Ente:
     """Ente del dominio con i procedimenti pubblicati (dati della mappatura dell'anticorruzione)."""
     e = await ente_richiesta()
@@ -138,6 +163,13 @@ async def procedimenti():
     }
 
 
+@bp.get("/procedimenti/ricerca")
+async def ricerca_procedimenti():
+    """Ricerca in linguaggio naturale nei procedimenti (es. "come chiedo il contributo per
+    l'affitto?")."""
+    return await _cerca(await _ente_con_procedimenti(), "PROCEDIMENTO")
+
+
 @bp.get("/procedimenti/<procedimento_id>")
 async def procedimento(procedimento_id: str):
     """Tutti i dati dell'allegato 11 (schema ART_35) del procedimento, con i recapiti degli uffici."""
@@ -147,6 +179,44 @@ async def procedimento(procedimento_id: str):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimento non trovato")
     return {"id": p.id, "codice": p.codice, "struttura_id": p.struttura_id,
             "scheda": dati_art35.scheda(p, await _strutture(e))}  # fmt: skip
+
+
+# --- registro delle ricerche e feedback dei cittadini ---------------------------------------
+
+# registrazioni per indirizzo IP (RICERCHE_LIMITE_REGISTRO al minuto)
+_limite_registro: servizio_ricerca.LimiteRichieste | None = None
+
+
+async def _ambiti_pubblici() -> tuple[Ente, dict]:
+    """Ente del dominio e ambiti con la pagina pubblica attiva; senza nessuno: 404."""
+    global _limite_registro
+    if _limite_registro is None:
+        _limite_registro = servizio_ricerca.LimiteRichieste(impostazioni().ricerche_limite_registro)
+    e = await ente_richiesta()
+    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Pagine pubbliche non attive")
+    attivi = {"MAPPATURA": e.mappatura_pubblica, "PROCEDIMENTI": e.procedimenti_pubblici}
+    ambiti = {k: d for k, d in reg.ambiti_disponibili(e).items() if attivi.get(k)}
+    if not ambiti:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Pagine pubbliche non attive")
+    if not _limite_registro.consenti(request.remote_addr or ""):
+        raise ErroreApi(HTTPStatus.TOO_MANY_REQUESTS, "Troppe richieste, riprova tra poco")
+    g.ente = e
+    return e, ambiti
+
+
+@bp.post("/ricerche/registro")
+async def registro_ricerca():
+    """Ricerca conclusa di un cittadino (senza IP né altri dati di chi cerca)."""
+    e, ambiti = await _ambiti_pubblici()
+    return await registra_ricerca(e.id, ambiti, True, corpo(RicercaConclusaIn)), 201
+
+
+@bp.post("/ricerche/feedback")
+async def feedback_ricerca():
+    """Feedback facoltativo di un cittadino sui risultati di una ricerca o su una scheda."""
+    e, ambiti = await _ambiti_pubblici()
+    return await registra_feedback(e.id, ambiti, True, corpo(FeedbackIn)), 201
 
 
 @bp.get("/logo")

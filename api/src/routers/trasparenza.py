@@ -30,7 +30,7 @@ from common.models import (
 )  # fmt: skip
 from common.trasparenza import documenti as doc
 from common.trasparenza.analisi import ANALISI, ESTRAZIONE
-from common.trasparenza.fonti import ESTENSIONI, estensione
+from common.trasparenza.fonti import ESTENSIONI, MAX_LINK, MAX_LINK_MASSIMO, estensione
 from common.trasparenza.registro import SCHEMI, get_schema, trova_prompt, valida_dati
 from common.trasparenza.sicurezza import estrai_esito, sanifica_html
 
@@ -119,6 +119,7 @@ class FonteIn(BaseModel):
     url: str | None = Field(default=None, max_length=2000, pattern=r"^https?://")
     analizza_pdf: bool = False  # della pagina: scarica anche i PDF collegati
     segui_link: bool = False  # della pagina: segue alcuni link del contenuto
+    max_link: int = Field(default=MAX_LINK, ge=1, le=MAX_LINK_MASSIMO)  # quanti, con segui_link
     descrizioni: dict[str, str] = {}  # nome del file -> note dell'utente
     note: str = Field(default="", max_length=5000)
     data_adozione: str = Field(default="", max_length=20)  # GG/MM/AAAA
@@ -178,6 +179,7 @@ async def _accoda(tipo: str, dati: FonteIn, files, specifici: dict) -> dict:
     richiesta = {
         **specifici,
         "url": dati.url, "analizza_pdf": dati.analizza_pdf, "segui_link": dati.segui_link,
+        "max_link": dati.max_link,
         "note": dati.note.strip(), "data_adozione": dati.data_adozione.strip(),
         "data_pubblicazione": dati.data_pubblicazione.strip(), "file": salvati,
     }  # fmt: skip

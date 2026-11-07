@@ -44,6 +44,10 @@ void main() {
           ],
         });
       }
+      if (r.url.path.endsWith('/pubblico/procedimenti/ricerca')) {
+        expect(r.url.queryParameters['testo'], 'come pago la locazione?');
+        return _json({'semantica': false, 'risultati': [{'id': 'p1', 'parole': ['locazion'], 'semantica': false}]});
+      }
       return _json({'id': 'p1', 'codice': 'A.1', 'struttura_id': 's1', 'scheda': _scheda});
     }));
     await tester.pumpWidget(MultiProvider(
@@ -60,6 +64,12 @@ void main() {
     await tester.pump();
     expect(find.text('Accesso agli atti'), findsOneWidget);
     expect(find.text('Contributo affitto'), findsNothing);
+    // una domanda: risultati del server (per parole e sinonimi)
+    await tester.enterText(find.byType(TextField), 'come pago la locazione?');
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Contributo affitto'), findsOneWidget);
+    expect(find.text('Accesso agli atti'), findsNothing);
+    expect(find.text('In ordine di pertinenza: per parole e sinonimi.'), findsOneWidget);
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
 

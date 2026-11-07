@@ -37,6 +37,15 @@ data:
   LLM_TEMPERATURA: "0"
   LLM_TEMPERATURA_REDAZIONE: "0.2"
   LLM_TEMPERATURA_ASSISTENTE: "0.3"
+  # Modello di embedding per la ricerca in linguaggio naturale (API /embeddings compatibile
+  # OpenAI). Vuoto = ricerca solo per parole. Eventuale chiave (EMBEDDING_API_KEY) nel Secret.
+  EMBEDDING_BASE_URL: ""         # es. http://vllm-embedding.llm.svc.cluster.local:8000/v1
+  EMBEDDING_MODEL: ""            # es. BAAI/bge-m3
+  EMBEDDING_TIMEOUT: "20"
+  RICERCA_SOGLIA_SEMANTICA: "0.5"
+  RICERCA_LIMITE_PUBBLICO: "20"  # ricerche per significato al minuto per IP, pagine pubbliche
+  RICERCHE_LIMITE_REGISTRO: "30" # ricerche concluse e feedback registrati al minuto per IP
+  RICERCHE_CONSERVAZIONE_MESI: "12"  # poi il worker cancella ricerche registrate e feedback
   # Assistente: caratteri al massimo in una conversazione, documenti allegati compresi
   ASSISTENTE_MAX_CARATTERI: "100000"
   # API del RAG (indirizzo e chiave nella configurazione di ogni ente)

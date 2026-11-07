@@ -285,6 +285,14 @@ rilevamento: se il modello non risponde il documento non viene prodotto, mai con
 chiaro. Il controllo rapido delle bozze, immediato e senza modello, non li cerca. Si
 disattiva con `LLM_DATI_PERSONALI=false`.
 
+**Modello di embedding (ricerca).** La ricerca in linguaggio naturale nella mappatura e nei
+procedimenti (anche nelle pagine pubbliche) usa, oltre alle parole con radici e sinonimi, un
+modello di embedding con API `/embeddings` compatibile OpenAI, configurato a parte
+dall'LLM: `EMBEDDING_BASE_URL` e `EMBEDDING_MODEL` (es. vLLM con `BAAI/bge-m3`).
+Senza, la ricerca funziona solo per parole. I vettori si calcolano alla prima ricerca e quando
+un processo cambia, e restano nella tabella `ricerca_vettori` (si può svuotare: si
+ricostruisce). Cambiando modello i vettori si ricalcolano da soli.
+
 I testi dei prompt inviati al modello sono file in `common/prompt/` (descritti nel
 README della cartella): si modificano senza toccare il codice e valgono al riavvio. Con
 `LLM_PROMPT_DIR` si indica una cartella di prompt personalizzati che sostituiscono quelli

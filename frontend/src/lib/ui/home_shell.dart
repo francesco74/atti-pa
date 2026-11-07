@@ -8,6 +8,7 @@ import '../stato/auth_state.dart';
 import 'admin/admin_page.dart';
 import 'anticorruzione/anticorruzione_page.dart';
 import 'performance/performance_page.dart';
+import 'ricerche/ricerche_page.dart';
 import 'assistente/assistente_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
@@ -88,6 +89,8 @@ class _HomeShellState extends State<HomeShell> {
     final anticorruzione = u.modulo('anticorruzione'); // mappatura dei processi e rischi corruttivi
     final performance = u.modulo('performance'); // obiettivi del PIAO per struttura
     final assistente = u.modulo('assistente'); // chat con l'LLM, per tutti gli utenti dell'ente
+    // ricerche registrate e feedback: oggi ci sono solo quelle della mappatura e dei procedimenti
+    final ricerche = anticorruzione && u.isAnalisiRicerche;
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
       if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
@@ -101,8 +104,9 @@ class _HomeShellState extends State<HomeShell> {
       if (performance && u.isPerformance) const _Voce('Performance', Icons.flag_outlined, PerformancePage()),
       if (assistente)
         _Voce('Assistente', Icons.chat_outlined, AssistentePage(conversazione: _conversazione)),
+      if (ricerche) const _Voce('Ricerche e feedback', Icons.manage_search, RicerchePage()),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (!redazione && !trasparenza && !anticorruzione && !performance && !assistente && !u.isAdmin)
+      if (!redazione && !trasparenza && !anticorruzione && !performance && !assistente && !ricerche && !u.isAdmin)
         const _Voce('Benvenuto', Icons.home, _NessunModulo()),
     ];
   }

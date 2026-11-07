@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 from routers import (
     anticorruzione, assistente, auth, bozze, checklists, controllo, ente, modelli, norme, norme_manuali, performance,
-    pubblico, trasparenza,
+    pubblico, relazioni, ricerche, trasparenza,
 )  # fmt: skip
 import httpx
 from flask import g, request
@@ -32,6 +32,7 @@ from web import AttiFlask, ErroreApi
 from common.config import Settings, get_settings
 from common.db import crea_engine, crea_sessionmaker
 from common.coda import Coda
+from common.embedding import crea_embedding
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
 from common.normattiva import NormattivaClient
@@ -86,11 +87,12 @@ def create_app(
         # connessione a RabbitMQ al primo invio: l'API parte anche se il broker non risponde
         coda=Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso),
         rag_http=httpx.AsyncClient(timeout=settings.rag_timeout),
+        embedding=crea_embedding(settings),
     )
 
     async def chiudi_risorse() -> None:
         stato = app.state
-        for client in (stato.llm, stato.documenti, stato.coda):
+        for client in (stato.llm, stato.documenti, stato.coda, stato.embedding):
             if client is not None:
                 await client.close()
         await stato.rag_http.aclose()
@@ -170,7 +172,7 @@ def create_app(
 
     for modulo in (
         auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,
-        verifiche, controllo, trasparenza, anticorruzione, performance, assistente, pubblico,
+        verifiche, controllo, trasparenza, anticorruzione, performance, assistente, pubblico, relazioni, ricerche,
     ):  # fmt: skip
         app.register_blueprint(modulo.bp)
 

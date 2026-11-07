@@ -21,16 +21,21 @@ from typing import Literal
 from flask import Blueprint
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import delete, select
+from sqlalchemy.orm import undefer
 
+import ricerca as servizio_ricerca
 from deps import audit, autenticato, db, ente_id, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
+from common.ricerca import Documento
 from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione import excel
+from common.anticorruzione.controlli import Contesto as ContestoControlli
+from common.anticorruzione.controlli import controlli_proposta
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
     AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio,
-    Ente, EnteDominio, Modulo, Ruolo, Struttura, User, nuovo_id,
+    Ente, EnteDominio, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
 )  # fmt: skip
 from common.trasparenza.registro import SCHEMI
 
@@ -101,6 +106,49 @@ async def ripristina_metodologia():
         audit(sessione, utente(), "ac_metodologia", ente_id(), "STANDARD")
         await sessione.commit()
     return nessun_contenuto()
+
+
+# --- importazione dei procedimenti dal sito AT o da documenti --------------------------------
+
+
+@bp.post("/procedimenti/importazioni")
+@rpct
+async def importa_procedimenti():
+    """Avvia la lettura dei procedimenti (art. 35) dalla pagina "Tipologie di procedimento" del
+    sito di Amministrazione trasparente o da documenti (Word, ODT, PDF, fogli di calcolo): il
+    worker la esegue con l'estrazione della trasparenza (schema ART_35, sezione PROCEDIMENTI); il
+    modello trascrive i dati, non li inventa. Il risultato si rivede con GET /<id>."""
+    from routers.trasparenza import ESTRAZIONE, FonteIn, _accoda, _richiesta
+
+    dati, files = _richiesta(FonteIn)
+    specifici = {"schema_id": dati_art35.SCHEMA, "variante": None, "sezione": dati_art35.SEZIONE, "origine": "mappatura"}
+    return await _accoda(ESTRAZIONE, dati, files, specifici), HTTPStatus.ACCEPTED
+
+
+@bp.get("/procedimenti/importazioni/<lavoro_id>")
+@rpct
+async def importazione_procedimenti(lavoro_id: str):
+    """Stato della lettura e, a lettura completata, i procedimenti trovati con gli abbinamenti
+    proposti (procedimento della mappatura, strutture per gli uffici) e gli avvisi."""
+    from routers.trasparenza import _lavoro
+
+    sessione = db()
+    lavoro = await sessione.scalar(
+        select(TrasparenzaLavoro).where(TrasparenzaLavoro.id == lavoro_id, TrasparenzaLavoro.ente_id == ente_id())
+        .options(undefer(TrasparenzaLavoro.risultato))
+    )  # fmt: skip
+    if lavoro is None or lavoro.utente_id != utente().id or (lavoro.richiesta or {}).get("origine") != "mappatura":
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Importazione non trovata")
+    risposta = _lavoro(lavoro)
+    if lavoro.stato == StatoVerifica.COMPLETATA and lavoro.risultato:
+        righe = ((lavoro.risultato or {}).get("dati") or {}).get("righe") or []
+        procedimenti = list(await sessione.scalars(
+            select(AcProcesso).where(AcProcesso.ente_id == ente_id(), AcProcesso.tipo == "PROCEDIMENTO")))  # fmt: skip
+        risposta |= {
+            "procedimenti": dati_art35.abbina(righe, procedimenti, await _strutture_ente(sessione)),
+            "avvisi": (lavoro.risultato or {}).get("avvisi") or [],
+        }
+    return risposta
 
 
 # --- pubblicazione della mappatura -----------------------------------------------------------
@@ -397,6 +445,46 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
         if p.tipo == "PROCEDIMENTO":  # quanti dati dell'art. 35 mancano (0: completi)
             risultato[-1]["art35_mancanti"] = len(dati_art35.mancanti(dati_art35.scheda(p, strutture)))
     return risultato
+
+
+class RicercaIn(BaseModel):
+    testo: str = Field(min_length=1, max_length=300)
+    tipo: Literal["PROCESSO", "PROCEDIMENTO"] | None = None
+
+
+async def documenti_ricerca(sessione, tipo: str | None = None) -> list[Documento]:
+    """Processi (o solo procedimenti) dell'ente come documenti da cercare: codice e
+    denominazione, poi descrizione, area, struttura, riferimenti normativi, termine, dati
+    dell'art. 35 descrittivi e descrizioni delle attività. Solo dati pubblicabili."""
+    q = select(AcProcesso).where(AcProcesso.ente_id == ente_id())
+    if tipo:
+        q = q.where(AcProcesso.tipo == tipo)
+    processi = list(await sessione.scalars(q))
+    aree = {a.id: a for a in await sessione.scalars(select(AcArea).where(AcArea.ente_id == ente_id()))}
+    strutture = await _strutture_ente(sessione)
+    attivita: dict[str, list[str]] = {}
+    for a in await sessione.scalars(select(AcAttivita).where(AcAttivita.ente_id == ente_id())):
+        attivita.setdefault(a.processo_id, []).append(a.descrizione or "")
+    documenti = []
+    for p in processi:
+        area, struttura, d = aree.get(p.area_id), strutture.get(p.struttura_id), p.art35 or {}
+        parti = [
+            p.descrizione, area.descrizione if area else None, struttura.descrizione if struttura else None,
+            p.norma_riferimento, p.termine_conclusione,
+            d.get("tipologia"), d.get("modalita_info"), d.get("strumenti_tutela"),
+            *attivita.get(p.id, []),
+        ]  # fmt: skip
+        documenti.append(Documento(p.id, f"{p.codice} {p.denominazione}", "\n".join(x for x in parti if x)))
+    return documenti
+
+
+@bp.get("/ricerca")
+@lettore
+async def ricerca_processi():
+    """Ricerca in linguaggio naturale nei processi e procedimenti: id in ordine di pertinenza
+    (vedi api/src/ricerca.py)."""
+    f = parametri(RicercaIn)
+    return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), f.tipo), ente_id=ente_id())
 
 
 async def processo_dell_ente(sessione, processo_id: str) -> AcProcesso:
@@ -1101,7 +1189,34 @@ async def proposta(proposta_id: str):
     pr = await _proposta_visibile(sessione, proposta_id)
     risultato = _proposta(pr, await sessione.get(User, pr.utente_id), dati=True)
     risultato["cambiato"] = await _cambiato(sessione, pr)
+    if pr.stato in ("INVIATA", "RESTITUITA"):  # da decidere: controlli oggettivi per il RPCT
+        risultato["controlli"] = controlli_proposta(pr.oggetto, pr.tipo, pr.dati, pr.prima,
+                                                    await _contesto_controlli(sessione, pr))  # fmt: skip
     return risultato
+
+
+async def _contesto_controlli(sessione, pr: AcProposta) -> ContestoControlli:
+    """Dati della mappatura per i controlli della proposta: processi dell'ente (doppioni),
+    attività del processo o rischi dell'attività, misure del rischio (eliminazione)."""
+    ctx = ContestoControlli(livelli=(await metodologia_ente()).livelli, elemento_id=pr.elemento_id)
+    if pr.oggetto == "PROCESSO":
+        righe = await sessione.execute(select(AcProcesso.id, AcProcesso.denominazione).where(AcProcesso.ente_id == ente_id()))
+        ctx.processi = {i: d for i, d in righe}
+    elif pr.oggetto == "ATTIVITA":
+        processo_id = pr.padre_id
+        if pr.tipo != "CREA" and (a := await sessione.get(AcAttivita, pr.elemento_id)) is not None:
+            processo_id = a.processo_id
+        righe = await sessione.execute(select(AcAttivita.id, AcAttivita.descrizione).where(AcAttivita.processo_id == processo_id))
+        ctx.fratelli = [d for i, d in righe if i != pr.elemento_id]
+    elif pr.oggetto == "RISCHIO":
+        attivita_id = pr.padre_id
+        if pr.tipo != "CREA" and (r := await sessione.get(AcRischio, pr.elemento_id)) is not None:
+            attivita_id = r.attivita_id
+        righe = await sessione.execute(select(AcRischio.id, AcRischio.evento).where(AcRischio.attivita_id == attivita_id))
+        ctx.fratelli = [e for i, e in righe if i != pr.elemento_id]
+    elif pr.oggetto == "MISURA" and pr.tipo == "ELIMINA" and (m := await sessione.get(AcMisura, pr.elemento_id)) is not None:
+        ctx.misure_del_rischio = len(list(await sessione.scalars(select(AcMisura.id).where(AcMisura.rischio_id == m.rischio_id))))
+    return ctx
 
 
 class PropostaNuova(BaseModel):

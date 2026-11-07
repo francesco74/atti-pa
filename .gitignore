@@ -13,6 +13,7 @@ dist/
 .coverage
 htmlcov/
 docs/
+sigerico/
 
 # Config locale e segreti
 .env

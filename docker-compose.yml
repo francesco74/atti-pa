@@ -32,6 +32,10 @@ x-comune: &comune
     LLM_MODEL: ${LLM_MODEL:-}
     LLM_API_KEY: ${LLM_API_KEY:-}
     LLM_EFFORT: ${LLM_EFFORT:-medium}
+    # modello di embedding per la ricerca (vuoto = solo per parole), es. vLLM sul computer:
+    # EMBEDDING_BASE_URL=http://host.docker.internal:8002/v1 EMBEDDING_MODEL=BAAI/bge-m3
+    EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+    EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
     LOG_SQL: ${LOG_SQL:-false}
   extra_hosts:

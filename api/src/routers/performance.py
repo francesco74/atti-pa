@@ -29,7 +29,7 @@ from common.anticorruzione.metodologia import chiave_naturale
 from common.models import (
     AcMisura, Modulo, PfElemento, PfModifica, PfObiettivo, PfPiao, Ruolo, Struttura,
 )  # fmt: skip
-from common.performance import TOTALE, disponibile, in_ritardo, media_pesata
+from common.performance import AVVISO, TOTALE, controlli_obiettivo, disponibile, in_ritardo, media_pesata
 
 bp = Blueprint("performance", __name__, url_prefix="/api/v1/performance")
 
@@ -291,8 +291,18 @@ def _obiettivo(o: PfObiettivo, p: PfPiao, elementi: list[PfElemento], oggi: date
         "azioni": sum(1 for x in elementi if x.tipo == "AZIONE"),
         "misure": sum(1 for x in elementi if x.tipo == "MISURA"),
         "ritardi": sum(1 for x in elementi if in_ritardo(x.scadenza, x.completamento, oggi)),
+        "avvisi": sum(1 for c in _controlli(o, elementi) if c["livello"] == AVVISO),
         "modificabile": _modificabile(o, p),
     }  # fmt: skip
+
+
+def _controlli(o: PfObiettivo, elementi: list[PfElemento], strutture_misure: dict | None = None) -> list[dict]:
+    return controlli_obiettivo(
+        o.impegno, o.anno, o.struttura_id,
+        [{"tipo": x.tipo, "descrizione": x.descrizione, "impegno": x.impegno, "scadenza": x.scadenza,
+          "misura_id": x.misura_id} for x in elementi],
+        misure_attive=ente().modulo_attivo(Modulo.ANTICORRUZIONE), strutture_misure=strutture_misure,
+    )  # fmt: skip
 
 
 async def _elementi_di(ids: list[str]) -> dict[str, list[PfElemento]]:
@@ -347,8 +357,12 @@ async def obiettivo(obiettivo_id: str):
     o, p = await _obiettivo_visibile(obiettivo_id)
     elementi = _per_scadenza((await _elementi_di([o.id]))[o.id])
     oggi = date.today()
+    ids_misure = [x.misura_id for x in elementi if x.misura_id]
+    strutture_misure = {
+        m_id: s_id for m_id, s_id in await db().execute(select(AcMisura.id, AcMisura.struttura_id).where(AcMisura.id.in_(ids_misure)))
+    } if ids_misure else {}  # fmt: skip
     return {**_obiettivo(o, p, elementi, oggi), "elementi": [_elemento(x, oggi) for x in elementi],
-            "piao": _piao(p)}  # fmt: skip
+            "piao": _piao(p), "controlli": _controlli(o, elementi, strutture_misure)}  # fmt: skip
 
 
 @bp.post("/obiettivi")

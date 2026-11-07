@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../api/api_client.dart';
 import '../../../util/scelta_file.dart';
+import '../../comuni.dart' show SceltaLink, linkPredefiniti;
 import '../servizio.dart';
 import 'selettore_schema.dart' show maiuscola;
 
@@ -24,6 +25,7 @@ class FontePrecompilazione {
   final String url;
   final bool analizzaPdf;
   final bool seguiLink;
+  final int maxLink;
   final List<DocumentoFonte> documenti;
 
   const FontePrecompilazione({
@@ -31,6 +33,7 @@ class FontePrecompilazione {
     this.url = '',
     this.analizzaPdf = false,
     this.seguiLink = false,
+    this.maxLink = linkPredefiniti,
     this.documenti = const [],
   });
 
@@ -75,7 +78,7 @@ Future<Map<String, dynamic>> estraiDaFonte(
     {
       'schema_id': idSchema,
       'variante': fonte.idControllo,
-      if (web) ...{'url': fonte.url, 'analizza_pdf': fonte.analizzaPdf, 'segui_link': fonte.seguiLink},
+      if (web) ...{'url': fonte.url, 'analizza_pdf': fonte.analizzaPdf, 'segui_link': fonte.seguiLink, 'max_link': fonte.maxLink},
     },
     web ? const [] : [for (final d in fonte.documenti) (d.nome, d.bytes)],
   );
@@ -99,6 +102,7 @@ class _DialogoFonteState extends State<_DialogoFonte> {
   _Tipo _tipo = _Tipo.web;
   bool _analizzaPdf = false;
   bool _seguiLink = false;
+  int _maxLink = linkPredefiniti;
   final List<DocumentoFonte> _documenti = [];
   String? _idControllo;
 
@@ -154,6 +158,7 @@ class _DialogoFonteState extends State<_DialogoFonte> {
         url: _tipo == _Tipo.web ? _urlController.text.trim() : '',
         analizzaPdf: _tipo == _Tipo.web && _analizzaPdf,
         seguiLink: _tipo == _Tipo.web && _seguiLink,
+        maxLink: _maxLink,
         documenti: _tipo == _Tipo.documenti ? List.of(_documenti) : const [],
       ),
     );
@@ -244,14 +249,12 @@ class _DialogoFonteState extends State<_DialogoFonte> {
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 ),
-                CheckboxListTile(
-                  title: const Text(
-                    'Segui i link presenti nel contenuto principale (max 5)',
-                  ),
-                  value: _seguiLink,
-                  onChanged: (v) => setState(() => _seguiLink = v ?? false),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
+                SceltaLink(
+                  titolo: 'Segui i link presenti nel contenuto principale',
+                  segui: _seguiLink,
+                  numero: _maxLink,
+                  onSegui: (v) => setState(() => _seguiLink = v),
+                  onNumero: (v) => setState(() => _maxLink = v),
                   dense: true,
                 ),
               ] else ...[

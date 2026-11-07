@@ -53,10 +53,13 @@ class Ruolo:
     # chiude i PIAO e vede e corregge tutto
     PERFORMANCE_RESPONSABILE = "PERFORMANCE_RESPONSABILE"
     PERFORMANCE_AMMINISTRATORE = "PERFORMANCE_AMMINISTRATORE"
+    # consulta le ricerche senza risposta e i feedback di cittadini e utenti (es. l'ufficio
+    # statistica): non dipende da un modulo
+    ANALISI_RICERCHE = "ANALISI_RICERCHE"
     TUTTI = (
         REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA,
         ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT,
-        PERFORMANCE_RESPONSABILE, PERFORMANCE_AMMINISTRATORE, ADMIN,
+        PERFORMANCE_RESPONSABILE, PERFORMANCE_AMMINISTRATORE, ANALISI_RICERCHE, ADMIN,
     )  # fmt: skip
 
 
@@ -919,6 +922,70 @@ class NotificaEmail(Base):
     errore: Mapped[str | None] = mapped_column(Text)  # dell'ultimo tentativo
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     inviata_il: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class RicercaVettore(Base):
+    """Vettore di embedding di un record per la ricerca semantica (common/ricerca.py): uno per
+    record e modello, ricalcolato quando cambia l'impronta del testo indicizzato. Float32 in
+    binario, già normalizzato. Si ricostruisce da solo: si può svuotare in ogni momento."""
+
+    __tablename__ = "ricerca_vettori"
+    __table_args__ = (UniqueConstraint("oggetto_id", "modello", name="uq_ricerca_vettore"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    oggetto_id: Mapped[str] = mapped_column(String(36))  # es. id di AcProcesso
+    modello: Mapped[str] = mapped_column(String(200))
+    impronta: Mapped[str] = mapped_column(String(64))
+    vettore: Mapped[bytes] = mapped_column(FileBinario)
+
+
+class RicercaRegistrata(Base):
+    """Ricerca conclusa (common/registro_ricerche.py): l'app la registra quando la persona
+    apre un risultato (TROVATA) o resta senza aprirne (NESSUN_RISULTATO, RISULTATI_DEBOLI,
+    NON_APERTI). Senza utente né IP; dati personali del testo oscurati. Le ricerche senza
+    risposta con la stessa `chiave` (radici delle parole) si consultano insieme e si segnano
+    gestite con una nota. Si cancellano dopo RICERCHE_CONSERVAZIONE_MESI."""
+
+    __tablename__ = "ricerche_registro"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    ambito: Mapped[str] = mapped_column(String(50))  # es. PROCEDIMENTI
+    pubblica: Mapped[bool] = mapped_column(Boolean)  # cittadino (pagina pubblica) o utente
+    testo: Mapped[str] = mapped_column(String(300))
+    chiave: Mapped[str] = mapped_column(String(300))
+    risultati: Mapped[int] = mapped_column(Integer)
+    esito: Mapped[str] = mapped_column(String(20))
+    posizione: Mapped[int | None] = mapped_column(Integer)  # del risultato aperto (da 1)
+    semantica: Mapped[bool] = mapped_column(Boolean, default=False)
+    gestita_il: Mapped[datetime | None] = mapped_column(DateTime)
+    gestita_da: Mapped[str | None] = mapped_column(String(255))
+    nota: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class RicercaFeedback(Base):
+    """Feedback facoltativo: sui risultati di una ricerca (RICERCA, con la ricerca) o su una
+    scheda (SCHEDA, es. un procedimento pubblico). Commento con i dati personali oscurati."""
+
+    __tablename__ = "ricerche_feedback"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    ambito: Mapped[str] = mapped_column(String(50))
+    pubblica: Mapped[bool] = mapped_column(Boolean)
+    tipo: Mapped[str] = mapped_column(String(20))  # RICERCA, SCHEDA
+    ricerca_id: Mapped[str | None] = mapped_column(ForeignKey("ricerche_registro.id", ondelete="SET NULL"))
+    testo: Mapped[str | None] = mapped_column(String(300))  # della ricerca
+    riferimento_id: Mapped[str | None] = mapped_column(String(36))  # della scheda
+    riferimento: Mapped[str | None] = mapped_column(String(500))  # titolo della scheda allora
+    utile: Mapped[bool] = mapped_column(Boolean)
+    commento: Mapped[str | None] = mapped_column(Text)
+    gestito_il: Mapped[datetime | None] = mapped_column(DateTime)
+    gestito_da: Mapped[str | None] = mapped_column(String(255))
+    nota: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class AuditLog(Base):

@@ -8,13 +8,14 @@
 
 scala: [Basso, Medio, Alto]  # dal più basso
 
-# livelli di rischio dal più basso: "Critico" è sotto "Alto" (matrice del PIAO)
-livelli: [Rischio Minimo, Rischio Basso, Rischio Medio, Rischio Critico, Rischio Alto]
+# livelli di rischio dal più basso: "Critico" è il più grave (matrice dell'ultima versione di
+# Si.Ge.Ri.Co., 02/11/2026: Alto/Alto = Critico, Alto/Medio = Alto)
+livelli: [Rischio Minimo, Rischio Basso, Rischio Medio, Rischio Alto, Rischio Critico]
 
 # probabilità → impatto → livello
 matrice:
-  Alto: {Alto: Rischio Alto, Medio: Rischio Critico, Basso: Rischio Medio}
-  Medio: {Alto: Rischio Critico, Medio: Rischio Medio, Basso: Rischio Basso}
+  Alto: {Alto: Rischio Critico, Medio: Rischio Alto, Basso: Rischio Medio}
+  Medio: {Alto: Rischio Alto, Medio: Rischio Medio, Basso: Rischio Basso}
   Basso: {Alto: Rischio Medio, Medio: Rischio Basso, Basso: Rischio Minimo}
 
 indicatori_probabilita:

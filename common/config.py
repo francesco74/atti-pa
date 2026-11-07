@@ -87,6 +87,26 @@ class Settings(BaseSettings):
     # chiamata per atto (più di una per gli atti oltre LLM_MAX_CARATTERI_ATTO)
     llm_dati_personali: bool = True
 
+    # Modello di embedding per la ricerca in linguaggio naturale nella mappatura e nei
+    # procedimenti (common/ricerca.py): API /embeddings compatibile OpenAI, es. vLLM con
+    # BAAI/bge-m3. Vuoto = ricerca solo per parole (radici e sinonimi), senza modello.
+    embedding_base_url: str | None = None
+    embedding_model: str | None = None
+    embedding_api_key: str = ""
+    embedding_timeout: float = 20.0
+    # Prefissi richiesti da alcuni modelli (es. e5: "query: " e "passage: "); bge-m3 nessuno
+    embedding_prefisso_domanda: str = ""
+    embedding_prefisso_documento: str = ""
+    # Similarità minima (coseno) di un risultato trovato per significato
+    ricerca_soglia_semantica: float = 0.5
+    # Ricerche per significato al minuto per indirizzo IP nelle pagine pubbliche; oltre si
+    # cerca solo per parole (il limite è di ogni processo dell'API)
+    ricerca_limite_pubblico: int = 20
+    # Ricerche concluse e feedback registrati al minuto per IP nelle pagine pubbliche
+    ricerche_limite_registro: int = 30
+    # Ricerche registrate e feedback si cancellano dopo questi mesi (giro di manutenzione)
+    ricerche_conservazione_mesi: int = 12
+
     # Cartella con prompt personalizzati: i file presenti sostituiscono quelli di
     # common/prompt/ con lo stesso nome (vuota = solo quelli predefiniti)
     llm_prompt_dir: str | None = None

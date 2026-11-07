@@ -3,16 +3,16 @@ import 'package:atti_pa/ui/anticorruzione/comune.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Valutazione mostrata dall'app prima del salvataggio (come il server: moda con la parità
-/// verso il più alto, matrice con "Critico" sotto "Alto") e albero del processo nel formato
+/// verso il più alto, matrice con "Critico" livello più grave) e albero del processo nel formato
 /// delle proposte.
 void main() {
   final dati = DatiAnticorruzione(
     metodologia: {
       'scala': ['Basso', 'Medio', 'Alto'],
-      'livelli': ['Rischio Minimo', 'Rischio Basso', 'Rischio Medio', 'Rischio Critico', 'Rischio Alto'],
+      'livelli': ['Rischio Minimo', 'Rischio Basso', 'Rischio Medio', 'Rischio Alto', 'Rischio Critico'],
       'matrice': {
-        'Alto': {'Alto': 'Rischio Alto', 'Medio': 'Rischio Critico', 'Basso': 'Rischio Medio'},
-        'Medio': {'Alto': 'Rischio Critico', 'Medio': 'Rischio Medio', 'Basso': 'Rischio Basso'},
+        'Alto': {'Alto': 'Rischio Critico', 'Medio': 'Rischio Alto', 'Basso': 'Rischio Medio'},
+        'Medio': {'Alto': 'Rischio Alto', 'Medio': 'Rischio Medio', 'Basso': 'Rischio Basso'},
         'Basso': {'Alto': 'Rischio Medio', 'Medio': 'Rischio Basso', 'Basso': 'Rischio Minimo'},
       },
       'indicatori_probabilita': [],
@@ -26,8 +26,9 @@ void main() {
   test('moda e matrice', () {
     expect(dati.moda(['Medio', 'Alto', 'Alto', 'Medio', 'Basso']), 'Alto');
     expect(dati.moda(['Basso', 'Basso', 'Alto']), 'Basso');
-    expect(dati.livelloDa('Alto', 'Medio'), 'Rischio Critico');
-    expect(dati.livelli.indexOf('Rischio Critico') < dati.livelli.indexOf('Rischio Alto'), isTrue);
+    expect(dati.livelloDa('Alto', 'Medio'), 'Rischio Alto');
+    expect(dati.livelloDa('Alto', 'Alto'), 'Rischio Critico');
+    expect(dati.livelli.indexOf('Rischio Alto') < dati.livelli.indexOf('Rischio Critico'), isTrue);
   });
 
   test('albero nel formato delle proposte', () {

@@ -54,6 +54,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
   final List<SelectedFile> _selectedFiles = [];
   bool _analyzePdfInUrl = false;
   bool _followLink = false;
+  int _maxLink = linkPredefiniti;
 
   // Le date partono vuote: con valori predefiniti (es. oggi) l'audit
   // confronterebbe date non reali e giudicherebbe la pubblicazione sempre
@@ -278,6 +279,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
       _varianteScelta = null;
       _analyzePdfInUrl = false;
       _followLink = false;
+      _maxLink = linkPredefiniti;
       _esito = null;
     });
   }
@@ -315,6 +317,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
         'url': _urlController.text.trim(),
         'analizza_pdf': _analyzePdfInUrl,
         'segui_link': _followLink,
+        'max_link': _maxLink,
       } else
         'descrizioni': {
           for (final f in _selectedFiles) f.name: f.descriptionController.text.trim(),
@@ -478,14 +481,12 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
           contentPadding: EdgeInsets.zero,
           dense: true,
         ),
-        CheckboxListTile(
-          title: const Text(
-            'Segui i link presenti nel contenuto principale (max 5)',
-          ),
-          value: _followLink,
-          onChanged: (v) => setState(() => _followLink = v ?? false),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
+        SceltaLink(
+          titolo: 'Segui i link presenti nel contenuto principale',
+          segui: _followLink,
+          numero: _maxLink,
+          onSegui: (v) => setState(() => _followLink = v),
+          onNumero: (v) => setState(() => _maxLink = v),
           dense: true,
         ),
       ],

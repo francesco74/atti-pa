@@ -40,7 +40,7 @@ class ProcedimentiApi(unittest.TestCase):
         from main import create_app
 
         cls.cartella = tempfile.TemporaryDirectory()
-        url = f"sqlite+aiosqlite:///{cls.cartella.name}/prova.db"
+        url = cls.url = f"sqlite+aiosqlite:///{cls.cartella.name}/prova.db"
 
         async def dati():
             motore = create_async_engine(url)
@@ -160,15 +160,21 @@ class ProcedimentiApi(unittest.TestCase):
             "tipo": "MODIFICA", "oggetto": "PROCESSO", "elemento_id": p["id"],
             "dati": {**base, "art35": {**art35, "silenzio_assenso": "SI"}}}), 201)  # fmt: skip
         self.assertEqual(proposta["prima"]["art35"]["silenzio_assenso"], "NO")
+        # controlli oggettivi per il RPCT (il procedimento ha termine e riferimenti normativi)
+        controlli = self._ok(rpct.get(f"{API}/proposte/{proposta['id']}", base_url=ENTE))["controlli"]
+        self.assertFalse(any("termine" in c["testo"] for c in controlli), controlli)
         self._ok(rpct.post(f"{API}/proposte/{proposta['id']}/approva", base_url=ENTE, json={}))
         self.assertEqual(self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["art35"]["silenzio_assenso"], "SI")
 
         # trasparenza: importazione nella scheda ART_35
         trasp = self._client("trasparenza")
         importabili = self._ok(trasp.get("/api/v1/trasparenza/procedimenti-mappatura", base_url=ENTE))
-        self.assertEqual([x["id"] for x in importabili], [p["id"]])  # solo i procedimenti
-        self.assertEqual(importabili[0]["elemento"]["silenzio_assenso"], "SI")
-        self.assertTrue(importabili[0]["mancanti"])
+        ids = [x["id"] for x in importabili]
+        self.assertIn(p["id"], ids)
+        self.assertNotIn(pr["id"], ids)  # solo i procedimenti
+        nostro = next(x for x in importabili if x["id"] == p["id"])
+        self.assertEqual(nostro["elemento"]["silenzio_assenso"], "SI")
+        self.assertTrue(nostro["mancanti"])
 
         # pagina pubblica dei procedimenti: spenta, poi accesa dal RPCT
         cittadino = self.app.test_client()
@@ -177,12 +183,62 @@ class ProcedimentiApi(unittest.TestCase):
         self.assertEqual((stato["procedimenti_attiva"], stato["attiva"]), (True, False))  # la mappatura resta spenta
         self.assertEqual(cittadino.get(f"{PUBBLICO}/mappatura", base_url=ENTE).status_code, 404)
         pagina = self._ok(cittadino.get(f"{PUBBLICO}/procedimenti", base_url=ENTE))
-        self.assertEqual([x["denominazione"] for x in pagina["procedimenti"]], ["Contributo affitto"])  # dalla proposta approvata
-        self.assertEqual([x["id"] for x in pagina["strutture"]], [servizi["id"]])
+        nostro = next(x for x in pagina["procedimenti"] if x["id"] == p["id"])
+        self.assertEqual(nostro["denominazione"], "Contributo affitto")  # dalla proposta approvata
+        self.assertIn(servizi["id"], [x["id"] for x in pagina["strutture"]])
         scheda = self._ok(cittadino.get(f"{PUBBLICO}/procedimenti/{p['id']}", base_url=ENTE))["scheda"]
         self.assertEqual((scheda["tipologia"], scheda["sost_nominativo"]), ("Contributi economici", "Anna Bianchi"))
         self.assertEqual(cittadino.get(f"{PUBBLICO}/procedimenti/{pr['id']}", base_url=ENTE).status_code, 404)  # processo
         self.assertEqual(cittadino.get(f"{PUBBLICO}/procedimenti/{p['id']}", base_url=ALTRO).status_code, 404)  # altro ente
+
+    def test_importazione_dal_sito(self):
+        from common.models import StatoVerifica, TrasparenzaLavoro
+
+        rpct, admin = self._client("rpct"), self._client("admin")
+        sociali = self._ok(admin.post("/api/v1/ente/strutture", base_url=ENTE,
+                                      json={"codice": "SETTORE 9", "descrizione": "Politiche abitative"}), 201)  # fmt: skip
+        area = self._ok(rpct.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Casa"}), 201)
+        esistente = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
+            "tipo": "PROCEDIMENTO", "area_id": area["id"], "denominazione": "Assegnazione alloggi ERP"}), 201)  # fmt: skip
+
+        # solo il RPCT; serve una fonte
+        self.assertEqual(self._client("referente").post(f"{API}/procedimenti/importazioni", base_url=ENTE,
+                                                        json={"url": "https://www.ente.it/at"}).status_code, 403)  # fmt: skip
+        self.assertEqual(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={}).status_code, 422)
+        # al più 15 link seguiti
+        self.assertEqual(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={
+            "url": "https://www.ente.it/at", "segui_link": True, "max_link": 16}).status_code, 422)  # fmt: skip
+        lavoro = self._ok(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={
+            "url": "https://www.ente.it/amministrazione-trasparente/tipologie-di-procedimento", "segui_link": True,
+            "max_link": 12}), 202)  # fmt: skip
+        stato = self._ok(rpct.get(f"{API}/procedimenti/importazioni/{lavoro['id']}", base_url=ENTE))
+        self.assertEqual(stato["stato"], "IN_CODA")
+        self.assertNotIn("procedimenti", stato)
+
+        # il worker ha letto la pagina (simulato): due procedimenti, uno già nella mappatura
+        righe = [
+            {"denominazione": "Assegnazione alloggi di ERP", "tipologia": "Concessioni", "uff_resp_denom": "Politiche abitative"},
+            {"denominazione": "Contributo morosità incolpevole", "silenzio_assenso": "NO"},
+        ]  # fmt: skip
+
+        async def completa():
+            motore = create_async_engine(self.url)
+            async with AsyncSession(motore) as db:
+                lv = await db.get(TrasparenzaLavoro, lavoro["id"])
+                self.assertEqual((lv.richiesta["segui_link"], lv.richiesta["max_link"]), (True, 12))
+                lv.stato = StatoVerifica.COMPLETATA
+                lv.risultato = {"dati": {"sezione": "PROCEDIMENTI", "righe": righe}, "avvisi": ["Orari non trovati"]}
+                await db.commit()
+            await motore.dispose()
+
+        asyncio.run(completa())
+        esito = self._ok(rpct.get(f"{API}/procedimenti/importazioni/{lavoro['id']}", base_url=ENTE))
+        self.assertEqual(esito["stato"], "COMPLETATA")
+        self.assertEqual(esito["avvisi"], ["Orari non trovati"])
+        self.assertEqual([p["procedimento_id"] for p in esito["procedimenti"]], [esistente["id"], None])
+        self.assertEqual(esito["procedimenti"][0]["uffici"]["uff_resp_struttura_id"]["struttura_id"], sociali["id"])
+        # l'importazione è di chi l'ha avviata
+        self.assertEqual(admin.get(f"{API}/procedimenti/importazioni/{lavoro['id']}", base_url=ENTE).status_code, 404)
 
 
 if __name__ == "__main__":

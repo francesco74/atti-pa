@@ -19,7 +19,17 @@ void main() {
     addTearDown(tester.view.reset);
     final client = MockClient((r) async {
       Object? corpo = const [];
-      if (r.url.path.endsWith('/processi')) {
+      if (r.url.path.endsWith('/ricerca')) {
+        // il server trova anche per significato: "appalto" non è nel testo di "Gare"
+        final testo = r.url.queryParameters['testo']!;
+        corpo = {
+          'semantica': true,
+          'risultati': [
+            if (testo == 'conc') {'id': 'p2', 'parole': ['conc'], 'semantica': false},
+            if (testo == 'appalto' || testo == 'gar') {'id': 'p1', 'parole': <String>[], 'semantica': true},
+          ],
+        };
+      } else if (r.url.path.endsWith('/processi')) {
         corpo = [
           {'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare', 'struttura_id': null, 'attivita': 1, 'rischi': 1, 'misure': 1, 'livello_massimo': 'Alto'},
           {'id': 'p2', 'codice': 'D.1', 'area_id': 'd', 'denominazione': 'Concorsi', 'struttura_id': null, 'attivita': 0, 'rischi': 0, 'misure': 0, 'livello_massimo': null},
@@ -65,8 +75,16 @@ void main() {
     // la ricerca trova il processo in tutte le aree
     await tester.enterText(find.byType(TextField), 'conc');
     await tester.pump();
-    expect(find.text('D.1 - Concorsi'), findsOneWidget);
+    expect(find.text('D.1 - Concorsi'), findsOneWidget); // subito il filtro locale
     expect(find.text('C - Contratti pubblici'), findsNothing);
+    // poi la risposta del server, che trova anche per significato
+    await tester.enterText(find.byType(TextField), 'appalto');
+    await tester.pump();
+    expect(find.text('C.1 - Gare'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('C.1 - Gare'), findsOneWidget);
+    expect(find.text('D.1 - Concorsi'), findsNothing);
+    expect(find.textContaining('per parole, sinonimi e significato'), findsOneWidget);
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
 
@@ -76,12 +94,12 @@ void main() {
     expect(find.text('D.1 - Concorsi'), findsNothing);
 
     // ricerca nei processi dell'area aperta
-    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area (codice o denominazione)'), 'xyz');
-    await tester.pump();
+    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area'), 'xyz');
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('C.1 - Gare'), findsNothing);
     expect(find.text('Nessun processo trovato.'), findsOneWidget);
-    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area (codice o denominazione)'), 'gar');
-    await tester.pump();
+    await tester.enterText(find.widgetWithText(TextField, 'Cerca nell\'area'), 'gar');
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('C.1 - Gare'), findsOneWidget);
 
     await tester.tap(find.text('C.1 - Gare'));

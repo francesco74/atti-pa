@@ -130,6 +130,25 @@ class Contenuti(unittest.TestCase):
         self.assertNotIn("NON DEVE ESSERE SEGUITO", testo)  # link di navigazione ignorato
         self.assertNotIn("x()", testo)
 
+    def test_numero_di_link_seguiti(self):
+        corpo = "".join(f'<a href="/at/p{i}">Procedimento {i}</a>' for i in range(20))
+        pagine = {"https://ente.example.it/at": f"<body><main>{corpo}</main></body>".encode()}
+        pagine |= {f"https://ente.example.it/at/p{i}": f"<body><p>Scheda {i}.</p></body>".encode() for i in range(20)}
+
+        def risposta(richiesta: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, headers={"Content-Type": "text/html"}, content=pagine[str(richiesta.url)])
+
+        def schede(**opzioni) -> int:
+            client = httpx.AsyncClient(transport=httpx.MockTransport(risposta))
+            with mock.patch.object(rete, "_host_pubblico", return_value=True):
+                c = _esegui(analisi.contenuti("https://ente.example.it/at", [], ConverterFinto({}),
+                                              segui_link=True, client=client, **opzioni))  # fmt: skip
+            return sum(f"Scheda {i}." in c.testo for i in range(20))
+
+        self.assertEqual(schede(), 5)  # predefinito
+        self.assertEqual(schede(max_link=12), 12)
+        self.assertEqual(schede(max_link=50), 15)  # limite massimo
+
 
 class Analisi(unittest.TestCase):
     def test_report_composto_dalla_risposta_json(self):

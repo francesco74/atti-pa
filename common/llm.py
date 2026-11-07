@@ -128,6 +128,8 @@ SEGNAPOSTO = {
     "dati_personali_sistema": set(),
     "dati_personali_utente": {"parte", "testo_atto"},
     "assistente_sistema": set(),
+    "relazione_sistema": set(),
+    "relazione_utente": {"ente", "relazione", "sezione", "dati"},
 }
 
 

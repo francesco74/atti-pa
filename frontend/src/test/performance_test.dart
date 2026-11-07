@@ -40,7 +40,7 @@ void main() {
           'obiettivi': [
             {'id': 'o1', 'piao_id': 'piao', 'anno': anno, 'struttura_id': 'uo', 'codice': 'P2_OS3', 'titolo': 'Digitalizzare i concorsi',
              'tipo': 'OPERATIVO', 'impegno': 60, 'completamento': 65.0, 'impegno_elementi': 100, 'completo': true,
-             'azioni': 1, 'misure': 1, 'ritardi': 1, 'modificabile': true},
+             'azioni': 1, 'misure': 1, 'ritardi': 1, 'avvisi': 1, 'modificabile': true},
           ],
           'impegno_totale': 60, 'completo': false, 'completamento': 65.0, 'modificabile': true,
         };
@@ -49,6 +49,7 @@ void main() {
           'id': 'o1', 'piao_id': 'piao', 'anno': anno, 'struttura_id': 'uo', 'codice': 'P2_OS3', 'titolo': 'Digitalizzare i concorsi',
           'descrizione': null, 'tipo': 'OPERATIVO', 'impegno': 60, 'completamento': 65.0, 'impegno_elementi': 100, 'completo': true,
           'azioni': 1, 'misure': 1, 'ritardi': 1, 'modificabile': true, 'piao': {'id': 'piao', 'stato': 'APERTO'},
+          'controlli': [{'livello': 'AVVISO', 'testo': 'Azione «Piattaforma online»: impegno 0%, non conta nel completamento'}],
           'elementi': [
             {'id': 'e1', 'tipo': 'AZIONE', 'descrizione': 'Piattaforma online', 'misura_id': null, 'misura_codice': null,
              'impegno': 70, 'completamento': 50, 'scadenza': '$anno-01-01', 'in_ritardo': true},
@@ -80,6 +81,7 @@ void main() {
     expect(find.text('Impegno assegnato: 60% su 100% (incompleto)'), findsOneWidget);
     expect(find.text('Nuovo obiettivo'), findsOneWidget);
     expect(find.text('1 in ritardo'), findsOneWidget);
+    expect(find.text('1 avviso'), findsOneWidget);
 
     await tester.tap(find.text('P2_OS3 - Digitalizzare i concorsi'));
     await tester.pumpAndSettle();
@@ -88,6 +90,7 @@ void main() {
     expect(find.text('In ritardo'), findsOneWidget);
     expect(find.text('Impegno delle azioni e misure: 100%'), findsOneWidget);
     expect(find.text('65%'), findsWidgets);
+    expect(find.textContaining('impegno 0%, non conta'), findsOneWidget); // controlli
 
     await tester.tap(find.text('Storico delle modifiche'));
     await tester.pumpAndSettle();

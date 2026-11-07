@@ -441,6 +441,11 @@ class _PropostaPageState extends State<PropostaPage> {
                 ),
             ]),
           ),
+          if (p['controlli'] != null)
+            Sezione(
+              titolo: 'Controlli',
+              child: ElencoControlli((p['controlli'] as List).cast<Map<String, dynamic>>()),
+            ),
           if (albero != null)
             albero
           else

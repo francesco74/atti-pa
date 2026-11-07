@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from common import archivio
 from common.config import Settings
 from common.models import Ente, StatoVerifica, TrasparenzaLavoro
-from common.trasparenza import analisi
+from common.trasparenza import analisi, fonti
 from common.trasparenza.rete import UrlNonConsentito
 
 log = logging.getLogger("worker.trasparenza")
@@ -79,6 +79,7 @@ class LavoriTrasparenza:
         contenuti = await analisi.contenuti(
             r.get("url") or "", await self._file(r), self.documenti,
             analizza_pdf=bool(r.get("analizza_pdf")), segui_link=bool(r.get("segui_link")),
+            max_link=int(r.get("max_link") or fonti.MAX_LINK),
         )  # fmt: skip
         if lavoro.tipo == analisi.ANALISI:
             contesto = analisi.Contesto(
@@ -86,7 +87,8 @@ class LavoriTrasparenza:
                 data_adozione=r.get("data_adozione") or "", data_pubblicazione=r.get("data_pubblicazione") or "",
             )  # fmt: skip
             return await analisi.analizza(r["controllo"], contenuti, contesto, self.llm)
-        return await analisi.estrai_dati(r["schema_id"], r.get("variante") or "", contenuti, self.llm)
+        return await analisi.estrai_dati(r["schema_id"], r.get("variante") or "", contenuti, self.llm,
+                                         r.get("sezione") or "")  # fmt: skip
 
     async def _elimina_file(self, richiesta: dict) -> None:
         for f in richiesta.get("file") or []:

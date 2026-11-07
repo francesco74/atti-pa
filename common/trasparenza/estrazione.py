@@ -306,13 +306,17 @@ def _elementi(campi: list, grezzi: list, parametri: dict, etichetta: str, multip
 # Orchestrazione
 # ---------------------------------------------------------------------------
 
-async def estrai(schema: Schema, variante: Optional[VarianteAudit], genera: Genera) -> dict:
+async def estrai(schema: Schema, variante: Optional[VarianteAudit], genera: Genera, sezione_id: str = "") -> dict:
     """
     Dati per il form di generazione (stesso formato dei dati salvati, con
-    'pdf_type') e avvisi su ciò che non è stato possibile caricare.
+    'pdf_type') e avvisi su ciò che non è stato possibile caricare. Con
+    `sezione_id` la sezione è data (es. i procedimenti dell'art. 35 importati
+    nella mappatura) e il modello non la deve individuare.
     """
     avvisi: list = []
     candidate = sezioni_candidate(schema, variante)
+    if sezione_id:
+        candidate = [s for s in candidate if s.id == sezione_id]
     fissati = variante.parametri if variante else {}
 
     parametri: dict = {}

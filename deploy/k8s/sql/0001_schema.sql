@@ -717,6 +717,61 @@ CREATE TABLE pf_modifiche (
 -- ---------------------------------------------------------------------------
 -- Coda di invio delle email (common/posta.py): scritta dall'API, inviata dal worker
 -- ---------------------------------------------------------------------------
+-- Vettori di embedding per la ricerca semantica (common/ricerca.py): si ricostruiscono da soli
+CREATE TABLE ricerca_vettori (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    ente_id     CHAR(36) NOT NULL,
+    oggetto_id  CHAR(36) NOT NULL,                 -- es. id del processo
+    modello     VARCHAR(200) NOT NULL,
+    impronta    CHAR(64) NOT NULL,                 -- sha256 del testo indicizzato
+    vettore     LONGBLOB NOT NULL,                 -- float32 normalizzati
+    UNIQUE KEY uq_ricerca_vettore (oggetto_id, modello),
+    KEY ix_ricerca_ente (ente_id, modello),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Ricerche concluse e feedback (common/registro_ricerche.py): senza utente né IP, cancellati
+-- dopo RICERCHE_CONSERVAZIONE_MESI
+CREATE TABLE ricerche_registro (
+    id          CHAR(36) PRIMARY KEY,
+    ente_id     CHAR(36) NOT NULL,
+    ambito      VARCHAR(50) NOT NULL,              -- es. MAPPATURA, PROCEDIMENTI
+    pubblica    BOOLEAN NOT NULL,                  -- cittadino o utente interno
+    testo       VARCHAR(300) NOT NULL,             -- dati personali oscurati
+    chiave      VARCHAR(300) NOT NULL,             -- radici delle parole, per raggruppare
+    risultati   INT NOT NULL,
+    esito       VARCHAR(20) NOT NULL,              -- TROVATA, NESSUN_RISULTATO, RISULTATI_DEBOLI, NON_APERTI
+    posizione   INT,                               -- del risultato aperto
+    semantica   BOOLEAN NOT NULL DEFAULT FALSE,
+    gestita_il  DATETIME,
+    gestita_da  VARCHAR(255),
+    nota        TEXT,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY ix_ricerche_ente (ente_id, created_at),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE ricerche_feedback (
+    id              CHAR(36) PRIMARY KEY,
+    ente_id         CHAR(36) NOT NULL,
+    ambito          VARCHAR(50) NOT NULL,
+    pubblica        BOOLEAN NOT NULL,
+    tipo            VARCHAR(20) NOT NULL,          -- RICERCA, SCHEDA
+    ricerca_id      CHAR(36),
+    testo           VARCHAR(300),
+    riferimento_id  CHAR(36),
+    riferimento     VARCHAR(500),
+    utile           BOOLEAN NOT NULL,
+    commento        TEXT,
+    gestito_il      DATETIME,
+    gestito_da      VARCHAR(255),
+    nota            TEXT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY ix_feedback_ente (ente_id, created_at),
+    FOREIGN KEY (ente_id) REFERENCES enti(id) ON DELETE CASCADE,
+    FOREIGN KEY (ricerca_id) REFERENCES ricerche_registro(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE notifiche_email (
     id                  CHAR(36) PRIMARY KEY,
     ente_id             CHAR(36) NOT NULL,

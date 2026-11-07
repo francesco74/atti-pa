@@ -12,7 +12,8 @@ verifica. Ogni minuto il worker:
 - rimette in coda le verifiche "IN_CORSO" abbandonate (worker terminato);
 - reinvia sulle code i lavori fermi da più di WORKER_REINVIO_MINUTI (messaggio perso o
   RabbitMQ non raggiungibile quando l'API ha provato a inviarlo);
-- invia le email in coda (notifiche_email, common/posta.py) con l'SMTP di ogni ente.
+- invia le email in coda (notifiche_email, common/posta.py) con l'SMTP di ogni ente;
+- cancella ricerche registrate e feedback scaduti (common/registro_ricerche.py).
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from sqlalchemy import DateTime, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import undefer
 
-from common import coda, posta
+from common import coda, posta, registro_ricerche
 from common.coda import Coda
 from common.config import Settings
 from common.llm import LlmClient
@@ -76,6 +77,7 @@ class Worker:
         self._reinviati: dict[str, datetime] = {}
         self._ritardati: set[asyncio.Task] = set()  # nuovi tentativi in attesa
         self.trasparenza = LavoriTrasparenza(sessionmaker, llm, documenti, settings)
+        self._ultima_pulizia_ricerche = datetime.min
 
     def ferma(self) -> None:
         self._stop.set()
@@ -383,6 +385,19 @@ class Worker:
         except Exception:
             log.exception("Errore nella manutenzione della coda")
         await self.invia_email()
+        await self.pulisci_ricerche()
+
+    async def pulisci_ricerche(self) -> None:
+        """Una volta all'ora: ricerche registrate e feedback oltre RICERCHE_CONSERVAZIONE_MESI."""
+        if datetime.now() - self._ultima_pulizia_ricerche < timedelta(hours=1):
+            return
+        self._ultima_pulizia_ricerche = datetime.now()
+        try:
+            async with self.sessionmaker() as db:
+                if cancellate := await registro_ricerche.pulisci(db, self.settings.ricerche_conservazione_mesi):
+                    log.info("%d ricerche registrate e feedback scaduti eliminati", cancellate)
+        except Exception:
+            log.exception("Errore nella pulizia delle ricerche registrate")
 
     async def invia_email(self) -> None:
         """Email in coda (notifiche_email) il cui momento è arrivato, con l'SMTP dell'ente."""

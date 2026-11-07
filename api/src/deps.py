@@ -37,6 +37,7 @@ class Risorse:
     documenti: Any = None
     coda: Any = None  # common.coda.Coda
     rag_http: Any = None  # httpx.AsyncClient per le API del RAG degli enti
+    embedding: Any = None  # common.embedding.ClientEmbedding, None = ricerca solo lessicale
     posta_invio: Any = invia_email  # invio immediato (prova della posta); sostituibile nei test
 
 

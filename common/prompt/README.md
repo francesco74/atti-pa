@@ -21,6 +21,8 @@ senza toccare il codice: le modifiche valgono al riavvio di API e worker.
 | `dati_personali_sistema.md` | prompt di sistema del rilevamento dei dati personali (omissis) | — |
 | `dati_personali_utente.md` | messaggio con il testo (o una sua parte) in cui cercare i dati | `parte`, `testo_atto` |
 | `assistente_sistema.md` | prompt di sistema della chat dell'assistente | — |
+| `relazione_sistema.md` | prompt di sistema della scrittura di una sezione di relazione (RPCT, PIAO, performance) solo dai dati forniti | — |
+| `relazione_utente.md` | messaggio con l'ente, la relazione, la sezione e i suoi dati (JSON) | `ente`, `relazione`, `sezione`, `dati` |
 
 I segnaposto si scrivono `${nome}`. Per un simbolo `$` letterale nel testo scrivere `$$`.
 Un segnaposto sconosciuto o scritto male blocca l'avvio di API e worker con un errore che

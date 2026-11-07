@@ -124,3 +124,76 @@ def scheda(p, strutture: dict) -> dict:
 def mancanti(elemento: dict) -> list[str]:
     """Dati mancanti o non validi rispetto allo schema ART_35 (vuoto: completo)."""
     return valida_elemento(get_schema(SCHEMA), SEZIONE, elemento)
+
+
+# --- importazione dal sito di Amministrazione trasparente o da documenti --------------------
+# I procedimenti si estraggono (worker, common/trasparenza/estrazione.py, sezione PROCEDIMENTI
+# dello schema ART_35) dalla pagina "Tipologie di procedimento" dell'ente o da un documento: il
+# modello trascrive, non aggiunge. Qui si propongono gli abbinamenti con i procedimenti della
+# mappatura e con le strutture; li conferma la persona, campo per campo.
+
+SOGLIA_ABBINAMENTO = 0.72
+
+# ufficio nella scheda -> campo della struttura scelta nel procedimento
+UFFICI = {
+    "unita_istruttoria": "struttura_id",
+    "uff_resp_denom": "uff_resp_struttura_id",
+    "uff_finale_denom": "uff_finale_struttura_id",
+    "ist_ufficio": "ist_struttura_id",
+    "sost_ufficio": "sost_struttura_id",
+}
+
+
+def _normalizza(testo: str) -> str:
+    testo = re.sub(r"[^\w\s]", " ", (testo or "").lower())
+    return re.sub(r"\s+", " ", testo).strip()
+
+
+def somiglianza(a: str, b: str) -> float:
+    from difflib import SequenceMatcher
+
+    a, b = _normalizza(a), _normalizza(b)
+    if not a or not b:
+        return 0.0
+    if a == b:
+        return 1.0
+    if a in b or b in a:  # "Servizi sociali" e "U.O. Servizi sociali e casa"
+        return max(0.8, SequenceMatcher(None, a, b).ratio())
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def _migliore(nome: str, candidati: dict[str, str]) -> tuple[str | None, float]:
+    """Id del candidato ({id: nome}) più simile a [nome], se supera la soglia."""
+    migliore, valore = None, 0.0
+    for chiave, testo in candidati.items():
+        v = somiglianza(nome, testo)
+        if v > valore:
+            migliore, valore = chiave, v
+    return (migliore, round(valore, 2)) if valore >= SOGLIA_ABBINAMENTO else (None, round(valore, 2))
+
+
+def abbina(righe: list[dict], procedimenti: list, strutture: dict) -> list[dict]:
+    """Per ogni procedimento estratto: il procedimento della mappatura più simile (se c'è) e la
+    struttura proposta per ciascun ufficio citato (descrizione o codice)."""
+    nomi_proc = {p.id: p.denominazione for p in procedimenti}
+    nomi_strutture = {s.id: s.descrizione for s in strutture.values()}
+    codici = {s.id: s.codice for s in strutture.values()}
+    usati: set[str] = set()
+    risultato = []
+    for elemento in righe:
+        liberi = {k: v for k, v in nomi_proc.items() if k not in usati}
+        procedimento_id, valore = _migliore(elemento.get("denominazione") or "", liberi)
+        if procedimento_id:
+            usati.add(procedimento_id)
+        uffici = {}
+        for campo, destinazione in UFFICI.items():
+            nome = (elemento.get(campo) or "").strip()
+            if not nome:
+                continue
+            s_id, _ = _migliore(nome, nomi_strutture)
+            if s_id is None:
+                s_id, _ = _migliore(nome, codici)
+            uffici[destinazione] = {"nome": nome, "struttura_id": s_id}
+        risultato.append({"elemento": elemento, "procedimento_id": procedimento_id, "somiglianza": valore,
+                          "uffici": uffici})  # fmt: skip
+    return risultato

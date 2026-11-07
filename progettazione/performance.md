@@ -33,6 +33,13 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
   sotto 100 il valore si calcola sui pesi presenti ed è provvisorio.
 - **Ritardo**: scadenza passata con il completamento sotto 100.
 
+## 2-bis. Controlli (07/11/2026)
+
+Sull'obiettivo, senza modello (`controlli_obiettivo` in `common/performance`): impegno 0% (di
+obiettivi, azioni o misure), scadenze fuori dall'anno dell'obiettivo, misure non più nella
+mappatura o attribuite nella mappatura a un'altra struttura, obiettivo senza azioni o senza
+misure della mappatura. Nell'elenco il numero degli avvisi, nel dettaglio l'elenco.
+
 ## 3. Ruoli
 
 | Ruolo | Può |
@@ -76,9 +83,16 @@ struttura; con il riepilogo della struttura), `obiettivi/<id>` (+ `/elementi`, `
 5. Dirigenti e responsabili hanno lo stesso ruolo: servizio o ufficio dipende dalla struttura
    assegnata all'utente (gerarchia delle strutture organizzative).
 
+## 6-bis. Relazione sulla performance (07/11/2026)
+
+Scheda "Relazione" dell'amministratore: per un PIAO e un anno, sintesi (obiettivi, strutture,
+obiettivi completati, completamento medio, azioni e misure, ritardi a fine anno o a oggi,
+strutture con impegni non al 100%) con la tabella per struttura, ed elenco degli obiettivi. Testo
+scritto dal modello dai soli dati, numeri da verificare, esportazione in DOCX/ODT: come le
+relazioni dell'anticorruzione (`anticorruzione.md`, decisione 23).
+
 ## 7. Da fare
 
 - importazione degli obiettivi da Excel del Piano (come in Si.Ge.Ri.Co.);
 - notifiche email (es. scadenze vicine o passate);
-- esportazione (Excel/PDF) per la relazione sulla performance;
 - collegamento degli obiettivi a processi e attività della mappatura.

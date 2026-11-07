@@ -169,6 +169,9 @@ class PerformanceApi(unittest.TestCase):
         d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
         self.assertEqual((d["completamento"], d["completo"], d["ritardi"], d["azioni"], d["misure"]), (65.0, True, 1, 1, 1))
         self.assertEqual([x["tipo"] for x in d["elementi"]], ["AZIONE", "MISURA"])  # per scadenza
+        # controlli oggettivi: la misura è della struttura dell'obiettivo, impegni non a zero
+        self.assertFalse(any("altra struttura" in c["testo"] or "impegno 0%" in c["testo"] for c in d["controlli"]), d["controlli"])
+        self.assertIn("avvisi", d)
         elenco = self._ok(resp.get(f"{API}/obiettivi?piao_id={p['id']}&anno={anno}&struttura_id={self.uo}", base_url=ENTE))
         # struttura: 60*65 + 40*0 = 39
         self.assertEqual((elenco["impegno_totale"], elenco["completo"], elenco["completamento"], elenco["modificabile"]),

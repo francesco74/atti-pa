@@ -4,6 +4,7 @@ import '../../api/api_client.dart';
 import '../anticorruzione/art35.dart';
 import '../anticorruzione/comune.dart' show Percorso, RigaVoce;
 import '../comuni.dart';
+import '../ricerca.dart';
 import 'comune.dart';
 
 /// Percorso della pagina pubblica dei procedimenti (da collegare nella sezione Amministrazione
@@ -30,6 +31,12 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
   String? _procedimentoId; // procedimento aperto
   Future<Map<String, dynamic>>? _scheda;
   final _testo = TextEditingController();
+  late final _registro = RegistroRicerche(apiDi(context).post, '$apiPubblico/ricerche', 'PROCEDIMENTI');
+  late final _ricerca = RicercaTesto(
+    (testo) => apiDi(context).get('$apiPubblico/procedimenti/ricerca', query: {'testo': testo}),
+    setState,
+    registro: _registro,
+  );
 
   @override
   void initState() {
@@ -40,6 +47,7 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
   @override
   void dispose() {
     _testo.dispose();
+    _ricerca.dispose();
     super.dispose();
   }
 
@@ -61,9 +69,11 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
   void _vaiStrutture() => setState(() {
         _struttura = _procedimentoId = null;
         _testo.clear();
+        _ricerca.cambia('');
       });
 
   void _apri(Map<String, dynamic> p) => setState(() {
+        _ricerca.aperto(p['id'] as String);
         _procedimentoId = p['id'] as String;
         _scheda = apiDi(context).get('$apiPubblico/procedimenti/${p['id']}').then((v) => v as Map<String, dynamic>);
       });
@@ -85,10 +95,8 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
       ]);
 
   List<Widget> _livelloStrutture(Map<String, dynamic> d, List<Map<String, dynamic>> procedimenti) {
-    final cerca = _testo.text.trim().toLowerCase();
-    final trovati = procedimenti
-        .where((p) => '${p['codice']} ${p['denominazione']} ${p['tipologia'] ?? ''}'.toLowerCase().contains(cerca))
-        .toList();
+    final cerca = _ricerca.testo;
+    final trovati = _ricerca.filtra(procedimenti);
     int quanti(String? id) => procedimenti.where((p) => (p['struttura_id'] ?? _senzaStruttura) == (id ?? _senzaStruttura)).length;
     String numero(int n) => n == 1 ? '1 procedimento' : '$n procedimenti';
     final senza = quanti(null);
@@ -99,14 +107,23 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
           width: 360,
           child: TextField(
             controller: _testo,
-            decoration: const InputDecoration(labelText: 'Cerca un procedimento', isDense: true, prefixIcon: Icon(Icons.search)),
-            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Cerca un procedimento',
+              hintText: 'Es. come chiedo il contributo per l\'affitto?',
+              isDense: true,
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: _ricerca.cambia,
           ),
         ),
       ),
+      NotaRicerca(_ricerca),
       const SizedBox(height: 16),
       if (cerca.isNotEmpty)
-        trovati.isEmpty ? const Center(child: Text('Nessun procedimento trovato.')) : _elenco(d, trovati)
+        trovati.isEmpty
+            ? Center(child: Text(_ricerca.inCorso ? '' : 'Nessun procedimento trovato.'))
+            : _elenco(d, trovati),
+      if (cerca.isNotEmpty) FeedbackRicerca(_ricerca)
       else if (procedimenti.isEmpty)
         const Center(child: Text('Nessun procedimento pubblicato.'))
       else
@@ -150,10 +167,17 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
                   Caricamento<Map<String, dynamic>>(
                     future: _scheda!,
                     riprova: () => _apri(aperto),
-                    builder: (context, p) => Sezione(
-                      titolo: '${aperto['denominazione']}',
-                      child: SchedaArt35((p['scheda'] as Map).cast<String, dynamic>()),
-                    ),
+                    builder: (context, p) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Sezione(
+                        titolo: '${aperto['denominazione']}',
+                        child: SchedaArt35((p['scheda'] as Map).cast<String, dynamic>()),
+                      ),
+                      FeedbackScheda(
+                        registro: _registro,
+                        id: aperto['id'] as String,
+                        titolo: '${aperto['codice']} ${aperto['denominazione']}',
+                      ),
+                    ]),
                   ),
                 ]);
               } else if (_struttura != null) {

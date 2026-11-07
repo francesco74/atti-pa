@@ -21,3 +21,4 @@ aio-pika==10.1.1
 pyyaml==6.0.3
 # sanificazione dell'HTML dei documenti della trasparenza (common/trasparenza/sicurezza.py)
 nh3==0.3.7
+snowballstemmer==3.0.1  # radici delle parole italiane per la ricerca (common/ricerca.py)

@@ -11,7 +11,7 @@ Gestisce la **mappatura dei processi** e la **gestione del rischio corruttivo** 
 | Funzione | Contenuto |
 |---|---|
 | **Mappatura** | gerarchia Processo → Attività → Rischio (evento rischioso) → Misura; processo con area di rischio, responsabilità (U.O.), tempi, attori esterni; attività con strutture coinvolte |
-| **Valutazione del rischio** | 9 indicatori di probabilità e 4 di impatto (Basso/Medio/Alto), moda dei valori, matrice → livello (Minimo, Basso, Medio, Critico, Alto), fattore abilitante (8 predefiniti) |
+| **Valutazione del rischio** | 9 indicatori di probabilità e 4 di impatto (Basso/Medio/Alto), moda dei valori, matrice → livello (in v1 Minimo, Basso, Medio, Critico, Alto; dalla v2 Critico è il più grave), fattore abilitante (8 predefiniti) |
 | **Proposte** | gli utenti non amministratori non modificano: propongono la creazione, modifica o eliminazione di un processo intero (JSON con attività, rischi, misure, valutazioni); l'amministratore approva, respinge o restituisce |
 | **Monitoraggio delle misure** | per annualità: ogni U.O. dichiara lo stato di attuazione delle proprie misure (attuata, parzialmente, non attuata, con motivazione, indicatore, target, evidenze); il RPCT verifica o contesta; la dichiarazione conserva una copia dei dati della misura; cruscotto per U.O. e confronto tra anni; esportazione Excel |
 | **Obiettivi di performance** | importati da Excel del Piano della performance; collegati alle U.O. (derivate dal centro del Piano: "STAFF B" → U.O. B.*) e associati a processi, attività, rischi o misure, con propagazione ai sottoelementi |
@@ -113,15 +113,18 @@ frontend/src/lib/ui/pubblico/          pagina /pubblico/mappatura
 Riferimento: PIAO 2026-2028 del Comune di Lucca (`docs/Allegato_1_PIAO.pdf`), sottosezione 2.3
 "Rischi corruttivi e trasparenza", §§ 2.3-2.7 (metodologia dell'Allegato 1 al PNA 2019).
 
-1. **Matrice del rischio**: resta quella del PIAO (§ 2.5), che Si.Ge.Ri.Co. riporta
-   correttamente. "Critico" è il livello **sotto** "Alto": dal più basso Minimo, Basso, Medio,
-   Critico, Alto. Nel codice originale mancava solo l'ordine dei livelli (serve per
-   ordinare, filtrare e colorare).
+1. **Matrice del rischio** (aggiornata il 07/11/2026): quella dell'ultima versione di
+   Si.Ge.Ri.Co. (v2, 02/11/2026), dove **"Critico" è il livello più grave**: dal più basso
+   Minimo, Basso, Medio, Alto, Critico. Sostituisce la matrice del PIAO 2026-2028 (§ 2.5), usata
+   fino ad allora, in cui Critico stava sotto Alto (Alto/Alto = Alto, Alto/Medio = Critico).
+   Colori, ordinamenti e filtri seguono l'ordine dei livelli della metodologia. Ogni ente può
+   comunque adattare la matrice (decisione 3): salvando la metodologia le valutazioni si
+   ricalcolano.
 
    | Probabilità \ Impatto | Basso | Medio | Alto |
    |---|---|---|---|
-   | **Alto** | Medio | Critico | Alto |
-   | **Medio** | Basso | Medio | Critico |
+   | **Alto** | Medio | Alto | Critico |
+   | **Medio** | Basso | Medio | Alto |
    | **Basso** | Minimo | Basso | Medio |
 
 2. **Parità nella moda**: vince il valore più alto, come prevede il PIAO (§ 2.5, nota 6:
@@ -245,3 +248,62 @@ Decisioni del 04/11/2026:
     procedimenti → scheda con tutti i dati dell'allegato 11), da collegare nella sezione
     Amministrazione trasparente (Attività e procedimenti → Tipologie di procedimento), con un
     interruttore del RPCT separato da quello della mappatura (`enti.procedimenti_pubblici`).
+21. **Importazione dei procedimenti dal sito o da documenti** (07/11/2026): i procedimenti
+    devono essere quelli effettivi dell'ente, quindi i dati art. 35 vengono **solo da fonti
+    certe**: inseriti a mano, oppure letti dalla pagina "Tipologie di procedimento" della
+    sezione Amministrazione trasparente (seguendo i link di dettaglio e, a scelta, i PDF
+    collegati) o da documenti dell'ente (Word, ODT, PDF, fogli di calcolo). Niente dati "dal
+    modello": l'LLM legge e trascrive con l'estrazione della trasparenza (worker, schema ART_35,
+    sezione PROCEDIMENTI fissata), poi i valori si normalizzano come nella trasparenza. Il RPCT
+    avvia la lettura dalla scheda Mappatura ("Importa procedimenti", `POST
+    /api/v1/anticorruzione/procedimenti/importazioni`) e rivede il risultato (`GET .../<id>`):
+    per ogni procedimento trovato il sistema propone il procedimento della mappatura più
+    simile per denominazione e la struttura più simile per ogni ufficio
+    (`art35.abbina`); la persona sceglie se aggiornare o creare, gli uffici e i singoli dati da
+    prendere (di un procedimento esistente la denominazione resta quella della mappatura; i
+    dati che la fonte non ha restano). Si salva con le API della mappatura; i recapiti che
+    mancano nelle strutture si completano se chi importa è l'amministratore dell'ente,
+    altrimenti si elencano per l'amministratore. L'analisi dei rischi (attività, eventi,
+    misure, valutazione) resta manuale: niente suggerimenti del modello (decisione dell'utente).
+    Link seguiti: 5 di predefinito, l'utente ne sceglie fino a 15 (`max_link`, limite
+    `MAX_LINK_MASSIMO` in `common/trasparenza/fonti.py`; vale per tutte le letture da pagina web,
+    anche nella trasparenza); con molti procedimenti conviene un documento o più letture.
+22. **Controlli sulle proposte** (07/11/2026): nel dettaglio di una proposta da decidere il RPCT
+    (e il referente) vede i controlli oggettivi, calcolati sulle regole senza modello
+    (`common/anticorruzione/controlli.py`): rischio senza misure o non valutato, misura senza
+    struttura, tempi, indicatore o target, misura di trasparenza senza obbligo collegato,
+    procedimento senza termine o riferimenti normativi, area mancante, denominazioni molto simili
+    a elementi già presenti, livello di rischio che scende, elementi eliminati insieme a quello
+    proposto, eliminazione dell'unica misura di un rischio. Avvisi e informazioni, non bloccano.
+23. **Relazioni di sintesi** (07/11/2026): scheda "Relazioni" del RPCT con la **relazione
+    annuale del RPCT** (mappatura e livelli di rischio, attuazione delle misure dal monitoraggio
+    con il confronto con l'anno prima, proposte dei referenti, trasparenza e procedimenti) e la
+    **sottosezione "Rischi corruttivi e trasparenza" del PIAO** (mappatura, rischi dei due
+    livelli più gravi, misure generali per categoria e specifiche, trasparenza). Dati e tabelle
+    si calcolano dal sistema (`api/src/routers/relazioni.py`); il modello scrive il testo di
+    una sezione alla volta dai soli dati della sezione (`common/prompt/relazione_*.md`: niente
+    fatti, numeri o norme aggiunti) e i numeri del testo che nei dati non ci sono si segnalano
+    da verificare (`common/relazioni.py`). Il testo si rivede e la bozza si esporta in DOCX o
+    ODT (converter). È un uso del modello per *mettere in forma* dati certi, non per valutare.
+24. **Ricerca in linguaggio naturale** (07/11/2026): nella mappatura (scheda e pagina pubblica)
+    e nei procedimenti pubblici si può scrivere una domanda ("come chiedo il contributo per
+    l'affitto?"); il risultato è sempre un elenco di processi esistenti, in ordine di
+    pertinenza, mai un testo generato. Due parti fuse per rango (`common/ricerca.py`):
+    **lessicale**, senza modello (radici italiane Snowball, parole vuote tolte, sinonimi di
+    `common/ricerca_sinonimi.yaml`, BM25 con la denominazione che pesa di più; codice o
+    denominazione che contengono il testo vanno in cima) e **semantica** con il modello di
+    embedding locale (`EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, API `/embeddings` compatibile
+    OpenAI). Si indicizzano codice, denominazione, descrizione, area, struttura, riferimenti
+    normativi, termine, tipologia, modalità di informazione e tutela e le attività: solo dati
+    pubblicabili. I vettori si calcolano alla ricerca solo per i processi nuovi o cambiati
+    (impronta del testo) e restano in `ricerca_vettori` e in memoria; il confronto è il coseno
+    in memoria, senza database vettoriale (poche centinaia di processi per ente). Se il modello
+    non è configurato o non risponde la ricerca resta lessicale. Nelle pagine pubbliche la
+    parte semantica ha un limite per indirizzo IP (`RICERCA_LIMITE_PUBBLICO` al minuto, per
+    processo dell'API), oltre il quale si cerca solo per parole.
+25. **Ricerche senza risposta e feedback** (07/11/2026): le ricerche nella mappatura (interna e
+    pubblica) e nei procedimenti pubblici si registrano quando sono concluse; le pagine pubbliche
+    chiedono un feedback facoltativo sui risultati e in fondo alla scheda del processo o del
+    procedimento. Nessun uso dell'LLM: chi ha il ruolo `ANALISI_RICERCHE` vede le domande che
+    non trovano risposta e decide cosa migliorare (testi dei procedimenti, sinonimi). Servizio
+    comune a tutto il sistema, descritto in `architettura.md` (sezione 4).

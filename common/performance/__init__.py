@@ -39,3 +39,52 @@ def disponibile(impegni_altri: Iterable[int]) -> int:
 def in_ritardo(scadenza: date | None, completamento: int | None, oggi: date | None = None) -> bool:
     """Scadenza passata senza il completamento al 100%."""
     return scadenza is not None and scadenza < (oggi or date.today()) and (completamento or 0) < TOTALE
+
+
+# --- controlli oggettivi sugli obiettivi -------------------------------------------------------
+
+AVVISO, INFO = "AVVISO", "INFO"
+
+
+def controlli_obiettivo(
+    impegno: int,
+    anno: int,
+    struttura_id: str,
+    elementi: list[dict],
+    *,
+    misure_attive: bool,
+    strutture_misure: dict[str, str | None] | None = None,
+) -> list[dict]:
+    """Avvisi e informazioni su un obiettivo, senza modello: impegni a zero, scadenze fuori
+    dall'anno, misure non più nella mappatura o di altre strutture, obiettivo senza azioni o
+    senza misure della mappatura. [elementi]: {tipo, descrizione, impegno, scadenza (date),
+    misura_id}; [strutture_misure]: misura_id -> struttura responsabile della misura."""
+    esito: list[dict] = []
+
+    def c(livello: str, testo: str) -> None:
+        esito.append({"livello": livello, "testo": testo})
+
+    if impegno == 0:
+        c(AVVISO, "L'obiettivo ha impegno 0%: non conta nel completamento della struttura")
+    if not elementi:
+        c(AVVISO, "Nessuna azione o misura: il completamento non si può calcolare")
+    elif misure_attive and not any(x["tipo"] == "MISURA" for x in elementi):
+        c(INFO, "Nessuna misura della mappatura dei rischi collegata all'obiettivo")
+    for x in elementi:
+        nome = f"{'Azione' if x['tipo'] == 'AZIONE' else 'Misura'} «{(x['descrizione'] or '')[:60]}»"
+        if (x.get("impegno") or 0) == 0:
+            c(AVVISO, f"{nome}: impegno 0%, non conta nel completamento")
+        scadenza = x.get("scadenza")
+        if scadenza is not None and scadenza.year > anno:
+            c(AVVISO, f"{nome}: scade il {scadenza:%d/%m/%Y}, dopo la fine dell'anno dell'obiettivo ({anno})")
+        elif scadenza is not None and scadenza.year < anno:
+            c(AVVISO, f"{nome}: scade il {scadenza:%d/%m/%Y}, prima dell'anno dell'obiettivo ({anno})")
+        if x["tipo"] == "MISURA":
+            if not x.get("misura_id"):
+                c(AVVISO, f"{nome}: la misura non è più nella mappatura dei rischi")
+            elif strutture_misure is not None:
+                responsabile = strutture_misure.get(x["misura_id"])
+                if responsabile and responsabile != struttura_id:
+                    c(INFO, f"{nome}: la misura è attribuita a un'altra struttura nella mappatura")
+    return sorted(esito, key=lambda v: v["livello"] != AVVISO)
+

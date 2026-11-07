@@ -136,6 +136,8 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
                         '${o['azioni']} azioni, ${o['misure']} misure'),
                     if (o['completo'] != true) Etichetta('Impegni ${o['impegno_elementi']}% su 100%', Colors.red),
                     if ((o['ritardi'] as int) > 0) Etichetta('${o['ritardi']} in ritardo', Colors.orange),
+                    if (((o['avvisi'] as int?) ?? 0) > 0)
+                      Etichetta(o['avvisi'] == 1 ? '1 avviso' : '${o['avvisi']} avvisi', Colors.deepOrange),
                   ]),
                 ]),
               ),
@@ -384,6 +386,8 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
               for (final x in elementi) _rigaElemento(o, x),
             ]),
           ),
+          if (o['controlli'] != null)
+            Sezione(titolo: 'Controlli', child: ElencoControlli((o['controlli'] as List).cast<Map<String, dynamic>>())),
           Card(
             child: ExpansionTile(
               title: const Text('Storico delle modifiche'),

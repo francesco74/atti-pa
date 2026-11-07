@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../stato/auth_state.dart';
 import '../comuni.dart';
+import '../relazioni/relazioni.dart';
 import 'comune.dart';
 import 'mappatura.dart';
 import 'monitoraggio.dart';
@@ -35,19 +37,21 @@ class _AnticorruzionePageState extends State<AnticorruzionePage> {
 
   @override
   Widget build(BuildContext context) {
+    final rpct = context.read<AuthState>().utente?.isAnticorruzioneRpct ?? false;
     return Caricamento<DatiAnticorruzione>(
       future: _dati,
       riprova: _carica,
       builder: (context, dati) => Provider<DatiAnticorruzione>.value(
         value: dati,
         child: DefaultTabController(
-          length: 4,
+          length: rpct ? 5 : 4,
           child: Column(children: [
-            const TabBar(isScrollable: true, tabs: [
-              Scheda(Icon(Icons.account_tree_outlined), 'Mappatura'),
-              Scheda(Icon(Icons.rate_review_outlined), 'Proposte'),
-              Scheda(Icon(Icons.fact_check_outlined), 'Monitoraggio'),
-              Scheda(Icon(Icons.insights), 'Riepilogo'),
+            TabBar(isScrollable: true, tabs: [
+              const Scheda(Icon(Icons.account_tree_outlined), 'Mappatura'),
+              const Scheda(Icon(Icons.rate_review_outlined), 'Proposte'),
+              const Scheda(Icon(Icons.fact_check_outlined), 'Monitoraggio'),
+              const Scheda(Icon(Icons.insights), 'Riepilogo'),
+              if (rpct) const Scheda(Icon(Icons.summarize_outlined), 'Relazioni'),
             ]),
             Expanded(
               child: TabBarView(key: ValueKey(_versione), children: [
@@ -55,6 +59,7 @@ class _AnticorruzionePageState extends State<AnticorruzionePage> {
                 const ProposteTab(),
                 const MonitoraggioTab(),
                 RiepilogoTab(onDatiCambiati: _carica),
+                if (rpct) const RelazioniTab(tipi: ['RPCT', 'PIAO']),
               ]),
             ),
           ]),

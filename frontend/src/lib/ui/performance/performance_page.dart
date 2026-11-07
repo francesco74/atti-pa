@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../comuni.dart';
 import 'comune.dart';
 import 'obiettivi.dart';
+import '../relazioni/relazioni.dart';
 
 /// Modulo performance: obiettivi annuali delle strutture nel PIAO triennale, con azioni e
 /// misure; riepilogo per struttura; PIAO (solo l'amministratore della performance).
@@ -37,18 +38,20 @@ class _PerformancePageState extends State<PerformancePage> {
       builder: (context, dati) => Provider<DatiPerformance>.value(
         value: dati,
         child: DefaultTabController(
-          length: dati.amministratore ? 3 : 2,
+          length: dati.amministratore ? 4 : 2,
           child: Column(children: [
             TabBar(isScrollable: true, tabs: [
               const Scheda(Icon(Icons.flag_outlined), 'Obiettivi'),
               const Scheda(Icon(Icons.insights), 'Riepilogo'),
               if (dati.amministratore) const Scheda(Icon(Icons.calendar_month_outlined), 'PIAO'),
+              if (dati.amministratore) const Scheda(Icon(Icons.summarize_outlined), 'Relazione'),
             ]),
             Expanded(
               child: TabBarView(key: ValueKey(_versione), children: [
                 const ObiettiviTab(),
                 const RiepilogoTab(),
                 if (dati.amministratore) PiaoTab(onCambiato: _carica),
+                if (dati.amministratore) const RelazioniTab(tipi: ['PERFORMANCE']),
               ]),
             ),
           ]),

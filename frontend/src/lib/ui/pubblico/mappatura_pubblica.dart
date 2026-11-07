@@ -5,6 +5,7 @@ import '../../api/api_client.dart';
 import '../anticorruzione/albero.dart' show IntestazioneProcesso, etichettaTipo;
 import '../anticorruzione/comune.dart';
 import '../comuni.dart';
+import '../ricerca.dart';
 import 'comune.dart';
 
 /// Percorso della pagina pubblica nell'app (il link da mettere sul sito dell'ente).
@@ -104,6 +105,11 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   String? _struttura, _livello, _tipo;
   final _testo = TextEditingController(); // ricerca in tutte le aree
   final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
+  late final _registro = RegistroRicerche(apiDi(context).post, '/api/v1/pubblico/ricerche', 'MAPPATURA');
+  late final _ricerca = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
+  late final _ricercaArea = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
+
+  Future<Object?> _chiamaRicerca(String testo) => apiDi(context).get('$apiPubblico/mappatura/ricerca', query: {'testo': testo});
 
   @override
   void initState() {
@@ -115,6 +121,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   void dispose() {
     _testo.dispose();
     _testoArea.dispose();
+    _ricerca.dispose();
+    _ricercaArea.dispose();
     super.dispose();
   }
 
@@ -130,6 +138,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
         _processoId = _attivitaId = _area = _struttura = _livello = _tipo = null;
         _testo.clear();
         _testoArea.clear();
+        _ricerca.cambia('');
+        _ricercaArea.cambia('');
         _carica();
       });
 
@@ -144,7 +154,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
         _albero = apiDi(context).get('$apiPubblico/mappatura/processi/$id').then((v) => v as Map<String, dynamic>);
       });
 
-  Widget _elencoProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi) => Column(children: [
+  Widget _elencoProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi, [RicercaTesto? ricerca]) =>
+      Column(children: [
         for (final p in processi)
           RigaVoce(
             icona: p['tipo'] == 'PROCEDIMENTO' ? Icons.gavel_outlined : Icons.account_tree_outlined,
@@ -155,17 +166,20 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
               '${p['attivita']} attività, ${p['rischi']} rischi, ${p['misure']} misure',
             ],
             finale: [LivelloChip(dati, p['livello_massimo'] as String?)],
-            onTap: () => _apriProcesso(p['id'] as String),
+            onTap: () {
+              ricerca?.aperto(p['id'] as String);
+              _apriProcesso(p['id'] as String);
+            },
           ),
       ]);
 
   /// Primo livello: le aree di rischio; mentre si cerca, i processi trovati.
   List<Widget> _livelloAree(DatiAnticorruzione dati, List<Map<String, dynamic>> processi) {
-    final cerca = _testo.text.trim().toLowerCase();
+    final cerca = _ricerca.testo;
     final idAree = dati.aree.map((a) => a['id']).toSet();
     int quanti(Object? id) => processi.where((p) => p['area_id'] == id).length;
     final senzaArea = processi.where((p) => !idAree.contains(p['area_id'])).length;
-    final trovati = processi.where((p) => '${p['codice']} ${p['denominazione']}'.toLowerCase().contains(cerca)).toList();
+    final trovati = _ricerca.filtra(processi);
     String numero(int n) => n == 1 ? '1 processo' : '$n processi';
     return [
       Align(
@@ -175,17 +189,22 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           child: TextField(
             controller: _testo,
             decoration: const InputDecoration(
-              labelText: 'Cerca un processo (codice o denominazione)',
+              labelText: 'Cerca un processo o procedimento',
+              hintText: 'Codice, parole o una domanda',
               isDense: true,
               prefixIcon: Icon(Icons.search),
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: _ricerca.cambia,
           ),
         ),
       ),
+      NotaRicerca(_ricerca),
       const SizedBox(height: 16),
       if (cerca.isNotEmpty)
-        trovati.isEmpty ? const Center(child: Text('Nessun processo trovato.')) : _elencoProcessi(dati, trovati)
+        trovati.isEmpty
+            ? Center(child: Text(_ricerca.inCorso ? '' : 'Nessun processo trovato.'))
+            : _elencoProcessi(dati, trovati, _ricerca),
+      if (cerca.isNotEmpty) FeedbackRicerca(_ricerca)
       else if (dati.aree.isEmpty && senzaArea == 0)
         const Center(child: Text('Nessun processo pubblicato.'))
       else
@@ -206,11 +225,9 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   /// Secondo livello: i processi dell'area, con i filtri.
   List<Widget> _livelloProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi) {
     final idAree = dati.aree.map((a) => a['id']).toSet();
-    final cerca = _testoArea.text.trim().toLowerCase();
-    final dellArea = processi
-        .where((p) => _area == _senzaArea ? !idAree.contains(p['area_id']) : p['area_id'] == _area)
-        .where((p) => '${p['codice']} ${p['denominazione']}'.toLowerCase().contains(cerca))
-        .toList();
+    final cerca = _ricercaArea.testo;
+    final tutti = processi.where((p) => _area == _senzaArea ? !idAree.contains(p['area_id']) : p['area_id'] == _area).toList();
+    final dellArea = cerca.isEmpty ? tutti : _ricercaArea.filtra(tutti);
     return [
       Percorso([('Aree di rischio', _vaiAree), (dati.area(_area) ?? 'Senza area', null)]),
       const SizedBox(height: 12),
@@ -220,11 +237,12 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           child: TextField(
             controller: _testoArea,
             decoration: const InputDecoration(
-              labelText: 'Cerca nell\'area (codice o denominazione)',
+              labelText: 'Cerca nell\'area',
+              hintText: 'Codice, parole o una domanda',
               isDense: true,
               prefixIcon: Icon(Icons.search),
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: _ricercaArea.cambia,
           ),
         ),
         SizedBox(
@@ -277,11 +295,13 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           ),
         ),
       ]),
+      NotaRicerca(_ricercaArea),
       const SizedBox(height: 16),
       if (dellArea.isEmpty)
-        Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : 'Nessun processo trovato.'))
+        Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
       else
-        _elencoProcessi(dati, dellArea),
+        _elencoProcessi(dati, dellArea, cerca.isEmpty ? null : _ricercaArea),
+      if (cerca.isNotEmpty) FeedbackRicerca(_ricercaArea),
     ];
   }
 
@@ -324,6 +344,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             finale: [LivelloChip(dati, _livelloMassimo(dati, rischi(a)))],
             onTap: () => setState(() => _attivitaId = a['id'] as String),
           ),
+        const SizedBox(height: 16),
+        FeedbackScheda(registro: _registro, id: processo['id'] as String, titolo: nome),
       ] else ...[
         Sezione(
           titolo: 'Attività ${aperta['codice']}',
