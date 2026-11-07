@@ -1,0 +1,232 @@
+# Installazione di produzione su un server con solo Docker (senza Kubernetes).
+# Guida: manuale/installazione_docker.md
+#
+#   cp .env.example .env    # poi compilare i valori
+#   docker compose up -d
+#
+# Immagini da Docker Hub (francesco74/atti-pa-*), pubblicate con
+#   REGISTRY=francesco74 PREFISSO=atti-pa- deploy/immagini.sh VERSIONE
+# Aggiornamento: VERSIONE nel .env, poi docker compose pull && docker compose up -d
+#
+# Solo Caddy espone porte (80 e 443): fa da Ingress (/api all'API, il resto all'app) e
+# ottiene i certificati Let's Encrypt per i domini degli enti (Caddyfile).
+# phpMyAdmin solo quando serve, raggiungibile dal server (tunnel SSH):
+#   docker compose --profile strumenti up -d phpmyadmin
+#   docker compose stop phpmyadmin
+
+name: atti-pa
+
+x-log: &log
+  logging:
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+# Variabili comuni di API, worker e normattiva-sync (come la ConfigMap e il Secret del cluster)
+x-ambiente: &ambiente
+  FUSO_ORARIO: Europe/Rome
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_SQL: "false"
+  DATABASE_URL: mysql+aiomysql://atti_pa:${MYSQL_PASSWORD:?manca MYSQL_PASSWORD}@mysql:3306/atti_pa
+  RABBITMQ_URL: amqp://atti_pa:${RABBITMQ_PASSWORD:?manca RABBITMQ_PASSWORD}@rabbitmq:5672/
+  RABBITMQ_PREFISSO: atti-pa
+  JWT_SECRET: ${JWT_SECRET:?manca JWT_SECRET}
+  CHIAVE_CIFRATURA: ${CHIAVE_CIFRATURA:?manca CHIAVE_CIFRATURA}
+  PASSWORD_INIZIALE: ${PASSWORD_INIZIALE:?manca PASSWORD_INIZIALE}
+  JWT_SCADENZA_MINUTI: "480"
+  LOGIN_TENTATIVI: "5"
+  LOGIN_FINESTRA_MINUTI: "15"
+  COOKIE_SECURE: "true"
+  CORS_ORIGINI: "[]"
+  PROXY_HOPS: "1"  # un solo proxy davanti all'API: Caddy
+  # LLM
+  LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_MODEL: ${LLM_MODEL:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_TIMEOUT: "180"
+  LLM_TIMEOUT_REDAZIONE: "60"
+  # Ricerca per significato
+  EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+  EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+  RICERCA_LIMITE_PUBBLICO: "20"
+  RICERCHE_LIMITE_REGISTRO: "30"
+  RICERCHE_CONSERVAZIONE_MESI: "12"
+  # Servizi interni
+  DOCUMENTI_URL: http://converter:8000
+  DOCUMENTI_TIMEOUT: "150"
+  ARCHIVIO_DIR: /var/lib/atti-pa/archivio
+  UPLOAD_MAX_MB: "20"
+  # Worker
+  WORKER_HEARTBEAT: /tmp/heartbeat
+  WORKER_TIMEOUT_MINUTI: "60"
+
+# Container delle immagini di atti-pa: utente 10001, file system in sola lettura tranne /tmp
+x-sicuro: &sicuro
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    <<: *log
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMINIO: ${DOMINIO:?manca DOMINIO}
+      ACME_EMAIL: ${ACME_EMAIL:?manca ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # certificati e account Let's Encrypt: da non perdere
+      - caddy_config:/config
+    depends_on:
+      api: { condition: service_healthy }
+      frontend: { condition: service_healthy }
+
+  mysql:
+    image: mysql:8.0
+    <<: *log
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?manca MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: atti_pa
+      MYSQL_USER: atti_pa
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql:/var/lib/mysql
+      # schema eseguito solo alla prima inizializzazione (volume vuoto); le modifiche
+      # successive si applicano a mano (manuale/installazione_docker.md)
+      - ../k8s/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      retries: 30
+      start_period: 60s
+
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    <<: *log
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: atti_pa
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -setcookie ${RABBITMQ_COOKIE:?manca RABBITMQ_COOKIE}
+      RABBITMQ_CTL_ERL_ARGS: -setcookie ${RABBITMQ_COOKIE}
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      retries: 30
+
+  api:
+    image: francesco74/atti-pa-api:${VERSIONE:?manca VERSIONE}
+    <<: [*log, *sicuro]
+    environment: *ambiente
+    volumes:
+      - archivio:/var/lib/atti-pa/archivio
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=5)"]
+      interval: 15s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      mysql: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  worker:
+    image: francesco74/atti-pa-worker:${VERSIONE}
+    <<: [*log, *sicuro]
+    environment: *ambiente
+    volumes:
+      - archivio:/var/lib/atti-pa/archivio
+    mem_limit: 1536m  # Chromium (Playwright) per le pagine della trasparenza
+    shm_size: 256m
+    healthcheck:
+      # il worker aggiorna /tmp/heartbeat a ogni ciclo
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(stat -c %Y /tmp/heartbeat) )) -lt 900"]
+      interval: 60s
+      start_period: 60s
+    depends_on:
+      mysql: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  # Conversione dei documenti (PDF/PDF-A delle bozze)
+  converter:
+    image: francesco74/atti-pa-converter:${VERSIONE}
+    <<: [*log, *sicuro]
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CONVERSIONI_PARALLELE: "2"
+      CONVERSIONE_TIMEOUT: "120"
+      UPLOAD_MAX_MB: "20"
+    mem_limit: 1536m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 30s
+      retries: 5
+
+  # Conversione in Markdown degli atti caricati (coda "conversione"): stessa immagine
+  converter-consumatore:
+    image: francesco74/atti-pa-converter:${VERSIONE}
+    <<: [*log, *sicuro]
+    command: ["python", "consumatore.py"]
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      RABBITMQ_URL: amqp://atti_pa:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      RABBITMQ_PREFISSO: atti-pa
+      ARCHIVIO_DIR: /var/lib/atti-pa/archivio
+      CONVERSIONE_TIMEOUT: "120"
+    volumes:
+      - archivio:/var/lib/atti-pa/archivio:ro
+    mem_limit: 1536m
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
+  frontend:
+    image: francesco74/atti-pa-frontend:${VERSIONE}
+    <<: [*log, *sicuro]
+    environment:
+      API_URL: ""  # stessa origine: /api passa da Caddy
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    tmpfs: [/tmp, /var/cache/nginx]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      retries: 5
+
+  # Aggiornamento delle norme da Normattiva ogni notte alle 03:30 (il CronJob del cluster)
+  normattiva-sync:
+    image: francesco74/atti-pa-normattiva-sync:${VERSIONE}
+    <<: [*log, *sicuro]
+    environment: *ambiente
+    command: ["python", "/pianifica.py", "03:30", "python", "/app"]
+    volumes:
+      - ./pianifica.py:/pianifica.py:ro
+    depends_on:
+      mysql: { condition: service_healthy }
+
+  # Consultazione del database, solo su richiesta e solo dal server:
+  #   ssh -L 8081:localhost:8081 utente@server   poi http://localhost:8081
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    <<: *log
+    profiles: [strumenti]
+    environment:
+      PMA_HOST: mysql
+      UPLOAD_LIMIT: 64M
+    ports: ["127.0.0.1:8081:80"]
+    depends_on:
+      mysql: { condition: service_healthy }
+
+volumes:
+  mysql:
+  rabbitmq:
+  archivio:     # file originali degli atti e caricati per la trasparenza
+  caddy_data:
+  caddy_config:

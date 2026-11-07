@@ -237,6 +237,15 @@ class MultiEnte(unittest.TestCase):
         a, _ = self._login(A, "admin")
         self.assertEqual(a.get("/api/v1/enti", base_url=A).status_code, 404)  # nessuna API degli enti
 
+    def test_consenso_certificati_tls(self):
+        """Caddy (installazione Docker) chiede un certificato solo per i domini degli enti attivi."""
+        c = self.app.test_client()
+        url = "/api/v1/tls/consenti"
+        self.assertEqual(c.get(url, query_string={"domain": "atti.provincia.example.it"}).status_code, 200)
+        self.assertEqual(c.get(url, query_string={"domain": "ATTI.Comune.example.it"}).status_code, 200)
+        self.assertEqual(c.get(url, query_string={"domain": "inventato.example.it"}).status_code, 404)
+        self.assertEqual(c.get(url).status_code, 404)
+
     def test_profilo_e_logo(self):
         import io
 

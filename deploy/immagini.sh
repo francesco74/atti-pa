@@ -4,6 +4,8 @@
 #   deploy/immagini.sh 0.1.0              # costruisce e pubblica la versione 0.1.0
 #   deploy/immagini.sh 0.1.0 --solo-build # costruisce soltanto
 #   REGISTRY=altro.registry/progetto deploy/immagini.sh 0.1.0
+#   REGISTRY=francesco74 PREFISSO=atti-pa- deploy/immagini.sh 0.1.0   # Docker Hub:
+#       francesco74/atti-pa-api, francesco74/atti-pa-worker... (installazione deploy/docker)
 #
 # Da eseguire su una macchina della rete interna, dopo `docker login` sul registry; la
 # macchina deve poter scaricare le immagini di base (Python, Flutter, nginx). Dopo la
@@ -11,6 +13,7 @@
 set -euo pipefail
 
 REGISTRY="${REGISTRY:-registry.intranet.provincia.lucca/atti.pa}"
+PREFISSO="${PREFISSO:-}"  # davanti al nome del componente, es. atti-pa-
 COMPONENTI=(api converter worker normattiva-sync frontend)
 
 versione="${1:-}"
@@ -25,15 +28,16 @@ pubblica=true
 cd "$(dirname "$0")/.."
 
 for c in "${COMPONENTI[@]}"; do
-    immagine="$REGISTRY/$c:$versione"
+    immagine="$REGISTRY/$PREFISSO$c:$versione"
     echo "==> $immagine"
     docker build -f "$c/Dockerfile" -t "$immagine" .
 done
 
 if $pubblica; then
     for c in "${COMPONENTI[@]}"; do
-        docker push "$REGISTRY/$c:$versione"
+        docker push "$REGISTRY/$PREFISSO$c:$versione"
     done
     echo "Pubblicate in $REGISTRY con la versione $versione."
-    echo "Aggiorna newTag in deploy/k8s/kustomization.yaml, poi: kubectl apply -k deploy/k8s"
+    echo "Kubernetes: aggiorna newTag in deploy/k8s/kustomization.yaml, poi: kubectl apply -k deploy/k8s"
+    echo "Docker: VERSIONE=$versione nel .env del server, poi: docker compose pull && docker compose up -d"
 fi

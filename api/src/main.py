@@ -25,7 +25,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth.ldap import LdapAuthenticator
 from ciclo import CicloAsync
-from deps import Risorse, chiudi_db
+from deps import Risorse, chiudi_db, db
 from common.documenti import DocumentiClient
 from routers import editor, pacchetti, verifiche
 from web import AttiFlask, ErroreApi
@@ -35,6 +35,7 @@ from common.coda import Coda
 from common.embedding import crea_embedding
 from common.llm import crea_llm
 from common.log import configura_da_ambiente
+from common.models import Ente, EnteDominio
 from common.normattiva import NormattivaClient
 
 log = logging.getLogger("atti_api")
@@ -169,6 +170,20 @@ def create_app(
         async with app.state.engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return {"status": "ok"}
+
+    @app.get("/api/v1/tls/consenti")
+    async def tls_consenti():
+        """Per il TLS "on demand" di Caddy (installazione Docker): 200 solo se il dominio è di
+        un ente attivo, così Caddy chiede a Let's Encrypt i certificati solo per quelli. Caddy
+        lo chiama dall'interno; dall'esterno il percorso è bloccato (deploy/docker/Caddyfile)."""
+        dominio = (request.args.get("domain") or "").strip().lower()
+        if dominio:
+            sessione = db()
+            d = await sessione.get(EnteDominio, dominio)
+            e = await sessione.get(Ente, d.ente_id) if d is not None else None
+            if e is not None and e.attivo:
+                return {"dominio": dominio}
+        return {"detail": "Dominio non registrato"}, HTTPStatus.NOT_FOUND
 
     for modulo in (
         auth, ente, norme, norme_manuali, checklists, modelli, pacchetti, editor, bozze,

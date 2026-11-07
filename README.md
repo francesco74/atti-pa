@@ -44,7 +44,7 @@ radice del repository (`docker build -f <componente>/Dockerfile .`).
 | `common/`          | — (libreria)                 | Codice condiviso: modelli, code, archivio, client Normattiva, verifica, LLM, prompt; `common/trasparenza/` (schemi ANAC, analisi) |
 | —                  | StatefulSet                  | RabbitMQ: code tra API, converter e worker |
 | —                  | StatefulSet                  | MySQL 8: database (schema in `deploy/k8s/sql/`, creato al primo avvio) |
-| `deploy/`          | —                            | Manifest Kubernetes (kustomize), schema SQL, script del pacchetto e di manutenzione |
+| `deploy/`          | —                            | Manifest Kubernetes (kustomize), installazione Docker (`deploy/docker`), schema SQL, script del pacchetto e di manutenzione |
 | `pacchetto/`       | —                            | Sorgenti del pacchetto standard: modelli di atto, specificità, checklist (da cui si crea lo zip) |
 | `manuale/`         | —                            | Manuali d'uso |
 
@@ -384,6 +384,13 @@ kubectl -n attipa exec -i mysql-0 -- sh -c 'mysql -uatti_pa -p"$MYSQL_PASSWORD" 
 
 e da aggiungere a `configMapGenerator` in `deploy/k8s/kustomization.yaml`, così le nuove
 installazioni li eseguono al primo avvio.
+
+## Installazione su un server Docker
+
+Per un server con solo Docker c'è `deploy/docker/`: compose di produzione con le immagini di
+Docker Hub (`francesco74/atti-pa-*`), Caddy al posto dell'Ingress con i certificati Let's
+Encrypt per i domini degli enti, aggiornamento notturno delle norme e backup. Guida:
+`manuale/installazione_docker.md`.
 
 ## Fonte dei dati normativi
 
