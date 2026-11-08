@@ -3,7 +3,8 @@ Copyright (C) 2026 Francesco Bertozzi <info@bertozzifrancesco.it>
 
 Questo programma è software libero, distribuito con licenza GNU Affero General Public
 License, versione 3 o (a scelta) successiva (file LICENSE), con i termini aggiuntivi
-seguenti, ammessi dalla sezione 7 della licenza.
+seguenti, ammessi dalla sezione 7 della licenza. La licenza vale per tutto il codice,
+comprese le versioni pubblicate prima dell'aggiunta del file LICENSE.
 
 Termini aggiuntivi (sezione 7, lettere b e c)
 
@@ -22,3 +23,5 @@ Additional terms under section 7(b) and 7(c) of the GNU AGPL v3:
 deployments, in the documentation and in any "about" or legal notices shown by the interface.
 (2) Modified versions must be reasonably marked as modified and must not be presented as
 the original version by the author.
+This license applies to the whole code history, including versions published
+before the LICENSE file was added.

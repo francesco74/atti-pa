@@ -431,6 +431,8 @@ Copyright (C) 2026 Francesco Bertozzi <info@bertozzifrancesco.it>.
 atti-pa è software libero: si può ridistribuire e modificare secondo i termini della
 **GNU Affero General Public License** pubblicata dalla Free Software Foundation, versione 3
 o (a scelta) successiva ([`LICENSE`](LICENSE), identificativo SPDX `AGPL-3.0-or-later`).
+La licenza vale per tutto il codice, comprese le versioni precedenti all'aggiunta del file
+`LICENSE`.
 È distribuito nella speranza che sia utile, ma **senza alcuna garanzia**, nemmeno implicita
 di commerciabilità o di idoneità a uno scopo particolare.
 
