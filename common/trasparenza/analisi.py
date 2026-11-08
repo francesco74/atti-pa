@@ -16,6 +16,9 @@ from datetime import datetime
 from typing import Literal
 from urllib.parse import urlparse
 
+from pa_common.conversione import testo as testo_semplice
+from pa_common.conversione.fogli import fogli_in_markdown
+from pa_common.errori import ConversioneNonRiuscita
 from pydantic import BaseModel, Field, ValidationError
 
 from . import fonti
@@ -278,11 +281,13 @@ def componi_report(r: ReportAnalisi, titolo: str, fonte: str) -> str:
 async def testo_file(f: File, documenti) -> str:
     """Testo di un file per l'LLM (`documenti`: client del converter)."""
     if f.estensione in fonti.TESTI:
-        return fonti.testo_csv(f.contenuto)
+        return testo_semplice(f.contenuto)
     if f.estensione in fonti.FOGLI:
+        # numeri con il formato interno: le verifiche controllano come il dato è presentato
+        # (registro.REGOLA_NUMERI_FOGLI_DI_CALCOLO)
         try:
-            return fonti.tabella_foglio(f.contenuto, f.estensione)
-        except Exception as e:  # noqa: BLE001 - file danneggiato o formato inatteso
+            return fogli_in_markdown(f.contenuto, f".{f.estensione}", annota_formato=True)
+        except ConversioneNonRiuscita as e:
             raise AnalisiNonRiuscita(f"Impossibile leggere il foglio di calcolo {f.nome}: {e}") from e
     if f.estensione in fonti.DOCUMENTI:
         testo = await documenti.markdown(f.contenuto, f.nome)

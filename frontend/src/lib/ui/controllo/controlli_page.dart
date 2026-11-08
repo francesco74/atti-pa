@@ -87,11 +87,11 @@ class _ControlliPageState extends State<ControlliPage> {
                     leading: const Icon(Icons.attach_file),
                     title: Text(
                       file?.name ??
-                          'Atto da controllare (PDF, ODT, DOCX o DOC)',
+                          'Atto da controllare (PDF, ODT, DOCX o DOC, anche firmato .p7m)',
                     ),
                     trailing: TextButton(
                       onPressed: () async {
-                        final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc']);
+                        final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc', 'p7m']);
                         if (scelto != null) aggiorna(() => file = scelto);
                       },
                       child: Text(file == null ? 'Scegli' : 'Cambia'),

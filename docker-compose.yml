@@ -119,8 +119,15 @@ services:
   converter:
     container_name: atti-pa-converter
     build: { context: ., dockerfile: converter/Dockerfile }
-    environment:
+    environment: &ocr
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # OCR delle pagine scansionate (pa-common): senza chiave i PDF scansionati sono rifiutati
+      OCR_PROVIDER: ${OCR_PROVIDER:-gemini}
+      OCR_MODEL: ${OCR_MODEL:-gemini-3-flash-preview}
+      OCR_API_KEY: ${OCR_API_KEY:-}
+      OCR_BASE_URL: ${OCR_BASE_URL:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Conversione in Markdown degli atti caricati (coda "conversione"): stessa immagine
   converter-consumatore:
@@ -128,9 +135,11 @@ services:
     build: { context: ., dockerfile: converter/Dockerfile }
     command: ["python", "consumatore.py"]
     environment:
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      <<: *ocr
       RABBITMQ_URL: amqp://atti_pa:password@rabbitmq:5672/
       ARCHIVIO_DIR: /var/lib/atti-pa/archivio
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - archivio:/var/lib/atti-pa/archivio:ro
     depends_on:

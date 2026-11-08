@@ -12,7 +12,6 @@ pymysql==1.1.3
 cryptography==50.0.2
 tzdata==2026.5
 lxml==6.1.3
-pypdf==6.20.0
 # SDK ufficiale per LLM_PROVIDER=anthropic (Claude)
 anthropic==1.13.0
 # Code RabbitMQ (common/coda.py)
@@ -22,3 +21,6 @@ pyyaml==6.0.3
 # sanificazione dell'HTML dei documenti della trasparenza (common/trasparenza/sicurezza.py)
 nh3==0.3.7
 snowballstemmer==3.0.1  # radici delle parole italiane per la ricerca (common/ricerca.py)
+# libreria condivisa con il RAG (https://github.com/francesco74/pa-common): file in ingresso
+# (.p7m, tipo reale), fogli di calcolo in Markdown; versione fissata dal tag
+pa-common[fogli] @ https://github.com/francesco74/pa-common/archive/refs/tags/v0.1.0.tar.gz

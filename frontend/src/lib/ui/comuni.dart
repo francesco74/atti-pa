@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api_client.dart';
+import '../config.dart';
 
 ApiClient apiDi(BuildContext context) => context.read<ApiClient>();
 
@@ -331,4 +332,41 @@ class SceltaLink extends StatelessWidget {
           onChanged: segui && onSegui != null ? (v) => onNumero(v ?? numero) : null,
         ),
       );
+}
+
+
+/// Informazioni sull'applicazione: licenza (AGPL-3.0), link al codice sorgente e licenze dei
+/// componenti usati (pagina standard di Flutter).
+void mostraInformazioni(BuildContext context) {
+  showAboutDialog(
+    context: context,
+    applicationName: 'atti-pa',
+    applicationLegalese: '© 2026 Francesco Bertozzi\n'
+        'Software libero, distribuito con licenza GNU Affero General Public License v3.0 o '
+        'successiva, senza alcuna garanzia.',
+    children: [
+      const SizedBox(height: 16),
+      const LinkSorgente(),
+    ],
+  );
+}
+
+/// Link al codice sorgente dell'app (Config.sorgenteUrl), in una nuova finestra.
+class LinkSorgente extends StatelessWidget {
+  const LinkSorgente({super.key, this.icona = false});
+
+  final bool icona;
+
+  void _apri() => launchUrl(Uri.parse(Config.sorgenteUrl), webOnlyWindowName: '_blank');
+
+  @override
+  Widget build(BuildContext context) {
+    const testo = Text('Codice sorgente (AGPL-3.0)');
+    return Semantics(
+      hint: 'si apre in una nuova finestra',
+      child: icona
+          ? TextButton.icon(icon: const Icon(Icons.code), label: testo, onPressed: _apri)
+          : TextButton(onPressed: _apri, child: testo),
+    );
+  }
 }

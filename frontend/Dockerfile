@@ -16,6 +16,12 @@ RUN flutter analyze --no-fatal-infos --no-fatal-warnings \
 # --- Server statico ------------------------------------------------------------------
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 
+# Licenza (AGPL-3.0-or-later): etichette OCI e testo nell'immagine
+LABEL org.opencontainers.image.title="atti-pa-frontend" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+      org.opencontainers.image.source="https://github.com/francesco74/atti-pa"
+COPY LICENSE NOTICE /usr/share/licenses/atti-pa/
+
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/build/web /usr/share/nginx/html
 # Genera config.json all'avvio da API_URL e LOG_LEVEL

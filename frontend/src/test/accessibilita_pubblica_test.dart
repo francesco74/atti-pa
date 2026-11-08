@@ -90,6 +90,7 @@ void main() {
     expect(tester.getSemantics(find.text('Strutture responsabili')), isSemantics(isHeader: true));
     expect(titoloScheda('Tipologie di procedimento – Comune di Prova'), isTrue);
     expect(find.text('Dichiarazione di accessibilità'), findsOneWidget);
+    expect(find.text('Codice sorgente (AGPL-3.0)'), findsOneWidget); // licenza AGPL, art. 13
 
     // struttura: il titolo della scheda del browser cambia
     await tester.tap(find.text('SETTORE 4 - Servizi sociali'));
@@ -122,6 +123,16 @@ void main() {
   testWidgets('320 px con il testo al 200%: niente esce dalla pagina', (tester) async {
     await apri(tester, const ProcedimentiPubbliciPage(), larghezza: 320, testo: 2);
     expect(tester.takeException(), isNull);
+    // piè di pagina compatto: le voci sono nella finestra "Informazioni"
+    expect(find.text('Codice sorgente (AGPL-3.0)'), findsNothing);
+    await tester.dragUntilVisible(find.text('Informazioni'), find.byType(NestedScrollView), const Offset(0, -200));
+    await tester.tap(find.text('Informazioni'));
+    await tester.pumpAndSettle();
+    expect(find.text('Codice sorgente (AGPL-3.0)'), findsOneWidget);
+    expect(find.text('Segnala un problema di accessibilità'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(5, 5)); // chiude la finestra
+    await tester.pumpAndSettle();
     await apri(tester, const MappaturaPubblicaPage(), larghezza: 320, testo: 2);
     expect(tester.takeException(), isNull);
     // la pagina scorre tutta (intestazione compresa) fino all'area

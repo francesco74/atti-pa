@@ -1,8 +1,11 @@
-"""Servizio interno di conversione documenti con LibreOffice headless (Flask).
+"""Servizio interno di conversione documenti (Flask), sulla libreria pa-common.
 
-Usato dall'API (e dal worker) nel namespace. Ogni conversione usa un profilo LibreOffice
-separato in una cartella temporanea, così più conversioni possono girare in parallelo.
-La configurazione arriva dalle variabili d'ambiente (vedi `Settings`).
+- `/converti`: documenti delle bozze in PDF, PDF/A, ODT o DOCX con LibreOffice headless;
+- `/markdown`: testo dei documenti in Markdown per l'LLM (PDF con OCR delle pagine
+  scansionate, ODT, DOC/DOCX/RTF, fogli di calcolo), usato dalla trasparenza.
+
+Usato dall'API (e dal worker) nel namespace. La configurazione arriva dalle variabili
+d'ambiente (vedi `Settings`).
 
 In produzione: `gunicorn -c python:gunicorn_conf "main:create_app()"`.
 """
@@ -11,35 +14,23 @@ from __future__ import annotations
 
 import logging
 import shutil
-import subprocess
-import tempfile
-import threading
-import time
 from http import HTTPStatus
 from pathlib import Path
 from typing import Literal
 
 from flask import Flask, request
+from pa_common.conversione import FORMATI as FORMATI_MARKDOWN
+from pa_common.conversione import Tempi, in_markdown_sync
+from pa_common.conversione.libreoffice import FILTRI, INGRESSI, LibreOffice, Occupato
+from pa_common.errori import ConversioneNonRiuscita, ErroreOcr, FileNonValido, TempoScaduto
+from pa_common.ocr import Ocr, crea_ocr
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from werkzeug.exceptions import HTTPException
 
-from markdown import ConversioneNonRiuscita, odt_in_markdown, pdf_in_markdown
-
 log = logging.getLogger("documenti")
 
-ESTENSIONI_AMMESSE = {".odt", ".docx", ".doc", ".rtf", ".html"}
-# L'HTML si apre come documento di Writer (non Writer/Web), così valgono gli stessi filtri
-# di esportazione degli altri documenti
-FILTRI_INGRESSO = {".html": "HTML (StarWriter)"}
-
-# Filtri di esportazione LibreOffice
-FILTRI = {
-    "pdf": 'pdf:writer_pdf_Export:{"SelectPdfVersion":{"type":"long","value":"0"}}',
-    "pdfa": 'pdf:writer_pdf_Export:{"SelectPdfVersion":{"type":"long","value":"2"}}',
-    "odt": "odt",
-    "docx": "docx:MS Word 2007 XML",
-}
+ESTENSIONI_AMMESSE = INGRESSI
 MIME = {
     "pdf": "application/pdf",
     "pdfa": "application/pdf",
@@ -73,6 +64,16 @@ class Settings(BaseSettings):
     # Ogni LibreOffice occupa 300-500 MB: due in parallelo stanno nel limite di 1,5 GB del pod
     conversioni_parallele: int = 2
     upload_max_mb: int = 20  # come UPLOAD_MAX_MB dell'API
+    max_pagine_pdf: int = 300  # PDF più lunghi rifiutati
+    # OCR delle pagine scansionate (pa_common.ocr), come nel RAG: fornitore gemini, openai,
+    # anthropic, mistral, vllm (OCR_BASE_URL obbligatorio) o ollama; il modello deve leggere
+    # le immagini. Senza la chiave (fornitori esterni) i PDF scansionati sono rifiutati.
+    ocr_provider: str = "gemini"
+    ocr_model: str = "gemini-3-flash-preview"
+    ocr_api_key: str = ""
+    ocr_base_url: str = ""
+    ocr_richieste_al_minuto: int = 10
+    ocr_tentativi: int = 6
     # Consumatore della coda di conversione (consumatore.py): stessi valori di API e worker
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
     rabbitmq_prefisso: str = "atti-pa"
@@ -106,105 +107,75 @@ def configura_logging(livello: str) -> None:
         logger.setLevel(logging.INFO if livello == "DEBUG" else livello)
 
 
-class Convertitore:
-    def __init__(self, settings: Settings):
-        self.settings = settings
-        self._semaforo = threading.BoundedSemaphore(settings.conversioni_parallele)
+def crea_libreoffice(settings: Settings) -> LibreOffice:
+    return LibreOffice(
+        settings.soffice_bin,
+        timeout=settings.conversione_timeout,
+        parallele=settings.conversioni_parallele,
+        attesa=settings.coda_timeout,
+    )
 
-    def converti(self, contenuto: bytes, estensione: str, formato: str) -> bytes:
-        s = self.settings
-        log.debug("Conversione %s -> %s (%d byte) in attesa", estensione, formato, len(contenuto))
-        if not self._semaforo.acquire(timeout=s.coda_timeout):
-            log.warning(
-                "Conversione rifiutata: %d già in corso da oltre %d s",
-                s.conversioni_parallele,
-                s.coda_timeout,
-            )
-            raise ErroreConversione(HTTPStatus.SERVICE_UNAVAILABLE, "Servizio occupato, riprovare")
-        try:
-            return self._esegui(contenuto, estensione, formato)
-        finally:
-            self._semaforo.release()
 
-    def _esegui(self, contenuto: bytes, estensione: str, formato: str) -> bytes:
-        inizio = time.perf_counter()
-        with tempfile.TemporaryDirectory(prefix="conv-") as cartella:
-            base = Path(cartella)
-            sorgente = base / f"documento{estensione}"
-            sorgente.write_bytes(contenuto)
-            uscita = base / "uscita"
-            comando = [
-                self.settings.soffice_bin,
-                f"-env:UserInstallation={(base / 'profilo').as_uri()}",
-                "--headless",
-                "--norestore",
-                "--nolockcheck",
-                *([f"--infilter={FILTRI_INGRESSO[estensione]}"] if estensione in FILTRI_INGRESSO else []),
-                "--convert-to",
-                FILTRI[formato],
-                "--outdir",
-                str(uscita),
-                str(sorgente),
-            ]
-            try:
-                processo = subprocess.run(
-                    comando,
-                    check=False,
-                    capture_output=True,
-                    timeout=self.settings.conversione_timeout,
-                )
-            except subprocess.TimeoutExpired as e:
-                log.warning(
-                    "Conversione %s -> %s interrotta dopo %d s",
-                    estensione,
-                    formato,
-                    self.settings.conversione_timeout,
-                )
-                raise ErroreConversione(
-                    HTTPStatus.GATEWAY_TIMEOUT, "Conversione troppo lunga"
-                ) from e
-            estensione_uscita = "pdf" if formato.startswith("pdf") else formato
-            risultato = uscita / f"documento.{estensione_uscita}"
-            if processo.returncode != 0 or not risultato.exists():
-                log.error("Conversione fallita: %s", processo.stderr.decode(errors="replace")[:500])
-                raise ErroreConversione(
-                    HTTPStatus.UNPROCESSABLE_ENTITY, "Il documento non può essere convertito"
-                )
-            dati = risultato.read_bytes()
-        log.debug(
-            "Conversione %s -> %s completata in %.1f s (%d byte)",
-            estensione,
-            formato,
-            time.perf_counter() - inizio,
-            len(dati),
+ESTERNI = {"gemini", "openai", "anthropic", "mistral"}
+
+
+def crea_ocr_da(settings: Settings) -> Ocr | None:
+    """L'OCR configurato, None se manca la configurazione (i PDF scansionati sono rifiutati)."""
+    fornitore = settings.ocr_provider.strip().lower()
+    if not fornitore:
+        log.info("OCR spento (OCR_PROVIDER vuoto): i PDF scansionati sono rifiutati")
+        return None
+    if fornitore in ESTERNI and not settings.ocr_api_key:
+        log.warning("OCR %s senza OCR_API_KEY: i PDF scansionati sono rifiutati", fornitore)
+        return None
+    try:
+        return crea_ocr(
+            fornitore,
+            settings.ocr_model,
+            api_key=settings.ocr_api_key,
+            base_url=settings.ocr_base_url or None,
+            al_minuto=settings.ocr_richieste_al_minuto,
+            tentativi=settings.ocr_tentativi,
         )
-        return dati
+    except (ErroreOcr, ImportError) as e:
+        log.error("OCR non utilizzabile: %s", e)
+        return None
 
 
-ESTENSIONI_MARKDOWN = {".pdf", ".odt", ".docx", ".doc", ".rtf"}
-
-
-def converti_in_markdown(convertitore: Convertitore, contenuto: bytes, nome_file: str) -> str:
-    """Testo di un documento in Markdown: PDF e ODT direttamente, gli altri via ODT."""
-    estensione = Path(nome_file).suffix.lower()
-    if estensione == ".pdf":
-        return pdf_in_markdown(contenuto)
-    if estensione == ".odt":
-        return odt_in_markdown(contenuto)
-    if estensione in (".docx", ".doc", ".rtf"):
-        try:
-            odt = convertitore.converti(contenuto, estensione, "odt")
-        except ErroreConversione as e:
-            raise ConversioneNonRiuscita(e.messaggio) from e
-        return odt_in_markdown(odt)
-    raise ConversioneNonRiuscita(f"Formato non supportato: {estensione or 'sconosciuto'}")
+def converti_in_markdown(
+    contenuto: bytes,
+    nome_file: str,
+    *,
+    libreoffice: LibreOffice,
+    ocr: Ocr | None,
+    settings: Settings,
+    tempi: Tempi | None = None,
+) -> str:
+    """Testo di un documento in Markdown (pa-common): sbusta le firme .p7m, OCR delle pagine
+    scansionate. Solleva `ConversioneNonRiuscita` o `FileNonValido`."""
+    return in_markdown_sync(
+        contenuto,
+        nome_file,
+        ocr=ocr,
+        libreoffice=libreoffice,
+        max_pagine=settings.max_pagine_pdf,
+        tempi=tempi,
+    )
 
 
 def create_app(settings: Settings | None = None) -> Flask:
     if settings is None:
         settings = Settings()
         configura_logging(settings.log_level)
-    convertitore = Convertitore(settings)
+    libreoffice = crea_libreoffice(settings)
+    ocr = crea_ocr_da(settings)
+    # l'API aspetta al massimo DOCUMENTI_TIMEOUT (150 s): i livelli dell'estrazione dei PDF
+    # restano sotto, l'OCR completo di un PDF lungo può comunque superarlo
+    tempi = Tempi(
+        layout_ai=settings.conversione_timeout,
+        semplice=settings.conversione_timeout / 2,
+        rasterizza=settings.conversione_timeout / 2,
+    )
 
     app = Flask("documenti")
     app.config["MAX_CONTENT_LENGTH"] = (settings.upload_max_mb + 1) * 1024 * 1024
@@ -220,7 +191,11 @@ def create_app(settings: Settings | None = None) -> Flask:
 
     @app.get("/health")
     def health() -> dict:
-        return {"status": "ok", "libreoffice": shutil.which(settings.soffice_bin) is not None}
+        return {
+            "status": "ok",
+            "libreoffice": shutil.which(settings.soffice_bin) is not None,
+            "ocr": repr(ocr) if ocr else None,
+        }
 
     @app.post("/converti")
     def converti_file():
@@ -239,7 +214,14 @@ def create_app(settings: Settings | None = None) -> Flask:
         if len(contenuto) > limite:
             log.warning("File %r rifiutato: oltre %d MB", file.filename, settings.upload_max_mb)
             raise ErroreConversione(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande")
-        risultato = convertitore.converti(contenuto, estensione, formato)
+        try:
+            risultato = libreoffice.converti(contenuto, estensione, formato)
+        except Occupato as e:
+            raise ErroreConversione(HTTPStatus.SERVICE_UNAVAILABLE, str(e)) from e
+        except TempoScaduto as e:
+            raise ErroreConversione(HTTPStatus.GATEWAY_TIMEOUT, str(e)) from e
+        except ConversioneNonRiuscita as e:
+            raise ErroreConversione(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
         return app.response_class(risultato, mimetype=MIME[formato])
 
     @app.post("/markdown")
@@ -248,23 +230,30 @@ def create_app(settings: Settings | None = None) -> Flask:
         file = request.files.get("file")
         if file is None:
             raise ErroreConversione(HTTPStatus.UNPROCESSABLE_ENTITY, "File mancante")
-        if Path(file.filename or "").suffix.lower() not in ESTENSIONI_MARKDOWN:
+        if Path(file.filename or "").suffix.lower() not in FORMATI_MARKDOWN | {".p7m", ".jpeg", ".tiff"}:
             raise ErroreConversione(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Formato non supportato")
         limite = settings.upload_max_mb * 1024 * 1024
         contenuto = file.read(limite + 1)
         if len(contenuto) > limite:
             raise ErroreConversione(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande")
         try:
-            testo = converti_in_markdown(convertitore, contenuto, file.filename or "")
-        except ConversioneNonRiuscita as e:
+            testo = converti_in_markdown(
+                contenuto, file.filename or "", libreoffice=libreoffice, ocr=ocr, settings=settings, tempi=tempi
+            )
+        except Occupato as e:
+            raise ErroreConversione(HTTPStatus.SERVICE_UNAVAILABLE, str(e)) from e
+        except TempoScaduto as e:
+            raise ErroreConversione(HTTPStatus.GATEWAY_TIMEOUT, str(e)) from e
+        except (ConversioneNonRiuscita, FileNonValido) as e:
             raise ErroreConversione(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
         return {"markdown": testo}
 
     log.info(
-        "Servizio documenti: %s, %d conversioni parallele, timeout %d s, log %s",
+        "Servizio documenti: %s, %d conversioni parallele, timeout %d s, OCR %s, log %s",
         settings.soffice_bin,
         settings.conversioni_parallele,
         settings.conversione_timeout,
+        repr(ocr) if ocr else "spento",
         settings.log_level,
     )
     return app

@@ -1,13 +1,12 @@
 """Contenuti da dare all'LLM per l'analisi o l'estrazione: pagine web (con i PDF collegati e
-alcuni link del contenuto), fogli di calcolo come tabelle con i numeri come li vede l'utente,
-CSV come testo. PDF e documenti di testo li converte in Markdown il converter.
+alcuni link del contenuto). Fogli di calcolo e CSV li legge pa-common (analisi.testo_file),
+PDF e documenti di testo li converte in Markdown il converter.
 Su httpx asincrono.
 """
 
 from __future__ import annotations
 
 import asyncio
-import io
 import logging
 import re
 from dataclasses import dataclass, field
@@ -198,108 +197,3 @@ async def documento_da_url(url: str, client: httpx.AsyncClient | None = None) ->
     if r.stato >= 400:
         raise ValueError(f"Il documento non è scaricabile (errore HTTP {r.stato})")
     return urlparse(r.url).path.split("/")[-1] or f"documento.{estensione(urlparse(url).path)}", r.contenuto
-
-
-# --- fogli di calcolo e CSV ------------------------------------------------------------------
-
-
-def testo_csv(contenuto: bytes) -> str:
-    try:
-        return contenuto.decode("utf-8")
-    except UnicodeDecodeError:
-        return contenuto.decode("latin-1")
-
-
-def _numero_italiano(valore, formato: str) -> str:
-    """Valore numerico come lo vede l'utente (punto per le migliaia, virgola per i decimali).
-    Il number_format di Excel è scritto sempre in sintassi en-US e non indica come appare
-    il dato: va tradotto, altrimenti un formato corretto sembrerebbe sbagliato."""
-    if formato == "General":
-        return str(int(valore)) if float(valore).is_integer() else str(valore).replace(".", ",")
-    m = re.search(r"\.(0+)", formato)
-    decimali = len(m.group(1)) if m else 0
-    migliaia = "," in (formato.split(".")[0] if "." in formato else formato)
-    testo = f"{float(valore):,.{decimali}f}"
-    if migliaia:
-        return testo.replace(",", "§").replace(".", ",").replace("§", ".")
-    return testo.replace(",", "").replace(".", ",")
-
-
-def _cella_numerica(valore, formato: str) -> str:
-    if formato == "General" and float(valore).is_integer():
-        return str(int(valore))
-    return f"{_numero_italiano(valore, formato)} [visualizzato in Excel; formato interno: {formato}]"
-
-
-def _righe_xlsx(contenuto: bytes) -> list[list[str]]:
-    import openpyxl
-
-    foglio = openpyxl.load_workbook(io.BytesIO(contenuto), data_only=True).active
-    righe = []
-    for i, riga in enumerate(foglio.iter_rows()):
-        valori = []
-        for cella in riga:
-            v = cella.value
-            if i == 0 or v is None or isinstance(v, bool) or not isinstance(v, int | float):
-                valori.append("" if v is None else str(v).strip())
-            else:
-                valori.append(_cella_numerica(v, cella.number_format))
-        righe.append(valori)
-    return righe
-
-
-def _righe_xls(contenuto: bytes) -> list[list[str]]:
-    import xlrd
-
-    libro = xlrd.open_workbook(file_contents=contenuto, formatting_info=True)
-    foglio = libro.sheet_by_index(0)
-    righe = []
-    for r in range(foglio.nrows):
-        valori = []
-        for c in range(foglio.ncols):
-            v = foglio.cell_value(r, c)
-            if r == 0 or v == "" or foglio.cell_type(r, c) != xlrd.XL_CELL_NUMBER:
-                valori.append(str(v).strip())
-                continue
-            fmt = libro.format_map.get(libro.xf_list[foglio.cell_xf_index(r, c)].format_key)
-            valori.append(_cella_numerica(v, fmt.format_str if fmt else "General"))
-        righe.append(valori)
-    return righe
-
-
-def _righe_ods(contenuto: bytes) -> list[list[str]]:
-    from odf.opendocument import load
-    from odf.table import Table, TableCell, TableRow
-    from odf.teletype import extractText
-
-    foglio = load(io.BytesIO(contenuto)).spreadsheet.getElementsByType(Table)[0]
-    righe = []
-    for i, riga in enumerate(foglio.getElementsByType(TableRow)):
-        celle = riga.getElementsByType(TableCell)
-        if not celle:
-            continue
-        valori = []
-        for cella in celle:
-            visibile = extractText(cella).strip()
-            tipo, grezzo = cella.getAttribute("valuetype"), cella.getAttribute("value")
-            if i and tipo in ("float", "currency", "percentage") and grezzo is not None:
-                if not (grezzo.endswith(".0") and visibile == grezzo[:-2]):
-                    visibile = f"{grezzo} [Visualizzato come: {visibile}]"
-            valori.append(visibile)
-        righe.append(valori)
-    return righe
-
-
-def tabella_foglio(contenuto: bytes, est: str) -> str:
-    """Primo foglio come tabella Markdown (prima riga = intestazioni)."""
-    lettori = {"xlsx": _righe_xlsx, "xls": _righe_xls, "ods": _righe_ods}
-    if est not in lettori:
-        raise ValueError(f"Formato di foglio non supportato: {est}")
-    righe = [r for r in lettori[est](contenuto) if any(r)]
-    if len(righe) < 2:
-        return "Nessun dato valido trovato nel file."
-    colonne = max(len(r) for r in righe)
-    pulite = [[c.replace("|", "\\|").replace("\n", " ") for c in r] + [""] * (colonne - len(r)) for r in righe]
-    testo = ["| " + " | ".join(pulite[0]) + " |", "|" + " --- |" * colonne]
-    testo += ["| " + " | ".join(r) + " |" for r in pulite[1:]]
-    return "\n".join(testo)

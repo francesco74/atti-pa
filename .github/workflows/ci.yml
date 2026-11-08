@@ -54,9 +54,13 @@ jobs:
           python test_verbale_api.py
           python test_multi_ente_api.py
           python test_trasparenza_api.py
+          python test_caricamento_atti_api.py
       - name: Test del worker
         working-directory: worker/tests
         run: python test_trasparenza_worker.py
+      - name: Test del converter (pa-common)
+        working-directory: converter/tests
+        run: python test_converter.py
       - name: Pacchetto standard
         run: |
           python deploy/pacchetto.py prova

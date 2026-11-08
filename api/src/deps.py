@@ -10,6 +10,8 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import current_app, g, request
+from pa_common import ingresso
+from pa_common.errori import FileNonValido
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from auth.ldap import LdapAuthenticator
@@ -19,7 +21,6 @@ from common import archivio
 from common.posta import invia as invia_email
 from common.config import Settings
 from common.models import AuditLog, Ente, EnteDominio, Modulo, Ruolo, User
-from common.testo import mime_da_nome
 
 log = logging.getLogger("atti_api.auth")
 
@@ -56,22 +57,36 @@ async def notifica(coda: str, dati: dict) -> None:
         )
 
 
+MIME_ATTI = {
+    ".pdf": "application/pdf",
+    ".odt": "application/vnd.oasis.opendocument.text",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".doc": "application/msword",
+}
+
+
 async def archivia_caricato(file) -> tuple[str, str, archivio.FileArchiviato]:
-    """Salva nell'archivio un file caricato (PDF, ODT, DOCX, DOC): nome, MIME, archiviato."""
+    """Salva nell'archivio un atto caricato (PDF, ODT, DOCX, DOC, anche firmati .p7m):
+    nome, MIME, archiviato. Le firme si sbustano e si archivia il documento; il contenuto deve
+    corrispondere all'estensione (pa_common.ingresso)."""
     nome = file.filename or "documento"
-    mime = mime_da_nome(nome)
-    if mime is None:
+    estensione = ingresso.estensione(nome)
+    if estensione not in MIME_ATTI and estensione != ".p7m":
         raise ErroreApi(
-            HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Formato non supportato: PDF, ODT, DOCX o DOC"
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Formato non supportato: PDF, ODT, DOCX o DOC, anche firmati (.p7m)"
         )
     limite = impostazioni().upload_max_mb * 1024 * 1024
     contenuto = file.read(limite + 1)
     if len(contenuto) > limite:
         raise ErroreApi(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "File troppo grande")
+    try:
+        f = await asyncio.to_thread(ingresso.verifica, contenuto, nome, set(MIME_ATTI))
+    except FileNonValido as e:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
     archiviato = await asyncio.to_thread(
-        archivio.salva, impostazioni().archivio_dir, contenuto, nome
+        archivio.salva, impostazioni().archivio_dir, f.contenuto, f.nome
     )
-    return nome, mime, archiviato
+    return f.nome, MIME_ATTI[f.estensione], archiviato
 
 
 def impostazioni() -> Settings:

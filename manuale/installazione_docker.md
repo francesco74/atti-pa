@@ -56,7 +56,8 @@ openssl rand -hex 32     # una volta per ogni password e chiave
 
 Compilare `.env`: `VERSIONE`, `ACME_EMAIL`, password e chiavi (solo lettere e cifre: finiscono
 negli URL di connessione), `PASSWORD_INIZIALE`, `LLM_API_KEY` ed `EMBEDDING_API_KEY` (la chiave
-di Google AI Studio, la stessa per entrambi).
+di Google AI Studio, la stessa per entrambi) e `OCR_API_KEY` (di nuovo la stessa: serve a
+leggere i PDF scansionati, senza chiave vengono rifiutati).
 
 **4. Verifica della chiave Gemini** (prima di avviare):
 
@@ -148,7 +149,7 @@ docker compose logs caddy | grep -i error    # certificati
   c'è il motivo; nei log dell'API la richiesta a `/api/v1/tls/consenti` deve avere esito 200.
 - **Un container è "unhealthy".** Docker non lo riavvia da solo: `docker compose restart NOME`
   e guardarne i log.
-- **Gemini.** Con `LLM_PROVIDER=gemini` il testo degli atti (con gli eventuali dati personali)
-  e, per la ricerca, i testi di processi, procedimenti e delle domande vengono inviati a
-  Google: l'ente ne deve tenere conto nel registro dei trattamenti. Senza `EMBEDDING_*` la
+- **Gemini.** Con `LLM_PROVIDER=gemini` il testo degli atti (con gli eventuali dati personali),
+  le pagine scansionate da trascrivere (`OCR_*`) e, per la ricerca, i testi di processi,
+  procedimenti e delle domande vengono inviati a Google: l'ente ne deve tenere conto nel registro dei trattamenti. Senza `EMBEDDING_*` la
   ricerca funziona solo per parole.

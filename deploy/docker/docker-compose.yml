@@ -61,6 +61,14 @@ x-ambiente: &ambiente
   WORKER_HEARTBEAT: /tmp/heartbeat
   WORKER_TIMEOUT_MINUTI: "60"
 
+# OCR delle pagine scansionate nel converter (pa-common): stessi valori per i due processi
+x-ocr: &ocr
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  OCR_PROVIDER: ${OCR_PROVIDER:-gemini}
+  OCR_MODEL: ${OCR_MODEL:-gemini-3-flash-preview}
+  OCR_API_KEY: ${OCR_API_KEY:-}
+  OCR_BASE_URL: ${OCR_BASE_URL:-}
+
 # Container delle immagini di atti-pa: utente 10001, file system in sola lettura tranne /tmp
 x-sicuro: &sicuro
   read_only: true
@@ -161,7 +169,7 @@ services:
     image: francesco74/atti-pa-converter:${VERSIONE}
     <<: [*log, *sicuro]
     environment:
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      <<: *ocr
       CONVERSIONI_PARALLELE: "2"
       CONVERSIONE_TIMEOUT: "120"
       UPLOAD_MAX_MB: "20"
@@ -177,7 +185,7 @@ services:
     <<: [*log, *sicuro]
     command: ["python", "consumatore.py"]
     environment:
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      <<: *ocr
       RABBITMQ_URL: amqp://atti_pa:${RABBITMQ_PASSWORD}@rabbitmq:5672/
       RABBITMQ_PREFISSO: atti-pa
       ARCHIVIO_DIR: /var/lib/atti-pa/archivio

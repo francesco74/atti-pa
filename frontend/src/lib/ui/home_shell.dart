@@ -292,6 +292,7 @@ class _HomeShellState extends State<HomeShell> {
           ('profilo', 'Il mio profilo'),
           if (widget.utente.ente.assistenza != null) ('assistenza', 'Assistenza'),
           if (widget.utente.locale) ('password', 'Cambia la password'),
+          ('informazioni', 'Informazioni e licenza'),
           ('esci', 'Esci'),
         ])
           PopupMenuItem(
@@ -312,6 +313,7 @@ class _HomeShellState extends State<HomeShell> {
         if (v == 'profilo') _profilo();
         if (v == 'assistenza') _assistenza();
         if (v == 'password') _cambiaPassword();
+        if (v == 'informazioni' && context.mounted) mostraInformazioni(context);
       },
     );
 

@@ -36,6 +36,17 @@ spec:
             - { name: UPLOAD_MAX_MB, value: "20" }
             - name: LOG_LEVEL
               valueFrom: { configMapKeyRef: { name: atti-pa-config, key: LOG_LEVEL } }
+            # OCR delle pagine scansionate (pa-common), dalla ConfigMap; chiave nel Secret
+            - name: OCR_PROVIDER
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_PROVIDER } }
+            - name: OCR_MODEL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_MODEL } }
+            - name: OCR_BASE_URL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_BASE_URL } }
+            - name: OCR_RICHIESTE_AL_MINUTO
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_RICHIESTE_AL_MINUTO } }
+            - name: OCR_API_KEY
+              valueFrom: { secretKeyRef: { name: atti-pa-secret, key: OCR_API_KEY, optional: true } }
           readinessProbe:
             httpGet: { path: /health, port: http }
           livenessProbe:
@@ -66,6 +77,17 @@ spec:
             - { name: CONVERSIONE_TIMEOUT, value: "120" }
             - name: LOG_LEVEL
               valueFrom: { configMapKeyRef: { name: atti-pa-config, key: LOG_LEVEL } }
+            # OCR delle pagine scansionate (pa-common), dalla ConfigMap; chiave nel Secret
+            - name: OCR_PROVIDER
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_PROVIDER } }
+            - name: OCR_MODEL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_MODEL } }
+            - name: OCR_BASE_URL
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_BASE_URL } }
+            - name: OCR_RICHIESTE_AL_MINUTO
+              valueFrom: { configMapKeyRef: { name: atti-pa-config, key: OCR_RICHIESTE_AL_MINUTO } }
+            - name: OCR_API_KEY
+              valueFrom: { secretKeyRef: { name: atti-pa-secret, key: OCR_API_KEY, optional: true } }
           resources:
             requests: { cpu: 200m, memory: 512Mi }
             limits: { memory: 1536Mi }

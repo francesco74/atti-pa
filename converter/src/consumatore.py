@@ -20,8 +20,10 @@ from pathlib import Path, PurePosixPath
 
 import aio_pika
 
-from main import Convertitore, Settings, configura_logging, converti_in_markdown
-from markdown import ConversioneNonRiuscita
+from pa_common.conversione import in_markdown
+from pa_common.errori import ConversioneNonRiuscita, FileNonValido
+
+from main import Settings, configura_logging, crea_libreoffice, crea_ocr_da
 
 log = logging.getLogger("converter.consumatore")
 
@@ -64,7 +66,8 @@ async def _connetti_in_attesa(url: str) -> aio_pika.abc.AbstractRobustConnection
 async def main() -> None:
     settings = Settings()
     configura_logging(settings.log_level)
-    convertitore = Convertitore(settings)
+    libreoffice = crea_libreoffice(settings)
+    ocr = crea_ocr_da(settings)
     connessione = await _connetti_in_attesa(settings.rabbitmq_url)
     canale = await connessione.channel(publisher_confirms=True)
     # una conversione alla volta per processo: LibreOffice occupa molta memoria
@@ -86,11 +89,17 @@ async def main() -> None:
                 contenuto = await asyncio.to_thread(
                     leggi_file, settings.archivio_dir, dati["percorso"]
                 )
-                markdown = await asyncio.to_thread(
-                    converti_in_markdown, convertitore, contenuto, dati["nome_file"]
+                # niente limite di tempo della richiesta HTTP qui: tempi predefiniti di
+                # pa-common (layout AI, modalità semplice, OCR completo)
+                markdown = await in_markdown(
+                    contenuto,
+                    dati["nome_file"],
+                    ocr=ocr,
+                    libreoffice=libreoffice,
+                    max_pagine=settings.max_pagine_pdf,
                 )
                 log.info("%s convertito: %d caratteri", descrizione, len(markdown))
-            except ConversioneNonRiuscita as e:
+            except (ConversioneNonRiuscita, FileNonValido) as e:
                 errore = str(e)
                 log.warning("%s non convertito: %s", descrizione, errore)
             risposta = {**lavoro, "markdown": markdown, "errore": errore}

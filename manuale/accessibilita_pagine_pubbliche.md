@@ -74,7 +74,7 @@ Da fare su Chrome o Firefox, con la pagina aperta dal link pubblico dell'ente.
 
 **Zoom e schermi piccoli**
 - [ ] Zoom del browser al 200%: tutto leggibile, nessuno scorrimento orizzontale.
-- [ ] Larghezza 320 px (strumenti per sviluppatori del browser, o un telefono): nessuno scorrimento orizzontale, il piè di pagina mostra il pulsante "Accessibilità".
+- [ ] Larghezza 320 px (strumenti per sviluppatori del browser, o un telefono): nessuno scorrimento orizzontale, il piè di pagina mostra il pulsante "Informazioni".
 - [ ] Telefono con il testo di sistema ingrandito: le righe vanno a capo e il livello di rischio finisce sotto il testo.
 
 **Colori**

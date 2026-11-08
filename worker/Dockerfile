@@ -2,6 +2,12 @@
 #   docker build -f worker/Dockerfile -t atti-pa/worker:0.1.0 .
 FROM python:3.12-slim
 
+# Licenza (AGPL-3.0-or-later): etichette OCI e testo nell'immagine
+LABEL org.opencontainers.image.title="atti-pa-worker" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+      org.opencontainers.image.source="https://github.com/francesco74/atti-pa"
+COPY LICENSE NOTICE /usr/share/licenses/atti-pa/
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \

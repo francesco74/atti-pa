@@ -20,6 +20,11 @@ class Config {
   static String apiUrl = '';
   static String logLevel = 'INFO';
 
+  /// Codice sorgente dell'app (licenza AGPL-3.0, art. 13: chi la usa in rete deve poterlo
+  /// avere). Chi installa una versione modificata indica qui il proprio repository.
+  static const sorgentePredefinito = 'https://github.com/francesco74/atti-pa';
+  static String sorgenteUrl = sorgentePredefinito;
+
   static Future<void> carica() async {
     var valori = <String, dynamic>{};
     try {
@@ -38,6 +43,7 @@ class Config {
     apiUrl = valore('API_URL', _apiUrlCompilazione);
     if (apiUrl.isEmpty) apiUrl = Uri.base.origin;
     logLevel = valore('LOG_LEVEL', _logLevelCompilazione);
+    sorgenteUrl = valore('SORGENTE_URL', sorgentePredefinito);
     Log.imposta(logLevel);
     Log.info('Configurazione: API $apiUrl, log ${Log.livello.name.toUpperCase()}');
   }

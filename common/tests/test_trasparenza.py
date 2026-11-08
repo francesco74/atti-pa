@@ -57,20 +57,24 @@ def _xlsx() -> bytes:
     return dati.getvalue()
 
 
-class Fonti(unittest.TestCase):
+class Fogli(unittest.TestCase):
+    """Fogli e CSV li legge pa-common; qui il formato atteso dai prompt delle verifiche."""
+
     def test_foglio_con_i_numeri_come_li_vede_l_utente(self):
-        tabella = fonti.tabella_foglio(_xlsx(), "xlsx")
+        tabella = _esegui(analisi.testo_file(analisi.File("importi.xlsx", _xlsx()), None))
         righe = tabella.splitlines()
         self.assertEqual(righe[0], "| Beneficiario | Importo | Anno |")
         self.assertIn("1.026,37 [visualizzato in Excel; formato interno: #,##0.00]", tabella)
         self.assertIn("Associazione \\| Uno", tabella)  # il separatore non rompe la tabella
         self.assertIn("| 2025 |", tabella)
 
-    def test_numero_senza_separatore_delle_migliaia(self):
-        self.assertEqual(fonti._numero_italiano(1026.375, "0.00"), "1026,38")
+    def test_foglio_illeggibile(self):
+        with self.assertRaises(analisi.AnalisiNonRiuscita):
+            _esegui(analisi.testo_file(analisi.File("rotto.xlsx", b"PK\x03\x04 rotto"), None))
 
     def test_csv_in_latin1(self):
-        self.assertEqual(fonti.testo_csv("città;importo".encode("latin-1")), "città;importo")
+        testo = _esegui(analisi.testo_file(analisi.File("elenco.csv", "città;importo".encode("latin-1")), None))
+        self.assertEqual(testo, "città;importo")
 
 
 class Ssrf(unittest.TestCase):

@@ -72,6 +72,15 @@ data:
   # LLM_PROMPT_DIR: "/etc/atti-pa/prompt"
   LLM_MAX_CARATTERI_ATTO: "60000"
 
+  # OCR delle pagine scansionate dei PDF (converter, libreria pa-common): gemini, openai,
+  # anthropic, mistral, vllm, ollama; vuoto = spento (PDF scansionati rifiutati). Il modello
+  # deve leggere le immagini (es. Mistral Small 3.1 o Qwen2.5-VL su vLLM). Chiave, per i
+  # fornitori esterni, nel Secret: OCR_API_KEY
+  OCR_PROVIDER: "vllm"
+  OCR_MODEL: "mistral-small"
+  OCR_BASE_URL: "http://vllm.llm.svc.cluster.local:8000/v1"
+  OCR_RICHIESTE_AL_MINUTO: "10"
+
   # Servizi interni
   DOCUMENTI_URL: "http://converter:8000"
   DOCUMENTI_TIMEOUT: "150"       # > CONVERSIONE_TIMEOUT (120), < 180 s dell'Ingress

@@ -65,10 +65,12 @@ radice del repository (`docker build -f <componente>/Dockerfile .`).
 
 **Flusso di un controllo.** L'API salva il file originale nell'archivio (`ARCHIVIO_DIR`,
 volume condiviso con il converter), registra atto e verifica nel database e pubblica un
-messaggio sulla coda `conversione`; la risposta all'utente è immediata. Il converter
-trasforma il file in Markdown (ODT/DOC/DOCX dall'XML del documento, tabelle comprese; PDF
-con PyMuPDF4LLM, senza intestazioni e piè di pagina ripetuti) e pubblica il risultato su
-`convertiti`; il worker salva il testo ed esegue la verifica. "Rianalizza" e le verifiche
+messaggio sulla coda `conversione`; la risposta all'utente è immediata. Gli atti firmati
+(`.p7m`) si sbustano al caricamento e si archivia il documento. Il converter trasforma il
+file in Markdown con la libreria [pa-common](https://github.com/francesco74/pa-common),
+condivisa con il RAG (ODT/DOC/DOCX dall'XML del documento, tabelle comprese; PDF con
+PyMuPDF4LLM, senza intestazioni e piè di pagina ripetuti, e le pagine scansionate con l'OCR
+configurato in `OCR_*`) e pubblica il risultato su `convertiti`; il worker salva il testo ed esegue la verifica. "Rianalizza" e le verifiche
 delle bozze passano dalla coda `verifica`. Lo stato resta nel database: se un messaggio
 non parte o si perde, il worker reinvia il lavoro dopo `WORKER_REINVIO_MINUTI`.
 
@@ -421,3 +423,25 @@ ci sono norme inserite manualmente; `LLM_RICONOSCIMENTO_NORME_MANUALI=false` la 
 Una citazione proposta dal modello è accettata solo se il testo si trova davvero nell'atto
 ed è segnalata come da verificare. Inserire e modificare le norme è riservato a
 controllori e amministratori. Tabelle: `norme_atti` (fonte `MANUALE`) e `norme_testi_caricati` in `deploy/k8s/sql/0001_schema.sql`.
+
+## Licenza
+
+Copyright (C) 2026 Francesco Bertozzi <info@bertozzifrancesco.it>.
+
+atti-pa è software libero: si può ridistribuire e modificare secondo i termini della
+**GNU Affero General Public License** pubblicata dalla Free Software Foundation, versione 3
+o (a scelta) successiva ([`LICENSE`](LICENSE), identificativo SPDX `AGPL-3.0-or-later`).
+È distribuito nella speranza che sia utile, ma **senza alcuna garanzia**, nemmeno implicita
+di commerciabilità o di idoneità a uno scopo particolare.
+
+In particolare, chi offre atti-pa modificato come servizio in rete (es. ad altri enti) deve
+rendere disponibile agli utenti il codice sorgente delle modifiche (art. 13 della licenza).
+Termini aggiuntivi (sezione 7 della licenza, file [`NOTICE`](NOTICE)): va conservata
+l'attribuzione all'autore e le versioni modificate vanno indicate come tali.
+
+- I contenuti di `pacchetto/` (modelli di atto, regole, checklist) sono distribuiti con
+  licenza **CC BY 4.0** ([`pacchetto/LICENSE.md`](pacchetto/LICENSE.md)).
+- I testi normativi provengono da Normattiva, con licenza CC BY 4.0 (sezione "Fonte dei dati
+  normativi").
+- Le dipendenze mantengono le proprie licenze. Tra queste PyMuPDF e PyMuPDF4LLM (conversione
+  dei PDF nel converter) sono AGPL-3.0: anche per questo atti-pa usa la stessa licenza.

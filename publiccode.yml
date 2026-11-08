@@ -1,0 +1,84 @@
+# Scheda del software per il catalogo Developers Italia (https://developers.italia.it),
+# standard publiccode.yml: https://yml.publiccode.tools
+# Prima della pubblicazione validare il file con https://publiccode-editor.developers.italia.it
+# (per il riuso da parte di un ente va aggiunto il suo codice IPA, in fondo)
+publiccodeYmlVersion: "0.4"
+
+name: atti-pa
+url: "https://github.com/francesco74/atti-pa"
+softwareVersion: "0.2.0"
+releaseDate: "2026-11-08"
+platforms:
+  - web
+
+categories:
+  - document-management
+  - compliance-management
+  - knowledge-management
+
+developmentStatus: beta
+softwareType: "standalone/web"
+
+description:
+  it:
+    localisedName: atti-pa – Sistema integrato RPCT
+    genericName: Redazione e controllo degli atti amministrativi
+    shortDescription: >-
+      Redazione guidata e controllo degli atti degli enti locali, trasparenza,
+      anticorruzione e performance, con norme verificate su Normattiva.
+    longDescription: >-
+      atti-pa supporta gli enti locali nella redazione delle determinazioni dirigenziali
+      secondo modelli di atto, con i riferimenti normativi presi da Normattiva e verificati
+      alla data di adozione, e nel controllo successivo di regolarità amministrativa
+      (art. 147-bis TUEL) con checklist, verifica automatica dei riferimenti e verbale.
+      Comprende i moduli per la trasparenza (analisi delle pagine di Amministrazione
+      trasparente), l'anticorruzione (mappatura dei processi, valutazione del rischio,
+      misure, pubblicazione per i cittadini) e la performance. Funziona con più enti nella
+      stessa installazione, con accesso tramite l'Active Directory dell'ente o utenti
+      dell'applicazione. Il modello linguistico è a scelta: on-premise (vLLM, Ollama) per non
+      far uscire dati dall'ente, oppure un servizio esterno. Le proposte dell'IA sono sempre
+      confermate da una persona.
+    features:
+      - Redazione guidata degli atti secondo modelli
+      - Riferimenti normativi verificati su Normattiva alla data di adozione
+      - Controllo successivo degli atti con checklist e verbale
+      - Analisi della sezione Amministrazione trasparente
+      - Mappatura dei processi e valutazione del rischio corruttivo
+      - Pagine pubbliche accessibili (WCAG 2.1 AA) con ricerca per i cittadini
+      - Più enti nella stessa installazione
+      - Modello linguistico on-premise o esterno a scelta
+
+legal:
+  license: AGPL-3.0-or-later
+  mainCopyrightOwner: Francesco Bertozzi
+  repoOwner: Francesco Bertozzi
+
+maintenance:
+  type: internal
+  contacts:
+    - name: Francesco Bertozzi
+      email: info@bertozzifrancesco.it
+
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - it
+
+dependsOn:
+  open:
+    - name: MySQL
+      versionMin: "8.0"
+    - name: RabbitMQ
+      versionMin: "4.0"
+    - name: LibreOffice
+
+it:
+  countryExtensionVersion: "0.2"
+  conforme:
+    lineeGuidaDesign: false
+    modelloInteroperabilita: false
+    misureMinimeSicurezza: false
+    gdpr: false
+  # codice IPA dell'ente che mette a riuso il software, se c'è
+  # riuso:
+  #   codiceIPA: c_xxxx

@@ -262,7 +262,7 @@ class _NormeManualiState extends State<NormeManuali> {
   }
 }
 
-/// Scelta di un file PDF, ODT, DOCX o DOC.
+/// Scelta di un file PDF, ODT, DOCX o DOC, anche firmato (.p7m).
 class _SceltaFile extends StatelessWidget {
   const _SceltaFile({required this.file, required this.suScelta});
 
@@ -274,10 +274,10 @@ class _SceltaFile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.attach_file),
-      title: Text(file?.name ?? 'File del testo (PDF, ODT, DOCX o DOC)'),
+      title: Text(file?.name ?? 'File del testo (PDF, ODT, DOCX o DOC, anche firmato .p7m)'),
       trailing: OutlinedButton(
         onPressed: () async {
-          final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc']);
+          final scelto = await scegliFile(['pdf', 'odt', 'docx', 'doc', 'p7m']);
           if (scelto != null) suScelta(scelto);
         },
         child: Text(file == null ? 'Scegli' : 'Cambia'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../comuni.dart';
 import '../ricerca.dart';
 
 /// Accessibilità delle pagine pubbliche (WCAG 2.1 livello AA, linee guida AgID). Su web Flutter
@@ -179,13 +180,13 @@ class PiePaginaPubblico extends StatelessWidget {
             builder: (_) => _SegnalaAccessibilita(registro: registro, pagina: pagina),
           ),
         ),
+      const LinkSorgente(icona: true),
     ];
-    if (voci.isEmpty) return const SizedBox.shrink();
     return Semantics(
       container: true,
       label: 'Piè di pagina',
       child: LayoutBuilder(builder: (context, vincoli) {
-        // spazio stretto: un solo pulsante "Accessibilità" che apre le due voci, così il piè di
+        // spazio stretto: un solo pulsante "Informazioni" che apre le voci, così il piè di
         // pagina non toglie spazio al contenuto (WCAG 1.4.10)
         if (vincoli.maxWidth >= 640 * MediaQuery.textScalerOf(context).scale(1)) {
           return Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: voci);
@@ -193,12 +194,12 @@ class PiePaginaPubblico extends StatelessWidget {
         return Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            icon: const Icon(Icons.accessibility_new),
-            label: const Text('Accessibilità'),
+            icon: const Icon(Icons.info_outline),
+            label: const Text('Informazioni'),
             onPressed: () => showDialog<void>(
               context: context,
               builder: (contesto) => SimpleDialog(
-                title: const Intestazione('Accessibilità'),
+                title: const Intestazione('Informazioni'),
                 children: [
                   for (final v in voci)
                     Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Align(alignment: Alignment.centerLeft, child: v)),
