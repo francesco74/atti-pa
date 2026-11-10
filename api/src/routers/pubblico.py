@@ -4,9 +4,10 @@ cittadini consultano su /pubblico/mappatura, e i procedimenti con i dati dell'ar
 sezione Amministrazione trasparente (Attività e procedimenti > Tipologie di procedimento).
 Ciascuna ha il suo interruttore (Ente.mappatura_pubblica, Ente.procedimenti_pubblici).
 
-L'ente si riconosce dal dominio della richiesta. Le API rispondono solo se l'ente ha il modulo
-anticorruzione e il RPCT ha acceso la pubblicazione (Ente.mappatura_pubblica); altrimenti 404,
-come se la pagina non esistesse. Si mostrano solo i dati da pubblicare: per i rischi evento,
+L'ente si riconosce dal dominio della richiesta. Le API rispondono solo se la pagina è accesa:
+la mappatura con il modulo anticorruzione (interruttore del RPCT), i procedimenti con
+l'anticorruzione o la trasparenza (catalogo condiviso, common/procedimenti.py; interruttore del
+RPCT o dell'operatore della trasparenza); altrimenti 404, come se la pagina non esistesse. Si mostrano solo i dati da pubblicare: per i rischi evento,
 fattore abilitante e livello, non i valori degli indicatori né le correzioni motivate.
 """
 
@@ -26,6 +27,7 @@ from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione.metodologia import chiave_naturale
 from web import ErroreApi, allegato, corpo, parametri
 from common.anticorruzione.metodologia import chiave_area
+from common import procedimenti as catalogo
 from common import registro_ricerche as reg
 from common.models import AcArea, AcProcesso, Ente, Modulo, Struttura
 from routers.ricerche import FeedbackIn, RicercaIn as RicercaConclusaIn, registra_feedback, registra_ricerca
@@ -70,11 +72,15 @@ def _solo(dati: dict, campi: tuple[str, ...]) -> dict:
     return {k: dati.get(k) for k in campi}
 
 
+def _mappatura_pubblica(e: Ente) -> bool:
+    return e.modulo_attivo(Modulo.ANTICORRUZIONE) and bool(e.mappatura_pubblica)
+
+
 async def _ente_con_mappatura() -> Ente:
     """Ente del dominio con la mappatura pubblicata; imposta g.ente per le funzioni di lettura
     del modulo anticorruzione."""
     e = await ente_richiesta()
-    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE) or not e.mappatura_pubblica:
+    if e is None or not _mappatura_pubblica(e):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Mappatura non pubblicata")
     g.ente = e
     return e
@@ -134,9 +140,10 @@ async def ricerca_mappatura():
 
 
 async def _ente_con_procedimenti() -> Ente:
-    """Ente del dominio con i procedimenti pubblicati (dati della mappatura dell'anticorruzione)."""
+    """Ente del dominio con i procedimenti pubblicati (catalogo condiviso tra anticorruzione e
+    trasparenza, common/procedimenti.py)."""
     e = await ente_richiesta()
-    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE) or not e.procedimenti_pubblici:
+    if e is None or not catalogo.disponibili(e) or not e.procedimenti_pubblici:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimenti non pubblicati")
     g.ente = e
     return e
@@ -198,7 +205,7 @@ async def _ambiti_pubblici() -> tuple[Ente, dict]:
     if _limite_registro is None:
         _limite_registro = servizio_ricerca.LimiteRichieste(impostazioni().ricerche_limite_registro)
     e = await ente_richiesta()
-    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE):
+    if e is None:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Pagine pubbliche non attive")
     attivi = {"MAPPATURA": e.mappatura_pubblica, "PROCEDIMENTI": e.procedimenti_pubblici}
     ambiti = {k: d for k, d in reg.ambiti_disponibili(e).items() if attivi.get(k)}
@@ -228,7 +235,7 @@ async def feedback_ricerca():
 async def logo():
     """Logo dell'ente, per l'intestazione delle pagine pubbliche."""
     e = await ente_richiesta()
-    if e is None or not e.modulo_attivo(Modulo.ANTICORRUZIONE) or not (e.mappatura_pubblica or e.procedimenti_pubblici):
+    if e is None or not (_mappatura_pubblica(e) or (catalogo.disponibili(e) and e.procedimenti_pubblici)):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Pagine pubbliche non attive")
     e = await db().scalar(select(Ente).where(Ente.id == e.id).options(undefer(Ente.logo)))
     if not e.logo:

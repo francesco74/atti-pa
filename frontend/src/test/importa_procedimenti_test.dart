@@ -60,7 +60,7 @@ void main() {
     );
     await tester.pumpWidget(MultiProvider(
       providers: [Provider<ApiClient>.value(value: api), ChangeNotifierProvider(create: (_) => AuthState(api))],
-      child: MaterialApp(home: ImportaProcedimentiPage(dati: dati)),
+      child: MaterialApp(home: ImportaProcedimentiPage(strutture: dati.strutture, aree: dati.aree)),
     ));
     await tester.enterText(find.byType(TextField), 'https://www.ente.it/at/tipologie-di-procedimento');
     await tester.pump();

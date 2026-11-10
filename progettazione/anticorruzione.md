@@ -238,7 +238,13 @@ Decisioni del 04/11/2026:
     silenzio assenso, strumenti di tutela, servizio online, pagamenti, ufficio del titolare del
     potere sostitutivo e modalità di attivazione. Gli **uffici sono strutture organizzative**,
     con i recapiti (telefono, PEO, PEC, sede, orari, responsabile e qualifica) gestiti in
-    Amministrazione → Strutture e letti al momento: cambiano in tutti i procedimenti. I dati non
+    Amministrazione → Strutture e letti al momento: cambiano in tutti i procedimenti. Un
+    recapito (o gli orari dell'ufficio istanze) scritto nel procedimento vale al posto di quello
+    della struttura, solo per quel procedimento (es. uno sportello con orari propri; 10/11/2026).
+    La finestra dei dati segue sezioni e domande dell'allegato 11 come la trasparenza: ufficio
+    finale e ufficio istanze (con indirizzo, recapiti, orari e modulistica) compaiono solo se
+    l'ufficio finale è diverso o il procedimento è a istanza di parte, e solo allora si salvano;
+    scelto un ufficio dall'organigramma se ne vedono i recapiti, con i mancanti segnalati. I dati non
     sono obbligatori per salvare: il procedimento mostra se sono completi o quanti ne mancano
     (stessi controlli della trasparenza). Un `art35` assente o nullo in una modifica lascia i
     dati come sono. Le proposte dei referenti li comprendono. Nella scheda Art. 35 della
@@ -307,3 +313,43 @@ Decisioni del 04/11/2026:
     procedimento. Nessun uso dell'LLM: chi ha il ruolo `ANALISI_RICERCHE` vede le domande che
     non trovano risposta e decide cosa migliorare (testi dei procedimenti, sinonimi). Servizio
     comune a tutto il sistema, descritto in `architettura.md` (sezione 4).
+26. **Procedimenti: catalogo condiviso con la trasparenza** (09/11/2026): i moduli si
+    contrattualizzano separatamente, ma i procedimenti (art. 35) servono a entrambi. La regola
+    sta in `common/procedimenti.py`: con l'anticorruzione attiva (da sola o con la trasparenza)
+    i procedimenti fanno parte della mappatura e seguono il suo iter (referente propone, RPCT
+    approva); la trasparenza li consulta e li importa nella scheda art. 35, senza modificarli.
+    Con la **sola trasparenza** l'operatore della trasparenza li crea, modifica, importa dal sito
+    ed elimina direttamente (scheda "Procedimenti" del modulo, `/api/v1/trasparenza/procedimenti`),
+    nelle stesse tabelle e con le stesse funzioni della mappatura, senza aree, attività, rischi e
+    misure (codice `P.<n>`). Passaggi: se l'ente aggiunge l'anticorruzione, i procedimenti
+    inseriti diventano la base della mappatura (il RPCT assegna le aree e aggiunge attività e
+    rischi; il codice resta); se la toglie, i dati restano, i procedimenti tornano modificabili
+    dalla trasparenza e processi, rischi e misure restano non visibili (un procedimento con
+    attività non si elimina dalla trasparenza). La pagina pubblica dei procedimenti, la sua
+    ricerca e il registro delle ricerche ci sono con almeno uno dei due moduli; l'interruttore lo
+    gestiscono il RPCT e l'operatore della trasparenza. La pagina pubblica della mappatura resta
+    solo dell'anticorruzione.
+27. **Elenco piatto della mappatura** (10/11/2026): scheda "Elenco" accanto alla Mappatura, per
+    chi vede la mappatura (referenti e RPCT). Un livello alla volta (aree, processi e
+    procedimenti, attività, rischi, misure; si apre sui processi) in una tabella con il
+    percorso nelle prime colonne, ordinabile per colonna e paginata. Filtri: area; **struttura
+    organizzativa** scelta dall'albero, comprese le sottostrutture (attivo all'inizio) e, a
+    scelta, le trasversali (processi e misure senza struttura, che riguardano tutti); tipo
+    (processo o procedimento); livello di rischio (il più alto per aree, processi e attività);
+    per le misure tipo e categoria; lacune ("mostra solo": processi senza attività, rischi o
+    misure, procedimenti con dati art. 35 mancanti; rischi senza misure o non valutati; misure
+    senza struttura o senza indicatore; per i procedimenti la colonna con la completezza dei
+    dati art. 35, e nella scheda la loro sezione con l'allegato 11). La
+    struttura di attività e rischi è quella del processo; quella della misura è la sua o, se
+    manca, quella del processo (indicata "dal processo"). **Ricerca in linguaggio naturale**
+    su ogni livello (`GET /anticorruzione/elenco/ricerca?livello=`, come la decisione 24): ogni
+    elemento si indicizza con il suo percorso (una misura anche con rischio, attività e
+    processo), i processi con gli stessi testi della ricerca nella mappatura (vettori in
+    comune); registro delle ricerche con l'ambito `ELENCO`. Dati: `GET /anticorruzione/elenco`
+    restituisce tutta la mappatura e il client compone righe e filtri (risultati immediati
+    mentre si scrive). Una riga apre la **scheda dell'elemento** in sola lettura (tutti i campi,
+    percorso cliccabile, elementi sotto), con "Apri nella mappatura" per modificare o proporre.
+    "Esporta in Excel" scarica l'elenco come appare (livello, filtri, ordine). I vettori dei
+    record eliminati si tolgono solo dalle ricerche che conoscono tutti gli elementi della
+    mappatura (l'elenco): la ricerca sui soli procedimenti non cancella più i vettori degli
+    altri.

@@ -41,8 +41,20 @@ def _da_binario(b: bytes) -> list[float]:
     return a.tolist()
 
 
-async def _vettori(client, ente_id: str, documenti: list[ricerca.Documento]) -> dict[str, list[float]]:
-    """Vettori dei documenti: dalla memoria, dal database o calcolati ora (e salvati)."""
+async def _togli_orfani(ente_id: str, modello: str, validi: set[str]) -> None:
+    """Elimina i vettori dei record che non ci sono più (solo gli id, senza i vettori)."""
+    async with risorse().sessionmaker() as s:
+        ids = await s.scalars(select(RicercaVettore.oggetto_id).where(RicercaVettore.ente_id == ente_id,
+                                                                      RicercaVettore.modello == modello))  # fmt: skip
+        orfani = [i for i in ids if i not in validi]
+        if orfani:
+            await s.execute(delete(RicercaVettore).where(RicercaVettore.ente_id == ente_id, RicercaVettore.oggetto_id.in_(orfani)))
+            await s.commit()
+
+
+async def _vettori(client, ente_id: str, documenti: list[ricerca.Documento], validi: set[str] | None) -> dict[str, list[float]]:
+    """Vettori dei documenti: dalla memoria, dal database o calcolati ora (e salvati). Con
+    [validi] si eliminano i vettori dei record che non ci sono più."""
     modello = client.modello
     impronte = {d.id: d.impronta for d in documenti}
     trovati: dict[str, list[float]] = {}
@@ -52,6 +64,8 @@ async def _vettori(client, ente_id: str, documenti: list[ricerca.Documento]) -> 
             trovati[d.id] = m[1]
     mancanti = [d for d in documenti if d.id not in trovati]
     if not mancanti:
+        if validi is not None:
+            await _togli_orfani(ente_id, modello, validi)
         return trovati
     async with risorse().sessionmaker() as s:
         righe = {r.oggetto_id: r for r in await s.scalars(
@@ -78,8 +92,9 @@ async def _vettori(client, ente_id: str, documenti: list[ricerca.Documento]) -> 
                                          impronta=impronte[d.id], vettore=_in_binario(v)))  # fmt: skip
                 else:
                     r.impronta, r.vettore = impronte[d.id], _in_binario(v)
-        # vettori di record eliminati
-        orfani = [i for i in righe if i not in impronte]
+        # vettori di record eliminati: solo se il chiamante conosce tutti i record dell'ente che
+        # hanno un vettore (una ricerca sui soli procedimenti non deve cancellare gli altri)
+        orfani = [i for i in righe if validi is not None and i not in validi and i not in impronte]
         if orfani:
             await s.execute(delete(RicercaVettore).where(RicercaVettore.ente_id == ente_id,
                                                          RicercaVettore.oggetto_id.in_(orfani)))  # fmt: skip
@@ -90,16 +105,18 @@ async def _vettori(client, ente_id: str, documenti: list[ricerca.Documento]) -> 
     return trovati
 
 
-async def cerca(domanda: str, documenti: list[ricerca.Documento], *, ente_id: str, semantica: bool = True) -> dict:
+async def cerca(domanda: str, documenti: list[ricerca.Documento], *, ente_id: str, semantica: bool = True,
+                validi: set[str] | None = None) -> dict:  # fmt: skip
     """Risultati in ordine di pertinenza: [{id, parole, semantica}] e se la parte semantica è
-    stata usata."""
+    stata usata. [validi]: id di tutti i record dell'ente che possono avere un vettore (oggi la
+    mappatura); i vettori degli altri si eliminano."""
     lessicali = ricerca.lessicale(domanda, documenti)
     semantici: list[ricerca.Risultato] = []
     client = risorse().embedding
     usata = False
     if semantica and client is not None and documenti and len(domanda.strip()) >= 3:
         try:
-            vettori = await _vettori(client, ente_id, documenti)
+            vettori = await _vettori(client, ente_id, documenti, validi)
             [q] = await client.vettori([domanda], domanda=True)
             semantici = ricerca.semantica(ricerca.unitario(q), vettori, risorse().settings.ricerca_soglia_semantica)
             usata = True

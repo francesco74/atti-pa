@@ -122,11 +122,15 @@ class RicercaApi(unittest.TestCase):
         self.assertEqual(r.status_code, codice, r.get_data(as_text=True)[:500])
         return r.get_json()
 
-    def _vettori(self) -> int:
+    def _vettori(self, solo_processi: bool = True) -> int:
+        """Vettori salvati: dei soli processi (gli altri test cercano anche negli altri livelli)."""
         async def conta():
             motore = create_async_engine(self.url)
             async with AsyncSession(motore) as db:
-                n = await db.scalar(select(func.count()).select_from(RicercaVettore))
+                q = select(func.count()).select_from(RicercaVettore)
+                if solo_processi:
+                    q = q.where(RicercaVettore.oggetto_id.in_(list(self.processi.values())))
+                n = await db.scalar(q)
             await motore.dispose()
             return n
 
@@ -169,6 +173,54 @@ class RicercaApi(unittest.TestCase):
         self.assertEqual(len(self.embedding.testi), calcolati + 1)
         self.assertIn("società sportive", self.embedding.testi[-1])
         self.assertEqual(self._vettori(), len(self.processi))
+
+    def test_ricerca_elenco(self):
+        """Elenco piatto della mappatura e ricerca su ogni livello, con il percorso; i vettori
+        degli altri livelli restano, quelli degli elementi eliminati si tolgono."""
+        rpct, referente = self._client("rpct"), self._client("referente")
+        p = self.processi["concorsi"]
+        a = self._ok(rpct.post(f"{API}/processi/{p}/attivita", base_url=ENTE, json={"descrizione": "Nomina della commissione di concorso"}), 201)
+        r = self._ok(rpct.post(f"{API}/attivita/{a['id']}/rischi", base_url=ENTE, json={"evento": "Commissari compiacenti"}), 201)
+        m = self._ok(rpct.post(f"{API}/rischi/{r['id']}/misure", base_url=ENTE, json={
+            "descrizione": "Rotazione dei componenti", "struttura_id": self.uo}), 201)  # fmt: skip
+
+        elenco = self._ok(referente.get(f"{API}/elenco", base_url=ENTE))
+        self.assertEqual({k: len(v) for k, v in elenco.items()}, {"aree": 1, "processi": 4, "attivita": 1, "rischi": 1, "misure": 1})
+        self.assertEqual((elenco["misure"][0]["rischio_id"], elenco["rischi"][0]["attivita_id"], elenco["attivita"][0]["processo_id"]),
+                         (r["id"], a["id"], p))  # fmt: skip
+
+        def cerca(testo, livello):
+            return self._ok(referente.get(f"{API}/elenco/ricerca", base_url=ENTE, query_string={"testo": testo, "livello": livello}))
+
+        # per parole, anche nel percorso: la misura si trova con il nome del processo
+        self.assertEqual([x["id"] for x in cerca("rotazione", "MISURA")["risultati"]], [m["id"]])
+        self.assertEqual([x["id"] for x in cerca("reclutamento", "MISURA")["risultati"]], [m["id"]])
+        self.assertEqual([x["id"] for x in cerca("compiacenti", "RISCHIO")["risultati"]], [r["id"]])
+        self.assertEqual([x["id"] for x in cerca("commissione", "ATTIVITA")["risultati"]], [a["id"]])
+        self.assertEqual(cerca("persona", "AREA")["risultati"][0]["parole"] != [], True)
+        # "assunzioni" non compare: sinonimi e significato (l'attività parla di concorso)
+        trovata = cerca("assunzioni", "MISURA")
+        self.assertTrue(trovata["semantica"])
+        self.assertEqual([x["id"] for x in trovata["risultati"]], [m["id"]])
+        self.assertEqual([x["id"] for x in cerca("affitto", "PROCESSO")["risultati"]][0], self.processi["affitto"])
+        self.assertEqual(referente.get(f"{API}/elenco/ricerca", base_url=ENTE, query_string={"testo": "x", "livello": "ALTRO"}).status_code, 422)
+
+        # esportazione dell'elenco come appare a video
+        r = referente.post(f"{API}/elenco/esporta", base_url=ENTE, json={
+            "titolo": "Misure", "intestazioni": ["Codice", "Misura"], "righe": [[m["codice"], m["descrizione"]]]})  # fmt: skip
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("elenco_misure.xlsx", r.headers["Content-Disposition"])
+        self.assertTrue(r.data.startswith(b"PK"))
+
+        # la ricerca nei procedimenti non cancella i vettori degli altri livelli
+        vettori = self._vettori(solo_processi=False)
+        self.assertEqual(vettori, len(self.processi) + 4)  # area, attività, rischio, misura
+        self._ok(rpct.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "concorso", "tipo": "PROCEDIMENTO"}))
+        self.assertEqual(self._vettori(solo_processi=False), vettori)
+        # eliminati attività, rischio e misura, la ricerca nell'elenco toglie i loro vettori
+        self._ok(rpct.delete(f"{API}/attivita/{a['id']}", base_url=ENTE), 204)
+        cerca("concorso", "PROCESSO")
+        self.assertEqual(self._vettori(solo_processi=False), len(self.processi) + 1)  # resta l'area
 
     def test_modello_non_disponibile(self):
         self.embedding.guasto = True

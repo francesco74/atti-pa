@@ -521,6 +521,7 @@ class TabellaCampi extends StatelessWidget {
     if (v == null || v == '') return '—';
     if (campo.startsWith('art35.')) {
       if (campo.endsWith('_struttura_id')) return dati.struttura(v) ?? '—';
+      if (v is List) return v.map((o) => '${(o as Map)['giorni']} dalle ${o['ora_inizio']} alle ${o['ora_fine']}').join('; ');
       return const {'SI': 'Sì', 'NO': 'No'}[v] ?? '$v';
     }
     return switch (campo) {

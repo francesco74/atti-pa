@@ -203,7 +203,7 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
             label: const Text('Importa procedimenti'),
             onPressed: () async {
               final fatto = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(builder: (_) => ImportaProcedimentiPage(dati: dati)),
+                MaterialPageRoute(builder: (_) => ImportaProcedimentiPage(strutture: dati.strutture, aree: dati.aree)),
               );
               if (fatto == true) _carica();
             },
@@ -361,9 +361,11 @@ class VistaProcesso extends StatefulWidget {
     required this.onAree,
     required this.onArea,
     required this.onChiuso,
+    this.attivitaIniziale,
   });
 
   final String processoId;
+  final String? attivitaIniziale; // attività da aprire subito (es. dall'elenco della mappatura)
   final VoidCallback onAree;
   final ValueChanged<String?> onArea;
   final VoidCallback onChiuso; // processo eliminato
@@ -379,6 +381,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
   @override
   void initState() {
     super.initState();
+    _attivitaId = widget.attivitaIniziale;
     _carica();
   }
 
@@ -536,7 +539,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
           onModifica: ops == null
               ? null
               : () => eseguiOperazione(context, _carica, () async {
-                    final v = await modificaArt35(context, dati, (processo['art35'] as Map?)?.cast<String, dynamic>());
+                    final v = await modificaArt35(context, dati.strutture, (processo['art35'] as Map?)?.cast<String, dynamic>(),
+                        procedimento: processo);
                     if (v != null) await ops.processo({...processo, 'art35': v});
                   }),
         ),
@@ -596,8 +600,13 @@ class _VistaProcessoState extends State<VistaProcesso> {
 /// Interruttori del RPCT: la mappatura (/pubblico/mappatura) e i procedimenti con i dati
 /// dell'art. 35 (/pubblico/procedimenti) consultabili dai cittadini, con i link da mettere sul
 /// sito dell'ente.
+/// Interruttori delle pagine pubbliche. Nella trasparenza ([soloProcedimenti]) c'è solo quello
+/// dei procedimenti, con le API della trasparenza.
 class PubblicazioneMappatura extends StatefulWidget {
-  const PubblicazioneMappatura({super.key});
+  const PubblicazioneMappatura({super.key, this.api = '$apiAnticorruzione/pubblicazione', this.soloProcedimenti = false});
+
+  final String api;
+  final bool soloProcedimenti;
 
   @override
   State<PubblicazioneMappatura> createState() => _PubblicazioneMappaturaState();
@@ -618,7 +627,7 @@ class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
 
   Future<void> _leggi() async {
     try {
-      _imposta(await apiDi(context).get('$apiAnticorruzione/pubblicazione'));
+      _imposta(await apiDi(context).get(widget.api));
     } catch (_) {
       // senza lo stato gli interruttori non compaiono
     }
@@ -637,7 +646,7 @@ class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
     }
     if (!mounted) return;
     try {
-      _imposta(await apiDi(context).put('$apiAnticorruzione/pubblicazione', {campo: attiva}));
+      _imposta(await apiDi(context).put(widget.api, {campo: attiva}));
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
@@ -662,7 +671,8 @@ class _PubblicazioneMappaturaState extends State<PubblicazioneMappatura> {
     final stato = _stato;
     if (stato == null) return const SizedBox.shrink();
     return Wrap(spacing: 16, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-      _interruttore('attiva', stato['percorso'] as String? ?? '/pubblico/mappatura', 'la mappatura',
+      if (!widget.soloProcedimenti)
+        _interruttore('attiva', stato['percorso'] as String? ?? '/pubblico/mappatura', 'la mappatura',
           'Pubblica la mappatura', 'Mappatura pubblicata'),
       _interruttore('procedimenti_attiva', stato['percorso_procedimenti'] as String? ?? '/pubblico/procedimenti',
           'i procedimenti', 'Pubblica i procedimenti (art. 35)', 'Procedimenti pubblicati'),

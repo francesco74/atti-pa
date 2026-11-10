@@ -134,12 +134,19 @@ frontend/src/lib/moduli/trasparenza/   pagine dell'app
 7. **DOCX**: con LibreOffice del converter al posto di pandoc; da verificare la resa delle
    tabelle.
 
-## Procedimenti dalla mappatura (07/11/2026)
+## Procedimenti (07/11/2026, catalogo condiviso dal 09/11/2026)
 
-La scheda Art. 35 (sezione Procedimenti) si può compilare importando i procedimenti della
-mappatura dell'anticorruzione (`GET /api/v1/trasparenza/procedimenti-mappatura`, pulsante
-"Importa dalla mappatura dei procedimenti" nel modulo, solo con il modulo anticorruzione attivo):
-gli elementi arrivano già nel formato dello schema, con i recapiti degli uffici presi dalle
-strutture organizzative, e restano modificabili; la compilazione da zero resta possibile. Vedi
-`anticorruzione.md`, decisione 20.
+La scheda Art. 35 (sezione Procedimenti) si può compilare importando i procedimenti dell'ente
+(`GET /api/v1/trasparenza/procedimenti-mappatura`, pulsante "Importa dai procedimenti
+dell'ente"): gli elementi arrivano già nel formato dello schema, con i recapiti degli uffici
+presi dalle strutture organizzative, e restano modificabili; la compilazione da zero resta
+possibile. Vedi `anticorruzione.md`, decisione 20.
+
+I procedimenti sono un catalogo condiviso con l'anticorruzione (`common/procedimenti.py`,
+`anticorruzione.md` decisione 26). Scheda **Procedimenti** del modulo: con la sola trasparenza
+l'operatore li crea, modifica (dati generali e art. 35), importa dal sito o da documenti ed
+elimina; con l'anticorruzione attiva si gestiscono nella mappatura, con l'iter del RPCT, e qui si
+consultano. In entrambi i casi c'è l'interruttore della pagina pubblica dei procedimenti.
+API: `procedimenti` (+ `/<id>`), `procedimenti/importazioni` (+ `/<id>`),
+`procedimenti/pubblicazione` (GET con `con_iter`, PUT).
 

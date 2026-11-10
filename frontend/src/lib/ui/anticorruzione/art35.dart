@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../comuni.dart';
-import 'comune.dart';
+import '../admin/strutture.dart' show alberoStrutture;
 
 /// Dati del procedimento per l'art. 35 d.lgs. 33/2013 (allegato 11 alla delibera ANAC
 /// 495/2024): la scheda arriva dall'API nel formato dello schema ART_35 della trasparenza,
@@ -24,40 +24,365 @@ const etichetteArt35 = {
   'link_pagamenti': 'Pagamenti (link)',
   'sost_struttura_id': 'Ufficio del titolare del potere sostitutivo',
   'sost_attivazione': 'Come attivare il potere sostitutivo',
+  ...etichetteRecapitiArt35,
 };
 
-const _siNo = [(null, '—'), ('SI', 'Sì'), ('NO', 'No')];
+/// Recapiti che si possono scrivere nel procedimento al posto di quelli della struttura
+/// dell'ufficio: campo -> etichetta (anche per le proposte).
+const etichetteRecapitiArt35 = {
+  'uff_resp_tel': 'Ufficio responsabile - telefono',
+  'uff_resp_peo': 'Ufficio responsabile - PEO',
+  'uff_resp_pec': 'Ufficio responsabile - PEC',
+  'uff_finale_resp': 'Responsabile dell\'ufficio competente',
+  'uff_finale_tel': 'Ufficio competente - telefono',
+  'uff_finale_peo': 'Ufficio competente - PEO',
+  'uff_finale_pec': 'Ufficio competente - PEC',
+  'ist_indirizzo': 'Ufficio istanze - indirizzo',
+  'ist_telefono': 'Ufficio istanze - telefono',
+  'ist_peo': 'Ufficio istanze - PEO',
+  'ist_pec': 'Ufficio istanze - PEC',
+  'orari': 'Orari di apertura al pubblico',
+  'sost_nominativo': 'Titolare del potere sostitutivo',
+  'sost_qualifica': 'Qualifica del titolare del potere sostitutivo',
+  'sost_tel': 'Potere sostitutivo - telefono',
+  'sost_peo': 'Potere sostitutivo - PEO',
+  'sost_pec': 'Potere sostitutivo - PEC',
+};
 
-/// Finestra dei dati art. 35 del procedimento: uffici scelti tra le strutture (con i loro
-/// recapiti), il resto testo. Restituisce la mappa `art35` da salvare.
-Future<Map<String, dynamic>?> modificaArt35(BuildContext context, DatiAnticorruzione d, Map<String, dynamic>? art35) {
-  List<(String?, String)> strutture(String vuota) => [
-        (null, vuota),
-        for (final s in d.strutture)
-          if (s['attiva'] != false) (s['id'] as String, '${s['codice']} - ${s['descrizione']}'),
-      ];
-  return modificaCampi(context, titolo: 'Dati per la trasparenza (art. 35)', valori: {...?art35}, campi: [
-    const Campo('tipologia', 'Tipologia di procedimento', aiuto: 'es. Autorizzazioni, Contributi economici, Certificazioni'),
-    Campo('uff_resp_struttura_id', 'Ufficio responsabile del procedimento',
-        scelte: strutture('La struttura responsabile del procedimento'),
-        aiuto: 'Recapiti (telefono, PEO, PEC) dalla struttura: Amministrazione → Strutture'),
-    Campo('uff_finale_struttura_id', 'Ufficio competente per il provvedimento finale',
-        scelte: strutture('Lo stesso ufficio responsabile'), aiuto: 'Solo se diverso; nome del responsabile e recapiti dalla struttura'),
-    const Campo('istanza_di_parte', 'Procedimento a istanza di parte', scelte: _siNo),
-    Campo('ist_struttura_id', 'Ufficio per informazioni e istanze',
-        scelte: strutture('—'), aiuto: 'Solo a istanza di parte: sede, recapiti e orari dalla struttura'),
-    const Campo('ist_modulistica', 'Atti e modulistica (link)', aiuto: 'Solo a istanza di parte: link a moduli e fac-simile'),
-    const Campo('modalita_info', 'Come avere informazioni sui procedimenti in corso', righe: 3),
-    const Campo('dichiarazione_sostitutiva', 'Provvedimento sostituibile da dichiarazione dell\'interessato', scelte: _siNo),
-    const Campo('silenzio_assenso', 'Silenzio assenso', scelte: _siNo),
-    const Campo('strumenti_tutela', 'Strumenti di tutela e modi per attivarli', righe: 3),
-    const Campo('servizio_online_link', 'Servizio online (link)'),
-    const Campo('servizio_online_tempi', 'Tempi previsti per attivare il servizio online', aiuto: 'Solo se non c\'è ancora'),
-    const Campo('link_pagamenti', 'Modalità di pagamento (link)', aiuto: 'Pagina con le informazioni sui pagamenti (art. 36)'),
-    Campo('sost_struttura_id', 'Ufficio del titolare del potere sostitutivo',
-        scelte: strutture('—'), aiuto: 'Nominativo, qualifica e recapiti dal responsabile della struttura'),
-    const Campo('sost_attivazione', 'Come attivare il potere sostitutivo', righe: 3),
-  ]).then((v) => v == null ? null : {for (final e in v.entries) if (e.value != null) e.key: e.value});
+/// Finestra dei dati art. 35 del procedimento, con le sezioni e le domande dell'allegato 11
+/// come nella trasparenza: le parti che dipendono da una risposta (ufficio finale diverso, a
+/// istanza di parte) compaiono solo quando servono. Gli uffici si scelgono dall'organigramma e
+/// se ne vedono i recapiti; un recapito scritto qui vale solo per questo procedimento, al posto
+/// di quello della struttura. Restituisce la mappa `art35` da salvare. [procedimento]: i dati
+/// che vengono dal procedimento (denominazione, struttura responsabile...). Usata dalla
+/// mappatura e dai procedimenti della trasparenza.
+Future<Map<String, dynamic>?> modificaArt35(
+  BuildContext context,
+  List<Map<String, dynamic>> strutture,
+  Map<String, dynamic>? art35, {
+  Map<String, dynamic>? procedimento,
+}) =>
+    showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => _FinestraArt35(strutture: strutture, art35: art35 ?? const {}, procedimento: procedimento ?? const {}),
+    );
+
+final _reUrl = RegExp(r'^https?://\S+$', caseSensitive: false);
+
+class _FinestraArt35 extends StatefulWidget {
+  const _FinestraArt35({required this.strutture, required this.art35, required this.procedimento});
+
+  final List<Map<String, dynamic>> strutture;
+  final Map<String, dynamic> art35;
+  final Map<String, dynamic> procedimento;
+
+  @override
+  State<_FinestraArt35> createState() => _FinestraArt35State();
+}
+
+class _FinestraArt35State extends State<_FinestraArt35> {
+  static const _testi = [
+    'tipologia', 'ist_modulistica', 'modalita_info', 'strumenti_tutela', 'servizio_online_link', 'servizio_online_tempi',
+    'link_pagamenti', 'sost_attivazione',
+  ];
+  static const _scelte = [
+    'uff_resp_struttura_id', 'uff_finale_struttura_id', 'ist_struttura_id', 'sost_struttura_id', 'istanza_di_parte',
+    'dichiarazione_sostitutiva', 'silenzio_assenso',
+  ];
+
+  late final Map<String, TextEditingController> _c = {
+    for (final k in [..._testi, ...etichetteRecapitiArt35.keys.where((k) => k != 'orari')])
+      k: TextEditingController(text: widget.art35[k] as String? ?? ''),
+  };
+  late final Map<String, String?> _v = {for (final k in _scelte) k: widget.art35[k] as String?};
+  late bool _finaleDiverso = widget.art35['uff_finale_struttura_id'] != null;
+  late final List<List<TextEditingController>> _orari = [
+    for (final o in (widget.art35['orari'] as List? ?? const []).cast<Map>())
+      [for (final k in const ['giorni', 'ora_inizio', 'ora_fine']) TextEditingController(text: '${o[k] ?? ''}')],
+  ];
+  String? _errore;
+
+  @override
+  void dispose() {
+    for (final c in [..._c.values, for (final r in _orari) ...r]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Map<String, dynamic>? _struttura(Object? id) => widget.strutture.where((s) => s['id'] == id).firstOrNull;
+
+  String _orariTesto(Object? orari) => (orari as List? ?? const [])
+      .cast<Map>()
+      .map((o) => '${o['giorni']} dalle ${o['ora_inizio']} alle ${o['ora_fine']}')
+      .join('; ');
+
+  // --- pezzi della finestra ---
+
+  Widget _titolo(String testo) => Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 8),
+        child: Semantics(header: true, child: Text(testo, style: Theme.of(context).textTheme.titleSmall)),
+      );
+
+  Widget _testo(String k, String etichetta, {int righe = 1, String? aiuto}) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: TextField(
+          controller: _c[k],
+          minLines: righe == 1 ? 1 : 2,
+          maxLines: righe,
+          decoration: InputDecoration(labelText: etichetta, helperText: aiuto, helperMaxLines: 3),
+        ),
+      );
+
+  Widget _siNo(String k, String etichetta, {ValueChanged<String?>? cambiato}) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: DropdownButtonFormField<String?>(
+          initialValue: _v[k],
+          decoration: InputDecoration(labelText: etichetta),
+          items: const [
+            DropdownMenuItem(value: null, child: Text('—')),
+            DropdownMenuItem(value: 'SI', child: Text('Sì')),
+            DropdownMenuItem(value: 'NO', child: Text('No')),
+          ],
+          onChanged: (v) => setState(() {
+            _v[k] = v;
+            cambiato?.call(v);
+          }),
+        ),
+      );
+
+  /// Scelta dell'ufficio dall'organigramma (ad albero, strutture attive e quella già scelta)
+  /// e, sotto, i suoi recapiti: ognuno si può scrivere per questo procedimento.
+  Widget _ufficio(String k, String etichetta, {required String vuota, Object? predefinita, required List<(String, String)> recapiti}) {
+    final voci = alberoStrutture(widget.strutture).where((e) => e.$1['attiva'] != false || e.$1['id'] == _v[k]);
+    final struttura = _struttura(_v[k] ?? predefinita);
+    final tema = Theme.of(context);
+    String? dallaStruttura(String attributo) {
+      if (struttura == null) return null;
+      final v = attributo == 'orari' ? _orariTesto(struttura['orari']) : (struttura[attributo] as String? ?? '');
+      return v.trim().isEmpty ? null : v;
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      DropdownButtonFormField<String?>(
+        initialValue: _v[k],
+        isExpanded: true,
+        decoration: InputDecoration(labelText: etichetta, helperText: 'Scegli l\'ufficio dall\'organigramma'),
+        items: [
+          DropdownMenuItem(value: null, child: Text(vuota, overflow: TextOverflow.ellipsis)),
+          for (final (s, livello) in voci)
+            DropdownMenuItem(
+              value: s['id'] as String,
+              child: Padding(
+                padding: EdgeInsets.only(left: 16.0 * livello),
+                child: Text('${s['codice']} - ${s['descrizione']}', overflow: TextOverflow.ellipsis),
+              ),
+            ),
+        ],
+        onChanged: (v) => setState(() => _v[k] = v),
+      ),
+      if (struttura != null)
+        Padding(
+          padding: const EdgeInsets.only(left: 12, top: 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('Dati dalla struttura; scrivi qui solo quelli diversi per questo procedimento.', style: tema.textTheme.bodySmall),
+            const SizedBox(height: 8),
+            for (final (campo, attributo) in recapiti)
+              if (campo == 'orari')
+                _orariProcedimento(dallaStruttura('orari'))
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: TextField(
+                    controller: _c[campo],
+                    decoration: InputDecoration(
+                      labelText: etichetteRecapitiArt35[campo]!.split(' - ').last.replaceFirstMapped(
+                          RegExp(r'^.'), (m) => m.group(0)!.toUpperCase()),
+                      isDense: true,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      hintText: dallaStruttura(attributo),
+                      helperText: dallaStruttura(attributo) == null
+                          ? 'Manca nella struttura: scrivilo qui o completalo in Amministrazione → Strutture'
+                          : 'Vuoto: quello della struttura',
+                      helperStyle: dallaStruttura(attributo) == null ? TextStyle(color: tema.colorScheme.error) : null,
+                    ),
+                  ),
+                ),
+          ]),
+        ),
+      const SizedBox(height: 8),
+    ]);
+  }
+
+  Widget _orariProcedimento(String? dallaStruttura) {
+    final tema = Theme.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text('Orari di apertura al pubblico', style: tema.textTheme.labelLarge),
+      Text(
+        _orari.isNotEmpty
+            ? 'Orari propri di questo procedimento.'
+            : dallaStruttura == null
+                ? 'La struttura non ha orari: aggiungili qui o in Amministrazione → Strutture.'
+                : 'Dalla struttura: $dallaStruttura',
+        style: tema.textTheme.bodySmall?.copyWith(color: _orari.isEmpty && dallaStruttura == null ? tema.colorScheme.error : null),
+      ),
+      for (final (n, riga) in _orari.indexed)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(children: [
+            Expanded(
+              flex: 3,
+              child: TextField(controller: riga[0], decoration: const InputDecoration(labelText: 'Giorni', isDense: true)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: TextField(controller: riga[1], decoration: const InputDecoration(labelText: 'Dalle', hintText: '09:00', isDense: true)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: TextField(controller: riga[2], decoration: const InputDecoration(labelText: 'Alle', hintText: '12:30', isDense: true)),
+            ),
+            IconButton(
+              tooltip: 'Togli la fascia oraria',
+              icon: const Icon(Icons.delete_outline, size: 18),
+              onPressed: () => setState(() {
+                for (final c in _orari.removeAt(n)) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => c.dispose());
+                }
+              }),
+            ),
+          ]),
+        ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(_orari.isEmpty ? 'Orari diversi per questo procedimento' : 'Aggiungi una fascia oraria'),
+          onPressed: () => setState(() => _orari.add([TextEditingController(), TextEditingController(), TextEditingController()])),
+        ),
+      ),
+      const SizedBox(height: 8),
+    ]);
+  }
+
+  void _salva() {
+    final istanza = _v['istanza_di_parte'] == 'SI';
+    String? t(String k) => _c[k]!.text.trim().isEmpty ? null : _c[k]!.text.trim();
+    for (final (k, etichetta) in [
+      if (istanza) ('ist_modulistica', 'Atti e modulistica'),
+      ('servizio_online_link', 'Servizio online'),
+      ('link_pagamenti', 'Modalità di pagamento'),
+    ]) {
+      final v = t(k);
+      if (v != null && !_reUrl.hasMatch(v)) return setState(() => _errore = '$etichetta: il link deve iniziare con http:// o https://');
+    }
+    final orari = [
+      if (istanza)
+        for (final r in _orari)
+          if (r.any((c) => c.text.trim().isNotEmpty)) {'giorni': r[0].text.trim(), 'ora_inizio': r[1].text.trim(), 'ora_fine': r[2].text.trim()},
+    ];
+    if (orari.any((o) => o.values.any((v) => v.isEmpty))) {
+      return setState(() => _errore = 'Orari: per ogni fascia indica giorni, ora di inizio e ora di fine');
+    }
+    bool tenuto(String k) =>
+        (istanza || !(k.startsWith('ist_') || k == 'orari')) && (_finaleDiverso || !k.startsWith('uff_finale_'));
+    final risultato = <String, dynamic>{
+      for (final k in _c.keys)
+        if (tenuto(k) && t(k) != null) k: t(k),
+      for (final k in _scelte)
+        if (tenuto(k) && _v[k] != null) k: _v[k],
+      if (orari.isNotEmpty) 'orari': orari,
+    };
+    Navigator.pop(context, risultato);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.procedimento;
+    final tema = Theme.of(context);
+    final responsabile = _struttura(p['struttura_id']);
+    final dalProcedimento = [
+      ('Denominazione', p['denominazione']),
+      ('Breve descrizione', p['descrizione']),
+      ('Riferimenti normativi', p['norma_riferimento']),
+      ('Termine di conclusione', p['termine_conclusione']),
+      ('Unità responsabile dell\'istruttoria', responsabile == null ? null : '${responsabile['codice']} - ${responsabile['descrizione']}'),
+    ];
+    return AlertDialog(
+      title: const Text('Dati per la trasparenza (art. 35)'),
+      content: SizedBox(
+        width: 640,
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+            _titolo('Dati sul procedimento'),
+            _testo('tipologia', 'Tipologia di procedimento', aiuto: 'es. Autorizzazioni, Contributi economici, Certificazioni'),
+            if (p.isNotEmpty) ...[
+              Text('Dal procedimento (si modificano con "Modifica" del procedimento):', style: tema.textTheme.bodySmall),
+              for (final (etichetta, valore) in dalProcedimento)
+                Text('• $etichetta: ${valore == null || '$valore'.trim().isEmpty ? 'manca' : valore}', style: tema.textTheme.bodySmall),
+            ],
+
+            _titolo('Ufficio responsabile del procedimento'),
+            _ufficio('uff_resp_struttura_id', 'Ufficio responsabile del procedimento',
+                vuota: responsabile == null ? 'La struttura responsabile del procedimento' : 'La struttura responsabile: ${responsabile['codice']} - ${responsabile['descrizione']}',
+                predefinita: p['struttura_id'],
+                recapiti: const [('uff_resp_tel', 'telefono'), ('uff_resp_peo', 'peo'), ('uff_resp_pec', 'pec')]),
+
+            _titolo('Ufficio competente all\'adozione del provvedimento finale'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: DropdownButtonFormField<bool>(
+                initialValue: _finaleDiverso,
+                decoration: const InputDecoration(labelText: 'L\'ufficio competente per il provvedimento finale è diverso?'),
+                items: const [
+                  DropdownMenuItem(value: false, child: Text('No, è lo stesso ufficio responsabile')),
+                  DropdownMenuItem(value: true, child: Text('Sì')),
+                ],
+                onChanged: (v) => setState(() => _finaleDiverso = v ?? false),
+              ),
+            ),
+            if (_finaleDiverso)
+              _ufficio('uff_finale_struttura_id', 'Ufficio competente per il provvedimento finale', vuota: '—', recapiti: const [
+                ('uff_finale_resp', 'responsabile'), ('uff_finale_tel', 'telefono'), ('uff_finale_peo', 'peo'), ('uff_finale_pec', 'pec'),
+              ]),
+
+            _titolo('Procedimento a istanza di parte'),
+            _siNo('istanza_di_parte', 'Procedimento a istanza di parte?'),
+            if (_v['istanza_di_parte'] == 'SI') ...[
+              _ufficio('ist_struttura_id', 'Ufficio cui rivolgersi per informazioni e istanze', vuota: '—', recapiti: const [
+                ('ist_indirizzo', 'sede'), ('ist_telefono', 'telefono'), ('ist_peo', 'peo'), ('ist_pec', 'pec'), ('orari', 'orari'),
+              ]),
+              _testo('ist_modulistica', 'Atti e modulistica (link)', aiuto: 'Link a atti, documenti, modulistica e fac-simile di autocertificazione'),
+            ],
+
+            _titolo('Informazioni, termini e tutele'),
+            _testo('modalita_info', 'Modalità per ottenere informazioni sui procedimenti in corso', righe: 3),
+            _siNo('dichiarazione_sostitutiva', 'Provvedimento sostituibile da dichiarazione dell\'interessato'),
+            _siNo('silenzio_assenso', 'Silenzio assenso'),
+            _testo('strumenti_tutela', 'Strumenti di tutela a favore dell\'interessato e modi per attivarli', righe: 3),
+            _testo('servizio_online_link', 'Link di accesso al servizio online'),
+            _testo('servizio_online_tempi', 'Tempi previsti per l\'attivazione del servizio online', aiuto: 'Solo se il servizio online non è ancora disponibile'),
+            _testo('link_pagamenti', 'Modalità per effettuare i pagamenti (link)', aiuto: 'Pagina con le informazioni sui pagamenti (art. 36)'),
+
+            _titolo('Potere sostitutivo in caso di inerzia'),
+            _ufficio('sost_struttura_id', 'Ufficio del titolare del potere sostitutivo', vuota: '—', recapiti: const [
+              ('sost_nominativo', 'responsabile'), ('sost_qualifica', 'qualifica'), ('sost_tel', 'telefono'), ('sost_peo', 'peo'),
+              ('sost_pec', 'pec'),
+            ]),
+            _testo('sost_attivazione', 'Modalità per attivare il potere sostitutivo', righe: 3),
+            if (_errore != null)
+              Padding(padding: const EdgeInsets.only(top: 8), child: Text(_errore!, style: TextStyle(color: tema.colorScheme.error))),
+          ]),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),
+        FilledButton(onPressed: _salva, child: const Text('Salva')),
+      ],
+    );
+  }
 }
 
 /// Scheda del procedimento con tutti i dati dell'allegato 11, divisa nelle sue sezioni.

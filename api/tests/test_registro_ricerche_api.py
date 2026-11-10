@@ -201,6 +201,7 @@ class RegistroRicercheApi(unittest.TestCase):
         self._ok(self._client("admin").get(f"{API}/senza-risposta", base_url=ENTE))
         self.assertEqual(self._ok(statistica.get(f"{API}/ambiti", base_url=ENTE)),
                          [{"id": "MAPPATURA", "descrizione": "Mappatura dei processi"},
+                          {"id": "ELENCO", "descrizione": "Elenco della mappatura (aree, processi, attività, rischi, misure)"},
                           {"id": "PROCEDIMENTI", "descrizione": "Procedimenti (art. 35)"}])  # fmt: skip
 
         gruppi = self._ok(statistica.get(f"{API}/senza-risposta", base_url=ENTE))

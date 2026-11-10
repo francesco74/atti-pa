@@ -5,7 +5,8 @@ Il procedimento ha i campi comuni con il processo (denominazione, descrizione, r
 normativi, termine di conclusione, struttura responsabile = unità responsabile dell'istruttoria)
 e, in `AcProcesso.art35`, i dati propri dell'art. 35 ([DatiArt35]): gli uffici sono strutture
 organizzative, i cui recapiti (telefono, PEO, PEC, sede, orari, responsabile e qualifica) si
-leggono al momento, così restano allineati in tutti i procedimenti.
+leggono al momento, così restano allineati in tutti i procedimenti. Un recapito scritto nel
+procedimento (es. uno sportello con orari propri) vale al posto di quello della struttura.
 
 [scheda] compone l'elemento nel formato dello schema ART_35 del modulo trasparenza (sezione
 PROCEDIMENTI): lo usano l'indicatore di completezza, l'importazione nella scheda della
@@ -30,6 +31,14 @@ STRUTTURE = ("uff_resp_struttura_id", "uff_finale_struttura_id", "ist_struttura_
 _RE_URL = re.compile(r'^https?://[^\s/$.?#"<>]+[^\s"<>]*$', re.IGNORECASE)
 
 
+class Orario(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    giorni: str = Field(min_length=1, max_length=100)
+    ora_inizio: str = Field(min_length=1, max_length=20)
+    ora_fine: str = Field(min_length=1, max_length=20)
+
+
 class DatiArt35(BaseModel):
     """Dati propri del procedimento; tutti facoltativi (la completezza è un indicatore)."""
 
@@ -52,6 +61,24 @@ class DatiArt35(BaseModel):
     link_pagamenti: str | None = Field(default=None, max_length=2048)
     sost_struttura_id: str | None = None  # ufficio del titolare del potere sostitutivo
     sost_attivazione: str | None = Field(default=None, max_length=5000)
+    # recapiti propri del procedimento (vuoti: quelli della struttura dell'ufficio)
+    uff_resp_tel: str | None = Field(default=None, max_length=255)
+    uff_resp_peo: str | None = Field(default=None, max_length=255)
+    uff_resp_pec: str | None = Field(default=None, max_length=255)
+    uff_finale_resp: str | None = Field(default=None, max_length=255)
+    uff_finale_tel: str | None = Field(default=None, max_length=255)
+    uff_finale_peo: str | None = Field(default=None, max_length=255)
+    uff_finale_pec: str | None = Field(default=None, max_length=255)
+    ist_indirizzo: str | None = Field(default=None, max_length=255)
+    ist_telefono: str | None = Field(default=None, max_length=255)
+    ist_peo: str | None = Field(default=None, max_length=255)
+    ist_pec: str | None = Field(default=None, max_length=255)
+    orari: list[Orario] | None = Field(default=None, max_length=20)  # vuoti: quelli dell'ufficio istanze
+    sost_nominativo: str | None = Field(default=None, max_length=255)
+    sost_qualifica: str | None = Field(default=None, max_length=255)
+    sost_tel: str | None = Field(default=None, max_length=255)
+    sost_peo: str | None = Field(default=None, max_length=255)
+    sost_pec: str | None = Field(default=None, max_length=255)
 
     @field_validator("*", mode="before")
     @classmethod
@@ -69,9 +96,15 @@ class DatiArt35(BaseModel):
         return v
 
 
-def _uff(s) -> dict:
-    return {"denom": s.descrizione if s else "", "tel": (s.telefono or "") if s else "",
-            "peo": (s.peo or "") if s else "", "pec": (s.pec or "") if s else ""}  # fmt: skip
+def _uff(s, d: DatiArt35, prefisso: str) -> dict:
+    """Denominazione e recapiti dell'ufficio: quelli scritti nel procedimento o, se mancano,
+    quelli della struttura [s]."""
+    def v(campo: str, attributo: str) -> str:
+        return getattr(d, campo) or ((getattr(s, attributo) or "") if s else "")
+
+    tel = "ist_telefono" if prefisso == "ist" else f"{prefisso}_tel"
+    return {"denom": s.descrizione if s else "", "tel": v(tel, "telefono"),
+            "peo": v(f"{prefisso}_peo", "peo"), "pec": v(f"{prefisso}_pec", "pec")}  # fmt: skip
 
 
 def scheda(p, strutture: dict) -> dict:
@@ -84,7 +117,7 @@ def scheda(p, strutture: dict) -> dict:
     diverso = finale is not None and finale is not uff_resp
     istanze = strutture.get(d.ist_struttura_id)
     sost = strutture.get(d.sost_struttura_id)
-    r, f, i, so = _uff(uff_resp), _uff(finale), _uff(istanze), _uff(sost)
+    r, f, i, so = _uff(uff_resp, d, "uff_resp"), _uff(finale, d, "uff_finale"), _uff(istanze, d, "ist"), _uff(sost, d, "sost")
     elemento = {
         "tipologia": d.tipologia or "",
         "denominazione": p.denominazione or "",
@@ -102,21 +135,22 @@ def scheda(p, strutture: dict) -> dict:
         "servizio_online_link": d.servizio_online_link or "",
         "servizio_online_tempi": d.servizio_online_tempi or "",
         "link_pagamenti": d.link_pagamenti or "",
-        "sost_nominativo": (sost.responsabile or "") if sost else "",
+        "sost_nominativo": d.sost_nominativo or ((sost.responsabile or "") if sost else ""),
         "sost_ufficio": so["denom"],
-        "sost_qualifica": (sost.qualifica or "") if sost else "",
+        "sost_qualifica": d.sost_qualifica or ((sost.qualifica or "") if sost else ""),
         "sost_tel": so["tel"], "sost_peo": so["peo"], "sost_pec": so["pec"],
         "sost_attivazione": d.sost_attivazione or "",
     }  # fmt: skip
     if diverso:
-        elemento.update({"uff_finale_denom": f["denom"], "uff_finale_resp": finale.responsabile or "",
+        elemento.update({"uff_finale_denom": f["denom"], "uff_finale_resp": d.uff_finale_resp or finale.responsabile or "",
                          "uff_finale_tel": f["tel"], "uff_finale_peo": f["peo"], "uff_finale_pec": f["pec"]})  # fmt: skip
     if d.istanza_di_parte == "SI":
         elemento.update({
-            "ist_ufficio": i["denom"], "ist_indirizzo": (istanze.sede or "") if istanze else "",
+            "ist_ufficio": i["denom"], "ist_indirizzo": d.ist_indirizzo or ((istanze.sede or "") if istanze else ""),
             "ist_telefono": i["tel"], "ist_peo": i["peo"], "ist_pec": i["pec"],
             "ist_modulistica": d.ist_modulistica or "",
-            "orari": [dict(o) for o in ((istanze.orari or []) if istanze else [])],
+            "orari": ([o.model_dump() for o in d.orari] if d.orari
+                      else [dict(o) for o in ((istanze.orari or []) if istanze else [])]),
         })  # fmt: skip
     return elemento
 

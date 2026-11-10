@@ -2,7 +2,8 @@
 (uffici = strutture con i recapiti, letti al momento), scheda nel formato dello schema ART_35
 con i dati mancanti, conservazione dei dati quando non si inviano, proposte dei referenti,
 importazione nella scheda della trasparenza, pagina pubblica dei procedimenti con il suo
-interruttore.
+interruttore; catalogo condiviso: con la sola trasparenza i procedimenti si gestiscono
+direttamente lì, con l'anticorruzione attiva solo nella mappatura.
     cd api/tests && python test_procedimenti_api.py
 """
 
@@ -26,6 +27,8 @@ from common.models import Base, Ente, EnteDominio, Modulo, Ruolo, User  # noqa: 
 PASSWORD = "Password-di-prova-1"
 ENTE = "http://lucca.example.it"
 ALTRO = "http://altro.example.it"
+SOLO = "http://solo.example.it"  # solo modulo trasparenza
+TR = "/api/v1/trasparenza"
 API = "/api/v1/anticorruzione"
 PUBBLICO = "/api/v1/pubblico"
 
@@ -51,11 +54,17 @@ class ProcedimentiApi(unittest.TestCase):
                             moduli_json=[Modulo.ANTICORRUZIONE, Modulo.TRASPARENZA])  # fmt: skip
                 altro = Ente(codice="altro", nome="Altro", dati_json={}, moduli_json=[Modulo.ANTICORRUZIONE],
                              procedimenti_pubblici=True)  # fmt: skip
-                db.add_all([ente, altro])
+                solo = Ente(codice="solo", nome="Comune di Solo", dati_json={}, moduli_json=[Modulo.TRASPARENZA])
+                db.add_all([ente, altro, solo])
                 await db.flush()
                 cls.ente_id = ente.id
                 db.add_all([EnteDominio(dominio="lucca.example.it", ente_id=ente.id),
-                            EnteDominio(dominio="altro.example.it", ente_id=altro.id)])  # fmt: skip
+                            EnteDominio(dominio="altro.example.it", ente_id=altro.id),
+                            EnteDominio(dominio="solo.example.it", ente_id=solo.id)])  # fmt: skip
+                for username, ruoli in [("admin", [Ruolo.ADMIN]), ("trasparenza", [Ruolo.TRASPARENZA]),
+                                        ("rpct", [Ruolo.ANTICORRUZIONE_RPCT])]:  # fmt: skip
+                    db.add(User(ente_id=solo.id, username=username, origine="LOCALE",
+                                password_hash=pw.calcola(PASSWORD), ruoli=ruoli))  # fmt: skip
                 for username, ruoli in [("admin", [Ruolo.ADMIN]), ("rpct", [Ruolo.ANTICORRUZIONE_RPCT]),
                                         ("referente", [Ruolo.ANTICORRUZIONE_REFERENTE]),
                                         ("trasparenza", [Ruolo.TRASPARENZA])]:  # fmt: skip
@@ -139,6 +148,20 @@ class ProcedimentiApi(unittest.TestCase):
         self.assertEqual((s["ufficio_finale_diverso"], s["riferimenti_normativi"]), ("NO", "L. 431/1998, art. 11"))
         elenco = self._ok(rpct.get(f"{API}/processi", base_url=ENTE))
         self.assertEqual([x["art35_mancanti"] for x in elenco if x["id"] == p["id"]], [0])
+        # anche nell'elenco piatto della mappatura, con la scheda
+        voce = next(x for x in self._ok(rpct.get(f"{API}/elenco", base_url=ENTE))["processi"] if x["id"] == p["id"])
+        self.assertEqual((voce["art35_mancanti"], voce["scheda_art35"]["ist_ufficio"]), ([], "Sportello sociale"))
+
+        # recapiti scritti nel procedimento al posto di quelli della struttura (es. uno sportello)
+        propri = {**art35, "ist_telefono": "0583 9999", "ist_indirizzo": "Piazza Grande 3",
+                  "orari": [{"giorni": "Martedì", "ora_inizio": "15:00", "ora_fine": "17:00"}], "sost_nominativo": "Marco Neri"}
+        self.assertEqual(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={
+            **base, "art35": {**propri, "orari": [{"giorni": "Martedì"}]}}).status_code, 422)  # fmt: skip
+        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "art35": propri}))
+        s = self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["scheda_art35"]
+        self.assertEqual((s["ist_telefono"], s["ist_indirizzo"], s["ist_peo"], s["orari"], s["sost_nominativo"], s["sost_qualifica"]),
+                         ("0583 9999", "Piazza Grande 3", "sportello@ente.it", propri["orari"], "Marco Neri", "Segretario generale"))  # fmt: skip
+        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "art35": art35}))
 
         # modifica senza art35: i dati restano; i recapiti si leggono al momento
         self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "denominazione": "Contributo affitti"}))
@@ -239,6 +262,95 @@ class ProcedimentiApi(unittest.TestCase):
         self.assertEqual(esito["procedimenti"][0]["uffici"]["uff_resp_struttura_id"]["struttura_id"], sociali["id"])
         # l'importazione è di chi l'ha avviata
         self.assertEqual(admin.get(f"{API}/procedimenti/importazioni/{lavoro['id']}", base_url=ENTE).status_code, 404)
+
+    def _db(self, funzione):
+        async def esegui():
+            motore = create_async_engine(self.url)
+            try:
+                async with AsyncSession(motore) as db:
+                    risultato = await funzione(db)
+                    await db.commit()
+                    return risultato
+            finally:
+                await motore.dispose()
+
+        return asyncio.run(esegui())
+
+    def test_solo_trasparenza(self):
+        """Senza anticorruzione l'operatore della trasparenza gestisce i procedimenti."""
+        from common.models import AcAttivita, AcProcesso
+
+        tr, admin = self._client("trasparenza", SOLO), self._client("admin", SOLO)
+        ufficio = self._ok(admin.post("/api/v1/ente/strutture", base_url=SOLO,
+                                      json={"codice": "U.O. 1", "descrizione": "Anagrafe", **RECAPITI}), 201)  # fmt: skip
+        self.assertFalse(self._ok(tr.get(f"{TR}/procedimenti/pubblicazione", base_url=SOLO))["con_iter"])
+        # la mappatura dell'anticorruzione non c'è
+        self.assertEqual(self._client("rpct", SOLO).get(f"{API}/processi", base_url=SOLO).status_code, 403)
+
+        nuovo = {"denominazione": "Cambio di residenza", "termine_conclusione": "45 giorni", "struttura_id": ufficio["id"],
+                 "art35": {"tipologia": "Anagrafe", "uff_resp_struttura_id": ufficio["id"], "istanza_di_parte": "SI"},
+                 "tipo": "PROCESSO", "area_id": "ignorata"}  # campi della mappatura: ignorati  # fmt: skip
+        self.assertEqual(tr.post(f"{TR}/procedimenti", base_url=SOLO, json={**nuovo, "denominazione": ""}).status_code, 422)
+        p = self._ok(tr.post(f"{TR}/procedimenti", base_url=SOLO, json=nuovo), 201)
+        self.assertEqual((p["codice"], p["tipo"], p["area_id"]), ("P.1", "PROCEDIMENTO", None))
+        self.assertEqual(p["scheda_art35"]["uff_resp_tel"], RECAPITI["telefono"])  # recapiti dalla struttura
+        self.assertIn("art35_mancanti", p)
+        # modifica senza art35: i dati dell'art. 35 restano
+        p = self._ok(tr.put(f"{TR}/procedimenti/{p['id']}", base_url=SOLO, json={
+            "denominazione": "Cambio di residenza e di indirizzo", "struttura_id": ufficio["id"]}))  # fmt: skip
+        self.assertEqual((p["denominazione"], p["art35"]["tipologia"], p["termine_conclusione"]),
+                         ("Cambio di residenza e di indirizzo", "Anagrafe", None))  # fmt: skip
+        self.assertEqual([x["codice"] for x in self._ok(tr.get(f"{TR}/procedimenti", base_url=SOLO))], ["P.1"])
+        # importazione nella scheda art. 35 anche senza anticorruzione
+        importabili = self._ok(tr.get(f"{TR}/procedimenti-mappatura", base_url=SOLO))
+        self.assertEqual([x["codice"] for x in importabili], ["P.1"])
+        # importazione dal sito: avviata dalla trasparenza
+        self._ok(tr.post(f"{TR}/procedimenti/importazioni", base_url=SOLO, json={"url": "https://www.ente.it/at"}), 202)
+
+        # pagina pubblica dei procedimenti: con la sola trasparenza; la mappatura no
+        self.assertEqual(self.app.test_client().get(f"{PUBBLICO}/procedimenti", base_url=SOLO).status_code, 404)
+        stato = self._ok(tr.put(f"{TR}/procedimenti/pubblicazione", base_url=SOLO, json={"procedimenti_attiva": True}))
+        self.assertTrue(stato["procedimenti_attiva"])
+        pubblico = self.app.test_client()
+        elenco = self._ok(pubblico.get(f"{PUBBLICO}/procedimenti", base_url=SOLO))
+        self.assertEqual([x["codice"] for x in elenco["procedimenti"]], ["P.1"])
+        self._ok(pubblico.get(f"{PUBBLICO}/procedimenti/{p['id']}", base_url=SOLO))
+        self._ok(pubblico.get(f"{PUBBLICO}/procedimenti/ricerca?testo=residenza", base_url=SOLO))
+        self.assertEqual(pubblico.get(f"{PUBBLICO}/mappatura", base_url=SOLO).status_code, 404)
+        self._ok(pubblico.post(f"{PUBBLICO}/ricerche/registro", base_url=SOLO, json={
+            "ambito": "PROCEDIMENTI", "testo": "residenza", "risultati": 1, "esito": "TROVATA", "posizione": 1}), 201)  # fmt: skip
+
+        # un procedimento con attività della mappatura (anticorruzione avuta in passato) non si elimina
+        async def attivita(db):
+            processo = await db.get(AcProcesso, p["id"])
+            db.add(AcAttivita(ente_id=processo.ente_id, processo_id=processo.id, codice="P.1.1", descrizione="Istruttoria"))
+
+        self._db(attivita)
+        self.assertEqual(tr.delete(f"{TR}/procedimenti/{p['id']}", base_url=SOLO).status_code, 409)
+        altro = self._ok(tr.post(f"{TR}/procedimenti", base_url=SOLO, json={"denominazione": "Carta d'identità"}), 201)
+        self.assertEqual(altro["codice"], "P.2")
+        self._ok(tr.delete(f"{TR}/procedimenti/{altro['id']}", base_url=SOLO), 204)
+        self.assertEqual(tr.get(f"{TR}/procedimenti/{altro['id']}", base_url=SOLO).status_code, 404)
+        # i procedimenti di un altro ente non si vedono
+        self.assertEqual(self._client("trasparenza").get(f"{TR}/procedimenti/{p['id']}", base_url=ENTE).status_code, 404)
+
+    def test_con_anticorruzione_solo_lettura(self):
+        """Con l'anticorruzione attiva la trasparenza consulta, la mappatura modifica."""
+        rpct, tr = self._client("rpct"), self._client("trasparenza")
+        p = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
+            "tipo": "PROCEDIMENTO", "denominazione": "Accesso agli atti"}), 201)  # fmt: skip
+        self.assertTrue(self._ok(tr.get(f"{TR}/procedimenti/pubblicazione", base_url=ENTE))["con_iter"])
+        self.assertIn(p["id"], [x["id"] for x in self._ok(tr.get(f"{TR}/procedimenti", base_url=ENTE))])
+        self._ok(tr.get(f"{TR}/procedimenti/{p['id']}", base_url=ENTE))
+        for r in (tr.post(f"{TR}/procedimenti", base_url=ENTE, json={"denominazione": "x"}),
+                  tr.put(f"{TR}/procedimenti/{p['id']}", base_url=ENTE, json={"denominazione": "x"}),
+                  tr.delete(f"{TR}/procedimenti/{p['id']}", base_url=ENTE),
+                  tr.post(f"{TR}/procedimenti/importazioni", base_url=ENTE, json={"url": "https://www.ente.it/at"})):
+            self.assertEqual(r.status_code, 409, r.get_data(as_text=True))
+            self.assertIn("mappatura", r.get_json()["detail"])
+        # l'interruttore della pagina pubblica dei procedimenti c'è anche per la trasparenza
+        self._ok(tr.put(f"{TR}/procedimenti/pubblicazione", base_url=ENTE, json={"procedimenti_attiva": False}))
+        self.assertFalse(self._ok(rpct.get(f"{API}/pubblicazione", base_url=ENTE))["procedimenti_attiva"])
 
 
 if __name__ == "__main__":

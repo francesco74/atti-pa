@@ -25,10 +25,12 @@ from sqlalchemy import delete
 from common import ricerca
 from common.models import Modulo, RicercaFeedback, RicercaRegistrata
 
-# ambito -> (descrizione, modulo che lo rende disponibile)
-AMBITI: dict[str, tuple[str, str]] = {
-    "MAPPATURA": ("Mappatura dei processi", Modulo.ANTICORRUZIONE),
-    "PROCEDIMENTI": ("Procedimenti (art. 35)", Modulo.ANTICORRUZIONE),
+# ambito -> (descrizione, moduli che lo rendono disponibile: basta uno)
+AMBITI: dict[str, tuple[str, tuple[str, ...]]] = {
+    "MAPPATURA": ("Mappatura dei processi", (Modulo.ANTICORRUZIONE,)),
+    "ELENCO": ("Elenco della mappatura (aree, processi, attività, rischi, misure)", (Modulo.ANTICORRUZIONE,)),
+    # catalogo condiviso (common/procedimenti.py)
+    "PROCEDIMENTI": ("Procedimenti (art. 35)", (Modulo.ANTICORRUZIONE, Modulo.TRASPARENZA)),
 }
 
 TROVATA = "TROVATA"
@@ -62,7 +64,7 @@ def chiave(testo: str) -> str:
 
 def ambiti_disponibili(ente) -> dict[str, str]:
     """Ambiti dei moduli attivi dell'ente: {codice: descrizione}."""
-    return {k: d for k, (d, modulo) in AMBITI.items() if ente.modulo_attivo(modulo)}
+    return {k: d for k, (d, moduli) in AMBITI.items() if any(ente.modulo_attivo(m) for m in moduli)}
 
 
 def nuova_ricerca(ente_id: str, ambito: str, pubblica: bool, testo: str, risultati: int, esito: str,

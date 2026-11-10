@@ -35,7 +35,7 @@ from common.anticorruzione.controlli import controlli_proposta
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
     AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio,
-    Ente, EnteDominio, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
+    Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
 )  # fmt: skip
 from common.trasparenza.registro import SCHEMI
 
@@ -118,11 +118,7 @@ async def importa_procedimenti():
     sito di Amministrazione trasparente o da documenti (Word, ODT, PDF, fogli di calcolo): il
     worker la esegue con l'estrazione della trasparenza (schema ART_35, sezione PROCEDIMENTI); il
     modello trascrive i dati, non li inventa. Il risultato si rivede con GET /<id>."""
-    from routers.trasparenza import ESTRAZIONE, FonteIn, _accoda, _richiesta
-
-    dati, files = _richiesta(FonteIn)
-    specifici = {"schema_id": dati_art35.SCHEMA, "variante": None, "sezione": dati_art35.SEZIONE, "origine": "mappatura"}
-    return await _accoda(ESTRAZIONE, dati, files, specifici), HTTPStatus.ACCEPTED
+    return await avvia_importazione_procedimenti()
 
 
 @bp.get("/procedimenti/importazioni/<lavoro_id>")
@@ -130,6 +126,21 @@ async def importa_procedimenti():
 async def importazione_procedimenti(lavoro_id: str):
     """Stato della lettura e, a lettura completata, i procedimenti trovati con gli abbinamenti
     proposti (procedimento della mappatura, strutture per gli uffici) e gli avvisi."""
+    return await stato_importazione_procedimenti(lavoro_id)
+
+
+# Usate anche dalla trasparenza quando gestisce da sola i procedimenti (common/procedimenti.py).
+
+
+async def avvia_importazione_procedimenti():
+    from routers.trasparenza import ESTRAZIONE, FonteIn, _accoda, _richiesta
+
+    dati, files = _richiesta(FonteIn)
+    specifici = {"schema_id": dati_art35.SCHEMA, "variante": None, "sezione": dati_art35.SEZIONE, "origine": "mappatura"}
+    return await _accoda(ESTRAZIONE, dati, files, specifici), HTTPStatus.ACCEPTED
+
+
+async def stato_importazione_procedimenti(lavoro_id: str) -> dict:
     from routers.trasparenza import _lavoro
 
     sessione = db()
@@ -485,6 +496,123 @@ async def ricerca_processi():
     (vedi api/src/ricerca.py)."""
     f = parametri(RicercaIn)
     return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), f.tipo), ente_id=ente_id())
+
+
+# --- elenco piatto della mappatura ------------------------------------------------------------
+
+
+async def _mappatura_completa(sessione) -> dict[str, list]:
+    """Aree, processi, attività, rischi e misure dell'ente, ciascuno per codice."""
+    def q(modello):
+        return select(modello).where(modello.ente_id == ente_id())
+
+    return {
+        "aree": _per_codice(await sessione.scalars(q(AcArea))),
+        "processi": _per_codice(await sessione.scalars(q(AcProcesso))),
+        "attivita": _per_codice(await sessione.scalars(q(AcAttivita))),
+        "rischi": _per_codice(await sessione.scalars(q(AcRischio))),
+        "misure": _per_codice(await sessione.scalars(q(AcMisura))),
+    }
+
+
+@bp.get("/elenco")
+@lettore
+async def elenco():
+    """Tutta la mappatura in forma piatta per la scheda Elenco: aree, processi e procedimenti,
+    attività, rischi e misure, ciascuno con l'id del padre; i procedimenti con la scheda art. 35
+    e i dati mancanti. Il client compone le righe con il percorso e applica i filtri (anche per
+    struttura, con le sottostrutture)."""
+    sessione = db()
+    m = await _mappatura_completa(sessione)
+    strutture = await _strutture_ente(sessione) if any(p.tipo == "PROCEDIMENTO" for p in m["processi"]) else {}
+
+    def processo(p: AcProcesso) -> dict:
+        if p.tipo != "PROCEDIMENTO":
+            return _processo(p)
+        scheda = dati_art35.scheda(p, strutture)
+        return {**_processo(p), "scheda_art35": scheda, "art35_mancanti": dati_art35.mancanti(scheda)}
+
+    return {
+        "aree": [_area(a) for a in m["aree"]],
+        "processi": [processo(p) for p in m["processi"]],
+        "attivita": [_attivita(a) for a in m["attivita"]],
+        "rischi": [_rischio(r) for r in m["rischi"]],
+        "misure": [_misura(x) for x in m["misure"]],
+    }
+
+
+class RicercaElencoIn(BaseModel):
+    testo: str = Field(min_length=1, max_length=300)
+    livello: Literal["AREA", "PROCESSO", "ATTIVITA", "RISCHIO", "MISURA"] = "PROCESSO"
+
+
+def _unisci(*parti) -> str:
+    return "\n".join(x for x in parti if x)
+
+
+@bp.get("/elenco/ricerca")
+@lettore
+async def ricerca_elenco():
+    """Ricerca in linguaggio naturale negli elementi di un livello della mappatura: id in ordine
+    di pertinenza. Ogni elemento si cerca con il suo percorso (es. una misura anche con il
+    rischio, l'attività e il processo), così "rotazione negli appalti" trova le misure di
+    rotazione dei processi dei contratti."""
+    f = parametri(RicercaElencoIn)
+    sessione = db()
+    m = await _mappatura_completa(sessione)
+    validi = {x.id for v in m.values() for x in v}
+    if f.livello == "PROCESSO":  # gli stessi documenti della ricerca nella mappatura (vettori in comune)
+        documenti = await documenti_ricerca(sessione)
+        return await servizio_ricerca.cerca(f.testo, documenti, ente_id=ente_id(), validi=validi)
+    aree = {a.id: a for a in m["aree"]}
+    processi = {p.id: p for p in m["processi"]}
+    attivita = {a.id: a for a in m["attivita"]}
+    rischi = {r.id: r for r in m["rischi"]}
+
+    def percorso_processo(pid: str | None) -> list[str | None]:
+        p = processi.get(pid)
+        a = aree.get(p.area_id) if p else None
+        return [p.denominazione if p else None, a.descrizione if a else None]
+
+    def percorso_attivita(aid: str | None) -> list[str | None]:
+        a = attivita.get(aid)
+        return [a.descrizione if a else None, *percorso_processo(a.processo_id if a else None)]
+
+    if f.livello == "AREA":
+        nomi: dict[str, list[str]] = {}
+        for p in m["processi"]:
+            nomi.setdefault(p.area_id, []).append(p.denominazione)
+        documenti = [Documento(a.id, f"{a.codice} {a.descrizione}", _unisci(a.descrizione_breve, *nomi.get(a.id, [])))
+                     for a in m["aree"]]  # fmt: skip
+    elif f.livello == "ATTIVITA":
+        documenti = [Documento(a.id, f"{a.codice} {a.descrizione}", _unisci(a.strutture_coinvolte, *percorso_processo(a.processo_id)))
+                     for a in m["attivita"]]  # fmt: skip
+    elif f.livello == "RISCHIO":
+        documenti = [Documento(r.id, f"{r.codice} {r.evento}", _unisci(r.fattore_abilitante, *percorso_attivita(r.attivita_id)))
+                     for r in m["rischi"]]  # fmt: skip
+    else:
+        documenti = []
+        for x in m["misure"]:
+            r = rischi.get(x.rischio_id)
+            documenti.append(Documento(x.id, f"{x.codice} {x.descrizione}", _unisci(
+                x.categoria, x.fasi, x.tempi, x.indicatore, x.target, r.evento if r else None,
+                *percorso_attivita(r.attivita_id if r else None))))  # fmt: skip
+    return await servizio_ricerca.cerca(f.testo, documenti, ente_id=ente_id(), validi=validi)
+
+
+class EsportaElencoIn(BaseModel):
+    titolo: str = Field(min_length=1, max_length=31)  # nome del foglio Excel
+    intestazioni: list[str] = Field(min_length=1, max_length=30)
+    righe: list[list[str | int | float | None]] = Field(max_length=20000)
+
+
+@bp.post("/elenco/esporta")
+@lettore
+async def esporta_elenco():
+    """L'elenco come appare a video (livello, filtri, ordine) in un foglio Excel."""
+    d = corpo(EsportaElencoIn)
+    nome = re.sub(r"[^a-z0-9]+", "_", d.titolo.lower()).strip("_") or "elenco"
+    return allegato(excel.foglio(d.titolo, d.intestazioni, d.righe), excel.MIME, f"elenco_{nome}.xlsx")
 
 
 async def processo_dell_ente(sessione, processo_id: str) -> AcProcesso:
@@ -1283,14 +1411,6 @@ def _descrizione_proposta(pr: AcProposta) -> str:
     return testo
 
 
-async def _indirizzo_app(sessione, e: Ente) -> str | None:
-    """Indirizzo dell'app per l'ente (il suo primo dominio), per i link nelle email."""
-    dominio = await sessione.scalar(
-        select(EnteDominio.dominio).where(EnteDominio.ente_id == e.id).order_by(EnteDominio.dominio).limit(1)
-    )
-    return f"https://{dominio}" if dominio else None
-
-
 def _dettagli_proposta(pr: AcProposta) -> str:
     righe = [f"  {_descrizione_proposta(pr)}"]
     if percorso := (pr.contesto or {}).get("percorso"):
@@ -1318,7 +1438,7 @@ async def _notifica_rpct(sessione, pr: AcProposta, autore: User, reinviata: bool
     if pr.nota:
         testo += f"\nNota del referente:\n{pr.nota}\n"
     oggetto = f"[Anticorruzione] {'Proposta reinviata' if reinviata else 'Nuova proposta'} da approvare: {_descrizione_proposta(pr)}"
-    posta.accoda(sessione, e, destinatari, oggetto, testo + _firma(e, await _indirizzo_app(sessione, e)),
+    posta.accoda(sessione, e, destinatari, oggetto, testo + _firma(e, await posta.indirizzo_app(sessione, e)),
                  origine=f"ac_proposta:{pr.id}")  # fmt: skip
 
 
@@ -1336,7 +1456,7 @@ async def _notifica_referente(sessione, pr: AcProposta) -> None:
     if pr.stato == "RESTITUITA":
         testo += "\nPuoi correggerla e reinviarla, oppure ritirarla.\n"
     oggetto = f"[Anticorruzione] Proposta {esito}: {_descrizione_proposta(pr)}"
-    posta.accoda(sessione, e, [autore.email], oggetto, testo + _firma(e, await _indirizzo_app(sessione, e)),
+    posta.accoda(sessione, e, [autore.email], oggetto, testo + _firma(e, await posta.indirizzo_app(sessione, e)),
                  origine=f"ac_proposta:{pr.id}")  # fmt: skip
 
 

@@ -22,11 +22,12 @@ from sqlalchemy.orm import undefer
 from deps import audit, autenticato, db, ente_id, impostazioni, notifica, risorse, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto
 from common import archivio, coda
+from common import procedimenti as catalogo
 from common.documenti import DocumentiError
 from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione.metodologia import chiave_naturale
 from common.models import (
-    AcProcesso, Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaDocumento, TrasparenzaLavoro, User,
+    AcAttivita, AcProcesso, Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaDocumento, TrasparenzaLavoro, User,
 )  # fmt: skip
 from common.trasparenza import documenti as doc
 from common.trasparenza.analisi import ANALISI, ESTRAZIONE
@@ -73,12 +74,10 @@ async def schemi():
 @bp.get("/procedimenti-mappatura")
 @operatore
 async def procedimenti_mappatura():
-    """Procedimenti della mappatura dell'anticorruzione nel formato della sezione PROCEDIMENTI
-    dello schema ART_35, da importare nella scheda (con i dati mancanti). Vuoto se l'ente non ha
-    il modulo anticorruzione."""
+    """Procedimenti del catalogo (mappatura dell'anticorruzione o procedimenti della trasparenza,
+    common/procedimenti.py) nel formato della sezione PROCEDIMENTI dello schema ART_35, da
+    importare nella scheda (con i dati mancanti)."""
     e = await db().get(Ente, ente_id())
-    if not e.modulo_attivo(Modulo.ANTICORRUZIONE):
-        return []
     sessione = db()
     strutture = {s.id: s for s in await sessione.scalars(select(Struttura).where(Struttura.ente_id == e.id))}
     procedimenti = await sessione.scalars(
@@ -499,3 +498,168 @@ async def esporta():
         raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
     nome = re.sub(r"[^A-Za-z0-9_-]+", "-", dati.nome).strip("-") or "documento"
     return allegato(contenuto, MIME[dati.formato], f"{nome}.{dati.formato}")
+
+
+# --- procedimenti ---------------------------------------------------------------------------
+# Catalogo condiviso con l'anticorruzione (common/procedimenti.py): con il solo modulo
+# trasparenza l'operatore crea, modifica ed elimina i procedimenti direttamente; con
+# l'anticorruzione attiva si gestiscono nella mappatura (iter di approvazione del RPCT) e qui si
+# consultano. Stesse tabelle e stesse funzioni della mappatura.
+
+
+class ProcedimentoIn(BaseModel):
+    denominazione: str = Field(min_length=1, max_length=500)
+    descrizione: str | None = None
+    termine_conclusione: str | None = Field(default=None, max_length=255)
+    norma_riferimento: str | None = None
+    struttura_id: str | None = None  # unità responsabile dell'istruttoria
+    art35: dati_art35.DatiArt35 | None = None  # null o assente: restano quelli attuali
+
+
+async def _strutture_ente() -> dict[str, Struttura]:
+    return {s.id: s for s in await db().scalars(select(Struttura).where(Struttura.ente_id == ente_id()))}
+
+
+def _procedimento(p: AcProcesso, strutture: dict[str, Struttura]) -> dict:
+    from routers.anticorruzione import _processo
+
+    elemento = dati_art35.scheda(p, strutture)
+    return {**_processo(p), "scheda_art35": elemento, "art35_mancanti": dati_art35.mancanti(elemento)}
+
+
+async def _gestione_diretta() -> None:
+    """Le modifiche dalla trasparenza valgono solo senza il modulo anticorruzione."""
+    if catalogo.con_iter(await db().get(Ente, ente_id())):
+        raise ErroreApi(HTTPStatus.CONFLICT, "Con il modulo anticorruzione i procedimenti si gestiscono nella mappatura, "
+                                             "con l'iter di approvazione del RPCT")  # fmt: skip
+
+
+async def _procedimento_dell_ente(procedimento_id: str) -> AcProcesso:
+    p = await db().get(AcProcesso, procedimento_id)
+    if p is None or p.ente_id != ente_id() or p.tipo != "PROCEDIMENTO":
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimento non trovato")
+    return p
+
+
+def _processo_in(dati: ProcedimentoIn, attuale: AcProcesso | None):
+    """Dati per le funzioni della mappatura: area, tempi e attori esterni restano quelli
+    attuali (li gestisce l'anticorruzione, se l'ente l'ha avuta)."""
+    from routers.anticorruzione import ProcessoIn
+
+    return ProcessoIn(tipo="PROCEDIMENTO", area_id=attuale.area_id if attuale else None,
+                      tempi=attuale.tempi if attuale else None,
+                      attori_esterni=attuale.attori_esterni if attuale else None,
+                      **dati.model_dump(exclude={"art35"}), art35=dati.art35)  # fmt: skip
+
+
+@bp.get("/procedimenti")
+@operatore
+async def procedimenti():
+    """Procedimenti dell'ente per codice, con i dati dell'art. 35 mancanti."""
+    strutture = await _strutture_ente()
+    righe = await db().scalars(select(AcProcesso).where(AcProcesso.ente_id == ente_id(), AcProcesso.tipo == "PROCEDIMENTO"))
+    return [_procedimento(p, strutture) for p in sorted(righe, key=lambda p: chiave_naturale(p.codice))]
+
+
+@bp.get("/procedimenti/<procedimento_id>")
+@operatore
+async def procedimento(procedimento_id: str):
+    return _procedimento(await _procedimento_dell_ente(procedimento_id), await _strutture_ente())
+
+
+@bp.post("/procedimenti")
+@operatore
+async def crea_procedimento():
+    """Nuovo procedimento (codice P.n assegnato dal sistema), solo senza l'anticorruzione."""
+    from routers.anticorruzione import _crea_processo
+
+    dati = corpo(ProcedimentoIn)
+    await _gestione_diretta()
+    sessione = db()
+    p = await _crea_processo(sessione, _processo_in(dati, None))
+    await sessione.flush()
+    audit(sessione, utente(), "ac_processo", p.id, "CREATO", {"codice": p.codice, "origine": "trasparenza"})
+    await sessione.commit()
+    await sessione.refresh(p)
+    return _procedimento(p, await _strutture_ente()), HTTPStatus.CREATED
+
+
+@bp.put("/procedimenti/<procedimento_id>")
+@operatore
+async def aggiorna_procedimento(procedimento_id: str):
+    from routers.anticorruzione import _modifica_processo
+
+    dati = corpo(ProcedimentoIn)
+    await _gestione_diretta()
+    sessione = db()
+    p = await _procedimento_dell_ente(procedimento_id)
+    await _modifica_processo(sessione, p, _processo_in(dati, p))
+    audit(sessione, utente(), "ac_processo", p.id, "AGGIORNATO", {"codice": p.codice, "origine": "trasparenza"})
+    await sessione.commit()
+    await sessione.refresh(p)
+    return _procedimento(p, await _strutture_ente())
+
+
+@bp.delete("/procedimenti/<procedimento_id>")
+@operatore
+async def elimina_procedimento(procedimento_id: str):
+    """Solo senza attività: un procedimento con attività, rischi e misure della mappatura
+    (dell'anticorruzione avuta in passato) non si elimina da qui."""
+    await _gestione_diretta()
+    sessione = db()
+    p = await _procedimento_dell_ente(procedimento_id)
+    if await sessione.scalar(select(AcAttivita.id).where(AcAttivita.processo_id == p.id).limit(1)):
+        raise ErroreApi(HTTPStatus.CONFLICT, "Il procedimento ha attività e rischi della mappatura dell'anticorruzione: "
+                                             "non si elimina dalla trasparenza")  # fmt: skip
+    audit(sessione, utente(), "ac_processo", p.id, "ELIMINATO", {"codice": p.codice, "origine": "trasparenza"})
+    await sessione.delete(p)
+    await sessione.commit()
+    return nessun_contenuto()
+
+
+@bp.post("/procedimenti/importazioni")
+@operatore
+async def importa_procedimenti():
+    """Lettura dei procedimenti dal sito o da documenti, come nella mappatura (solo senza
+    l'anticorruzione); il risultato si rivede con GET /<id> e si salva con le API qui sopra."""
+    from routers.anticorruzione import avvia_importazione_procedimenti
+
+    await _gestione_diretta()
+    return await avvia_importazione_procedimenti()
+
+
+@bp.get("/procedimenti/importazioni/<lavoro_id>")
+@operatore
+async def importazione_procedimenti(lavoro_id: str):
+    from routers.anticorruzione import stato_importazione_procedimenti
+
+    return await stato_importazione_procedimenti(lavoro_id)
+
+
+class PubblicazioneProcedimentiIn(BaseModel):
+    procedimenti_attiva: bool
+
+
+def _pubblicazione(e: Ente) -> dict:
+    return {"con_iter": catalogo.con_iter(e), "procedimenti_attiva": bool(e.procedimenti_pubblici),
+            "percorso_procedimenti": "/pubblico/procedimenti"}  # fmt: skip
+
+
+@bp.get("/procedimenti/pubblicazione")
+@operatore
+async def pubblicazione_procedimenti():
+    """Se i procedimenti si gestiscono con l'iter dell'anticorruzione e se la loro pagina
+    pubblica è accesa (la accende anche il RPCT)."""
+    return _pubblicazione(await db().get(Ente, ente_id()))
+
+
+@bp.put("/procedimenti/pubblicazione")
+@operatore
+async def aggiorna_pubblicazione_procedimenti():
+    dati = corpo(PubblicazioneProcedimentiIn)
+    sessione = db()
+    e = await sessione.get(Ente, ente_id())
+    e.procedimenti_pubblici = dati.procedimenti_attiva
+    audit(sessione, utente(), "ente", e.id, "PROCEDIMENTI_PUBBLICI" if dati.procedimenti_attiva else "PROCEDIMENTI_RISERVATI")
+    await sessione.commit()
+    return _pubblicazione(e)

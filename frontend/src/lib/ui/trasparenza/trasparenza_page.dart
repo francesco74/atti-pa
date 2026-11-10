@@ -10,12 +10,14 @@ import 'servizio.dart';
 import 'tabs/ai_analysis_tab.dart';
 import 'tabs/analisi_avviate_tab.dart';
 import 'tabs/pdf_generator_tab.dart';
+import 'tabs/procedimenti_tab.dart';
 import 'tabs/result_tab.dart';
 
 /// Modulo trasparenza: analisi con l'IA delle pubblicazioni di
 /// Amministrazione Trasparente, schede generate dagli schemi ANAC, risultati con l'editor,
 /// l'archivio dei documenti e il verbale di validazione. Le analisi avviate girano in
-/// background e si seguono nella loro scheda.
+/// background e si seguono nella loro scheda. I procedimenti (art. 35) sono il catalogo
+/// condiviso con l'anticorruzione: senza quel modulo si gestiscono qui.
 class TrasparenzaPage extends StatefulWidget {
   const TrasparenzaPage({super.key});
 
@@ -36,7 +38,7 @@ class _TrasparenzaPageState extends State<TrasparenzaPage> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _schede = TabController(length: 4, vsync: this);
+    _schede = TabController(length: 5, vsync: this);
     _coda = CodaAnalisi(ServizioTrasparenza(apiDi(context)))
       ..suConclusa = _analisiConclusa
       ..aggiorna();
@@ -146,6 +148,7 @@ class _TrasparenzaPageState extends State<TrasparenzaPage> with SingleTickerProv
               const Scheda(Icon(Icons.article_outlined), 'Schede'),
               Scheda(_iconaRisultati(), 'Risultati'),
               Scheda(_iconaAvviate(), 'Analisi avviate'),
+              const Scheda(Icon(Icons.assignment_outlined), 'Procedimenti'),
             ],
           ),
         ),
@@ -173,6 +176,7 @@ class _TrasparenzaPageState extends State<TrasparenzaPage> with SingleTickerProv
               onApriScheda: _vaiA,
             ),
             const AnalisiAvviateTab(),
+            const ProcedimentiTab(),
           ],
         ),
       ),

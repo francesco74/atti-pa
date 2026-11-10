@@ -162,12 +162,23 @@ class RicercaTesto {
   /// L'elemento è stato trovato solo per significato (nessuna parola in comune).
   bool soloSignificato(String id) => _soloSignificato[id] ?? false;
 
-  /// Gli elementi di [elenco] trovati, in ordine di pertinenza.
-  List<Map<String, dynamic>> filtra(List<Map<String, dynamic>> elenco) {
+  /// Rifà la ricerca con lo stesso testo, quando cambia l'insieme in cui si cerca (es. il
+  /// livello dell'elenco della mappatura).
+  void rilancia() {
+    final t = _testo;
+    if (t.isEmpty) return;
+    _testo = '';
+    cambia(t);
+  }
+
+  /// Gli elementi di [elenco] trovati, in ordine di pertinenza. Finché il server non risponde
+  /// vale il filtro locale su [testoLocale] (predefinito: codice e denominazione).
+  List<Map<String, dynamic>> filtra(List<Map<String, dynamic>> elenco, {String Function(Map<String, dynamic>)? testoLocale}) {
     final ordine = _ordine;
     if (ordine == null) {
       final cerca = _testo.toLowerCase();
-      return elenco.where((p) => '${p['codice']} ${p['denominazione']}'.toLowerCase().contains(cerca)).toList();
+      final testo = testoLocale ?? (p) => '${p['codice']} ${p['denominazione']}';
+      return elenco.where((p) => testo(p).toLowerCase().contains(cerca)).toList();
     }
     final perId = {for (final p in elenco) p['id']: p};
     return [for (final id in ordine) ?perId[id]];

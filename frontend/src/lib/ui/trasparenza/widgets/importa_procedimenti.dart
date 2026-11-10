@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../api/api_client.dart';
 import '../../comuni.dart' show Caricamento;
 
-/// Scelta dei procedimenti della mappatura dell'anticorruzione da importare nella scheda
+/// Scelta dei procedimenti del catalogo (mappatura dell'anticorruzione o procedimenti della
+/// trasparenza) da importare nella scheda
 /// art. 35 (GET /api/v1/trasparenza/procedimenti-mappatura): restituisce gli elementi nel
 /// formato dello schema, già compilati con i recapiti degli uffici; si possono poi modificare.
 Future<List<Map<String, dynamic>>?> scegliProcedimenti(BuildContext context, ApiClient api) {
@@ -40,12 +41,13 @@ class _SceltaState extends State<_Scelta> {
           final cerca = _testo.text.trim().toLowerCase();
           final visibili = tutti.where((p) => '${p['codice']} ${p['denominazione']} ${p['struttura'] ?? ''}'.toLowerCase().contains(cerca)).toList();
           return AlertDialog(
-            title: const Text('Importa dalla mappatura dei procedimenti'),
+            title: const Text('Importa dai procedimenti dell\'ente'),
             content: SizedBox(
               width: 680,
               height: 480,
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Text('I dati arrivano dai procedimenti della mappatura dell\'anticorruzione, con i recapiti degli uffici '
+                const Text('I dati arrivano dai procedimenti dell\'ente (scheda Procedimenti o mappatura dell\'anticorruzione), '
+                    'con i recapiti degli uffici '
                     'presi dalle strutture; dopo l\'importazione si possono modificare nella scheda.'),
                 const SizedBox(height: 8),
                 TextField(
@@ -58,7 +60,7 @@ class _SceltaState extends State<_Scelta> {
                   child: Caricamento<List<Map<String, dynamic>>>(
                     future: widget.elenco,
                     builder: (context, _) => tutti.isEmpty
-                        ? const Center(child: Text('Nessun procedimento nella mappatura.'))
+                        ? const Center(child: Text('Nessun procedimento: si inseriscono nella scheda Procedimenti.'))
                         : ListView(children: [
                             for (final p in visibili)
                               CheckboxListTile(

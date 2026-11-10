@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../stato/auth_state.dart';
 import '../../comuni.dart' show apiDi, mostraErrore, mostraMessaggio;
 import '../utils/data_formatter.dart';
 import '../widgets/importa_procedimenti.dart';
@@ -196,16 +194,10 @@ class SchemaFormState extends State<SchemaForm> {
     }
   }
 
-  /// Scheda art. 35, sezione dei procedimenti, con il modulo anticorruzione attivo: gli
-  /// elementi si possono importare dai procedimenti della mappatura (o inserire da zero).
-  bool _importaProcedimenti(Json sezione) {
-    if (widget.schema['id'] != 'ART_35' || sezione['id'] != 'PROCEDIMENTI') return false;
-    try {
-      return context.read<AuthState>().utente?.modulo('anticorruzione') ?? false;
-    } catch (_) {
-      return false; // senza stato dell'accesso (es. nei test del solo form)
-    }
-  }
+  /// Scheda art. 35, sezione dei procedimenti: gli elementi si possono importare dal catalogo
+  /// dei procedimenti (mappatura dell'anticorruzione o procedimenti della trasparenza), o
+  /// inserire da zero.
+  bool _importaProcedimenti(Json sezione) => widget.schema['id'] == 'ART_35' && sezione['id'] == 'PROCEDIMENTI';
 
   Future<void> _importa(List<Json> campi) async {
     try {

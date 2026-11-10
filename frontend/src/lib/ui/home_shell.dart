@@ -90,7 +90,8 @@ class _HomeShellState extends State<HomeShell> {
     final performance = u.modulo('performance'); // obiettivi del PIAO per struttura
     final assistente = u.modulo('assistente'); // chat con l'LLM, per tutti gli utenti dell'ente
     // ricerche registrate e feedback: oggi ci sono solo quelle della mappatura e dei procedimenti
-    final ricerche = anticorruzione && u.isAnalisiRicerche;
+    // (questi anche con la sola trasparenza)
+    final ricerche = (anticorruzione || trasparenza) && u.isAnalisiRicerche;
     return [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
       if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
