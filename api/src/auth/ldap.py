@@ -36,6 +36,7 @@ GRUPPI_PREDEFINITI = {
     Ruolo.ANTICORRUZIONE_REFERENTE: "ATTI-PA-Anticorruzione-Referenti",
     Ruolo.ANTICORRUZIONE_RPCT: "ATTI-PA-Anticorruzione-RPCT",
     Ruolo.PERFORMANCE_RESPONSABILE: "ATTI-PA-Performance-Responsabili",
+    Ruolo.PERFORMANCE_APPROVATORE: "ATTI-PA-Performance-Approvatori",
     Ruolo.PERFORMANCE_AMMINISTRATORE: "ATTI-PA-Performance-Amministratori",
     Ruolo.ANALISI_RICERCHE: "ATTI-PA-Analisi-Ricerche",
     Ruolo.ADMIN: "ATTI-PA-Admin",

@@ -12,6 +12,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Double,
     ForeignKey,
     Integer,
     LargeBinary,
@@ -49,9 +50,11 @@ class Ruolo:
     ANTICORRUZIONE_REFERENTE = "ANTICORRUZIONE_REFERENTE"
     ANTICORRUZIONE_RPCT = "ANTICORRUZIONE_RPCT"
     # modulo performance: il responsabile (dirigente di un servizio o responsabile di un
-    # ufficio) dichiara e aggiorna gli obiettivi della sua struttura; l'amministratore apre e
-    # chiude i PIAO e vede e corregge tutto
+    # ufficio) propone gli obiettivi della sua struttura e ne aggiorna l'avanzamento;
+    # l'approvatore decide le proposte e modifica direttamente; l'amministratore apre e chiude
+    # i PIAO, vede tutto e propone come i responsabili
     PERFORMANCE_RESPONSABILE = "PERFORMANCE_RESPONSABILE"
+    PERFORMANCE_APPROVATORE = "PERFORMANCE_APPROVATORE"
     PERFORMANCE_AMMINISTRATORE = "PERFORMANCE_AMMINISTRATORE"
     # consulta le ricerche senza risposta e i feedback di cittadini e utenti (es. l'ufficio
     # statistica): non dipende da un modulo
@@ -59,7 +62,7 @@ class Ruolo:
     TUTTI = (
         REDATTORE, CONTROLLORE, GESTORE_MODELLI, TRASPARENZA,
         ANTICORRUZIONE_REFERENTE, ANTICORRUZIONE_RPCT,
-        PERFORMANCE_RESPONSABILE, PERFORMANCE_AMMINISTRATORE, ANALISI_RICERCHE, ADMIN,
+        PERFORMANCE_RESPONSABILE, PERFORMANCE_APPROVATORE, PERFORMANCE_AMMINISTRATORE, ANALISI_RICERCHE, ADMIN,
     )  # fmt: skip
 
 
@@ -881,6 +884,65 @@ class PfElemento(Base):
     scadenza: Mapped[date] = mapped_column(Date)
     ordine: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PfIndicatore(Base):
+    """Indicatore di un'azione o misura: cosa si misura e il valore da raggiungere (target),
+    con il valore rilevato. La definizione fa parte dell'obiettivo (iter di approvazione), il
+    rilevato è avanzamento. Con almeno un indicatore il completamento dell'azione o misura è la
+    media del loro raggiungimento (common/performance)."""
+
+    __tablename__ = "pf_indicatori"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    elemento_id: Mapped[str] = mapped_column(ForeignKey("pf_elementi.id", ondelete="CASCADE"), index=True)
+    descrizione: Mapped[str] = mapped_column(Text)
+    tipo: Mapped[str] = mapped_column(String(12))  # NUMERO, PERCENTUALE, SI_NO, DATA
+    unita: Mapped[str | None] = mapped_column(String(50))  # es. eventi, giorni
+    partenza: Mapped[float | None] = mapped_column(Double)
+    target: Mapped[float | None] = mapped_column(Double)
+    target_data: Mapped[date | None] = mapped_column(Date)
+    verso: Mapped[str] = mapped_column(String(12), default="CRESCENTE")  # DECRESCENTE: più basso è meglio
+    fonte: Mapped[str | None] = mapped_column(String(255))
+    rilevato: Mapped[float | None] = mapped_column(Double)  # sì/no: 1 o 0
+    rilevato_data: Mapped[date | None] = mapped_column(Date)
+    rilevato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    ordine: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PfProposta(Base):
+    """Proposta su un obiettivo: creazione, modifica o eliminazione. Creazione e modifica
+    portano la versione completa dell'obiettivo con le azioni e misure (`dati`, senza il
+    completamento, che si aggiorna a parte); la modifica e l'eliminazione anche l'obiettivo
+    com'era quando la proposta è nata (`prima`), per mostrare le differenze e accorgersi di
+    modifiche fatte nel frattempo. Una sola proposta aperta per obiettivo.
+
+    Stati: BOZZA (si prepara) -> INVIATA -> APPROVATA (applicata) | RESPINTA | RESTITUITA (si
+    corregge e si reinvia). L'inviata si ritira (torna in bozza); bozza e restituita si
+    scartano. L'eliminazione nasce già inviata."""
+
+    __tablename__ = "pf_proposte"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    piao_id: Mapped[str] = mapped_column(ForeignKey("pf_piao.id", ondelete="CASCADE"))
+    anno: Mapped[int] = mapped_column(Integer)
+    struttura_id: Mapped[str] = mapped_column(ForeignKey("strutture.id", ondelete="RESTRICT"))
+    obiettivo_id: Mapped[str | None] = mapped_column(String(36))  # creazione: assegnato all'approvazione
+    tipo: Mapped[str] = mapped_column(String(10))  # CREA, MODIFICA, ELIMINA
+    titolo: Mapped[str] = mapped_column(String(600))  # dell'obiettivo (con il codice), per gli elenchi
+    dati: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # versione proposta
+    prima: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # modifica, eliminazione: com'era
+    stato: Mapped[str] = mapped_column(String(20), default="BOZZA")
+    utente_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))  # chi l'ha inviata
+    nota: Mapped[str | None] = mapped_column(Text)  # di chi propone
+    motivazione: Mapped[str | None] = mapped_column(Text)  # dell'approvatore
+    deciso_da: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    inviata_il: Mapped[datetime | None] = mapped_column(DateTime)
+    decisa_il: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class PfModifica(Base):

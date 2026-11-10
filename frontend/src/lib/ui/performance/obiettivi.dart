@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import '../anticorruzione/comune.dart' show Percorso, IconaAzione;
 import '../comuni.dart';
 import 'comune.dart';
+import 'proposte.dart';
 
 /// Obiettivi di una struttura in un anno del PIAO, con il totale degli impegni e il
-/// completamento; aprendone uno, le sue azioni e misure e lo storico delle modifiche. Il
-/// responsabile modifica quelli della sua struttura, l'amministratore tutti.
+/// completamento, e i nuovi obiettivi proposti; aprendone uno, le sue azioni e misure e lo
+/// storico delle modifiche. Il responsabile propone (l'approvatore decide) e aggiorna
+/// l'avanzamento; l'approvatore modifica direttamente.
 class ObiettiviTab extends StatefulWidget {
   const ObiettiviTab({super.key});
 
@@ -50,21 +52,50 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
     });
   }
 
-  Future<void> _nuovo(int disponibile) async {
-    final v = await modificaObiettivo(context, disponibile: disponibile);
+  /// Nuovo obiettivo: diretto (approvatore) o proposta in bozza, da completare con le azioni
+  /// e misure e inviare.
+  Future<void> _nuovo(int disponibile, {required bool diretto}) async {
+    final v = await modificaObiettivo(context, disponibile: disponibile, nota: diretto);
     if (v == null || !mounted) return;
+    final posizione = {'piao_id': _piaoId, 'anno': _anno, 'struttura_id': _strutturaId};
     try {
-      final o = await apiDi(context).post('$apiPerformance/obiettivi', {
-        ...v,
-        'piao_id': _piaoId,
-        'anno': _anno,
-        'struttura_id': _strutturaId,
-      }) as Map<String, dynamic>;
-      if (mounted) setState(() => _obiettivoId = o['id'] as String);
+      if (diretto) {
+        final o = await apiDi(context).post('$apiPerformance/obiettivi', {...v, ...posizione}) as Map<String, dynamic>;
+        if (mounted) setState(() => _obiettivoId = o['id'] as String);
+        return;
+      }
+      final p = await apiDi(context).post('$apiPerformance/proposte', {'tipo': 'CREA', ...posizione, 'dati': v}) as Map<String, dynamic>;
+      if (!mounted) return;
+      await apriPropostaPf(context, p['id'] as String);
+      _carica();
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     }
   }
+
+  Widget _rigaProposta(Map<String, dynamic> p) => Card(
+        child: InkWell(
+          onTap: () async {
+            await apriPropostaPf(context, p['id'] as String);
+            _carica();
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(children: [
+              const Icon(Icons.add_box_outlined),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('${p['titolo']}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text('Nuovo obiettivo proposto · impegno ${p['impegno']}%'),
+                ]),
+              ),
+              StatoPropostaPf(p['stato']),
+            ]),
+          ),
+        ),
+      );
 
   Widget _filtri(DatiPerformance dati) {
     final piao = dati.piaoDi(_piaoId);
@@ -138,6 +169,9 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
                     if ((o['ritardi'] as int) > 0) Etichetta('${o['ritardi']} in ritardo', Colors.orange),
                     if (((o['avvisi'] as int?) ?? 0) > 0)
                       Etichetta(o['avvisi'] == 1 ? '1 avviso' : '${o['avvisi']} avvisi', Colors.deepOrange),
+                    if (o['proposta'] != null)
+                      Etichetta('${etichettaTipoProposta((o['proposta'] as Map)['tipo'])}: '
+                          '${(etichetteStatoProposta[(o['proposta'] as Map)['stato']] ?? '').toLowerCase()}', Colors.blue),
                   ]),
                 ]),
               ),
@@ -176,7 +210,9 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
       riprova: _carica,
       builder: (context, elenco) {
         final obiettivi = (elenco['obiettivi'] as List).cast<Map<String, dynamic>>();
+        final proposti = (elenco['proposte'] as List? ?? const []).cast<Map<String, dynamic>>();
         final totale = elenco['impegno_totale'] as int;
+        final aggiunta = elenco['aggiunta'] as String?;
         return ListView(padding: const EdgeInsets.all(16), children: [
           _filtri(dati),
           const SizedBox(height: 16),
@@ -186,23 +222,27 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
               const Text('Completamento della struttura: '),
               BarraCompletamento(elenco['completamento'] as num?),
             ]),
-            if (elenco['modificabile'] == true && totale < 100)
+            if (aggiunta != null && totale < 100)
               FilledButton.icon(
-                onPressed: () => _nuovo(100 - totale),
+                onPressed: () => _nuovo(100 - totale, diretto: aggiunta == 'DIRETTA'),
                 icon: const Icon(Icons.add),
-                label: const Text('Nuovo obiettivo'),
+                label: Text(aggiunta == 'DIRETTA' ? 'Nuovo obiettivo' : 'Proponi un nuovo obiettivo'),
               ),
           ]),
           const SizedBox(height: 16),
-          if (obiettivi.isEmpty) const Center(child: Text('Nessun obiettivo per la struttura in questo anno.')),
+          if (obiettivi.isEmpty && proposti.isEmpty) const Center(child: Text('Nessun obiettivo per la struttura in questo anno.')),
           for (final o in obiettivi) _riga(o),
+          for (final p in proposti) _rigaProposta(p),
         ]);
       },
     );
   }
 }
 
-/// Obiettivo con le azioni e le misure (impegno, completamento, scadenza) e lo storico.
+/// Obiettivo con le azioni e le misure (impegno, completamento, scadenza, indicatori con il
+/// valore rilevato) e lo storico.
+/// L'approvatore lo modifica direttamente; il responsabile propone modifiche ed eliminazione
+/// e aggiorna l'avanzamento.
 class VistaObiettivo extends StatefulWidget {
   const VistaObiettivo({super.key, required this.obiettivoId, required this.onChiuso});
 
@@ -297,6 +337,36 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         if (v != null && mounted) await apiDi(context).put('$apiPerformance/elementi/${x['id']}', v);
       });
 
+  Future<void> _avanzamento(Map<String, dynamic> x) => _esegui(() async {
+        final v = await aggiornaAvanzamento(context, x);
+        if (v != null && mounted) await apiDi(context).put('$apiPerformance/elementi/${x['id']}/avanzamento', v);
+      });
+
+  Future<void> _apriProposta(String id) async {
+    await apriPropostaPf(context, id);
+    if (mounted) _carica();
+  }
+
+  Future<void> _proponi(Map<String, dynamic> o, String tipo) async {
+    String? nota;
+    if (tipo == 'ELIMINA') {
+      nota = await chiediTesto(context, 'Proporre l\'eliminazione?',
+          etichetta: 'Motivo',
+          testo: 'Si invia all\'approvatore la proposta di eliminare l\'obiettivo con le sue azioni e misure.');
+      if (nota == null || !mounted) return;
+    }
+    try {
+      final p = await apiDi(context).post('$apiPerformance/proposte', {
+        'tipo': tipo,
+        'obiettivo_id': o['id'],
+        if (nota != null && nota.isNotEmpty) 'nota': nota,
+      }) as Map<String, dynamic>;
+      if (mounted) await _apriProposta(p['id'] as String);
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
   Future<void> _eliminaElemento(Map<String, dynamic> x) async {
     final nota = await confermaConNota(context, x['tipo'] == 'AZIONE' ? 'Eliminare l\'azione?' : 'Togliere la misura dall\'obiettivo?',
         'L\'eliminazione resta nello storico dell\'obiettivo.');
@@ -314,13 +384,19 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         child: Icon(misura ? Icons.shield_outlined : Icons.directions_run),
       ),
       title: Text(misura ? '${x['misura_codice']} - ${x['descrizione']}' : '${x['descrizione']}'),
-      subtitle: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        Text('Impegno ${x['impegno']}% · entro il ${formatData(x['scadenza'])}'),
-        if (ritardo) const Etichetta('In ritardo', Colors.orange),
-        if (misura && x['misura_id'] == null) const Etichetta('Misura non più nella mappatura', Colors.blueGrey),
+      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Text('Impegno ${x['impegno']}% · entro il ${formatData(x['scadenza'])}'),
+          if (ritardo) const Etichetta('In ritardo', Colors.orange),
+          if (misura && x['misura_id'] == null) const Etichetta('Misura non più nella mappatura', Colors.blueGrey),
+          if ((x['indicatori'] as List? ?? const []).isEmpty) const Etichetta('Senza indicatori', Colors.blueGrey),
+        ]),
+        ElencoIndicatori((x['indicatori'] as List? ?? const []).cast<Map<String, dynamic>>(), rilevati: true),
       ]),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         BarraCompletamento(x['completamento'] as num?, larghezza: 100),
+        // avanzamento (valori rilevati): anche per l'approvatore, che in più modifica ed elimina
+        if (o['avanzamento'] == true) IconaAzione(Icons.trending_up, 'Aggiorna l\'avanzamento', () => _avanzamento(x)),
         if (modificabile) ...[
           IconaAzione(Icons.edit_outlined, 'Modifica', () => _modificaElemento(o, x)),
           IconaAzione(Icons.delete_outline, 'Elimina', () => _eliminaElemento(x)),
@@ -338,6 +414,7 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
       builder: (context, o) {
         final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
         final modificabile = o['modificabile'] == true;
+        final proposta = (o['proposta'] as Map?)?.cast<String, dynamic>();
         final impegnoElementi = o['impegno_elementi'] as int;
         final titolo = o['codice'] == null ? '${o['titolo']}' : '${o['codice']} - ${o['titolo']}';
         return ListView(padding: const EdgeInsets.all(16), children: [
@@ -358,6 +435,19 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
                   onPressed: () => _elimina(o),
                 ),
               ],
+              if (o['proponibile'] == true) ...[
+                TextButton.icon(
+                  icon: const Icon(Icons.edit_note, size: 18),
+                  label: const Text('Proponi modifiche'),
+                  onPressed: () => _proponi(o, 'MODIFICA'),
+                ),
+                TextButton.icon(
+                  style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                  icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                  label: const Text('Proponi eliminazione'),
+                  onPressed: () => _proponi(o, 'ELIMINA'),
+                ),
+              ],
             ],
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${etichettaTipoObiettivo(o['tipo'])} · ${dati.struttura(o['struttura_id'])} · anno ${o['anno']} · '
@@ -367,6 +457,16 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
               Row(children: [const Text('Completamento: '), BarraCompletamento(o['completamento'] as num?, larghezza: 220)]),
               if ((o['piao'] as Map)['stato'] == 'CHIUSO')
                 const Padding(padding: EdgeInsets.only(top: 8), child: Etichetta('PIAO chiuso: sola lettura', Colors.blueGrey)),
+              if (proposta != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Icon(iconaProposta(proposta['tipo']), size: 18),
+                    Text('Proposta di ${etichettaTipoProposta(proposta['tipo']).toLowerCase()}:'),
+                    StatoPropostaPf(proposta['stato']),
+                    TextButton(onPressed: () => _apriProposta(proposta['id'] as String), child: const Text('Apri la proposta')),
+                  ]),
+                ),
             ]),
           ),
           Sezione(

@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import '../comuni.dart';
 import 'comune.dart';
 import 'obiettivi.dart';
+import 'proposte.dart';
 import '../relazioni/relazioni.dart';
 
 /// Modulo performance: obiettivi annuali delle strutture nel PIAO triennale, con azioni e
-/// misure; riepilogo per struttura; PIAO (solo l'amministratore della performance).
+/// misure; proposte sugli obiettivi (decise dall'approvatore); riepilogo per struttura; PIAO
+/// (solo l'amministratore della performance).
 class PerformancePage extends StatefulWidget {
   const PerformancePage({super.key});
 
@@ -30,6 +32,16 @@ class _PerformancePageState extends State<PerformancePage> {
         _versione++;
       });
 
+  /// Dopo una decisione: solo il contatore delle proposte da decidere (le schede restano).
+  Future<void> _aggiornaContatore(DatiPerformance dati) async {
+    try {
+      final c = await apiDi(context).get('$apiPerformance/contesto') as Map<String, dynamic>;
+      if (mounted) setState(() => dati.contesto['da_decidere'] = c['da_decidere']);
+    } catch (_) {
+      // il contatore si aggiorna alla prossima apertura
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Caricamento<DatiPerformance>(
@@ -38,10 +50,18 @@ class _PerformancePageState extends State<PerformancePage> {
       builder: (context, dati) => Provider<DatiPerformance>.value(
         value: dati,
         child: DefaultTabController(
-          length: dati.amministratore ? 4 : 2,
+          length: dati.amministratore ? 5 : 3,
           child: Column(children: [
             TabBar(isScrollable: true, tabs: [
               const Scheda(Icon(Icons.flag_outlined), 'Obiettivi'),
+              Scheda(
+                Badge(
+                  isLabelVisible: dati.daDecidere > 0,
+                  label: Text('${dati.daDecidere}'),
+                  child: const Icon(Icons.how_to_vote_outlined),
+                ),
+                'Proposte',
+              ),
               const Scheda(Icon(Icons.insights), 'Riepilogo'),
               if (dati.amministratore) const Scheda(Icon(Icons.calendar_month_outlined), 'PIAO'),
               if (dati.amministratore) const Scheda(Icon(Icons.summarize_outlined), 'Relazione'),
@@ -49,6 +69,7 @@ class _PerformancePageState extends State<PerformancePage> {
             Expanded(
               child: TabBarView(key: ValueKey(_versione), children: [
                 const ObiettiviTab(),
+                ProposteTab(onCambiato: dati.approvatore ? () => _aggiornaContatore(dati) : null),
                 const RiepilogoTab(),
                 if (dati.amministratore) PiaoTab(onCambiato: _carica),
                 if (dati.amministratore) const RelazioniTab(tipi: ['PERFORMANCE']),
@@ -62,7 +83,8 @@ class _PerformancePageState extends State<PerformancePage> {
 }
 
 /// Per ogni struttura visibile e anno: obiettivi, impegno totale, completamento, obiettivi
-/// con gli impegni di azioni e misure non a 100, ritardi.
+/// con gli impegni di azioni e misure non a 100, ritardi, azioni e misure senza indicatori,
+/// proposte da approvare.
 class RiepilogoTab extends StatefulWidget {
   const RiepilogoTab({super.key});
 
@@ -147,6 +169,8 @@ class _RiepilogoTabState extends State<RiepilogoTab> {
                   DataColumn(label: Text('Completamento')),
                   DataColumn(label: Text('Da completare'), numeric: true),
                   DataColumn(label: Text('In ritardo'), numeric: true),
+                  DataColumn(label: Text('Senza indicatori'), numeric: true),
+                  DataColumn(label: Text('Proposte da approvare'), numeric: true),
                 ], rows: [
                   for (final r in righe)
                     DataRow(cells: [
@@ -158,6 +182,8 @@ class _RiepilogoTabState extends State<RiepilogoTab> {
                       DataCell(BarraCompletamento(r['completamento'] as num?, larghezza: 120)),
                       DataCell(Text('${r['obiettivi_incompleti']}')),
                       DataCell(Text('${r['ritardi']}', style: TextStyle(color: (r['ritardi'] as int) > 0 ? Colors.orange.shade800 : null))),
+                      DataCell(Text('${r['senza_indicatori'] ?? 0}')),
+                      DataCell(Text('${r['proposte'] ?? 0}')),
                     ]),
                 ]),
               ),

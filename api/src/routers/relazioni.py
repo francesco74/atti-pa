@@ -5,7 +5,8 @@
 - PIAO: sottosezione "Rischi corruttivi e trasparenza" (mappatura per area, misure, rischi più
   gravi) - come sopra;
 - PERFORMANCE: relazione sulla performance di un anno del PIAO (obiettivi per struttura,
-  completamento, ritardi, misure anticorruzione collegate) - amministratore della performance.
+  completamento, ritardi, misure anticorruzione collegate, indicatori con target e valore
+  rilevato) - amministratore della performance.
 
 GET restituisce le sezioni con i dati e le tabelle calcolati; POST .../testo fa scrivere al
 modello il testo di una sezione dai soli suoi dati e segnala i numeri del testo che nei dati non
@@ -32,9 +33,10 @@ from common.anticorruzione.metodologia import chiave_naturale
 from common.documenti import DocumentiError
 from common.llm import LlmError, testo_prompt
 from common.models import (
-    AcAttivita, AcMisura, AcProcesso, AcProposta, AcRischio, Modulo, PfElemento, PfObiettivo, PfPiao, Ruolo, Struttura,
+    AcAttivita, AcMisura, AcProcesso, AcProposta, AcRischio, Modulo, PfElemento, PfIndicatore, PfObiettivo, PfPiao, Ruolo,
+    Struttura,
 )  # fmt: skip
-from common.performance import TOTALE, in_ritardo, media_pesata
+from common.performance import TOTALE, in_ritardo, media_pesata, raggiungimento, valore_indicatore
 from common.relazioni import Sezione, Tabella, html_relazione, numeri_da_verificare, percentuale
 
 bp = Blueprint("relazioni", __name__, url_prefix="/api/v1/relazioni")
@@ -234,7 +236,40 @@ async def _performance(piao_id: str | None, anno: int) -> list[Sezione]:
         Sezione("sintesi", "Sintesi dei risultati", sintesi, [tabella]),
         Sezione("obiettivi", "Obiettivi assegnati", {"anno": anno, "per_tipo": {k.lower(): v for k, v in per_tipo.items()},
                                                     "obiettivi": len(obiettivi)}, [elenco]),  # fmt: skip
+        await _indicatori(obiettivi, elementi, strutture),
     ]
+
+
+async def _indicatori(obiettivi: list[PfObiettivo], elementi: dict[str, list[PfElemento]], strutture: dict) -> Sezione:
+    """Indicatori delle azioni e misure: target, valore rilevato, raggiungimento."""
+    ids = [x.id for v in elementi.values() for x in v]
+    per_elemento: dict[str, list[PfIndicatore]] = {i: [] for i in ids}
+    if ids:
+        q = select(PfIndicatore).where(PfIndicatore.elemento_id.in_(ids)).order_by(PfIndicatore.ordine)
+        for i in await db().scalars(q):
+            per_elemento[i.elemento_id].append(i)
+    righe, valori = [], []
+    for o in sorted(obiettivi, key=lambda o: (chiave_naturale(strutture[o.struttura_id].codice if o.struttura_id in strutture else ""),
+                                              chiave_naturale(o.codice or ""), o.titolo)):  # fmt: skip
+        for x in sorted(elementi[o.id], key=lambda x: (x.scadenza, x.ordine)):
+            for i in per_elemento[x.id]:
+                d = {"tipo": i.tipo, "unita": i.unita, "partenza": i.partenza, "target": i.target, "target_data": i.target_data,
+                     "verso": i.verso, "rilevato": i.rilevato, "rilevato_data": i.rilevato_data}  # fmt: skip
+                target = valore_indicatore(d, i.target_data if i.tipo == "DATA" else 1 if i.tipo == "SI_NO" else i.target)
+                rilevato = valore_indicatore(d, i.rilevato_data if i.tipo == "DATA" else i.rilevato)
+                valore = raggiungimento(d)
+                valori.append(valore)
+                righe.append([strutture[o.struttura_id].codice if o.struttura_id in strutture else "—", o.codice or o.titolo,
+                              x.misura_codice or x.descrizione, i.descrizione, target, rilevato, valore])  # fmt: skip
+    dati = {
+        "indicatori": len(valori), "raggiunti_al_100": sum(v >= TOTALE for v in valori),
+        "non_rilevati": sum(r[5] == "—" for r in righe),
+        "raggiungimento_medio": round(sum(valori) / len(valori), 1) if valori else None,
+        "azioni_e_misure_senza_indicatori": sum(1 for x in ids if not per_elemento[x]),
+    }  # fmt: skip
+    tabella = Tabella("Indicatori", ["Struttura", "Obiettivo", "Azione o misura", "Indicatore", "Target", "Rilevato",
+                                     "Raggiungimento %"], righe)  # fmt: skip
+    return Sezione("indicatori", "Indicatori e risultati", dati, [tabella])
 
 
 # --- API -------------------------------------------------------------------------------------

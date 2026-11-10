@@ -1,5 +1,5 @@
 """Calcoli della performance: media pesata (provvisoria con impegni sotto 100), disponibile,
-ritardo.
+ritardo, raggiungimento degli indicatori e completamento che ne deriva.
     python -m unittest common.tests.test_performance
 """
 
@@ -8,7 +8,9 @@ from __future__ import annotations
 import unittest
 from datetime import date
 
-from common.performance import disponibile, in_ritardo, media_pesata
+from common.performance import (
+    completamento_indicatori, disponibile, errore_indicatore, in_ritardo, media_pesata, raggiungimento, testo_indicatore,
+)  # fmt: skip
 
 
 class Calcoli(unittest.TestCase):
@@ -28,6 +30,44 @@ class Calcoli(unittest.TestCase):
         self.assertTrue(in_ritardo(date(2026, 5, 31), 90, oggi))
         self.assertFalse(in_ritardo(date(2026, 5, 31), 100, oggi))
         self.assertFalse(in_ritardo(date(2026, 6, 1), 0, oggi))
+
+
+class Indicatori(unittest.TestCase):
+    def test_raggiungimento(self):
+        eventi = {"tipo": "NUMERO", "target": 3, "unita": "eventi"}
+        self.assertEqual(raggiungimento(eventi), 0.0)  # non rilevato
+        self.assertEqual(raggiungimento({**eventi, "rilevato": 2}), 66.7)
+        self.assertEqual(raggiungimento({**eventi, "rilevato": 5}), 100.0)  # oltre il target: 100
+        self.assertEqual(raggiungimento({**eventi, "partenza": 1, "rilevato": 2}), 50.0)
+        self.assertEqual(raggiungimento({**eventi, "partenza": 1, "rilevato": 0}), 0.0)  # peggiorato: 0
+        attese = {"tipo": "NUMERO", "partenza": 40, "target": 30, "verso": "DECRESCENTE"}
+        self.assertEqual(raggiungimento({**attese, "rilevato": 35}), 50.0)
+        self.assertEqual(raggiungimento({**attese, "rilevato": 25}), 100.0)
+        self.assertEqual(raggiungimento({**attese, "partenza": None, "rilevato": 60}), 50.0)  # target / rilevato
+        self.assertEqual(raggiungimento({"tipo": "SI_NO", "rilevato": 1}), 100.0)
+        self.assertEqual(raggiungimento({"tipo": "SI_NO", "rilevato": 0}), 0.0)
+        entro = {"tipo": "DATA", "target_data": "2026-06-30"}
+        self.assertEqual(raggiungimento({**entro, "rilevato_data": date(2026, 6, 30)}), 100.0)
+        self.assertEqual(raggiungimento({**entro, "rilevato_data": "2026-07-01"}), 0.0)  # in ritardo
+        self.assertEqual(raggiungimento(entro), 0.0)
+
+    def test_completamento(self):
+        self.assertIsNone(completamento_indicatori([]))  # si inserisce a mano
+        self.assertEqual(completamento_indicatori([{"tipo": "NUMERO", "target": 3, "rilevato": 2}]), 67)
+        self.assertEqual(completamento_indicatori([{"tipo": "NUMERO", "target": 4, "rilevato": 2}, {"tipo": "SI_NO", "rilevato": 1}]), 75)
+
+    def test_definizione(self):
+        self.assertIsNone(errore_indicatore({"tipo": "NUMERO", "target": 3}))
+        self.assertIn("target", errore_indicatore({"tipo": "NUMERO"}))
+        self.assertIsNotNone(errore_indicatore({"tipo": "NUMERO", "partenza": 3, "target": 3}))
+        self.assertIsNotNone(errore_indicatore({"tipo": "NUMERO", "partenza": 20, "target": 30, "verso": "DECRESCENTE"}))
+        self.assertIsNotNone(errore_indicatore({"tipo": "PERCENTUALE", "target": 101}))
+        self.assertIsNotNone(errore_indicatore({"tipo": "DATA"}))
+        self.assertIsNone(errore_indicatore({"tipo": "SI_NO"}))
+        self.assertEqual(testo_indicatore({"descrizione": "Eventi", "tipo": "NUMERO", "target": 3.0, "unita": "eventi"}), "Eventi: 3 eventi")
+        self.assertEqual(testo_indicatore({"descrizione": "Copertura", "tipo": "PERCENTUALE", "partenza": 50, "target": 72.5}),
+                         "Copertura: da 50% a 72,5%")  # fmt: skip
+        self.assertEqual(testo_indicatore({"descrizione": "Report", "tipo": "DATA", "target_data": "2026-06-30"}), "Report: entro il 30/06/2026")
 
 
 class Controlli(unittest.TestCase):

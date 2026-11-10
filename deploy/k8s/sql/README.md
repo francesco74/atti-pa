@@ -5,6 +5,8 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | File | Contenuto |
 |---|---|
 | `0001_schema.sql` | tutte le tabelle, la tipologia di atto "Determinazione dirigenziale" e la riga dei dati dell'ente |
+| `0002_proposte_performance.sql` | proposte sugli obiettivi della performance (iter di approvazione) |
+| `0003_indicatori_performance.sql` | indicatori delle azioni e misure degli obiettivi della performance |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

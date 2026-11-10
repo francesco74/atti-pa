@@ -56,7 +56,8 @@ class Utente {
   bool get isAnticorruzioneRpct => isAdmin || ruoli.contains('ANTICORRUZIONE_RPCT');
   bool get isAnticorruzione => isAnticorruzioneRpct || ruoli.contains('ANTICORRUZIONE_REFERENTE');
   bool get isPerformanceAmministratore => isAdmin || ruoli.contains('PERFORMANCE_AMMINISTRATORE');
-  bool get isPerformance => isPerformanceAmministratore || ruoli.contains('PERFORMANCE_RESPONSABILE');
+  bool get isPerformance =>
+      isPerformanceAmministratore || ruoli.contains('PERFORMANCE_RESPONSABILE') || ruoli.contains('PERFORMANCE_APPROVATORE');
   bool get isAnalisiRicerche => isAdmin || ruoli.contains('ANALISI_RICERCHE');
 }
 

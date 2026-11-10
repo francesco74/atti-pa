@@ -44,7 +44,7 @@ class PostaApi(unittest.TestCase):
             async with motore.begin() as c:
                 await c.run_sync(Base.metadata.create_all)
             async with AsyncSession(motore) as db:
-                ente = Ente(codice="lucca", nome="Comune di Lucca", dati_json={}, moduli_json=[Modulo.ANTICORRUZIONE])
+                ente = Ente(codice="lucca", nome="Comune di Lucca", dati_json={}, moduli_json=[Modulo.ANTICORRUZIONE, Modulo.PERFORMANCE])
                 db.add(ente)
                 await db.flush()
                 cls.ente_id = ente.id
@@ -59,6 +59,9 @@ class PostaApi(unittest.TestCase):
                     ("staff", [Ruolo.ANTICORRUZIONE_RPCT], "Staff@Lucca.example.it", None),
                     ("senzaemail", [Ruolo.ANTICORRUZIONE_RPCT], None, None),
                     ("referente", [Ruolo.ANTICORRUZIONE_REFERENTE], "referente@lucca.example.it", uo.id),
+                    ("approvatore", [Ruolo.PERFORMANCE_APPROVATORE], "approvatore@lucca.example.it", None),
+                    ("dirigente", [Ruolo.PERFORMANCE_RESPONSABILE], "dirigente@lucca.example.it", uo.id),
+                    ("amministratore", [Ruolo.PERFORMANCE_AMMINISTRATORE], "amm@lucca.example.it", None),
                 ]:
                     db.add(User(ente_id=ente.id, username=username, origine="LOCALE", email=email,
                                 struttura_id=struttura, nome_completo=username.title(),
@@ -204,6 +207,40 @@ class PostaApi(unittest.TestCase):
         self.assertEqual(asyncio.run(invia()), (1, 0))
         self.assertEqual(inviate, ["referente@lucca.example.it"])
         self._ok(admin.delete("/api/v1/ente/posta", base_url=ENTE), 204)
+
+    def test_notifiche_performance(self):
+        PF = "/api/v1/performance"
+        admin, appr, dirig = self._client("admin"), self._client("approvatore"), self._client("dirigente")
+        piao = self._ok(self._client("amministratore").post(f"{PF}/piao", base_url=ENTE, json={
+            "anno_inizio": 2026, "titolo": "PIAO 2026-2028"}), 201)  # fmt: skip
+        self._ok(admin.put("/api/v1/ente/posta", base_url=ENTE, json={
+            "host": "smtp.lucca.example.it", "mittente": "atti@lucca.example.it"}))  # fmt: skip
+        self._svuota()
+        pr = self._ok(dirig.post(f"{PF}/proposte", base_url=ENTE, json={
+            "tipo": "CREA", "piao_id": piao["id"], "anno": 2026, "nota": "Nuovo servizio",
+            "dati": {"titolo": "Sportello digitale", "codice": "OB7", "impegno": 50}}), 201)  # fmt: skip
+        self.assertEqual(self._notifiche(), [])  # la bozza non si notifica
+        self._ok(dirig.post(f"{PF}/proposte/{pr['id']}/invia", base_url=ENTE, json={}))
+        [(destinatario, oggetto, testo)] = self._notifiche()  # solo all'approvatore
+        self.assertEqual(destinatario, "approvatore@lucca.example.it")
+        self.assertEqual(oggetto, "[Performance] Nuova proposta da approvare: OB7 - Sportello digitale")
+        for atteso in ("Dirigente ha inviato una proposta", "Nuovo obiettivo: OB7 - Sportello digitale",
+                       "U.O. 2.1 - Personale", "PIAO 2026-2028, anno 2026", "Nuovo servizio", "https://lucca.example.it"):
+            self.assertIn(atteso, testo)
+        self._svuota()
+        self._ok(appr.post(f"{PF}/proposte/{pr['id']}/restituisci", base_url=ENTE, json={"motivazione": "Mancano le azioni"}))
+        [(destinatario, oggetto, testo)] = self._notifiche()
+        self.assertEqual((destinatario, oggetto), ("dirigente@lucca.example.it",
+                                                   "[Performance] Proposta restituita per una correzione: OB7 - Sportello digitale"))
+        self.assertIn("Mancano le azioni", testo)
+        self._svuota()
+        self._ok(dirig.post(f"{PF}/proposte/{pr['id']}/invia", base_url=ENTE, json={}))
+        self.assertIn("Proposta reinviata", self._notifiche()[0][1])
+        self._svuota()
+        self._ok(appr.post(f"{PF}/proposte/{pr['id']}/approva", base_url=ENTE, json={}))
+        self.assertEqual(self._notifiche()[0][:2], ("dirigente@lucca.example.it", "[Performance] Proposta approvata: OB7 - Sportello digitale"))
+        self._ok(admin.delete("/api/v1/ente/posta", base_url=ENTE), 204)
+        self._svuota()
 
 
 if __name__ == "__main__":

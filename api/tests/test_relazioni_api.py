@@ -74,7 +74,7 @@ class RelazioniApi(unittest.TestCase):
                 db.add(EnteDominio(dominio="lucca.example.it", ente_id=ente.id))
                 for username, ruoli, struttura in [
                     ("rpct", [Ruolo.ANTICORRUZIONE_RPCT], None), ("referente", [Ruolo.ANTICORRUZIONE_REFERENTE], uo.id),
-                    ("perf", [Ruolo.PERFORMANCE_AMMINISTRATORE], None), ("resp", [Ruolo.PERFORMANCE_RESPONSABILE], uo.id),
+                    ("perf", [Ruolo.PERFORMANCE_AMMINISTRATORE, Ruolo.PERFORMANCE_APPROVATORE], None), ("resp", [Ruolo.PERFORMANCE_RESPONSABILE], uo.id),
                 ]:  # fmt: skip
                     db.add(User(ente_id=ente.id, username=username, origine="LOCALE", struttura_id=struttura,
                                 password_hash=pw.calcola(PASSWORD), ruoli=ruoli))  # fmt: skip
@@ -158,14 +158,20 @@ class RelazioniApi(unittest.TestCase):
         self.assertEqual(perf.get(f"{API}/PERFORMANCE?anno=2026", base_url=ENTE).status_code, 422)  # senza PIAO
         o = self._ok(perf.post(f"{PF}/obiettivi", base_url=ENTE, json={
             "piao_id": piao["id"], "anno": 2026, "struttura_id": self.uo, "titolo": "Digitalizzare", "impegno": 100}), 201)  # fmt: skip
-        self._ok(perf.post(f"{PF}/obiettivi/{o['id']}/elementi", base_url=ENTE, json={
-            "tipo": "AZIONE", "descrizione": "Piattaforma", "impegno": 100, "completamento": 100,
-            "scadenza": str(date.today() + timedelta(days=5))}), 201)  # fmt: skip
+        x = self._ok(perf.post(f"{PF}/obiettivi/{o['id']}/elementi", base_url=ENTE, json={
+            "tipo": "AZIONE", "descrizione": "Piattaforma", "impegno": 100, "scadenza": str(date.today() + timedelta(days=5)),
+            "indicatori": [{"descrizione": "Servizi online", "tipo": "NUMERO", "unita": "servizi", "target": 4}]}), 201)  # fmt: skip
+        self._ok(perf.put(f"{PF}/elementi/{x['id']}/avanzamento", base_url=ENTE, json={
+            "indicatori": [{"id": x["indicatori"][0]["id"], "rilevato": 4}]}))  # fmt: skip
         rel = self._ok(perf.get(f"{API}/PERFORMANCE?anno=2026&piao_id={piao['id']}", base_url=ENTE))
         sintesi = rel["sezioni"][0]
         self.assertEqual((sintesi["dati"]["obiettivi"], sintesi["dati"]["obiettivi_completati_al_100"],
                           sintesi["dati"]["strutture_con_impegni_non_al_100"]), (1, 1, []))  # fmt: skip
         self.assertEqual(sintesi["tabelle"][0]["righe"], [["U.O. 2.1 - Personale", 1, 100, 100.0, 0]])
+        indicatori = rel["sezioni"][2]
+        self.assertEqual((indicatori["id"], indicatori["dati"]["indicatori"], indicatori["dati"]["raggiunti_al_100"]), ("indicatori", 1, 1))
+        self.assertEqual(indicatori["tabelle"][0]["righe"], [["U.O. 2.1", "Digitalizzare", "Piattaforma", "Servizi online",
+                                                               "4 servizi", "4 servizi", 100.0]])  # fmt: skip
         self.assertEqual(rel["sottotitolo"], "PIAO 2026-2028 - anno 2026")
 
 

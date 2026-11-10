@@ -26,7 +26,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from common import cifratura
-from common.models import Ente, NotificaEmail
+from common.models import Ente, EnteDominio, NotificaEmail
 
 log = logging.getLogger("common.posta")
 
@@ -118,6 +118,14 @@ def accoda(sessione: AsyncSession, ente: Ente, destinatari: Iterable[str | None]
         sessione.add(NotificaEmail(ente_id=ente.id, destinatario=d.strip(), oggetto=oggetto[:255], testo=testo,
                                    origine=origine, stato=DA_INVIARE))  # fmt: skip
     return len(visti)
+
+
+async def indirizzo_app(sessione: AsyncSession, ente: Ente) -> str | None:
+    """Indirizzo dell'app per l'ente (il suo primo dominio), per i link nelle email."""
+    dominio = await sessione.scalar(
+        select(EnteDominio.dominio).where(EnteDominio.ente_id == ente.id).order_by(EnteDominio.dominio).limit(1)
+    )
+    return f"https://{dominio}" if dominio else None
 
 
 Invio = Callable[[ConfigSmtp, str, str, str, str, float], None]
