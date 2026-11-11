@@ -53,7 +53,7 @@ def _password_iniziale() -> str:
     valore = get_settings().password_iniziale
     if not valore:
         raise ValueError("Manca PASSWORD_INIZIALE nella configurazione")
-    if errore := pw.controlla_nuova(valore):
+    if errore := pw.controlla_nuova(valore, [Ruolo.ADMIN]):  # è la password di admin
         raise ValueError(f"PASSWORD_INIZIALE non valida: {errore}")
     return valore
 

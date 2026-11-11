@@ -37,7 +37,7 @@ class ImportaProcedimentiPage extends StatefulWidget {
   State<ImportaProcedimentiPage> createState() => _ImportaProcedimentiPageState();
 }
 
-const _estensioni = ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods', 'csv'];
+const _estensioni = ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods', 'csv', 'xml', 'json'];
 
 /// Campi del procedimento (processo) e dati art. 35 di testo che si possono prendere dalla fonte.
 const _campiProcesso = {
@@ -98,8 +98,8 @@ enum _Fase { fonte, attesa, revisione, fatto }
 class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
   var _fase = _Fase.fonte;
   final _url = TextEditingController();
-  bool _seguiLink = true, _analizzaPdf = false;
-  int _maxLink = linkPredefiniti;
+  bool _seguiLink = true, _analizzaDocumenti = false;
+  int _maxLink = linkPredefiniti, _maxDocumenti = documentiPredefiniti;
   List<FileScelto> _files = [];
   String? _lavoroId, _errore;
   Timer? _attesa;
@@ -122,7 +122,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
     final api = apiDi(context);
     setState(() => _errore = null);
     try {
-      final opzioni = {'segui_link': _seguiLink, 'max_link': _maxLink, 'analizza_pdf': _analizzaPdf};
+      final opzioni = {'segui_link': _seguiLink, 'max_link': _maxLink, 'analizza_documenti': _analizzaDocumenti, 'max_documenti': _maxDocumenti};
       final r = _files.isEmpty
           ? await api.post(widget.apiImportazioni, {'url': _url.text.trim(), ...opzioni})
           : await api.postMultipartFiles(widget.apiImportazioni,
@@ -292,11 +292,12 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
               onSegui: _files.isEmpty ? (v) => setState(() => _seguiLink = v) : null,
               onNumero: (v) => setState(() => _maxLink = v),
             ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _analizzaPdf,
-              onChanged: _files.isEmpty ? (v) => setState(() => _analizzaPdf = v ?? false) : null,
-              title: const Text('Leggi anche i PDF collegati'),
+            SceltaLink.documenti(
+              titolo: 'Leggi anche i documenti collegati ($formatiDocumentiCollegati)',
+              segui: _analizzaDocumenti,
+              numero: _maxDocumenti,
+              onSegui: _files.isEmpty ? (v) => setState(() => _analizzaDocumenti = v) : null,
+              onNumero: (v) => setState(() => _maxDocumenti = v),
             ),
             const SizedBox(height: 8),
             Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [

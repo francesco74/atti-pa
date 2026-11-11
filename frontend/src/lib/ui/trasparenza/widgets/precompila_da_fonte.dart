@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../api/api_client.dart';
 import '../../../util/scelta_file.dart';
-import '../../comuni.dart' show SceltaLink, linkPredefiniti;
+import '../../comuni.dart' show SceltaLink, documentiPredefiniti, formatiDocumentiCollegati, linkPredefiniti;
 import '../servizio.dart';
 import 'selettore_schema.dart' show maiuscola;
 
@@ -23,7 +23,8 @@ class FontePrecompilazione {
   // Controllo (sezione) da precompilare; null per gli schemi con una sezione.
   final String? idControllo;
   final String url;
-  final bool analizzaPdf;
+  final bool analizzaDocumenti;
+  final int maxDocumenti;
   final bool seguiLink;
   final int maxLink;
   final List<DocumentoFonte> documenti;
@@ -31,7 +32,8 @@ class FontePrecompilazione {
   const FontePrecompilazione({
     this.idControllo,
     this.url = '',
-    this.analizzaPdf = false,
+    this.analizzaDocumenti = false,
+    this.maxDocumenti = documentiPredefiniti,
     this.seguiLink = false,
     this.maxLink = linkPredefiniti,
     this.documenti = const [],
@@ -78,7 +80,7 @@ Future<Map<String, dynamic>> estraiDaFonte(
     {
       'schema_id': idSchema,
       'variante': fonte.idControllo,
-      if (web) ...{'url': fonte.url, 'analizza_pdf': fonte.analizzaPdf, 'segui_link': fonte.seguiLink, 'max_link': fonte.maxLink},
+      if (web) ...{'url': fonte.url, 'analizza_documenti': fonte.analizzaDocumenti, 'max_documenti': fonte.maxDocumenti, 'segui_link': fonte.seguiLink, 'max_link': fonte.maxLink},
     },
     web ? const [] : [for (final d in fonte.documenti) (d.nome, d.bytes)],
   );
@@ -100,7 +102,8 @@ class _DialogoFonte extends StatefulWidget {
 class _DialogoFonteState extends State<_DialogoFonte> {
   final _urlController = TextEditingController();
   _Tipo _tipo = _Tipo.web;
-  bool _analizzaPdf = false;
+  bool _analizzaDocumenti = false;
+  int _maxDocumenti = documentiPredefiniti;
   bool _seguiLink = false;
   int _maxLink = linkPredefiniti;
   final List<DocumentoFonte> _documenti = [];
@@ -156,7 +159,8 @@ class _DialogoFonteState extends State<_DialogoFonte> {
       FontePrecompilazione(
         idControllo: _idControllo,
         url: _tipo == _Tipo.web ? _urlController.text.trim() : '',
-        analizzaPdf: _tipo == _Tipo.web && _analizzaPdf,
+        analizzaDocumenti: _tipo == _Tipo.web && _analizzaDocumenti,
+        maxDocumenti: _maxDocumenti,
         seguiLink: _tipo == _Tipo.web && _seguiLink,
         maxLink: _maxLink,
         documenti: _tipo == _Tipo.documenti ? List.of(_documenti) : const [],
@@ -239,14 +243,12 @@ class _DialogoFonteState extends State<_DialogoFonte> {
                           ),
                   ),
                 ),
-                CheckboxListTile(
-                  title: const Text(
-                    'Leggi anche i PDF collegati alla pagina (max 5)',
-                  ),
-                  value: _analizzaPdf,
-                  onChanged: (v) => setState(() => _analizzaPdf = v ?? false),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
+                SceltaLink.documenti(
+                  titolo: 'Leggi anche i documenti collegati alla pagina ($formatiDocumentiCollegati)',
+                  segui: _analizzaDocumenti,
+                  numero: _maxDocumenti,
+                  onSegui: (v) => setState(() => _analizzaDocumenti = v),
+                  onNumero: (v) => setState(() => _maxDocumenti = v),
                   dense: true,
                 ),
                 SceltaLink(
@@ -290,7 +292,7 @@ class _DialogoFonteState extends State<_DialogoFonte> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Formati ammessi: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV.',
+                  'Formati ammessi: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV, XML, JSON.',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
               ],

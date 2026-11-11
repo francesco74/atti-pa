@@ -116,6 +116,10 @@ class ServizioTrasparenza {
   /// Documento in PDF o DOCX (formato: "pdf" o "docx").
   Future<Uint8List> esporta(String html, String nome, String formato) =>
       api.postBytes('$_base/esporta', {'html': html, 'nome': nome, 'formato': formato});
+
+  /// Dati della scheda (quelli del form) in formato aperto: "json", "xml" o "csv".
+  Future<Uint8List> esportaDati(Map<String, dynamic> datiSchema, String formato) =>
+      api.postBytes('$_base/schede/esporta', datiSchema, query: {'formato': formato});
 }
 
 class LavoroNonRiuscito implements Exception {
@@ -128,4 +132,4 @@ class LavoroNonRiuscito implements Exception {
 }
 
 /// Formati dei documenti che si possono analizzare o da cui estrarre i dati.
-const estensioniAmmesse = ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods', 'csv'];
+const estensioniAmmesse = ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods', 'csv', 'xml', 'json'];

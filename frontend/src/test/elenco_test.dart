@@ -108,6 +108,10 @@ void main() {
     expect(find.text('1 processi e procedimenti su 3'), findsOneWidget);
     expect(find.text('Gare'), findsOneWidget);
     expect(find.text('Affidamenti diretti'), findsNothing);
+    // la tabella è alta quanto le righe filtrate, senza righe vuote in fondo
+    final tabella = tester.widget<PaginatedDataTable>(find.byType(PaginatedDataTable));
+    expect(tabella.rowsPerPage, 1);
+    expect(tabella.onRowsPerPageChanged, isNull);
     await tester.tap(find.text('Comprese le sottostrutture'));
     await tester.pumpAndSettle();
     expect(find.text('Nessun elemento con questi filtri.'), findsOneWidget);

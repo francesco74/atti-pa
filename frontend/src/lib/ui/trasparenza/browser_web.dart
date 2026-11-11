@@ -12,6 +12,8 @@ const _mime = {
   'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'ods': 'application/vnd.oasis.opendocument.spreadsheet',
   'csv': 'text/csv',
+  'xml': 'application/xml',
+  'json': 'application/json',
 };
 
 web.Blob _blob(Uint8List bytes, String nome) => web.Blob(

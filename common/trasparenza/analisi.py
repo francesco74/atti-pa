@@ -4,14 +4,16 @@ controllo scelto, chiamata all'LLM, report HTML composto dalla risposta JSON. Le
 (lavori della tabella trasparenza_lavori).
 
 I documenti arrivano all'LLM come testo: PDF e documenti di testo convertiti in Markdown dal
-converter, fogli di calcolo come tabelle, CSV come sono, pagine web come HTML del contenuto.
+converter, fogli di calcolo come tabelle, CSV come sono, XML e JSON compattati, pagine web come HTML del contenuto.
 """
 
 from __future__ import annotations
 
 import html as html_lib
+import json
 import logging
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
 from urllib.parse import urlparse
@@ -27,6 +29,22 @@ from .registro import genera_prompt, get_schema, trova_prompt
 from .sicurezza import sanifica_html
 
 log = logging.getLogger("common.trasparenza.analisi")
+
+_RE_TRA_TAG = re.compile(r">\s+<")
+
+
+def compatta(testo: str, estensione: str) -> str:
+    """XML senza gli spazi tra i tag e JSON senza indentazione: i file indentati arrivano presto
+    al limite di lunghezza. L'XML resta testo, non lo si interpreta (niente entità esterne); un
+    JSON non valido resta com'è."""
+    if estensione == "xml":
+        return _RE_TRA_TAG.sub("><", testo).strip()
+    if estensione == "json":
+        try:
+            return json.dumps(json.loads(testo), ensure_ascii=False, separators=(",", ":"))
+        except ValueError:
+            return testo.strip()
+    return testo
 
 ANALISI = "ANALISI"
 ESTRAZIONE = "ESTRAZIONE"
@@ -237,9 +255,10 @@ def _badge(testo: str, colore: str, classe: str = "") -> str:
     )
 
 
-def componi_report(r: ReportAnalisi, titolo: str, fonte: str) -> str:
+def componi_report(r: ReportAnalisi, titolo: str, fonte: str, non_letti: list[str] = ()) -> str:
     """Report HTML dell'analisi, con stili in linea (si modifica nell'editor e si esporta in
-    PDF o Word). L'esito di validazione sta nel badge con class="esito-validazione"."""
+    PDF o Word). L'esito di validazione sta nel badge con class="esito-validazione";
+    `non_letti`: documenti collegati alla pagina che non è stato possibile leggere."""
     e = html_lib.escape
     righe = "".join(
         "<tr>"
@@ -258,7 +277,14 @@ def componi_report(r: ReportAnalisi, titolo: str, fonte: str) -> str:
         f"<h2>Analisi di conformità: {e(titolo)}</h2>"
         f"<p><strong>Fonte:</strong> {e(fonte)}<br/>"
         f"<strong>Data dell'analisi:</strong> {datetime.now():%d/%m/%Y}</p>"
-        "<h3>1. Analisi descrittiva dei risultati</h3>"
+        + (
+            "<p><strong>Documenti collegati non letti</strong> (non considerati nell'analisi):</p><ul>"
+            + "".join(f"<li>{e(x)}</li>" for x in non_letti)
+            + "</ul>"
+            if non_letti
+            else ""
+        )
+        + "<h3>1. Analisi descrittiva dei risultati</h3>"
         + "".join(f"<p>{e(paragrafo)}</p>" for paragrafo in r.analisi if paragrafo.strip())
         + "<h3>2. Sintesi tecnica, Open Data ed esito di validazione</h3>"
         f"<p><strong>Esito globale:</strong> {_badge(r.esito_globale, _COLORI_GLOBALE[r.esito_globale])}</p>"
@@ -281,7 +307,7 @@ def componi_report(r: ReportAnalisi, titolo: str, fonte: str) -> str:
 async def testo_file(f: File, documenti) -> str:
     """Testo di un file per l'LLM (`documenti`: client del converter)."""
     if f.estensione in fonti.TESTI:
-        return testo_semplice(f.contenuto)
+        return compatta(testo_semplice(f.contenuto), f.estensione)
     if f.estensione in fonti.FOGLI:
         # numeri con il formato interno: le verifiche controllano come il dato è presentato
         # (registro.REGOLA_NUMERI_FOGLI_DI_CALCOLO)
@@ -309,6 +335,7 @@ class Contenuti:
     estensione: str = ""  # del file analizzato (livello Open Data)
     url: str = ""  # della pagina web analizzata
     fonte: str = ""  # per il report: URL o nomi dei file
+    non_letti: list[str] = field(default_factory=list)  # documenti collegati saltati, con il motivo
 
     @property
     def testo(self) -> str:
@@ -316,10 +343,18 @@ class Contenuti:
 
 
 async def contenuti(
-    url: str, files: list[File], documenti, *, analizza_pdf=False, segui_link=False, max_link=fonti.MAX_LINK, client=None
+    url: str,
+    files: list[File],
+    documenti,
+    *,
+    analizza_documenti=False,
+    max_documenti=fonti.MAX_DOCUMENTI,
+    segui_link=False,
+    max_link=fonti.MAX_LINK,
+    client=None,
 ) -> Contenuti:
-    """Pagina web (con PDF e link collegati), documento indicato da un URL o file caricati.
-    `client`: client HTTP da usare (nei test)."""
+    """Pagina web (con i documenti e i link collegati), documento indicato da un URL o file
+    caricati. `client`: client HTTP da usare (nei test)."""
     fonte = url
     if url:
         est = fonti.estensione(urlparse(url).path)
@@ -328,15 +363,21 @@ async def contenuti(
             files = [File(nome if fonti.estensione(nome) == est else f"documento.{est}", dati)]
         else:
             pagina = await fonti.pagina(
-                url, analizza_pdf=analizza_pdf, segui_link=segui_link, max_link=max_link, client=client
-            )
+                url, analizza_documenti=analizza_documenti, max_documenti=max_documenti,
+                segui_link=segui_link, max_link=max_link, client=client,
+            )  # fmt: skip
             parti = [_intestato(f"CONTENUTO DELLA PAGINA WEB ({url})", pagina.html)]
-            for nome, dati in pagina.pdf:
+            non_letti = list(pagina.non_letti)
+            for nome, dati in pagina.documenti:
                 try:
-                    parti.append(_intestato(f"DOCUMENTO PDF COLLEGATO: {nome}", await testo_file(File(nome, dati), documenti)))
-                except Exception as e:  # noqa: BLE001 - un allegato illeggibile non ferma l'analisi
-                    log.warning("PDF collegato %s non convertito: %s", nome, e)
-            return Contenuti(parti, url=url, fonte=fonte)
+                    parti.append(_intestato(f"DOCUMENTO COLLEGATO: {nome}", await testo_file(File(nome, dati), documenti)))
+                except AnalisiNonRiuscita as e:  # un allegato illeggibile non ferma l'analisi
+                    log.warning("Documento collegato %s non letto: %s", nome, e)
+                    non_letti.append(f"{nome}: {e}")
+                except Exception as e:  # noqa: BLE001 - es. converter non raggiungibile
+                    log.warning("Documento collegato %s non convertito: %s", nome, e)
+                    non_letti.append(f"{nome}: non convertito in testo")
+            return Contenuti(parti, url=url, fonte=fonte, non_letti=non_letti)
     if not files:
         raise AnalisiNonRiuscita("Indica una pagina web o carica dei documenti")
     fonte = fonte or ", ".join(f.nome for f in files)
@@ -374,7 +415,7 @@ async def analizza(controllo: str, c: Contenuti, contesto: Contesto, llm) -> dic
         raise AnalisiNonRiuscita(f"Il modello ha risposto in un formato non previsto: {e.error_count()} errori") from e
     schema, variante = trova_prompt(controllo)
     titolo = f"{schema.articolo[:1].upper()}{schema.articolo[1:]} - {variante.titolo if variante else schema.titolo}"
-    return {"html": componi_report(report, titolo, c.fonte or c.url)}
+    return {"html": componi_report(report, titolo, c.fonte or c.url, c.non_letti)}
 
 
 async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm, sezione_id: str = "") -> dict:
@@ -388,4 +429,7 @@ async def estrai_dati(schema_id: str, variante_id: str, c: Contenuti, llm, sezio
     async def genera(prompt: str, schema_risposta: dict) -> dict:
         return await llm.dati_json(SISTEMA_ESTRAZIONE, f"{prompt}\n\n{c.testo}", json_schema(schema_risposta))
 
-    return await estrai(schema, variante, genera, sezione_id)
+    risultato = await estrai(schema, variante, genera, sezione_id)
+    if c.non_letti:
+        risultato["avvisi"] = [*(f"Documento collegato non letto: {x}" for x in c.non_letti), *risultato.get("avvisi", [])]
+    return risultato

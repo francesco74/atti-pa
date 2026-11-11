@@ -1,5 +1,5 @@
-"""Contenuti da dare all'LLM per l'analisi o l'estrazione: pagine web (con i PDF collegati e
-alcuni link del contenuto). Fogli di calcolo e CSV li legge pa-common (analisi.testo_file),
+"""Contenuti da dare all'LLM per l'analisi o l'estrazione: pagine web (con i documenti collegati
+e alcuni link del contenuto). Fogli di calcolo, CSV, XML e JSON li legge pa-common (analisi.testo_file),
 PDF e documenti di testo li converte in Markdown il converter.
 Su httpx asincrono.
 """
@@ -10,30 +10,72 @@ import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
-from urllib.parse import urljoin, urlparse
+from email.message import Message
+from urllib.parse import unquote, urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
 
-from .rete import INTESTAZIONI, UrlNonConsentito, scarica, url_consentito, verifica_url
+from .rete import INTESTAZIONI, Scaricato, UrlNonConsentito, scarica, url_consentito, verifica_url
 
 log = logging.getLogger("common.trasparenza.fonti")
 
 DOCUMENTI = {"pdf", "doc", "docx", "odt"}  # testo in Markdown dal converter
 FOGLI = {"xls", "xlsx", "ods"}
-TESTI = {"csv"}
+TESTI = {"csv", "xml", "json"}  # testo semplice (XML e JSON compattati)
 ESTENSIONI = DOCUMENTI | FOGLI | TESTI
 
 MAX_LINK = 5  # link del contenuto seguiti in una pagina, se non indicato
 MAX_LINK_MASSIMO = 15  # limite al numero di link scelto dall'utente
-MAX_PDF = 5  # PDF collegati scaricati da una pagina
+MAX_DOCUMENTI = 5  # documenti collegati letti da una pagina, se non indicato
+MAX_DOCUMENTI_MASSIMO = 10  # limite al numero di documenti scelto dall'utente
 MAX_IFRAME = 3
-_RE_PDF = re.compile(r"\.pdf(\?.*)?$", re.IGNORECASE)
+# link senza estensione che potrebbero scaricare un documento (es. /download/123, allegato.php?id=)
+_RE_DOWNLOAD = re.compile(r"download|allegat|attachment|scarica|getfile", re.IGNORECASE)
+# formato dal Content-Type, quando né il nome né l'indirizzo hanno un'estensione ammessa
+_TIPI = {
+    "application/pdf": "pdf",
+    "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.oasis.opendocument.text": "odt",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.oasis.opendocument.spreadsheet": "ods",
+    "text/csv": "csv",
+    "application/xml": "xml",
+    "text/xml": "xml",
+    "application/json": "json",
+}
 _RUMORE = ("menu", "sidebar", "nav", "header", "footer", "topbar", "widget", "breadcrumb")
 
 
 def estensione(nome: str) -> str:
     return nome.rsplit(".", 1)[-1].lower() if "." in nome else ""
+
+
+def _estensione_url(indirizzo: str) -> str:
+    return estensione(urlparse(indirizzo).path)
+
+
+def _nome_disposizione(valore: str) -> str:
+    """Nome del file dal Content-Disposition (anche filename*=UTF-8''...), senza percorso."""
+    if not valore:
+        return ""
+    m = Message()
+    m["content-disposition"] = valore
+    return (m.get_filename() or "").replace("\\", "/").split("/")[-1].strip()
+
+
+def nome_documento(r: Scaricato) -> str | None:
+    """Nome con un'estensione ammessa per un file scaricato: dal Content-Disposition,
+    dall'indirizzo o dal Content-Type; None se non è un documento leggibile (es. una pagina)."""
+    if r.tipo == "text/html":
+        return None
+    nome = _nome_disposizione(r.disposizione) or unquote(urlparse(r.url).path.split("/")[-1])
+    if estensione(nome) in ESTENSIONI:
+        return nome
+    est = _TIPI.get(r.tipo)
+    return f"{nome or 'documento'}.{est}" if est else None
 
 
 # --- pagine web ------------------------------------------------------------------------------
@@ -42,7 +84,8 @@ def estensione(nome: str) -> str:
 @dataclass
 class Pagina:
     html: str  # contenuto della pagina, delle pagine collegate e degli iframe
-    pdf: list[tuple[str, bytes]] = field(default_factory=list)  # (nome, contenuto)
+    documenti: list[tuple[str, bytes]] = field(default_factory=list)  # (nome, contenuto)
+    non_letti: list[str] = field(default_factory=list)  # documenti collegati saltati, con il motivo
 
 
 def _contenuto(soup: BeautifulSoup) -> str:
@@ -53,6 +96,23 @@ def _contenuto(soup: BeautifulSoup) -> str:
         tag.decompose()
     body = soup.find("body")
     return str(body) if body else str(soup)
+
+
+def _link_a_documento(a, href: str) -> bool:
+    """Link che porta (o potrebbe portare) a un documento: estensione ammessa, oppure
+    attributo download o indirizzo da download, fuori dalla navigazione."""
+    if _estensione_url(href) in ESTENSIONI:
+        return True
+    return (a.has_attr("download") or bool(_RE_DOWNLOAD.search(href))) and not _link_di_navigazione(a)
+
+
+def _nome_unico(nome: str, usati: set[str]) -> str:
+    base, punto, est = nome.rpartition(".")
+    candidato, n = nome, 2
+    while candidato in usati:
+        candidato, n = f"{base}_{n}{punto}{est}", n + 1
+    usati.add(candidato)
+    return candidato
 
 
 def _link_di_navigazione(a) -> bool:
@@ -102,15 +162,18 @@ async def _rendering_js(url: str, timeout_ms: int = 20_000) -> str:
 async def pagina(
     url: str,
     *,
-    analizza_pdf: bool = False,
+    analizza_documenti: bool = False,
+    max_documenti: int = MAX_DOCUMENTI,
     segui_link: bool = False,
     max_link: int = MAX_LINK,
     client: httpx.AsyncClient | None = None,
 ) -> Pagina:
-    """Scarica la pagina; con `analizza_pdf` anche i PDF collegati (segnati nel testo con
+    """Scarica la pagina; con `analizza_documenti` anche fino a `max_documenti` documenti
+    collegati (al più MAX_DOCUMENTI_MASSIMO, nei formati ammessi; segnati nel testo con
     [FILE ALLEGATO: nome]), con `segui_link` fino a `max_link` pagine collegate dal contenuto
     (al più MAX_LINK_MASSIMO)."""
     max_link = max(1, min(max_link, MAX_LINK_MASSIMO))
+    max_documenti = max(1, min(max_documenti, MAX_DOCUMENTI_MASSIMO))
     await asyncio.to_thread(verifica_url, url)
     async with client or httpx.AsyncClient() as client:
         sorgente: str | bytes | None = None
@@ -130,23 +193,8 @@ async def pagina(
         risultato = Pagina(html="")
         correlate: list[str] = []
 
-        if analizza_pdf:
-            for i, a in enumerate(soup.find_all("a", href=_RE_PDF)[:MAX_PDF]):
-                indirizzo = urljoin(url, a.get("href"))
-                try:
-                    r = await scarica(client, indirizzo, timeout=10)
-                    if r.stato >= 400:
-                        raise ValueError(f"HTTP {r.stato}")
-                except (httpx.HTTPError, UrlNonConsentito, ValueError) as e:
-                    log.warning("PDF %s non scaricato: %s", indirizzo, e)
-                    continue
-                nome = indirizzo.split("/")[-1].split("?")[0] or f"documento_{i + 1}.pdf"
-                if not nome.lower().endswith(".pdf"):
-                    nome += ".pdf"
-                risultato.pdf.append((nome, r.contenuto))
-                segno = soup.new_tag("span")
-                segno.string = f" [FILE ALLEGATO: {nome}] "
-                a.insert_after(segno)
+        if analizza_documenti:
+            await _documenti_collegati(client, url, soup, max_documenti, risultato)
 
         if segui_link:
             visti = {url}
@@ -159,7 +207,7 @@ async def pagina(
                     or not href
                     or href.startswith("#")
                     or href.lower().startswith(("mailto:", "tel:", "javascript:"))
-                    or _RE_PDF.search(href)
+                    or _estensione_url(href) in ESTENSIONI
                 ):
                     continue
                 indirizzo = urljoin(url, href)
@@ -188,6 +236,48 @@ async def pagina(
                 log.debug("Iframe %s ignorato: %s", indirizzo, e)
         risultato.html = "\n\n".join(parti)
         return risultato
+
+
+async def _documenti_collegati(client, url: str, soup, massimo: int, risultato: Pagina) -> None:
+    """Scarica fino a `massimo` documenti linkati dalla pagina. I link con un'estensione
+    ammessa che non si leggono finiscono in `non_letti`; quelli solo "da download" che non
+    portano a un documento (es. una pagina) si ignorano. I tentativi sono limitati al doppio
+    del massimo, perché i link da download possono essere molti."""
+    visti: set[str] = set()
+    usati: set[str] = set()
+    tentativi = 0
+    for a in soup.find_all("a", href=True):
+        if len(risultato.documenti) >= massimo or tentativi >= 2 * massimo:
+            break
+        href = a.get("href").strip()
+        if not href or href.startswith("#") or not _link_a_documento(a, href):
+            continue
+        indirizzo = urljoin(url, href)
+        if indirizzo in visti:
+            continue
+        visti.add(indirizzo)
+        tentativi += 1
+        dichiarato = _estensione_url(indirizzo) in ESTENSIONI
+        etichetta = unquote(urlparse(indirizzo).path.split("/")[-1]) or indirizzo
+        try:
+            r = await scarica(client, indirizzo, timeout=10)
+            if r.stato >= 400:
+                raise ValueError(f"errore HTTP {r.stato}")
+        except (httpx.HTTPError, UrlNonConsentito, ValueError) as e:
+            log.warning("Documento %s non scaricato: %s", indirizzo, e)
+            if dichiarato:
+                risultato.non_letti.append(f"{etichetta}: non scaricato ({str(e) or type(e).__name__})")
+            continue
+        nome = nome_documento(r)
+        if nome is None:
+            if dichiarato:
+                risultato.non_letti.append(f"{etichetta}: il sito non ha restituito un documento")
+            continue
+        nome = _nome_unico(nome, usati)
+        risultato.documenti.append((nome, r.contenuto))
+        segno = soup.new_tag("span")
+        segno.string = f" [FILE ALLEGATO: {nome}] "
+        a.insert_after(segno)
 
 
 async def documento_da_url(url: str, client: httpx.AsyncClient | None = None) -> tuple[str, bytes]:

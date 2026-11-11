@@ -77,6 +77,7 @@ class Scaricato:
     stato: int
     tipo: str  # Content-Type senza parametri
     contenuto: bytes
+    disposizione: str = ""  # Content-Disposition (nome del file scaricato)
 
 
 def _ip_connesso(risposta: httpx.Response) -> str | None:
@@ -112,5 +113,6 @@ async def scarica(
                 if len(contenuto) > max_byte:
                     raise UrlNonConsentito(f"Risorsa oltre il limite di {max_byte} byte")
             tipo = risposta.headers.get("Content-Type", "").split(";")[0].strip().lower()
-            return Scaricato(attuale, risposta.status_code, tipo, bytes(contenuto))
+            disposizione = risposta.headers.get("Content-Disposition", "")
+            return Scaricato(attuale, risposta.status_code, tipo, bytes(contenuto), disposizione)
     raise UrlNonConsentito("Troppi redirect")

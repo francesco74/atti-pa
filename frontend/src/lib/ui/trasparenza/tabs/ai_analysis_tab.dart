@@ -52,7 +52,8 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
 
   _Sorgente _sorgente = _Sorgente.documenti;
   final List<SelectedFile> _selectedFiles = [];
-  bool _analyzePdfInUrl = false;
+  bool _analizzaDocumenti = false;
+  int _maxDocumenti = documentiPredefiniti;
   bool _followLink = false;
   int _maxLink = linkPredefiniti;
 
@@ -277,7 +278,8 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
       _adozioneNonNota = false;
       _schemaScelto = null;
       _varianteScelta = null;
-      _analyzePdfInUrl = false;
+      _analizzaDocumenti = false;
+      _maxDocumenti = documentiPredefiniti;
       _followLink = false;
       _maxLink = linkPredefiniti;
       _esito = null;
@@ -315,7 +317,8 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
       'data_adozione': data(_adozioneNonNota, _dataAdozione),
       if (web) ...{
         'url': _urlController.text.trim(),
-        'analizza_pdf': _analyzePdfInUrl,
+        'analizza_documenti': _analizzaDocumenti,
+        'max_documenti': _maxDocumenti,
         'segui_link': _followLink,
         'max_link': _maxLink,
       } else
@@ -473,12 +476,12 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
           ),
         ),
         const SizedBox(height: 8),
-        CheckboxListTile(
-          title: const Text('Analizza anche i PDF collegati alla pagina (max 5)'),
-          value: _analyzePdfInUrl,
-          onChanged: (v) => setState(() => _analyzePdfInUrl = v ?? false),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
+        SceltaLink.documenti(
+          titolo: 'Analizza anche i documenti collegati alla pagina ($formatiDocumentiCollegati)',
+          segui: _analizzaDocumenti,
+          numero: _maxDocumenti,
+          onSegui: (v) => setState(() => _analizzaDocumenti = v),
+          onNumero: (v) => setState(() => _maxDocumenti = v),
           dense: true,
         ),
         SceltaLink(
@@ -505,7 +508,7 @@ class _AiAnalysisTabState extends State<AiAnalysisTab>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Nessun documento selezionato.\nFormati ammessi: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV.',
+              'Nessun documento selezionato.\nFormati ammessi: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV, XML, JSON.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade700),
             ),

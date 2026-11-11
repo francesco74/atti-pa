@@ -139,8 +139,8 @@ class ApiClient {
   }
 
   /// POST JSON che restituisce un file (es. esportazione in PDF o DOCX).
-  Future<Uint8List> postBytes(String percorso, Object corpo) async {
-    final r = await _http.post(uri(percorso), headers: _intestazioni(), body: jsonEncode(corpo));
+  Future<Uint8List> postBytes(String percorso, Object corpo, {Map<String, String>? query}) async {
+    final r = await _http.post(uri(percorso, query), headers: _intestazioni(), body: jsonEncode(corpo));
     return _byte(r);
   }
 

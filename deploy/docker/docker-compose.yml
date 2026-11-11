@@ -8,9 +8,9 @@
 #   REGISTRY=francesco74 PREFISSO=atti-pa- deploy/immagini.sh VERSIONE
 # Aggiornamento: VERSIONE nel .env, poi docker compose pull && docker compose up -d
 #
-# Solo Caddy espone porte (80 e 443): fa da Ingress (/api all'API, il resto all'app) e
+# Caddy espone 80 e 443 e fa da Ingress (/api all'API, il resto all'app) e
 # ottiene i certificati Let's Encrypt per i domini degli enti (Caddyfile).
-# phpMyAdmin solo quando serve, raggiungibile dal server (tunnel SSH):
+# phpMyAdmin solo quando serve, sulla porta 8081 del server (senza Caddy):
 #   docker compose --profile strumenti up -d phpmyadmin
 #   docker compose stop phpmyadmin
 
@@ -219,16 +219,17 @@ services:
     depends_on:
       mysql: { condition: service_healthy }
 
-  # Consultazione del database, solo su richiesta e solo dal server:
-  #   ssh -L 8081:localhost:8081 utente@server   poi http://localhost:8081
+  # Consultazione del database, solo su richiesta: http://server:8081, indipendente da Caddy.
+  # Esposto su internet in chiaro (HTTP) mentre è avviato: fermarlo quando non serve.
   phpmyadmin:
     image: phpmyadmin:5.2
     <<: *log
+    restart: "no"
     profiles: [strumenti]
     environment:
       PMA_HOST: mysql
       UPLOAD_LIMIT: 64M
-    ports: ["127.0.0.1:8081:80"]
+    ports: ["8081:80"]
     depends_on:
       mysql: { condition: service_healthy }
 

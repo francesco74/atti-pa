@@ -367,7 +367,9 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
         azione: 'Salva',
         campi: [username, nome, email, password],
         controlla: () => nuovo
-            ? (username.text.trim().isEmpty ? 'Inserire il nome utente.' : erroreNuovaPassword(password.text))
+            ? (username.text.trim().isEmpty
+                ? 'Inserire il nome utente.'
+                : erroreNuovaPassword(password.text, amministratore: ruoli.contains('ADMIN')))
             : null,
         salva: salva,
         contenuto: (aggiorna) => [
@@ -395,8 +397,8 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
                 controller: password,
                 etichetta: 'Password iniziale',
                 aggiorna: aggiorna,
-                aiuto:
-                    'Almeno 10 caratteri, con lettere e numeri o simboli. '
+                amministratore: ruoli.contains('ADMIN'),
+                aiuto: '${aiutoPassword(amministratore: ruoli.contains('ADMIN'))}. '
                     'L\'utente la cambierà al primo accesso.',
               ),
             const SizedBox(height: 12),
@@ -433,6 +435,7 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
 
   Future<void> _reimpostaPassword(Map<String, dynamic> u) async {
     final password = TextEditingController();
+    final amministratore = (u['ruoli'] as List).contains('ADMIN');
     final api = apiDi(context);
     final ok = await showDialog<bool>(
       context: context,
@@ -440,15 +443,15 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
         titolo: 'Nuova password per ${u['username']}',
         azione: 'Imposta',
         campi: [password],
-        controlla: () => erroreNuovaPassword(password.text),
+        controlla: () => erroreNuovaPassword(password.text, amministratore: amministratore),
         salva: () => api.put('/api/v1/ente/utenti/${u['id']}/password', {'password': password.text}),
         contenuto: (aggiorna) => [
           _CampoPassword(
             controller: password,
             etichetta: 'Nuova password',
             aggiorna: aggiorna,
-            aiuto:
-                'Almeno 10 caratteri, con lettere e numeri o simboli. Le sessioni aperte '
+            amministratore: amministratore,
+            aiuto: '${aiutoPassword(amministratore: amministratore)}. Le sessioni aperte '
                 'dell\'utente si chiudono e al prossimo accesso dovrà sceglierne una propria.',
           ),
         ],
@@ -507,16 +510,6 @@ class _UtentiEntePageState extends State<UtentiEntePage> {
   }
 }
 
-/// Errore della nuova password con le stesse regole del server (auth/password.py), così lo
-/// si vede subito; il server resta il controllo definitivo.
-String? erroreNuovaPassword(String password) {
-  if (password.length < 10) return 'La password deve avere almeno 10 caratteri.';
-  if (RegExp(r'^\p{L}+$', unicode: true).hasMatch(password) || RegExp(r'^\d+$').hasMatch(password)) {
-    return 'La password deve contenere sia lettere sia numeri o simboli.';
-  }
-  return null;
-}
-
 /// Campo password che segnala il problema mentre si scrive (dopo il primo carattere).
 class _CampoPassword extends StatelessWidget {
   const _CampoPassword({
@@ -524,16 +517,19 @@ class _CampoPassword extends StatelessWidget {
     required this.etichetta,
     required this.aiuto,
     required this.aggiorna,
+    this.amministratore = false,
   });
 
   final TextEditingController controller;
   final String etichetta;
   final String aiuto;
   final void Function(VoidCallback) aggiorna;
+  final bool amministratore;
 
   @override
   Widget build(BuildContext context) {
-    final errore = controller.text.isEmpty ? null : erroreNuovaPassword(controller.text);
+    final errore =
+        controller.text.isEmpty ? null : erroreNuovaPassword(controller.text, amministratore: amministratore);
     return TextField(
       controller: controller,
       obscureText: true,

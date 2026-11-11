@@ -10,8 +10,16 @@ from __future__ import annotations
 import bcrypt
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from common.models import Ruolo
+
 METODO = "scrypt"
-LUNGHEZZA_MINIMA = 10
+# Lunghezza minima: più alta per chi amministra l'ente (ruolo ADMIN)
+LUNGHEZZA_MINIMA = 8
+LUNGHEZZA_MINIMA_ADMIN = 16
+
+
+def lunghezza_minima(ruoli) -> int:
+    return LUNGHEZZA_MINIMA_ADMIN if Ruolo.ADMIN in (ruoli or ()) else LUNGHEZZA_MINIMA
 
 
 def calcola(password: str) -> str:
@@ -39,10 +47,12 @@ def verifica(hash_salvato: str | None, password: str) -> tuple[bool, bool]:
     return ok, ok and not hash_salvato.startswith(f"{METODO}:")
 
 
-def controlla_nuova(password: str) -> str | None:
-    """Messaggio d'errore se la nuova password non è accettabile."""
-    if len(password) < LUNGHEZZA_MINIMA:
-        return f"La password deve avere almeno {LUNGHEZZA_MINIMA} caratteri"
+def controlla_nuova(password: str, ruoli) -> str | None:
+    """Messaggio d'errore se la nuova password non è accettabile per un utente con questi ruoli."""
+    minima = lunghezza_minima(ruoli)
+    if len(password) < minima:
+        chi = " per un amministratore" if minima == LUNGHEZZA_MINIMA_ADMIN else ""
+        return f"La password deve avere almeno {minima} caratteri{chi}"
     if password.isalpha() or password.isdigit():
         return "La password deve contenere sia lettere sia numeri o simboli"
     return None

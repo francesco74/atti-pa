@@ -29,7 +29,9 @@ sono UUID di 36 caratteri (`CHAR(36)`, in MySQL `UUID()`). Le chiavi esterne (`o
 Per ogni ufficio:
 
 1. Crea l'ente con il modulo trasparenza (e `redazione` se serve):
-   `python deploy/enti.py crea CODICE "Nome" DOMINIO --moduli trasparenza`.
+   `python enti.py crea CODICE "Nome" DOMINIO --moduli trasparenza`, nel container dell'API
+   (in Docker `docker compose exec api python enti.py ...`, in Kubernetes
+   `kubectl -n attipa exec deploy/api -- python enti.py ...`).
 2. Accedi come `admin` dal dominio dell'ente e cambia la password iniziale.
 3. In **Amministrazione → Profilo dell'ente**:
    - carica il logo, cioè il file indicato da `offices.logo`. Si trova in `static/sc` dentro
@@ -181,6 +183,30 @@ Ipotesi: il dump di PApuntozeroIA è importato in uno schema `papuntozero` sullo
 server MySQL di atti-pa, e i comandi si eseguono sul database di atti-pa. Adatta i nomi e
 prova prima su una copia.
 
+### Dump e import
+
+Prima un backup di atti-pa (`./backup.sh` in `deploy/docker`). Poi il dump delle tre tabelle,
+sul server di PApuntozeroIA (adatta il nome del servizio MySQL e le credenziali):
+
+```bash
+docker compose exec -T mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" trasparenza offices users user_documents' > papz.sql
+```
+
+Import in Docker, da `deploy/docker` di atti-pa:
+
+```bash
+MYSQL='docker compose exec -T mysql sh -c'
+$MYSQL 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE papuntozero"'
+$MYSQL 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" papuntozero' < papz.sql
+# console per gli script qui sotto
+docker compose exec mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" atti_pa'
+```
+
+In Kubernetes è lo stesso con `kubectl -n attipa exec -i mysql-0 -- sh -c '...'`
+(`-it` per la console).
+
+### Script
+
 ```sql
 -- Corrispondenza uffici → enti (una riga per ufficio, enti già creati con enti.py)
 CREATE TABLE papuntozero.mig_enti (office_id INT PRIMARY KEY, ente_id CHAR(36) NOT NULL);
@@ -276,7 +302,10 @@ verrebbero duplicati. Se qualcosa va storto, cancella e ripeti:
 - **Documenti:** in **Risultati** l'elenco mostra i documenti con le date originali. Una
   scheda si apre con il logo visibile e, se aveva i dati del form, "Modifica i dati della
   scheda" riapre il form compilato.
-- **Esportazione:** PDF e DOCX di una scheda e di un verbale contengono il logo.
+- **Esportazione:** PDF e DOCX di una scheda e di un verbale contengono il logo. Una scheda
+  con i dati del form si scarica anche in JSON, XML e CSV (gli schemi sono gli stessi di
+  PApuntozeroIA, quindi i dati passano la validazione); le schede senza `dati_schema` no.
 - **Amministratore:** l'admin dell'ente vede i documenti di tutti gli utenti.
 - **Analisi:** un'analisi di prova restituisce un report coerente con il tipo di ente (§3).
-- **Pulizia finale:** elimina lo schema `papuntozero`, o almeno le tabelle `mig_*`.
+- **Pulizia finale:** elimina lo schema `papuntozero` (`DROP DATABASE papuntozero`), o almeno
+  le tabelle `mig_*`.

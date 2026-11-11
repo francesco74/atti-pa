@@ -542,9 +542,13 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
               sortColumnIndex: _colonna,
               sortAscending: _crescente,
               source: _Righe(righe, colonne, (x) => _apri(m, x)),
-              rowsPerPage: _righePerPagina,
+              // se le righe stanno in una pagina la tabella è alta quanto loro (niente righe
+              // vuote in fondo) e la scelta delle righe per pagina non serve
+              rowsPerPage: righe.length < _righePerPagina ? righe.length : _righePerPagina,
               availableRowsPerPage: const [25, 50, 100],
-              onRowsPerPageChanged: (n) => setState(() => _righePerPagina = n ?? _righePerPagina),
+              onRowsPerPageChanged: righe.length < _righePerPagina
+                  ? null
+                  : (n) => setState(() => _righePerPagina = n ?? _righePerPagina),
               showCheckboxColumn: false,
               dataRowMinHeight: 48,
               dataRowMaxHeight: 72,

@@ -607,6 +607,21 @@ class _ResultTabState extends State<ResultTab>
     );
   }
 
+  /// Dati della scheda in JSON, XML o CSV: quelli del form, senza i ritocchi fatti nell'editor.
+  Future<void> _scaricaDati(String formato) async {
+    final dati = _datiSchema;
+    if (dati == null) return;
+    final nome = '${_nomeFile()}.$formato';
+    final ok = await _esegui('Esportazione dei dati in ${formato.toUpperCase()}...', () async {
+      try {
+        scaricaBytes(await _servizio.esportaDati(dati, formato), nome);
+      } on Exception catch (e) {
+        throw _Errore('Esportazione non riuscita: ${e.toString().replaceFirst('Exception: ', '')}.');
+      }
+    });
+    if (ok) _avviso('Scaricato $nome');
+  }
+
   Future<void> _scarica(String formato) async {
     final contenuto = await _testoAttuale();
     if (contenuto.isEmpty) return;
@@ -1209,6 +1224,8 @@ class _ResultTabState extends State<ResultTab>
                   _modificaDati();
                 case 'copia':
                   _salva(comeNuovo: true);
+                case 'json' || 'xml' || 'csv':
+                  _scaricaDati(azione);
                 default:
                   _scarica(azione);
               }
@@ -1220,6 +1237,20 @@ class _ResultTabState extends State<ResultTab>
               ],
               _voceMenu('pdf', Icons.picture_as_pdf_outlined, 'Scarica PDF'),
               _voceMenu('docx', Icons.description_outlined, 'Scarica Word (.docx)'),
+              if (_datiSchema != null) ...[
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  enabled: false,
+                  height: 32,
+                  child: Text(
+                    'Dati della scheda, senza le modifiche fatte nell\'editor:',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+                _voceMenu('json', Icons.data_object, 'Scarica dati JSON'),
+                _voceMenu('xml', Icons.code, 'Scarica dati XML'),
+                _voceMenu('csv', Icons.table_chart_outlined, 'Scarica dati CSV'),
+              ],
               if (_docId != null) ...[
                 const PopupMenuDivider(),
                 _voceMenu('copia', Icons.copy_all_outlined, 'Salva come nuovo documento'),

@@ -295,8 +295,16 @@ class ElencoControlli extends StatelessWidget {
 const linkPredefiniti = 5;
 const linkMassimi = 15;
 
+/// Documenti collegati alla pagina da leggere (default e limite del server).
+const documentiPredefiniti = 5;
+const documentiMassimi = 10;
+
+/// Formati dei documenti collegati che si leggono, per le etichette.
+const formatiDocumentiCollegati = 'PDF, Word, OpenDocument, fogli di calcolo, CSV, XML, JSON';
+
 /// Casella "segui i link" con il numero massimo di pagine collegate da leggere (5-15): più
-/// link rendono la lettura più completa ma più lunga.
+/// link rendono la lettura più completa ma più lunga. Con [minimo], [massimo] e [unita] vale
+/// anche per i documenti collegati ([SceltaLink.documenti]).
 class SceltaLink extends StatelessWidget {
   const SceltaLink({
     super.key,
@@ -306,7 +314,23 @@ class SceltaLink extends StatelessWidget {
     required this.onSegui,
     required this.onNumero,
     this.dense = false,
+    this.minimo = linkPredefiniti,
+    this.massimo = linkMassimi,
+    this.unita = 'link',
   });
+
+  /// "Leggi anche i documenti collegati" con il numero massimo di documenti (5-10).
+  const SceltaLink.documenti({
+    super.key,
+    required this.titolo,
+    required this.segui,
+    required this.numero,
+    required this.onSegui,
+    required this.onNumero,
+    this.dense = false,
+  })  : minimo = documentiPredefiniti,
+        massimo = documentiMassimi,
+        unita = 'documenti';
 
   final String titolo;
   final bool segui;
@@ -314,6 +338,9 @@ class SceltaLink extends StatelessWidget {
   final ValueChanged<bool>? onSegui; // null: disabilitata
   final ValueChanged<int> onNumero;
   final bool dense;
+  final int minimo;
+  final int massimo;
+  final String unita;
 
   @override
   Widget build(BuildContext context) => CheckboxListTile(
@@ -327,7 +354,7 @@ class SceltaLink extends StatelessWidget {
           value: numero,
           underline: const SizedBox.shrink(),
           items: [
-            for (var n = linkPredefiniti; n <= linkMassimi; n++) DropdownMenuItem(value: n, child: Text('fino a $n link')),
+            for (var n = minimo; n <= massimo; n++) DropdownMenuItem(value: n, child: Text('fino a $n $unita')),
           ],
           onChanged: segui && onSegui != null ? (v) => onNumero(v ?? numero) : null,
         ),
@@ -369,4 +396,26 @@ class LinkSorgente extends StatelessWidget {
           : TextButton(onPressed: _apri, child: testo),
     );
   }
+}
+
+/// Lunghezza minima della password, come sul server (auth/password.py): più alta per gli
+/// amministratori dell'ente.
+int lunghezzaMinimaPassword({bool amministratore = false}) => amministratore ? 16 : 8;
+
+/// Testo d'aiuto dei campi password.
+String aiutoPassword({bool amministratore = false}) =>
+    'Almeno ${lunghezzaMinimaPassword(amministratore: amministratore)} caratteri'
+    '${amministratore ? ' (utente amministratore)' : ''}, con lettere e numeri o simboli';
+
+/// Errore della nuova password con le stesse regole del server (auth/password.py), così lo
+/// si vede subito; il server resta il controllo definitivo.
+String? erroreNuovaPassword(String password, {bool amministratore = false}) {
+  final minima = lunghezzaMinimaPassword(amministratore: amministratore);
+  if (password.length < minima) {
+    return 'La password deve avere almeno $minima caratteri${amministratore ? ' per un amministratore' : ''}.';
+  }
+  if (RegExp(r'^\p{L}+$', unicode: true).hasMatch(password) || RegExp(r'^\d+$').hasMatch(password)) {
+    return 'La password deve contenere sia lettere sia numeri o simboli.';
+  }
+  return null;
 }

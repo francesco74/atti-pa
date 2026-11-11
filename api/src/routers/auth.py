@@ -288,7 +288,7 @@ async def cambia_password():
     ok, _ = pw.verifica(user.password_hash, dati.attuale)
     if not ok:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Password attuale non corretta")
-    if errore := pw.controlla_nuova(dati.nuova):
+    if errore := pw.controlla_nuova(dati.nuova, user.ruoli):
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, errore)
     if dati.nuova == dati.attuale:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "La nuova password deve essere diversa")

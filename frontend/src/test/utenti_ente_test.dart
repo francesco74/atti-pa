@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:atti_pa/api/api_client.dart';
 import 'package:atti_pa/ui/admin/ente_accesso.dart';
+import 'package:atti_pa/ui/comuni.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +19,11 @@ void main() {
     expect(erroreNuovaPassword('corta1'), isNotNull);
     expect(erroreNuovaPassword('sololettere'), isNotNull);
     expect(erroreNuovaPassword('1234567890'), isNotNull);
-    expect(erroreNuovaPassword('lettere-e-1'), isNull);
+    expect(erroreNuovaPassword('lettere1'), isNull); // 8 caratteri bastano a un utente
+    // un amministratore ne vuole 16
+    expect(erroreNuovaPassword('lettere-e-1', amministratore: true),
+        'La password deve avere almeno 16 caratteri per un amministratore.');
+    expect(erroreNuovaPassword('lettere-e-numeri-1', amministratore: true), isNull);
   });
 
   testWidgets('la finestra del nuovo utente non si chiude sugli errori', (tester) async {
@@ -49,7 +54,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Nome e cognome'), 'Mario Rossi');
     await tester.enterText(find.widgetWithText(TextField, 'Password iniziale'), 'corta1');
     await tester.pump();
-    expect(find.text('La password deve avere almeno 10 caratteri.'), findsOneWidget); // subito, sotto il campo
+    expect(find.text('La password deve avere almeno 8 caratteri.'), findsOneWidget); // subito, sotto il campo
 
     await tester.tap(find.text('Salva'));
     await tester.pumpAndSettle();

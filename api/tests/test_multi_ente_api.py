@@ -310,6 +310,41 @@ class MultiEnte(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self._login(A, "nuovo", "Scelta-da-me-3", atteso=403)  # utente disattivato
 
+    def test_lunghezza_minima_della_password(self):
+        """8 caratteri per gli utenti, 16 per gli amministratori (ruolo ADMIN)."""
+        c, _ = self._login(A, "admin")
+
+        def crea(username, ruoli, password):
+            return c.post("/api/v1/ente/utenti", base_url=A, json={
+                "username": username, "nome_completo": username, "ruoli": ruoli, "password": password,
+            })  # fmt: skip
+
+        self.assertEqual(crea("corto", ["CONTROLLORE"], "abc-123").status_code, 422)  # 7
+        r = crea("utente8", ["CONTROLLORE"], "abcd-123")  # 8: basta a un utente
+        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
+        utente8 = r.get_json()
+        r = crea("admin2", ["ADMIN"], "Lunga-dieci-1")  # 13: non basta a un amministratore
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("16 caratteri", r.get_json()["detail"])
+        self.assertEqual(crea("admin2", ["ADMIN"], "Lunga-sedici-12!").status_code, 201)
+
+        # l'utente sceglie la sua: per lui ne bastano 8
+        u, _ = self._login(A, "utente8", "abcd-123")
+        self._cambia(u, A, "abcd-123", "efgh-456")
+
+        # promosso amministratore: la password può essere corta, al prossimo accesso la cambia
+        r = c.put(f"/api/v1/ente/utenti/{utente8['id']}", base_url=A,
+                  json={"ruoli": ["CONTROLLORE", "ADMIN"], "attivo": True})  # fmt: skip
+        self.assertEqual(r.status_code, 200)
+        u, dati = self._login(A, "utente8", "efgh-456")
+        self.assertTrue(dati["utente"]["cambio_password"])
+        self._cambia(u, A, "efgh-456", "ijkl-789-mnop", atteso=422)  # 13: troppo corta ora
+        self._cambia(u, A, "efgh-456", "Ora-sono-admin-1234")
+
+        # reimpostata dall'amministratore: vale il minimo dei ruoli dell'utente
+        r = c.put(f"/api/v1/ente/utenti/{utente8['id']}/password", base_url=A, json={"password": "abcd-1234"})
+        self.assertEqual(r.status_code, 422)
+
     def test_strutture_organizzative(self):
         import io
 

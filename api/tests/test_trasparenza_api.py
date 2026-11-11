@@ -128,6 +128,24 @@ class TrasparenzaApi(unittest.TestCase):
         r = c.post("/api/v1/trasparenza/schede", base_url=ENTE, json={"pdf_type": "ART_99"})
         self.assertEqual(r.status_code, 422)
 
+        # dati della scheda in formato aperto
+        r = c.post("/api/v1/trasparenza/schede/esporta?formato=json&nome=provvedimenti 2026", base_url=ENTE, json=DATI_SCHEDA)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('filename="provvedimenti-2026.json"', r.headers["Content-Disposition"])
+        aperti = r.get_json()
+        self.assertEqual((aperti["ente"], aperti["elementi"][0]["data"]), ("Provincia di Prova", "2026-03-10"))
+        r = c.post("/api/v1/trasparenza/schede/esporta?formato=xml", base_url=ENTE, json=DATI_SCHEDA)
+        self.assertEqual((r.status_code, r.mimetype), (200, "application/xml"))
+        self.assertIn(b"<oggetto>Affidamento &lt;b&gt;servizio&lt;/b&gt;</oggetto>", r.data)
+        self.assertIn('filename="art_23.xml"', r.headers["Content-Disposition"])
+        r = c.post("/api/v1/trasparenza/schede/esporta?formato=csv", base_url=ENTE, json=DATI_SCHEDA)
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.data.decode("utf-8-sig").startswith("Data,Numero,Denominazione"))
+        self.assertEqual(c.post("/api/v1/trasparenza/schede/esporta?formato=pdf", base_url=ENTE,
+                                json=DATI_SCHEDA).status_code, 422)  # fmt: skip
+        self.assertEqual(c.post("/api/v1/trasparenza/schede/esporta?formato=json", base_url=ENTE,
+                                json=sbagliati).status_code, 422)  # fmt: skip
+
     def test_documenti_privati_e_amministratore(self):
         op, collega, admin = self._client("operatore"), self._client("collega"), self._client("admin")
         report = self._ok(op.post("/api/v1/trasparenza/documenti", base_url=ENTE,

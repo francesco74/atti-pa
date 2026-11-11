@@ -78,8 +78,9 @@ class LavoriTrasparenza:
         r = lavoro.richiesta
         contenuti = await analisi.contenuti(
             r.get("url") or "", await self._file(r), self.documenti,
-            analizza_pdf=bool(r.get("analizza_pdf")), segui_link=bool(r.get("segui_link")),
-            max_link=int(r.get("max_link") or fonti.MAX_LINK),
+            analizza_documenti=bool(r.get("analizza_documenti")),
+            max_documenti=int(r.get("max_documenti") or fonti.MAX_DOCUMENTI),
+            segui_link=bool(r.get("segui_link")), max_link=int(r.get("max_link") or fonti.MAX_LINK),
         )  # fmt: skip
         if lavoro.tipo == analisi.ANALISI:
             contesto = analisi.Contesto(

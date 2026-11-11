@@ -131,7 +131,9 @@ class _HomeShellState extends State<HomeShell> {
     final ripeti = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      // PointerInterceptor: la finestra può aprirsi sopra l'editor della trasparenza (un
+      // iframe), che altrimenti riceverebbe i clic
+      builder: (c) => PointerInterceptor(child: AlertDialog(
         title: const Text('Cambia la password'),
         content: SizedBox(
           width: 380,
@@ -140,9 +142,10 @@ class _HomeShellState extends State<HomeShell> {
             TextField(
               controller: nuova,
               obscureText: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Nuova password',
-                helperText: 'Almeno 10 caratteri, con lettere e numeri o simboli',
+                helperText: aiutoPassword(amministratore: widget.utente.isAdmin),
+                helperMaxLines: 2,
               ),
             ),
             TextField(controller: ripeti, obscureText: true, decoration: const InputDecoration(labelText: 'Ripeti la nuova password')),
@@ -152,7 +155,7 @@ class _HomeShellState extends State<HomeShell> {
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
           FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Cambia')),
         ],
-      ),
+      )),
     );
     final valori = (attuale.text, nuova.text, ripeti.text);
     attuale.dispose();
@@ -191,7 +194,8 @@ class _HomeShellState extends State<HomeShell> {
     String? scelta;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
+      // PointerInterceptor: come sopra, la finestra può aprirsi sopra l'editor della trasparenza
+      builder: (c) => PointerInterceptor(child: StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
         title: const Text('Il mio profilo'),
         content: SizedBox(
           width: 420,
@@ -251,7 +255,7 @@ class _HomeShellState extends State<HomeShell> {
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
           FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
         ],
-      )),
+      ))),
     );
     if (ok == true && mounted) {
       try {

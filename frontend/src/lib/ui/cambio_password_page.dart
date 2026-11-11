@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../stato/auth_state.dart';
+import 'comuni.dart';
 
 /// Primo accesso con una password iniziale (l'admin di un nuovo ente, o un utente a cui
 /// l'amministratore ha dato o reimpostato la password): prima di usare l'app va scelta una
@@ -84,10 +85,12 @@ class _CambioPasswordPageState extends State<CambioPasswordPage> {
                       TextFormField(
                         controller: _nuova,
                         obscureText: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Nuova password',
-                          helperText: 'Almeno 10 caratteri, con lettere e numeri o simboli',
-                          prefixIcon: Icon(Icons.lock),
+                          helperText: aiutoPassword(
+                              amministratore: context.read<AuthState>().utente?.isAdmin ?? false),
+                          helperMaxLines: 2,
+                          prefixIcon: const Icon(Icons.lock),
                         ),
                         validator: (v) => (v == null || v.isEmpty) ? 'Inserire la nuova password' : null,
                       ),

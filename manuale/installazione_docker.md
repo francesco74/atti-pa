@@ -11,7 +11,7 @@ raggiunge dal suo sottodominio, es. `provincia.attipa.papuntozero.it`.
 | worker, converter, converter-consumatore | verifiche, trasparenza, conversione dei documenti |
 | mysql, rabbitmq | database e code, solo all'interno |
 | normattiva-sync | aggiornamento delle norme ogni notte alle 03:30 |
-| phpmyadmin | solo su richiesta, solo dal server |
+| phpmyadmin | solo su richiesta, sulla porta 8081 del server |
 
 ## Certificati
 
@@ -127,13 +127,14 @@ Le immagini su Docker Hub sono pubbliche: contengono il codice, ma nessuna passw
 
 ## Consultazione del database
 
-phpMyAdmin non parte con gli altri servizi e ascolta solo sul server:
+phpMyAdmin non parte con gli altri servizi. Avviato, ascolta sulla porta 8081 del server,
+indipendente da Caddy: è raggiungibile da internet in HTTP, quindi password in chiaro e
+protetto solo dalle password di MySQL. Va fermato appena finito; se il firewall lo
+permette, conviene aprire la 8081 solo al proprio indirizzo.
 
 ```bash
-docker compose --profile strumenti up -d phpmyadmin
-# dal proprio computer
-ssh -L 8081:localhost:8081 utente@server     # poi http://localhost:8081, utente root
-docker compose stop phpmyadmin               # finito
+docker compose --profile strumenti up -d phpmyadmin   # poi http://server:8081, utente root
+docker compose stop phpmyadmin                        # finito
 ```
 
 ## Controllo e problemi

@@ -314,11 +314,10 @@ Applicare una modifica allo schema:
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" atti_pa' < modifica.sql
 ```
 
-phpMyAdmin (solo dal server; dal proprio computer con il tunnel SSH, poi
-<http://localhost:8081>, utente `root`):
+phpMyAdmin (su `http://server:8081`, utente `root`, senza Caddy; esposto su internet in
+HTTP finché è avviato):
 ```bash
 docker compose --profile strumenti up -d phpmyadmin
-ssh -L 8081:localhost:8081 utente@server
 docker compose stop phpmyadmin
 ```
 

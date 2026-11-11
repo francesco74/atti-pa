@@ -10,7 +10,7 @@ secondo gli schemi ANAC (delibere 495/2024, 481/2025, 497/2025). L'app ha tre sc
 
 | Scheda | Funzione | Endpoint |
 |---|---|---|
-| **Analisi IA** | verifica con l'LLM una pagina pubblicata (URL) o uno o più file (PDF, DOC/DOCX/ODT, XLS/XLSX/ODS, CSV) rispetto a uno schema o a un suo controllo; produce un report HTML con analisi, livello Open Data, **esito di validazione** (Pubblicabile / Pubblicabile provvisoriamente / Non pubblicabile) e tabella dei rilievi | `POST /ai_analyze` |
+| **Analisi IA** | verifica con l'LLM una pagina pubblicata (URL) o uno o più file (PDF, DOC/DOCX/ODT, XLS/XLSX/ODS, CSV, XML, JSON) rispetto a uno schema o a un suo controllo; produce un report HTML con analisi, livello Open Data, **esito di validazione** (Pubblicabile / Pubblicabile provvisoriamente / Non pubblicabile) e tabella dei rilievi | `POST /ai_analyze` |
 | **Generatore** | form guidato costruito dallo schema (parametri, sezioni, campi, elenchi, condizioni di visibilità); validazione dei dati sul server; genera il documento HTML da pubblicare. Il form si può **precompilare** estraendo i dati da una pagina o da documenti con l'LLM (risposta JSON con struttura imposta, normalizzata nei formati dello schema) | `GET /schemi`, `POST /doc_create`, `POST /estrai_dati` |
 | **Risultato** | editor HTML (html_editor_enhanced) del report o del documento; salvataggio nell'archivio personale; **verbale di validazione** (modello fisso + documenti scelti); esportazione PDF (LibreOffice) e DOCX (pandoc, con `custom-reference.docx`) | `POST /save_document`, `GET /load_documents`, `POST /load_document`, `POST /delete_document`, `POST /crea_verbale`, `POST /html2pdf`, `POST /html2docx` |
 
@@ -92,6 +92,7 @@ modulo si chiama `trasparenza` e si attiva per ente con `enti.py moduli CODICE .
 | `GET/POST/PUT/DELETE /api/v1/trasparenza/documenti[/<id>]` | `load_documents`, `load_document`, `save_document`, `delete_document` |
 | `POST /api/v1/trasparenza/verbale` | `/crea_verbale` |
 | `POST /api/v1/trasparenza/esporta?formato=pdf\|docx` | `/html2pdf`, `/html2docx` |
+| `POST /api/v1/trasparenza/schede/esporta?formato=json\|xml\|csv` (dati del form della scheda) | — |
 
 `/auth`, `/change_password` e `/status` sono già nel nucleo.
 
@@ -133,6 +134,26 @@ frontend/src/lib/moduli/trasparenza/   pagine dell'app
 6. **Playwright**: resta, nel worker.
 7. **DOCX**: con LibreOffice del converter al posto di pandoc; da verificare la resa delle
    tabelle.
+8. **Formati letti** (10/11/2026): oltre a PDF, documenti d'ufficio, fogli di calcolo e CSV,
+   anche XML e JSON, passati all'LLM come testo compattato (XML senza spazi tra i tag, JSON
+   senza indentazione); l'XML non si interpreta, quindi niente entità esterne.
+9. **Documenti collegati alla pagina** (10/11/2026): con "Analizza anche i documenti
+   collegati" si leggono i link a tutti i formati ammessi, non solo ai PDF, e quelli da
+   download senza estensione (attributo `download` o indirizzo con download/allegato/
+   attachment/scarica/getfile, fuori dalla navigazione): il formato si ricava dal
+   `Content-Disposition` o dal `Content-Type`, e se il link porta a una pagina si ignora.
+   Il numero si sceglie come per i link: 5 predefiniti, al massimo 10 (`max_documenti`); i
+   tentativi sono limitati al doppio. I documenti che non si leggono (errore di scaricamento,
+   nessun testo, conversione non riuscita) sono elencati nel report dell'analisi ("Documenti
+   collegati non letti") e negli avvisi dell'estrazione, non solo nel log.
+10. **Dati delle schede in formato aperto** (10/11/2026): JSON, XML e CSV si generano dai dati
+    del form (`dati_schema`), non dall'HTML: le modifiche fatte nell'editor non ci sono, e il
+    menu lo dice. Chiavi = id dei campi dello schema, etichette nel dizionario `campi`; date in
+    ISO 8601, importi e numeri come numeri; campi vuoti a null (assenti in XML), campi
+    nascosti dalle condizioni assenti. Il CSV ha un elemento per riga con le etichette come
+    intestazioni, virgola come separatore e BOM UTF-8 (Excel); gli elenchi annidati stanno in
+    una cella ("Etichetta: valore; …", elementi separati da " | "). Solo per i documenti
+    generati dal form (le schede), non per analisi e verbali (`common/trasparenza/esportazione.py`).
 
 ## Procedimenti (07/11/2026, catalogo condiviso dal 09/11/2026)
 

@@ -231,9 +231,12 @@ class ProcedimentiApi(unittest.TestCase):
         # al più 15 link seguiti
         self.assertEqual(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={
             "url": "https://www.ente.it/at", "segui_link": True, "max_link": 16}).status_code, 422)  # fmt: skip
+        # al più 10 documenti collegati
+        self.assertEqual(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={
+            "url": "https://www.ente.it/at", "analizza_documenti": True, "max_documenti": 11}).status_code, 422)  # fmt: skip
         lavoro = self._ok(rpct.post(f"{API}/procedimenti/importazioni", base_url=ENTE, json={
             "url": "https://www.ente.it/amministrazione-trasparente/tipologie-di-procedimento", "segui_link": True,
-            "max_link": 12}), 202)  # fmt: skip
+            "max_link": 12, "analizza_documenti": True, "max_documenti": 8}), 202)  # fmt: skip
         stato = self._ok(rpct.get(f"{API}/procedimenti/importazioni/{lavoro['id']}", base_url=ENTE))
         self.assertEqual(stato["stato"], "IN_CODA")
         self.assertNotIn("procedimenti", stato)
@@ -249,6 +252,7 @@ class ProcedimentiApi(unittest.TestCase):
             async with AsyncSession(motore) as db:
                 lv = await db.get(TrasparenzaLavoro, lavoro["id"])
                 self.assertEqual((lv.richiesta["segui_link"], lv.richiesta["max_link"]), (True, 12))
+                self.assertEqual((lv.richiesta["analizza_documenti"], lv.richiesta["max_documenti"]), (True, 8))
                 lv.stato = StatoVerifica.COMPLETATA
                 lv.risultato = {"dati": {"sezione": "PROCEDIMENTI", "righe": righe}, "avvisi": ["Orari non trovati"]}
                 await db.commit()

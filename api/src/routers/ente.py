@@ -638,7 +638,7 @@ async def crea_utente():
     e = ente()
     if not e.accesso_locale:
         raise ErroreApi(HTTPStatus.CONFLICT, "L'accesso con utenti locali non è abilitato per l'ente")
-    if errore := pw.controlla_nuova(dati.password):
+    if errore := pw.controlla_nuova(dati.password, dati.ruoli):
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, errore)
     sessione = db()
     username = dati.username.lower()
@@ -678,6 +678,10 @@ async def aggiorna_utente(utente_id: str):
         u.nome_completo = dati.nome_completo
         u.email = dati.email
         if dati.ruoli is not None:
+            if Ruolo.ADMIN in dati.ruoli and Ruolo.ADMIN not in (u.ruoli or []):
+                # la password attuale può essere più corta del minimo degli amministratori:
+                # al prossimo accesso ne sceglie una nuova
+                u.cambio_password = True
             u.ruoli = dati.ruoli
     if dati.struttura_id:
         await _struttura_dell_ente(sessione, dati.struttura_id)
@@ -695,12 +699,12 @@ async def aggiorna_utente(utente_id: str):
 @amministratore_ente
 async def reimposta_password(utente_id: str):
     dati = corpo(NuovaPasswordIn)
-    if errore := pw.controlla_nuova(dati.password):
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, errore)
     sessione = db()
     u = await _utente_dell_ente(sessione, utente_id)
     if u.origine != OrigineUtente.LOCALE:
         raise ErroreApi(HTTPStatus.BAD_REQUEST, "La password di dominio si cambia in Active Directory")
+    if errore := pw.controlla_nuova(dati.password, u.ruoli):
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, errore)
     u.password_hash = pw.calcola(dati.password)
     u.cambio_password = u.id != utente().id
     u.token_version = (u.token_version or 0) + 1

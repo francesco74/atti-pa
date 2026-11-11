@@ -1,6 +1,6 @@
 """Modulo trasparenza: catalogo degli schemi ANAC, schede generate dal form, analisi ed
 estrazioni con l'LLM (lavori in coda eseguiti dal worker), documenti salvati, verbale di
-validazione, esportazione in PDF o DOCX.
+validazione, esportazione in PDF o DOCX (e dei dati delle schede in JSON, XML o CSV).
 
 I documenti sono privati di chi li salva; l'amministratore dell'ente li vede tutti (in
 sola lettura). Logica in common/trasparenza.
@@ -30,8 +30,16 @@ from common.models import (
     AcAttivita, AcProcesso, Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaDocumento, TrasparenzaLavoro, User,
 )  # fmt: skip
 from common.trasparenza import documenti as doc
+from common.trasparenza import esportazione
 from common.trasparenza.analisi import ANALISI, ESTRAZIONE
-from common.trasparenza.fonti import ESTENSIONI, MAX_LINK, MAX_LINK_MASSIMO, estensione
+from common.trasparenza.fonti import (
+    ESTENSIONI,
+    MAX_DOCUMENTI,
+    MAX_DOCUMENTI_MASSIMO,
+    MAX_LINK,
+    MAX_LINK_MASSIMO,
+    estensione,
+)
 from common.trasparenza.registro import SCHEMI, get_schema, trova_prompt, valida_dati
 from common.trasparenza.sicurezza import estrai_esito, sanifica_html
 
@@ -116,7 +124,8 @@ class FonteIn(BaseModel):
     """Una pagina web (o un documento indicato dal suo URL) oppure i file caricati."""
 
     url: str | None = Field(default=None, max_length=2000, pattern=r"^https?://")
-    analizza_pdf: bool = False  # della pagina: scarica anche i PDF collegati
+    analizza_documenti: bool = False  # della pagina: legge anche i documenti collegati
+    max_documenti: int = Field(default=MAX_DOCUMENTI, ge=1, le=MAX_DOCUMENTI_MASSIMO)  # quanti
     segui_link: bool = False  # della pagina: segue alcuni link del contenuto
     max_link: int = Field(default=MAX_LINK, ge=1, le=MAX_LINK_MASSIMO)  # quanti, con segui_link
     descrizioni: dict[str, str] = {}  # nome del file -> note dell'utente
@@ -161,7 +170,7 @@ def _richiesta(modello: type[BaseModel]):
         if estensione(f.filename) not in ESTENSIONI:
             raise ErroreApi(
                 HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-                f"Formato non ammesso: {f.filename} (PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV)",
+                f"Formato non ammesso: {f.filename} (PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, CSV, XML, JSON)",
             )
     return dati, files
 
@@ -177,8 +186,8 @@ async def _accoda(tipo: str, dati: FonteIn, files, specifici: dict) -> dict:
         salvati.append({"percorso": a.percorso, "nome": f.filename, "descrizione": dati.descrizioni.get(f.filename, "")})
     richiesta = {
         **specifici,
-        "url": dati.url, "analizza_pdf": dati.analizza_pdf, "segui_link": dati.segui_link,
-        "max_link": dati.max_link,
+        "url": dati.url, "analizza_documenti": dati.analizza_documenti, "max_documenti": dati.max_documenti,
+        "segui_link": dati.segui_link, "max_link": dati.max_link,
         "note": dati.note.strip(), "data_adozione": dati.data_adozione.strip(),
         "data_pubblicazione": dati.data_pubblicazione.strip(), "file": salvati,
     }  # fmt: skip
@@ -498,6 +507,27 @@ async def esporta():
         raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
     nome = re.sub(r"[^A-Za-z0-9_-]+", "-", dati.nome).strip("-") or "documento"
     return allegato(contenuto, MIME[dati.formato], f"{nome}.{dati.formato}")
+
+
+@bp.post("/schede/esporta")
+@operatore
+async def esporta_scheda():
+    """Dati della scheda (quelli del form, non l'HTML ritoccato nell'editor) in formato aperto:
+    ?formato=json|xml|csv; il nome del file da ?nome=."""
+    formato = request.args.get("formato", "json")
+    if formato not in esportazione.FORMATI:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Formato non previsto: json, xml o csv")
+    dati = request.get_json(silent=True)
+    if not isinstance(dati, dict):
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Corpo JSON mancante o non valido")
+    schema = _schema_dei_dati(dati)
+    if errori := valida_dati(schema, dati):
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Dati non validi:\n- " + "\n- ".join(errori))
+    e = await db().get(Ente, ente_id())
+    aperti = esportazione.dati_aperti(schema, dati, e.nome)
+    contenuto = {"json": esportazione.in_json, "xml": esportazione.in_xml, "csv": esportazione.in_csv}[formato](aperti)
+    nome = re.sub(r"[^A-Za-z0-9_-]+", "-", request.args.get("nome") or schema.id.lower()).strip("-")[:200] or "scheda"
+    return allegato(contenuto, esportazione.FORMATI[formato], f"{nome}.{formato}")
 
 
 # --- procedimenti ---------------------------------------------------------------------------
