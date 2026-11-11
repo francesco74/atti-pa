@@ -409,7 +409,7 @@ struttura, impronta e rinvii degli articoli già salvati, senza riscaricare null
 
 Elencare le differenze, senza modificare:
 ```bash
-python deploy/manutenzione/riprocessa_norme.py --prova
+python deploy/manutenzione/riprocessa_norme.py --dry-run
 ```
 
 Aggiornare il database:

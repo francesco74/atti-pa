@@ -4,7 +4,7 @@ Serve dopo una correzione di common/normattiva/parser.py: le versioni degli arti
 nella libreria conservano l'HTML originale di Normattiva, da cui si ricalcolano struttura
 (commi e lettere), impronta del testo e rinvii, senza riscaricare nulla.
 
-    python deploy/manutenzione/riprocessa_norme.py --prova   # elenca le differenze
+    python deploy/manutenzione/riprocessa_norme.py --dry-run   # elenca le differenze
     python deploy/manutenzione/riprocessa_norme.py           # aggiorna il database
 """
 
@@ -62,8 +62,8 @@ async def riprocessa(prova: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--prova", action="store_true", help="elenca senza modificare")
-    return asyncio.run(riprocessa(parser.parse_args().prova))
+    parser.add_argument("--dry-run", action="store_true", help="elenca senza modificare")
+    return asyncio.run(riprocessa(parser.parse_args().dry_run))
 
 
 if __name__ == "__main__":
