@@ -100,6 +100,28 @@ Ogni notte salva il dump del database e l'archivio dei file in `/var/backups/att
 14 giorni. Le copie vanno portate anche fuori dal server. Il ripristino è descritto in testa a
 `backup.sh`.
 
+## Collegamento al rag
+
+Il rag dà all'assistente i documenti della conversazione: caricamento, domande con citazioni,
+Riassumi, Confronta ed Estrai. È facoltativo: senza rag l'assistente offre solo la chat libera.
+
+**Rag sullo stesso server.** Va installato con la sua installazione Docker (repository `rag`,
+`deploy/docker/README.md`), che crea la rete Docker `rag`. Poi, in `/opt/atti-pa/deploy/docker`:
+
+1. nel `.env` togliere il commento a
+   `COMPOSE_FILE=docker-compose.yml:docker-compose.rag.yml`;
+2. `docker compose up -d`: API e worker entrano nella rete `rag`;
+3. nel rag creare la chiave: `docker compose exec api python -m utils.manage_api_keys add atti-pa`
+   (nella cartella `deploy/docker` del rag);
+4. in atti-pa, Amministrazione → *Collegamento al RAG*: indirizzo `http://rag-gateway:8080/api`
+   e la chiave; "Prova" verifica il collegamento.
+
+Con `COMPOSE_FILE` attivo il rag va avviato prima di atti-pa: senza la rete `rag` atti-pa non
+parte. Per tornare senza rag basta rimettere il commento e rifare `docker compose up -d`.
+
+**Rag su un altro server.** Non serve `COMPOSE_FILE`: in atti-pa si indica l'indirizzo del gateway
+del rag, raggiungibile dal server di atti-pa (vedi la guida del rag, `RAG_INDIRIZZO`).
+
 ## Rilascio di una nuova versione
 
 Dal computer di sviluppo, dopo `docker login`:

@@ -1,0 +1,16 @@
+# Collegamento al rag installato sullo stesso server (rag: deploy/docker), che crea la rete
+# Docker "rag" con il suo gateway. Facoltativo: senza rag atti-pa funziona, con la chat libera
+# dell'assistente e senza i documenti. Si attiva nel .env con
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.rag.yml
+# e il rag avviato prima (altrimenti la rete non esiste e atti-pa non parte). In atti-pa,
+# Amministrazione -> Collegamento al RAG: indirizzo http://rag-gateway:8080/api
+services:
+  api:
+    networks: [default, rag]
+  worker:
+    networks: [default, rag]
+
+networks:
+  rag:
+    name: rag
+    external: true
