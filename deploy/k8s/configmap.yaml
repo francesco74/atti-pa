@@ -46,8 +46,13 @@ data:
   RICERCA_LIMITE_PUBBLICO: "20"  # ricerche per significato al minuto per IP, pagine pubbliche
   RICERCHE_LIMITE_REGISTRO: "30" # ricerche concluse e feedback registrati al minuto per IP
   RICERCHE_CONSERVAZIONE_MESI: "12"  # poi il worker cancella ricerche registrate e feedback
-  # Assistente: caratteri al massimo in una conversazione, documenti allegati compresi
+  # Assistente: caratteri al massimo in una conversazione (i documenti stanno nel RAG)
   ASSISTENTE_MAX_CARATTERI: "100000"
+  # Domande sui documenti: passaggi chiesti al RAG e caratteri dei passaggi nel prompt
+  # (24.000 ~ 7.000 token: con la conversazione resta in un contesto di 32k; da alzare con
+  # un max_model_len più ampio)
+  ASSISTENTE_PASSAGGI: "8"
+  ASSISTENTE_CARATTERI_PASSAGGI: "24000"
   # API del RAG (indirizzo e chiave nella configurazione di ogni ente)
   RAG_TIMEOUT: "30"
   # Posta in uscita: attesa del server SMTP, tentativi per email, email per giro del worker

@@ -2,21 +2,29 @@
 riassunti, riformulazioni). Le conversazioni non si salvano: l'app invia a ogni richiesta i
 messaggi precedenti. Non legge atti né norme: per quello c'è il chatbot RAG (progetto esterno).
 
-Documenti allegati: li converte in testo il RAG dell'ente (common/rag.py), con un lavoro
-asincrono che l'app segue finché non è concluso; il testo entra poi nel messaggio. Il file non
-resta in atti-pa e la chiave del RAG non arriva mai all'app.
+Documenti della conversazione (progettazione/assistente_documenti.md): l'utente li carica in
+una sessione temporanea del RAG dell'ente, che li converte, li indicizza e ne cerca i passaggi.
+A ogni domanda sui documenti selezionati il RAG restituisce i passaggi pertinenti e l'LLM
+risponde solo da quelli, citandoli: nessun documento entra intero nel prompt, quindi si
+lavora anche su leggi lunghe. atti-pa fa da tramite: la chiave del RAG non arriva all'app.
+
+La sessione non ha tabelle: l'app riceve un token (id della sessione del RAG con una firma
+che lo lega a ente e utente) e lo rimanda nell'intestazione X-Assistente-Sessione. La sessione
+si perde ricaricando la pagina o con "Nuova conversazione", e nel RAG scade da sola.
 """
 
+import hashlib
+import hmac
 import re
 from http import HTTPStatus
 from typing import Literal
 
-from flask import Blueprint
+from flask import Blueprint, request
 from pydantic import BaseModel, Field
 
-from deps import autenticato, ente, risorse
+from deps import autenticato, ente, ente_id, risorse, utente
 from web import ErroreApi, corpo, file_caricato
-from common.llm import PROVIDER_ESTERNI, LlmError
+from common.llm import PROVIDER_ESTERNI, LlmError, testo_prompt
 from common.models import Modulo
 from common.rag import FORMATI_CONVERSIONE, RagClient, RagError
 
@@ -25,7 +33,13 @@ bp = Blueprint("assistente", __name__, url_prefix="/api/v1/assistente")
 utente_assistente = autenticato(modulo=Modulo.ASSISTENTE)
 
 MAX_MESSAGGI = 100
-JOB_ID = re.compile(r"^[0-9a-f]{32}$")
+ID_RAG = re.compile(r"^[0-9a-f]{32}$")
+INTESTAZIONE_SESSIONE = "X-Assistente-Sessione"
+# Una domanda breve ("e la scadenza?") da sola cerca male: si cerca insieme alla precedente
+DOMANDA_BREVE = 80
+# Stati del documento nel RAG -> stati dell'API
+STATI = {"queued": "in_coda", "converting": "conversione", "indexing": "indicizzazione",
+         "ready": "pronto", "failed": "errore"}  # fmt: skip
 
 
 class Messaggio(BaseModel):
@@ -35,6 +49,8 @@ class Messaggio(BaseModel):
 
 class ConversazioneIn(BaseModel):
     messaggi: list[Messaggio] = Field(min_length=1)
+    # Documenti della sessione su cui rispondere; vuoto = conversazione libera
+    documenti: list[str] = Field(default_factory=list, max_length=20)
 
 
 def _llm():
@@ -48,15 +64,11 @@ def _max_caratteri() -> int:
     return risorse().settings.assistente_max_caratteri
 
 
-def _numero(n: int) -> str:
-    return f"{n:,}".replace(",", ".")
-
-
 def _rag() -> RagClient | None:
     try:
         return RagClient.dell_ente(risorse().rag_http, ente().rag_json, risorse().settings.chiave_cifratura)
     except RagError:
-        return None  # chiave non decifrabile: gli allegati non si offrono
+        return None  # chiave non decifrabile: i documenti non si offrono
 
 
 def _rag_obbligatorio() -> RagClient:
@@ -65,45 +77,124 @@ def _rag_obbligatorio() -> RagClient:
     except RagError as e:
         raise ErroreApi(HTTPStatus.SERVICE_UNAVAILABLE, str(e)) from e
     if client is None:
-        raise ErroreApi(HTTPStatus.CONFLICT, "Allegati non disponibili: il collegamento al RAG non è configurato")
+        raise ErroreApi(HTTPStatus.CONFLICT, "Documenti non disponibili: il collegamento al RAG non è configurato")
     return client
+
+
+def _errore_rag(e: RagError) -> ErroreApi:
+    if e.stato_http == 404:
+        return ErroreApi(HTTPStatus.NOT_FOUND, "La sessione dei documenti è scaduta: caricali di nuovo")
+    if e.stato_http in (409, 413, 415):
+        return ErroreApi(e.stato_http, str(e))
+    return ErroreApi(HTTPStatus.BAD_GATEWAY, str(e))
+
+
+# --- Token della sessione --------------------------------------------------------------
+
+
+def _firma(session_id: str) -> str:
+    chiave = ("assistente-sessione:" + risorse().settings.jwt_secret).encode()
+    dati = f"{session_id}:{ente_id()}:{utente().id}".encode()
+    return hmac.new(chiave, dati, hashlib.sha256).hexdigest()[:32]
+
+
+def _token(session_id: str) -> str:
+    return f"{session_id}.{_firma(session_id)}"
+
+
+def _sessione() -> str:
+    """Id della sessione del RAG dal token dell'intestazione; 404 se manca o non è di questo
+    utente (un token copiato da un altro utente o ente non vale)."""
+    token = request.headers.get(INTESTAZIONE_SESSIONE, "")
+    session_id, _, firma = token.partition(".")
+    if not ID_RAG.match(session_id) or not hmac.compare_digest(firma, _firma(session_id)):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Sessione dei documenti non trovata")
+    return session_id
+
+
+def _owner() -> str:
+    """Impronta di ente e utente per il RAG, che la conserva senza interpretarla."""
+    return hashlib.sha256(f"{ente_id()}:{utente().id}".encode()).hexdigest()[:32]
+
+
+def _documento(d: dict) -> dict:
+    vista = {"id": d["doc_id"], "nome": d["file_name"], "stato": STATI.get(d.get("status"), "in_coda")}
+    if d.get("tokens") is not None:
+        vista["token"] = d["tokens"]
+    if d.get("sections") is not None:
+        vista["parti"] = d["sections"]
+    if d.get("error"):
+        vista["errore"] = d["error"]
+    return vista
+
+
+def _limiti(limits: dict) -> dict:
+    return {"max_documenti": limits.get("max_documents"), "max_token": limits.get("max_tokens")}
+
+
+# --- Rotte -------------------------------------------------------------------------------
 
 
 @bp.get("")
 @utente_assistente
 async def informazioni():
     """Se il modello è esterno (l'app apre la chat con un avviso sui dati personali) e i formati
-    dei documenti che si possono allegare (nessuno senza collegamento al RAG)."""
+    dei documenti che si possono caricare (nessuno senza collegamento al RAG)."""
     return {
         "llm_esterno": _llm().provider in PROVIDER_ESTERNI,
-        "formati_allegati": list(FORMATI_CONVERSIONE) if _rag() else [],
-        "max_mb_allegato": risorse().settings.upload_max_mb,
+        "formati_documenti": list(FORMATI_CONVERSIONE) if _rag() else [],
+        "max_mb_documento": risorse().settings.upload_max_mb,
         "max_caratteri": _max_caratteri(),
     }
 
 
-@bp.post("/messaggi")
+@bp.post("/sessione")
 @utente_assistente
-async def messaggio():
-    """Risposta del modello alla conversazione, che termina con il messaggio dell'utente."""
-    dati = corpo(ConversazioneIn)
-    if dati.messaggi[-1].role != "user":
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "L'ultimo messaggio deve essere dell'utente")
-    if len(dati.messaggi) > MAX_MESSAGGI or sum(len(m.content) for m in dati.messaggi) > _max_caratteri():
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Conversazione troppo lunga: iniziane una nuova")
+async def crea_sessione():
+    """Nuova sessione dei documenti nel RAG: il token da rimandare e i limiti."""
     try:
-        testo = (await _llm().conversa([m.model_dump() for m in dati.messaggi])).strip()
-    except LlmError as e:
-        raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
-    if not testo:
-        raise ErroreApi(HTTPStatus.BAD_GATEWAY, "Il modello non ha restituito alcuna risposta")
-    return {"testo": testo}
+        r = await _rag_obbligatorio().crea_sessione(_owner())
+    except RagError as e:
+        raise _errore_rag(e) from e
+    return {"sessione": _token(r["session_id"]), "scadenza": r.get("expires_at"),
+            "limiti": _limiti(r.get("limits") or {})}, HTTPStatus.CREATED  # fmt: skip
 
 
-@bp.post("/allegati")
+@bp.get("/sessione")
 @utente_assistente
-async def allega():
-    """Avvia la conversione in testo di un documento: restituisce il lavoro da seguire."""
+async def stato_sessione():
+    """Documenti con il loro stato, token usati e limiti. Rinnova la scadenza nel RAG."""
+    session_id = _sessione()
+    try:
+        r = await _rag_obbligatorio().sessione(session_id)
+    except RagError as e:
+        raise _errore_rag(e) from e
+    return {
+        "documenti": [_documento(d) for d in r.get("documents", [])],
+        "token": r.get("tokens", 0),
+        "scadenza": r.get("expires_at"),
+        "limiti": _limiti(r.get("limits") or {}),
+    }
+
+
+@bp.delete("/sessione")
+@utente_assistente
+async def chiudi_sessione():
+    """Chiude la sessione: il RAG cancella subito documenti e passaggi."""
+    session_id = _sessione()
+    try:
+        await _rag_obbligatorio().chiudi_sessione(session_id)
+    except RagError as e:
+        if e.stato_http != 404:  # già scaduta: niente da cancellare
+            raise _errore_rag(e) from e
+    return "", HTTPStatus.NO_CONTENT
+
+
+@bp.post("/sessione/documenti")
+@utente_assistente
+async def carica_documento():
+    """Carica un documento nella sessione: il RAG lo converte e lo indicizza (si segue lo stato)."""
+    session_id = _sessione()
     client = _rag_obbligatorio()
     file = file_caricato()
     nome = file.filename or "documento"
@@ -111,44 +202,104 @@ async def allega():
     if estensione not in FORMATI_CONVERSIONE:
         raise ErroreApi(
             HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-            f"Formato non ammesso: si possono allegare {', '.join(FORMATI_CONVERSIONE)}",
+            f"Formato non ammesso: si possono caricare {', '.join(FORMATI_CONVERSIONE)}",
         )
     try:
-        job_id = await client.avvia_conversione(file.read(), nome)
+        r = await client.carica_documento(session_id, file.read(), nome)
     except RagError as e:
-        raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
-    return {"job_id": job_id, "nome": nome}, HTTPStatus.ACCEPTED
+        raise _errore_rag(e) from e
+    return _documento(r), HTTPStatus.ACCEPTED
 
 
-@bp.get("/allegati/<job_id>")
+@bp.get("/sessione/documenti/<doc_id>")
 @utente_assistente
-async def stato_allegato(job_id: str):
-    """Stato della conversione (queued, running, completed, failed); a conversione conclusa,
-    il testo del documento, se rientra nel limite della conversazione. Il RAG consegna l'esito
-    una volta sola: se la risposta si è persa, il lavoro non c'è più e va riallegato."""
-    if not JOB_ID.match(job_id):
-        raise ErroreApi(HTTPStatus.NOT_FOUND, "Allegato non trovato")
+async def stato_documento(doc_id: str):
+    session_id = _sessione()
+    if not ID_RAG.match(doc_id):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Documento non trovato")
     try:
-        r = await _rag_obbligatorio().conversione(job_id)
+        return _documento(await _rag_obbligatorio().documento(session_id, doc_id))
     except RagError as e:
         if e.stato_http == 404:
-            return {
-                "stato": "failed",
-                "errore": "Il risultato della conversione non è più disponibile: allega di nuovo il documento",
-            }
+            raise ErroreApi(HTTPStatus.NOT_FOUND, "Documento non trovato o sessione scaduta") from e
+        raise _errore_rag(e) from e
+
+
+@bp.delete("/sessione/documenti/<doc_id>")
+@utente_assistente
+async def togli_documento(doc_id: str):
+    session_id = _sessione()
+    if not ID_RAG.match(doc_id):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Documento non trovato")
+    try:
+        await _rag_obbligatorio().togli_documento(session_id, doc_id)
+    except RagError as e:
+        if e.stato_http != 404:
+            raise _errore_rag(e) from e
+    return "", HTTPStatus.NO_CONTENT
+
+
+def _domanda_di_ricerca(messaggi: list[Messaggio]) -> str:
+    """L'ultima domanda; se è breve, insieme alla precedente dell'utente, che ne dà il contesto."""
+    domande = [m.content for m in messaggi if m.role == "user"]
+    if len(domande) > 1 and len(domande[-1]) < DOMANDA_BREVE:
+        return f"{domande[-2]}\n{domande[-1]}"[-2000:]
+    return domande[-1][:2000]
+
+
+def _passaggi(passaggi: list[dict], budget: int) -> tuple[str, list[dict]]:
+    """Blocchi dei passaggi per il prompt, nell'ordine di pertinenza, fino al budget di
+    caratteri; e le fonti usate, per l'app."""
+    blocchi, fonti, usati = [], [], 0
+    for p in passaggi:
+        parte = int(p["parent_index"]) + 1
+        titoli = " › ".join(str(v) for v in (p.get("headings") or {}).values() if v)
+        etichetta = f"{p['file_name']}, parte {parte}"
+        testo = p["content"].strip()
+        resto = budget - usati
+        if resto < 500:
+            break
+        if len(testo) > resto:
+            testo = testo[:resto] + " […]"
+        blocchi.append(f"<<< {etichetta}{' — ' + titoli if titoli else ''} >>>\n{testo}\n<<< fine >>>")
+        fonti.append({"documento": p["file_name"], "parte": parte, "id": p["doc_id"]})
+        usati += len(testo)
+    return "\n\n".join(blocchi), fonti
+
+
+@bp.post("/messaggi")
+@utente_assistente
+async def messaggio():
+    """Risposta del modello alla conversazione, che termina con il messaggio dell'utente. Con
+    `documenti` la risposta si basa sui passaggi di quei documenti trovati dal RAG, con le fonti."""
+    dati = corpo(ConversazioneIn)
+    if dati.messaggi[-1].role != "user":
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "L'ultimo messaggio deve essere dell'utente")
+    if len(dati.messaggi) > MAX_MESSAGGI or sum(len(m.content) for m in dati.messaggi) > _max_caratteri():
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Conversazione troppo lunga: iniziane una nuova")
+    messaggi = [m.model_dump() for m in dati.messaggi]
+    fonti: list[dict] = []
+    if dati.documenti:
+        if not all(ID_RAG.match(d) for d in dati.documenti):
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Documenti non validi")
+        session_id = _sessione()
+        settings = risorse().settings
+        try:
+            r = await _rag_obbligatorio().cerca(
+                session_id, _domanda_di_ricerca(dati.messaggi), dati.documenti, settings.assistente_passaggi
+            )
+        except RagError as e:
+            raise _errore_rag(e) from e
+        blocchi, fonti = _passaggi(r.get("passages", []), settings.assistente_caratteri_passaggi)
+        messaggi[-1]["content"] = testo_prompt(
+            "assistente_documenti",
+            passaggi=blocchi or "(nessun passaggio pertinente trovato nei documenti selezionati)",
+            domanda=dati.messaggi[-1].content,
+        )
+    try:
+        testo = (await _llm().conversa(messaggi)).strip()
+    except LlmError as e:
         raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
-    stato = r.get("status")
-    if stato == "failed":
-        return {"stato": "failed", "errore": r.get("error") or "Conversione non riuscita"}
-    if stato != "completed":
-        return {"stato": stato if stato in ("queued", "running") else "queued"}
-    testo = (r.get("content") or "").strip()
     if not testo:
-        return {"stato": "failed", "errore": "Il documento non contiene testo leggibile"}
-    if len(testo) > _max_caratteri():
-        return {
-            "stato": "failed",
-            "errore": f"Il documento ha {_numero(len(testo))} caratteri: supera il limite di "
-            f"{_numero(_max_caratteri())} che il modello può leggere in una conversazione",
-        }
-    return {"stato": "completed", "testo": testo}
+        raise ErroreApi(HTTPStatus.BAD_GATEWAY, "Il modello non ha restituito alcuna risposta")
+    return {"testo": testo, "fonti": fonti} if dati.documenti else {"testo": testo}

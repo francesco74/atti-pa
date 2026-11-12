@@ -9,7 +9,7 @@ Data: 27/10/2026, aggiornata il 30/10/2026.
 | 1. Nucleo multi ente in atti-pa | **fatto**: enti e domini, accesso locale e Active Directory per ente (configurazione nel database), enti gestiti solo da riga di comando (`deploy/enti.py`: domini, moduli, utente `admin` creato con l'ente e password iniziale da cambiare al primo accesso), login sempre attivo anche in locale (domini `*.localhost`), dati di atti-pa separati per ente, blocco dopo tentativi falliti, hash delle password di rag e PApuntozeroIA accettati, app con accesso per ente, menu per modulo, amministrazione di accesso e utenti dell'ente. La riorganizzazione delle cartelle in `nucleo/` e `moduli/` è rinviata a quando arriva il secondo modulo. Permessi: per ora i ruoli di atti-pa |
 | 2. Client LLM e converter unici | **fatto con la trasparenza**: client LLM comune con JSON a schema libero e testo lungo; converter con HTML → PDF/DOCX e testo in Markdown via HTTP |
 | 3. Modulo trasparenza | **backend e app fatti** (vedi `trasparenza.md`): catalogo, schede, documenti, verbale, esportazione, analisi ed estrazioni nel worker; app con le schede Analisi, Schede e Risultati (riprese da PApuntozeroIA); resta la migrazione dei dati |
-| Modulo assistente | **fatto**: chat con l'LLM configurato per il lavoro quotidiano (email, riassunti, riformulazioni), per tutti gli utenti dell'ente. Non legge atti né norme (per quello c'è il chatbot RAG, sezione 9). Le conversazioni restano in memoria nell'app, non sul server; con un LLM esterno la chat si apre con un avviso. Documenti allegati (pdf, docx, odt, xlsx, ods, txt, md, immagini) convertiti in testo dal RAG dell'ente (sezione 9), al massimo `ASSISTENTE_MAX_CARATTERI` per conversazione: un documento più lungo si rifiuta, non si tronca |
+| Modulo assistente | **fatto**: chat con l'LLM configurato per il lavoro quotidiano (email, riassunti, riformulazioni), per tutti gli utenti dell'ente. Non legge atti né norme (per quello c'è il chatbot RAG, sezione 9). Le conversazioni restano in memoria nell'app, non sul server; con un LLM esterno la chat si apre con un avviso. Documenti della conversazione (pdf, docx, odt, xlsx, ods, txt, md, immagini) in una sessione temporanea del RAG dell'ente (sezione 9): l'utente li seleziona e le domande ricevono i passaggi pertinenti con le citazioni, quindi si lavora anche su leggi lunghe (`progettazione/assistente_documenti.md`) |
 | 4. Modulo anticorruzione | **backend, pacchetto standard e app fatti** (vedi `anticorruzione.md`, da Si.Ge.Ri.Co.): strutture organizzative nel nucleo, mappatura (aree, processi e procedimenti, attività, rischi con valutazione, misure; codici assegnati dal sistema) con valutazione, proposte dei referenti per singolo elemento limitate alla propria struttura, monitoraggio delle misure, allegati al PTPCT; PIAO e obiettivi tolti il 04/11/2026; restano i collegamenti con gli altri moduli |
 | 5. Modulo performance | **backend e app fatti** (vedi `performance.md`): PIAO triennali aperti e chiusi dall'amministratore della performance, obiettivi annuali per struttura dichiarati da dirigenti e responsabili, azioni e misure (dalla mappatura dei rischi) con impegno, completamento e scadenza, completamento calcolato, storico delle modifiche, riepilogo per struttura |
 
@@ -192,10 +192,11 @@ non si configurano qui: dipendono dalle credenziali.
   chiave in `enti.rag_json`. La chiave è cifrata con `CHIAVE_CIFRATURA` (Secret), non torna mai
   all'app e se il segreto cambia va reinserita. "Prova" elenca i topic consultabili.
 - **Conversione dei documenti** (`POST /external/v1/convert`, poi `GET /external/v1/convert/<job_id>`
-  finché non è `completed` o `failed`): la usa l'assistente per gli allegati. L'API di atti-pa fa
-  da tramite, così la chiave resta sul server; l'app segue lo stato del lavoro. Il RAG converte
-  con PyMuPDF dove c'è testo e con l'LLM solo dove ce n'è troppo poco. Cancella il file a
-  conversione finita e il risultato appena lo consegna: se la risposta si perde (errore di rete)
-  la richiesta successiva riceve 404 e l'assistente chiede di riallegare il documento. atti-pa
-  non conserva il testo per riconsegnarlo, per non tenere copie dei documenti.
-- **Da fare nel RAG**: i formati docx, odt, xlsx e ods (atti-pa li ammette già).
+  finché non è `completed` o `failed`). Il RAG converte con PyMuPDF dove c'è testo e con l'LLM
+  solo dove ce n'è troppo poco; cancella il file a conversione finita e il risultato appena lo
+  consegna.
+- **Sessioni di documenti** (`/external/v1/sessions`): le usa l'assistente per i documenti della
+  conversazione. Il RAG converte, indicizza e cerca i passaggi; la risposta la scrive l'LLM di
+  atti-pa. L'API di atti-pa fa da tramite (la chiave resta sul server) e lega la sessione a ente
+  e utente con un token firmato, senza tabelle. I documenti restano nel RAG fino alla chiusura o
+  alla scadenza della sessione (2 ore dall'ultimo uso, 12 al massimo).

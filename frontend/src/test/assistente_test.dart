@@ -91,48 +91,96 @@ void main() {
     expect(find.textContaining('Risposta conservata', findRichText: true), findsOneWidget);
   });
 
-  testWidgets('un documento allegato viene convertito e il suo testo entra nel messaggio', (tester) async {
-    final inviati = <List<dynamic>>[];
+  testWidgets('documenti della conversazione: caricamento, domanda sui selezionati, fonti, chiusura', (tester) async {
+    final richieste = <http.Request>[];
     var letture = 0;
+    final id = 'd' * 32;
     final api = ApiClient('http://api.test', client: MockClient((r) async {
-      if (r.url.path == '/api/v1/assistente') {
-        return _json({'llm_esterno': false, 'formati_allegati': ['pdf', 'docx'], 'max_mb_allegato': 20});
+      richieste.add(r);
+      switch (r.url.path) {
+        case '/api/v1/assistente':
+          return _json({'llm_esterno': false, 'formati_documenti': ['pdf', 'docx'], 'max_mb_documento': 20});
+        case '/api/v1/assistente/sessione':
+          if (r.method == 'DELETE') return http.Response('', 204);
+          return _json({'sessione': 'token-firmato', 'limiti': {'max_documenti': 10, 'max_token': 500000}}, 201);
+        case '/api/v1/assistente/sessione/documenti':
+          return _json({'id': id, 'nome': 'Delibera.pdf', 'stato': 'in_coda'}, 202);
+        case '/api/v1/assistente/messaggi':
+          final corpo = jsonDecode(r.body) as Map<String, dynamic>;
+          return _json({
+            'testo': 'Il contributo è di 15.000 euro [Delibera.pdf, parte 3].',
+            if (corpo['documenti'] != null) 'fonti': [{'documento': 'Delibera.pdf', 'parte': 3, 'id': id}],
+          });
       }
-      if (r.url.path == '/api/v1/assistente/allegati') return _json({'job_id': 'a' * 32, 'nome': 'relazione.pdf'}, 202);
-      if (r.url.path.startsWith('/api/v1/assistente/allegati/')) {
-        return _json(++letture == 1 ? {'stato': 'running'} : {'stato': 'completed', 'testo': 'Testo della relazione'});
-      }
-      inviati.add(jsonDecode(r.body)['messaggi'] as List<dynamic>);
-      return _json({'testo': 'Ecco il riassunto'});
+      return _json(++letture == 1
+          ? {'id': id, 'nome': 'Delibera.pdf', 'stato': 'indicizzazione'}
+          : {'id': id, 'nome': 'Delibera.pdf', 'stato': 'pronto', 'token': 1200, 'parti': 3});
     }));
     final c = ConversazioneAssistente();
     await _apri(tester, api, c);
-    expect(find.byIcon(Icons.attach_file), findsOneWidget);
+    expect(find.text('Carica'), findsOneWidget); // pannello a lato su schermo largo
 
-    c.allega(api, FileScelto('relazione.pdf', Uint8List.fromList([1, 2, 3])));
+    c.carica(api, FileScelto('Delibera.pdf', Uint8List.fromList([1, 2, 3])));
     await tester.pump();
-    expect(find.textContaining('in conversione'), findsOneWidget);
-    final invio = tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.send));
-    expect(invio.onPressed, isNull); // finché il testo del documento non è pronto
+    await tester.pump();
+    expect(find.textContaining('in coda'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(seconds: 3));
-    expect(find.textContaining('21 caratteri'), findsOneWidget);
+    expect(find.text('3 parti · 1.200 token'), findsOneWidget);
+    expect(find.textContaining('1.200 di 500.000 token'), findsOneWidget);
+    final caricamento = richieste.firstWhere((r) => r.url.path.endsWith('/sessione/documenti'));
+    expect(caricamento.headers['X-Assistente-Sessione'], 'token-firmato');
 
-    await tester.enterText(find.byType(TextField), 'Riassumi');
+    await tester.enterText(find.byType(TextField), 'Di quanto è il contributo?');
     await tester.tap(find.byIcon(Icons.send));
     await tester.pumpAndSettle();
-    final contenuto = inviati.single.single['content'] as String;
-    expect(contenuto, startsWith('Riassumi'));
-    expect(contenuto, contains('Testo della relazione'));
-    expect(inviati.single.single.keys, unorderedEquals(['role', 'content']));
-    expect(find.text('relazione.pdf'), findsOneWidget); // nella chat il nome, non il testo
-    expect(find.textContaining('Testo della relazione'), findsNothing);
-    expect(c.allegati, isEmpty);
+    final domanda = richieste.lastWhere((r) => r.url.path.endsWith('/messaggi'));
+    expect(jsonDecode(domanda.body)['documenti'], [id]);
+    expect(domanda.headers['X-Assistente-Sessione'], 'token-firmato');
+    expect(find.textContaining('Passaggi consultati: Delibera.pdf (parte 3)'), findsOneWidget);
+
+    // deselezionato: la domanda torna libera, senza documenti né sessione
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'Scrivi una email');
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pumpAndSettle();
+    final libera = richieste.lastWhere((r) => r.url.path.endsWith('/messaggi'));
+    expect((jsonDecode(libera.body) as Map).containsKey('documenti'), isFalse);
+    expect(libera.headers.containsKey('X-Assistente-Sessione'), isFalse);
+
+    await tester.tap(find.text('Nuova conversazione'));
+    await tester.pumpAndSettle();
+    expect(c.documenti, isEmpty);
+    expect(richieste.last.method, 'DELETE');
+    expect(richieste.last.url.path, '/api/v1/assistente/sessione');
   });
 
-  testWidgets('senza collegamento al RAG non si possono allegare documenti', (tester) async {
-    final api = ApiClient('http://api.test', client: MockClient((r) async => _json({'llm_esterno': false, 'formati_allegati': []})));
+  testWidgets('sessione scaduta nel RAG: i documenti vanno ricaricati', (tester) async {
+    final api = ApiClient('http://api.test', client: MockClient((r) async {
+      switch (r.url.path) {
+        case '/api/v1/assistente':
+          return _json({'llm_esterno': false, 'formati_documenti': ['pdf']});
+        case '/api/v1/assistente/sessione':
+          return _json({'sessione': 't', 'limiti': {'max_documenti': 10, 'max_token': 500000}}, 201);
+        case '/api/v1/assistente/sessione/documenti':
+          return _json({'id': 'e' * 32, 'nome': 'Legge.pdf', 'stato': 'in_coda'}, 202);
+      }
+      return _json({'detail': 'La sessione dei documenti è scaduta: caricali di nuovo'}, 404);
+    }));
+    final c = ConversazioneAssistente();
+    await _apri(tester, api, c);
+    c.carica(api, FileScelto('Legge.pdf', Uint8List.fromList([1])));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    expect(c.documenti.single.fallito, isTrue);
+    expect(find.textContaining('Sessione scaduta'), findsOneWidget);
+  });
+
+  testWidgets('senza collegamento al RAG non c\'è il pannello dei documenti', (tester) async {
+    final api = ApiClient('http://api.test', client: MockClient((r) async => _json({'llm_esterno': false, 'formati_documenti': []})));
     await _apri(tester, api, ConversazioneAssistente());
-    expect(find.byIcon(Icons.attach_file), findsNothing);
+    expect(find.text('Carica'), findsNothing);
+    expect(find.textContaining('Documenti'), findsNothing);
   });
 }

@@ -160,8 +160,14 @@ class Settings(BaseSettings):
     posta_timeout: float = 20.0
     posta_tentativi: int = 6
     posta_lotto: int = 50
-    # Assistente: caratteri al massimo in una conversazione, documenti allegati compresi
+    # Assistente: caratteri al massimo in una conversazione (i documenti non contano: stanno
+    # nella sessione del RAG)
     assistente_max_caratteri: int = 100_000
+    # Domande sui documenti: passaggi chiesti al RAG e caratteri dei passaggi messi nel prompt.
+    # Con 24.000 caratteri (~7.000 token) più la conversazione si resta in un contesto di 32k;
+    # con un max_model_len più ampio si possono alzare.
+    assistente_passaggi: int = 8
+    assistente_caratteri_passaggi: int = 24_000
 
     # Job notturno di aggiornamento normative
     sync_giorni_iniziali: int = 7  # prima esecuzione: modifiche dell'ultima settimana

@@ -6,49 +6,87 @@ import '../../api/api_client.dart';
 import '../../util/scelta_file.dart';
 import '../comuni.dart';
 
-const _maxAllegati = 5; // per messaggio
 const _intervalloStato = Duration(seconds: 2);
 const _attesaMassima = Duration(minutes: 20); // una scansione lunga può richiedere minuti
+const _intestazioneSessione = 'X-Assistente-Sessione';
+const _larghezzaPannello = 340.0;
 
-/// Documento allegato al prossimo messaggio: lo converte in testo il RAG dell'ente, con un
-/// lavoro di cui si chiede lo stato finché non è concluso.
-class AllegatoAssistente {
-  AllegatoAssistente(this.nome);
+String _migliaia(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+
+/// Documento della conversazione: sta nella sessione del RAG dell'ente, che lo converte, lo
+/// indicizza e ne cerca i passaggi a ogni domanda. Lo stato si segue finché non è pronto.
+class DocumentoSessione {
+  DocumentoSessione(this.nome);
 
   final String nome;
-  String? jobId;
-  String stato = 'caricamento'; // poi queued, running, completed, failed
-  String? testo;
+  String? id;
+  String stato = 'caricamento'; // poi in_coda, conversione, indicizzazione, pronto, errore
+  int? token;
+  int? parti;
   String? errore;
+  bool selezionato = true;
 
-  bool get pronto => stato == 'completed';
-  bool get fallito => stato == 'failed';
+  bool get pronto => stato == 'pronto';
+  bool get fallito => stato == 'errore';
   bool get inCorso => !pronto && !fallito;
+
+  String get descrizioneStato => switch (stato) {
+        'caricamento' => 'invio…',
+        'in_coda' => 'in coda…',
+        'conversione' => 'in conversione…',
+        'indicizzazione' => 'in indicizzazione…',
+        'pronto' => [
+            if (parti != null) parti == 1 ? '1 parte' : '$parti parti',
+            if (token != null) '${_migliaia(token!)} token',
+          ].join(' · '),
+        _ => 'non riuscito',
+      };
+
+  void aggiorna(Map<String, dynamic> d) {
+    id = d['id'] as String? ?? id;
+    stato = d['stato'] as String? ?? stato;
+    token = (d['token'] as num?)?.toInt() ?? token;
+    parti = (d['parti'] as num?)?.toInt() ?? parti;
+    errore = d['errore'] as String?;
+  }
 }
 
 /// Conversazione con l'assistente: non si salva sul server, quindi l'intera conversazione
 /// viene inviata a ogni richiesta. Sta fuori dalla pagina per restare cambiando voce del menu,
-/// anche mentre si attende una risposta o la conversione di un allegato.
+/// anche mentre si attende una risposta o l'elaborazione di un documento. I documenti stanno
+/// in una sessione del RAG, identificata da un token che l'API firma per questo utente: si
+/// perdono ricaricando la pagina o con "Nuova conversazione".
 class ConversazioneAssistente extends ChangeNotifier {
-  /// role e content (inviati al modello); per i messaggi dell'utente anche testo e allegati
-  /// (nomi separati da a capo), mostrati nella chat al posto del contenuto completo.
+  /// role e content (inviati al modello). Per i messaggi dell'utente anche `documenti` (nomi
+  /// dei documenti su cui si chiede, separati da a capo) e `ids` (i loro id, separati da
+  /// virgola); per le risposte `fonti` (righe "documento|parte").
   final messaggi = <Map<String, String>>[];
-  final allegati = <AllegatoAssistente>[];
+  final documenti = <DocumentoSessione>[];
   bool inAttesa = false;
   String? errore;
 
   /// Se il modello è esterno all'ente; null finché non si sa.
   bool? llmEsterno;
 
-  /// Formati che si possono allegare: nessuno se l'ente non è collegato al RAG.
+  /// Formati dei documenti: nessuno se l'ente non è collegato al RAG.
   List<String> formati = const [];
-  int maxMbAllegato = 20;
+  int maxMbDocumento = 20;
+  int? maxDocumenti;
+  int? maxToken;
 
-  /// Cambia con una nuova conversazione: la risposta a quella vecchia viene ignorata.
+  String? _sessione;
+  Future<String>? _creazione;
+
+  /// Cambia con una nuova conversazione: le risposte e gli stati di quella vecchia si ignorano.
   int _turno = 0;
   bool _chiusa = false;
 
-  bool get allegatiPronti => allegati.every((a) => a.pronto);
+  List<DocumentoSessione> get selezionati => [for (final d in documenti) if (d.pronto && d.selezionato) d];
+  int get tokenUsati => documenti.where((d) => !d.fallito).fold(0, (n, d) => n + (d.token ?? 0));
+  int get documentiAttivi => documenti.where((d) => !d.fallito).length;
+  bool get documentiInCorso => documenti.any((d) => d.inCorso);
+
+  Map<String, String> get _intestazioni => {_intestazioneSessione: ?_sessione};
 
   void _aggiorna() {
     if (!_chiusa) notifyListeners();
@@ -59,75 +97,115 @@ class ConversazioneAssistente extends ChangeNotifier {
     try {
       final info = await api.get('/api/v1/assistente') as Map<String, dynamic>;
       llmEsterno = info['llm_esterno'] == true;
-      formati = List<String>.from(info['formati_allegati'] as List? ?? const []);
-      maxMbAllegato = (info['max_mb_allegato'] as num?)?.toInt() ?? maxMbAllegato;
+      formati = List<String>.from(info['formati_documenti'] as List? ?? const []);
+      maxMbDocumento = (info['max_mb_documento'] as num?)?.toInt() ?? maxMbDocumento;
     } catch (_) {
       llmEsterno = true; // nel dubbio l'avviso resta
     }
     _aggiorna();
   }
 
-  /// Invia il file al server e segue la conversione; un errore resta sull'allegato.
-  Future<void> allega(ApiClient api, FileScelto file) async {
-    final a = AllegatoAssistente(file.name);
-    allegati.add(a);
-    _aggiorna();
-    if (file.bytes.length > maxMbAllegato * 1024 * 1024) {
-      _fallito(a, 'Il file supera i $maxMbAllegato MB');
-      return;
-    }
-    try {
-      final r = await api.postMultipartFiles('/api/v1/assistente/allegati',
-          campi: {}, campoFile: 'file', files: [(file.name, file.bytes)]) as Map<String, dynamic>;
-      a
-        ..jobId = r['job_id'] as String
-        ..stato = 'queued';
-      _aggiorna();
-      final limite = DateTime.now().add(_attesaMassima);
-      while (a.inCorso && allegati.contains(a) && !_chiusa) {
-        if (DateTime.now().isAfter(limite)) {
-          _fallito(a, 'La conversione non è terminata in ${_attesaMassima.inMinutes} minuti');
-          return;
-        }
-        await Future<void>.delayed(_intervalloStato);
-        if (!allegati.contains(a) || _chiusa) return;
-        final s = await api.get('/api/v1/assistente/allegati/${a.jobId}') as Map<String, dynamic>;
-        a
-          ..stato = s['stato'] as String
-          ..testo = s['testo'] as String?
-          ..errore = s['errore'] as String?;
-        _aggiorna();
+  /// Token della sessione, creata al primo documento.
+  Future<String> _token(ApiClient api) {
+    if (_sessione != null) return Future.value(_sessione);
+    return _creazione ??= () async {
+      try {
+        final r = await api.post('/api/v1/assistente/sessione') as Map<String, dynamic>;
+        final limiti = r['limiti'] as Map<String, dynamic>? ?? const {};
+        maxDocumenti = (limiti['max_documenti'] as num?)?.toInt();
+        maxToken = (limiti['max_token'] as num?)?.toInt();
+        return _sessione = r['sessione'] as String;
+      } finally {
+        _creazione = null;
       }
-    } catch (e) {
-      _fallito(a, e.toString());
+    }();
+  }
+
+  /// La sessione non c'è più nel RAG (scaduta): i documenti sono persi.
+  void _sessioneScaduta() {
+    _sessione = null;
+    for (final d in documenti) {
+      if (!d.fallito) {
+        d
+          ..stato = 'errore'
+          ..errore = 'Sessione scaduta: carica di nuovo il documento';
+      }
     }
   }
 
-  void _fallito(AllegatoAssistente a, String errore) {
-    a
-      ..stato = 'failed'
+  /// Invia il file al RAG (tramite l'API) e ne segue l'elaborazione; un errore resta sul documento.
+  Future<void> carica(ApiClient api, FileScelto file) async {
+    final turno = _turno;
+    final d = DocumentoSessione(file.name);
+    documenti.add(d);
+    _aggiorna();
+    if (file.bytes.length > maxMbDocumento * 1024 * 1024) {
+      _fallito(d, 'Il file supera i $maxMbDocumento MB');
+      return;
+    }
+    bool attivo() => turno == _turno && documenti.contains(d) && !_chiusa;
+    try {
+      await _token(api);
+      if (!attivo()) return;
+      final r = await api.postMultipart('/api/v1/assistente/sessione/documenti',
+          campi: {}, campoFile: 'file', bytes: file.bytes, nomeFile: file.name, intestazioni: _intestazioni);
+      d.aggiorna(r as Map<String, dynamic>);
+      _aggiorna();
+      final limite = DateTime.now().add(_attesaMassima);
+      while (d.inCorso && attivo()) {
+        if (DateTime.now().isAfter(limite)) {
+          _fallito(d, 'L\'elaborazione non è terminata in ${_attesaMassima.inMinutes} minuti');
+          return;
+        }
+        await Future<void>.delayed(_intervalloStato);
+        if (!attivo()) return;
+        final s = await api.get('/api/v1/assistente/sessione/documenti/${d.id}', intestazioni: _intestazioni);
+        d.aggiorna(s as Map<String, dynamic>);
+        _aggiorna();
+      }
+    } on ApiException catch (e) {
+      if (!attivo()) return;
+      if (e.status == 404 && d.id != null) {
+        _sessioneScaduta();
+        _aggiorna();
+      } else {
+        _fallito(d, e.messaggio);
+      }
+    } catch (e) {
+      if (attivo()) _fallito(d, e.toString());
+    }
+  }
+
+  void _fallito(DocumentoSessione d, String errore) {
+    d
+      ..stato = 'errore'
       ..errore = errore;
     _aggiorna();
   }
 
-  void togli(AllegatoAssistente a) {
-    allegati.remove(a);
+  /// Toglie il documento dalla conversazione e dal RAG.
+  void togli(ApiClient api, DocumentoSessione d) {
+    documenti.remove(d);
+    _aggiorna();
+    if (d.id != null && _sessione != null && !d.fallito) {
+      api.delete('/api/v1/assistente/sessione/documenti/${d.id}', null, _intestazioni).catchError((_) {});
+    }
+  }
+
+  void seleziona(DocumentoSessione d, bool valore) {
+    d.selezionato = valore;
     _aggiorna();
   }
 
-  /// Il messaggio porta con sé il testo dei documenti allegati, già convertiti.
+  /// Con documenti selezionati la domanda riguarda quelli: risponde dai loro passaggi.
   Future<void> invia(ApiClient api, String testo) async {
-    final documenti = [
-      for (final a in allegati)
-        '--- Documento allegato: ${a.nome} ---\n${a.testo}\n--- Fine del documento: ${a.nome} ---',
-    ];
+    final scelti = selezionati;
     messaggi.add({
       'role': 'user',
-      'content': [if (testo.isNotEmpty) testo, ...documenti].join('\n\n'),
-      'testo': testo,
-      if (allegati.isNotEmpty) 'allegati': allegati.map((a) => a.nome).join('\n'),
+      'content': testo,
+      if (scelti.isNotEmpty) 'documenti': scelti.map((d) => d.nome).join('\n'),
+      if (scelti.isNotEmpty) 'ids': scelti.map((d) => d.id!).join(','),
     });
-    allegati.clear();
     await riprova(api);
   }
 
@@ -136,24 +214,42 @@ class ConversazioneAssistente extends ChangeNotifier {
     inAttesa = true;
     errore = null;
     notifyListeners();
+    final ids = messaggi.last['ids']?.split(',') ?? const <String>[];
     try {
-      final r = await api.post('/api/v1/assistente/messaggi', {
-        'messaggi': [for (final m in messaggi) {'role': m['role'], 'content': m['content']}],
-      }) as Map<String, dynamic>;
+      final r = await api.post(
+        '/api/v1/assistente/messaggi',
+        {
+          'messaggi': [for (final m in messaggi) {'role': m['role'], 'content': m['content']}],
+          if (ids.isNotEmpty) 'documenti': ids,
+        },
+        ids.isNotEmpty ? _intestazioni : null,
+      ) as Map<String, dynamic>;
       if (turno != _turno || _chiusa) return;
-      messaggi.add({'role': 'assistant', 'content': r['testo'] as String});
+      final fonti = [
+        for (final f in (r['fonti'] as List? ?? const []).cast<Map<String, dynamic>>()) '${f['documento']}|${f['parte']}',
+      ];
+      messaggi.add({'role': 'assistant', 'content': r['testo'] as String, if (fonti.isNotEmpty) 'fonti': fonti.join('\n')});
+    } on ApiException catch (e) {
+      if (turno != _turno || _chiusa) return;
+      if (e.status == 404 && ids.isNotEmpty) _sessioneScaduta();
+      errore = e.messaggio;
     } catch (e) {
       if (turno != _turno || _chiusa) return;
       errore = e.toString();
     }
     inAttesa = false;
-    notifyListeners();
+    _aggiorna();
   }
 
-  void nuova() {
+  /// Nuova conversazione: la sessione dei documenti si chiude e il RAG li cancella subito.
+  void nuova(ApiClient api) {
     _turno++;
+    if (_sessione != null) {
+      api.delete('/api/v1/assistente/sessione', null, _intestazioni).catchError((_) {});
+    }
+    _sessione = null;
     messaggi.clear();
-    allegati.clear();
+    documenti.clear();
     inAttesa = false;
     errore = null;
     notifyListeners();
@@ -221,26 +317,23 @@ class _AssistentePageState extends State<AssistentePage> {
 
   void _invia() {
     final testo = _testo.text.trim();
-    if ((testo.isEmpty && _c.allegati.isEmpty) || _c.inAttesa) return;
-    if (!_c.allegatiPronti) {
-      mostraMessaggio(context, 'Attendi la conversione degli allegati, o togli quelli non riusciti');
-      return;
-    }
+    if (testo.isEmpty || _c.inAttesa) return;
     _testo.clear();
     _c.invia(apiDi(context), testo);
     _focus.requestFocus();
   }
 
-  Future<void> _allega() async {
+  Future<void> _carica() async {
     final scelti = await scegliFiles(_c.formati);
     if (scelti.isEmpty || !mounted) return;
-    if (_c.allegati.length + scelti.length > _maxAllegati) {
-      mostraErrore(context, 'Al massimo $_maxAllegati documenti per messaggio');
+    final massimo = _c.maxDocumenti;
+    if (massimo != null && _c.documentiAttivi + scelti.length > massimo) {
+      mostraErrore(context, 'Al massimo $massimo documenti per conversazione');
       return;
     }
     final api = apiDi(context);
     for (final f in scelti) {
-      _c.allega(api, f);
+      _c.carica(api, f);
     }
   }
 
@@ -255,21 +348,44 @@ class _AssistentePageState extends State<AssistentePage> {
         ),
       );
 
+  /// Fonti di una risposta raggruppate per documento: "Delibera.pdf (parti 3, 1)".
+  Widget _fonti(String righe, ColorScheme tema) {
+    final perDocumento = <String, List<String>>{};
+    for (final r in righe.split('\n')) {
+      final i = r.lastIndexOf('|');
+      perDocumento.putIfAbsent(r.substring(0, i), () => []).add(r.substring(i + 1));
+    }
+    final testo = [
+      for (final MapEntry(key: nome, value: parti) in perDocumento.entries)
+        '$nome (${parti.length == 1 ? 'parte' : 'parti'} ${parti.join(', ')})',
+    ].join('; ');
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text('Passaggi consultati: $testo',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: tema.onSurfaceVariant)),
+    );
+  }
+
   Widget _messaggio(Map<String, String> m, ColorScheme tema) {
     if (m['role'] == 'user') {
-      final testo = m['testo'] ?? m['content']!;
-      final allegati = m['allegati']?.split('\n') ?? const <String>[];
+      final documenti = m['documenti']?.split('\n') ?? const <String>[];
       return _riquadro(
         aDestra: true,
         colore: tema.primaryContainer,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          for (final nome in allegati)
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.description_outlined, size: 18),
-              const SizedBox(width: 4),
-              Flexible(child: Text(nome, style: const TextStyle(fontWeight: FontWeight.w600))),
-            ]),
-          if (testo.isNotEmpty) SelectableText(testo),
+          if (documenti.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.description_outlined, size: 16),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(documenti.join(', '),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                ),
+              ]),
+            ),
+          SelectableText(m['content']!),
         ]),
       );
     }
@@ -279,6 +395,7 @@ class _AssistentePageState extends State<AssistentePage> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // le immagini non si caricano: l'indirizzo lo sceglie il modello
         MarkdownBody(data: testo, selectable: true, imageBuilder: (_, _, _) => const SizedBox.shrink()),
+        if (m['fonti'] != null) _fonti(m['fonti']!, tema),
         Align(
           alignment: Alignment.centerRight,
           child: IconButton(
@@ -294,125 +411,195 @@ class _AssistentePageState extends State<AssistentePage> {
     );
   }
 
-  Widget _allegato(AllegatoAssistente a, ColorScheme tema) {
-    final caratteri = a.testo?.length ?? 0;
-    final dettaglio = a.pronto
-        ? '${caratteri.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.')} caratteri'
-        : a.fallito
-            ? 'non riuscito'
-            : 'in conversione…';
-    final chip = InputChip(
-      avatar: a.inCorso
-          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-          : Icon(a.pronto ? Icons.description_outlined : Icons.error_outline,
-              color: a.fallito ? tema.error : null),
-      label: Text('${a.nome} · $dettaglio'),
-      deleteButtonTooltipMessage: 'Togli',
-      onDeleted: () => _c.togli(a),
+  /// Pannello dei documenti: a lato su schermo largo, dal basso sul telefono.
+  Widget _pannello(ColorScheme tema) {
+    final testi = Theme.of(context).textTheme;
+    final maxToken = _c.maxToken;
+    final maxDocumenti = _c.maxDocumenti;
+    return ListenableBuilder(
+      listenable: _c,
+      builder: (context, _) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+          child: Row(children: [
+            Expanded(child: Text('Documenti', style: testi.titleMedium)),
+            FilledButton.tonalIcon(
+              onPressed: _c.inAttesa ? null : _carica,
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Carica'),
+            ),
+          ]),
+        ),
+        if (maxToken != null && _c.documenti.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              LinearProgressIndicator(value: (_c.tokenUsati / maxToken).clamp(0.0, 1.0)),
+              const SizedBox(height: 4),
+              Text(
+                '${_migliaia(_c.tokenUsati)} di ${_migliaia(maxToken)} token'
+                '${maxDocumenti != null ? ' · ${_c.documentiAttivi} di $maxDocumenti documenti' : ''}',
+                style: testi.bodySmall,
+              ),
+            ]),
+          ),
+        Expanded(
+          child: _c.documenti.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Carica delibere, determine, leggi o altri documenti (${_c.formati.join(', ')}; al massimo '
+                    '${_c.maxMbDocumento} MB l\'uno) e fai domande su quelli selezionati: le risposte citano '
+                    'le parti dei documenti da cui vengono.',
+                    style: testi.bodySmall,
+                  ),
+                )
+              : ListView(children: [
+                  for (final d in _c.documenti)
+                    ListTile(
+                      dense: true,
+                      leading: d.inCorso
+                          ? const SizedBox(
+                              width: 24, height: 24, child: Padding(padding: EdgeInsets.all(3), child: CircularProgressIndicator(strokeWidth: 2)))
+                          : d.fallito
+                              ? Icon(Icons.error_outline, color: tema.error)
+                              : Checkbox(
+                                  value: d.selezionato,
+                                  onChanged: (v) => _c.seleziona(d, v ?? false),
+                                ),
+                      title: Text(d.nome, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(d.fallito ? (d.errore ?? 'non riuscito') : d.descrizioneStato,
+                          style: d.fallito ? TextStyle(color: tema.error) : null),
+                      trailing: IconButton(
+                        tooltip: 'Togli',
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => _c.togli(apiDi(context), d),
+                      ),
+                      onTap: d.pronto ? () => _c.seleziona(d, !d.selezionato) : null,
+                    ),
+                ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Le domande usano solo i documenti selezionati. I documenti restano fino a "Nuova '
+            'conversazione", al ricaricamento della pagina o dopo due ore senza uso.',
+            style: testi.bodySmall?.copyWith(color: tema.onSurfaceVariant),
+          ),
+        ),
+      ]),
     );
-    return a.errore == null ? chip : Tooltip(message: a.errore!, child: chip);
+  }
+
+  void _apriPannello(ColorScheme tema) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => SizedBox(height: MediaQuery.of(context).size.height * 0.7, child: _pannello(tema)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).colorScheme;
-    final allegaPossibile = _c.formati.isNotEmpty;
-    final errori = [for (final a in _c.allegati) if (a.errore != null) '${a.nome}: ${a.errore}'];
-    return Scaffold(
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(children: [
-            Expanded(
-              child: Text(
-                'Scrive e rivede testi, riassume, riformula. Non legge gli atti: verifica sempre ciò che propone.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+    final conDocumenti = _c.formati.isNotEmpty;
+    final largo = MediaQuery.of(context).size.width >= 1000;
+    final scelti = _c.selezionati.length;
+    final chat = Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Row(children: [
+          Expanded(
+            child: Text(
+              'Scrive e rivede testi, riassume, risponde sui documenti che carichi. Non legge gli '
+              'atti dell\'ente: verifica sempre ciò che propone.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
+          ),
+          if (conDocumenti && !largo)
             TextButton.icon(
-              onPressed: _c.messaggi.isEmpty && _c.allegati.isEmpty && !_c.inAttesa ? null : _c.nuova,
-              icon: const Icon(Icons.add_comment_outlined),
-              label: const Text('Nuova conversazione'),
+              onPressed: () => _apriPannello(tema),
+              icon: const Icon(Icons.folder_open_outlined),
+              label: Text('Documenti (${_c.documenti.length})'),
             ),
-          ]),
-        ),
-        Expanded(
-          child: ListView(
-            controller: _scorrimento,
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (_c.llmEsterno == true)
-                _riquadro(
-                  colore: tema.tertiaryContainer,
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Icon(Icons.warning_amber, color: tema.onTertiaryContainer),
-                    const SizedBox(width: 8),
-                    const Flexible(
-                      child: Text('Il testo che scrivi e quello dei documenti che alleghi vengono inviati a '
-                          'un fornitore esterno all\'ente: non inserire né allegare dati personali.'),
-                    ),
-                  ]),
-                ),
-              for (final m in _c.messaggi) _messaggio(m, tema),
-              if (_c.inAttesa)
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()),
-                ),
-              if (_c.errore != null)
-                _riquadro(
-                  colore: tema.errorContainer,
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(_c.errore!),
-                    TextButton(onPressed: () => _c.riprova(apiDi(context)), child: const Text('Riprova')),
-                  ]),
-                ),
-            ],
+          TextButton.icon(
+            onPressed: _c.messaggi.isEmpty && _c.documenti.isEmpty && !_c.inAttesa ? null : () => _c.nuova(apiDi(context)),
+            icon: const Icon(Icons.add_comment_outlined),
+            label: const Text('Nuova conversazione'),
           ),
-        ),
-        if (_c.allegati.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Wrap(spacing: 8, runSpacing: 8, children: [for (final a in _c.allegati) _allegato(a, tema)]),
-              for (final e in errori)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(e, style: TextStyle(color: tema.error)),
-                ),
-            ]),
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            if (allegaPossibile)
-              IconButton(
-                tooltip: 'Allega documenti (${_c.formati.join(', ')}; al massimo ${_c.maxMbAllegato} MB)',
-                onPressed: _c.inAttesa ? null : _allega,
-                icon: const Icon(Icons.attach_file),
+        ]),
+      ),
+      Expanded(
+        child: ListView(
+          controller: _scorrimento,
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (_c.llmEsterno == true)
+              _riquadro(
+                colore: tema.tertiaryContainer,
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(Icons.warning_amber, color: tema.onTertiaryContainer),
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text('Il testo che scrivi e i passaggi dei documenti che carichi vengono inviati a '
+                        'un fornitore esterno all\'ente: non inserire né caricare dati personali.'),
+                  ),
+                ]),
               ),
-            Expanded(
-              child: TextField(
-                controller: _testo,
-                focusNode: _focus,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  hintText: 'Scrivi un messaggio o incolla un testo (Maiusc+Invio per andare a capo)',
-                  border: OutlineInputBorder(),
-                ),
+            for (final m in _c.messaggi) _messaggio(m, tema),
+            if (_c.inAttesa)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()),
+              ),
+            if (_c.errore != null)
+              _riquadro(
+                colore: tema.errorContainer,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(_c.errore!),
+                  TextButton(onPressed: () => _c.riprova(apiDi(context)), child: const Text('Riprova')),
+                ]),
+              ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Expanded(
+            child: TextField(
+              controller: _testo,
+              focusNode: _focus,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 6,
+              decoration: InputDecoration(
+                hintText: scelti > 0
+                    ? 'Domanda su ${scelti == 1 ? 'il documento selezionato' : 'i $scelti documenti selezionati'}'
+                        ' (Maiusc+Invio per andare a capo)'
+                    : 'Scrivi un messaggio o incolla un testo (Maiusc+Invio per andare a capo)',
+                border: const OutlineInputBorder(),
               ),
             ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              tooltip: 'Invia',
-              onPressed: _c.inAttesa || !_c.allegatiPronti ? null : _invia,
-              icon: const Icon(Icons.send),
-            ),
-          ]),
-        ),
-      ]),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filled(
+            tooltip: 'Invia',
+            onPressed: _c.inAttesa ? null : _invia,
+            icon: const Icon(Icons.send),
+          ),
+        ]),
+      ),
+    ]);
+    return Scaffold(
+      body: conDocumenti && largo
+          ? Row(children: [
+              Expanded(child: chat),
+              const VerticalDivider(width: 1),
+              SizedBox(width: _larghezzaPannello, child: _pannello(tema)),
+            ])
+          : chat,
     );
   }
 }

@@ -85,14 +85,16 @@ class ApiClient {
     return 'Errore ${r.statusCode}';
   }
 
-  Future<dynamic> get(String percorso, {Map<String, String>? query}) async {
-    final r = await _http.get(uri(percorso, query), headers: _intestazioni(json: false));
+  /// [intestazioni] aggiuntive per singola richiesta (es. la sessione dei documenti
+  /// dell'assistente).
+  Future<dynamic> get(String percorso, {Map<String, String>? query, Map<String, String>? intestazioni}) async {
+    final r = await _http.get(uri(percorso, query), headers: {..._intestazioni(json: false), ...?intestazioni});
     return _decodifica(r);
   }
 
-  Future<dynamic> post(String percorso, [Object? corpo]) async {
+  Future<dynamic> post(String percorso, [Object? corpo, Map<String, String>? intestazioni]) async {
     final r = await _http.post(uri(percorso),
-        headers: _intestazioni(), body: corpo == null ? null : jsonEncode(corpo));
+        headers: {..._intestazioni(), ...?intestazioni}, body: corpo == null ? null : jsonEncode(corpo));
     return _decodifica(r);
   }
 
@@ -102,9 +104,10 @@ class ApiClient {
   }
 
   /// [corpo] facoltativo (es. la nota di un'eliminazione, che resta nello storico).
-  Future<void> delete(String percorso, [Object? corpo]) async {
+  Future<void> delete(String percorso, [Object? corpo, Map<String, String>? intestazioni]) async {
     final r = await _http.delete(uri(percorso),
-        headers: _intestazioni(json: corpo != null), body: corpo == null ? null : jsonEncode(corpo));
+        headers: {..._intestazioni(json: corpo != null), ...?intestazioni},
+        body: corpo == null ? null : jsonEncode(corpo));
     _decodifica(r);
   }
 
@@ -114,9 +117,10 @@ class ApiClient {
     required String campoFile,
     required Uint8List bytes,
     required String nomeFile,
+    Map<String, String>? intestazioni,
   }) async {
     final richiesta = http.MultipartRequest('POST', uri(percorso))
-      ..headers.addAll(_intestazioni(json: false))
+      ..headers.addAll({..._intestazioni(json: false), ...?intestazioni})
       ..fields.addAll(campi)
       ..files.add(http.MultipartFile.fromBytes(campoFile, bytes, filename: nomeFile));
     final risposta = await http.Response.fromStream(await _http.send(richiesta));

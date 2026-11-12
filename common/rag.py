@@ -7,6 +7,10 @@ documenti basta una chiave valida. La conversione è asincrona: si avvia, si ric
 se ne chiede lo stato finché non è conclusa. Il RAG cancella il file a conversione finita e il
 risultato appena lo consegna (completed o failed): una seconda richiesta risponde 404, quindi se
 la risposta si perde il documento va riconvertito.
+
+Sessioni di documenti (assistente): contenitori temporanei nel RAG, legati alla chiave, con
+scadenza che si rinnova a ogni uso. Il RAG converte e indicizza i documenti e ne cerca i
+passaggi; la risposta la scrive l'LLM di atti-pa. Vedi progettazione/assistente_documenti.md.
 """
 
 from __future__ import annotations
@@ -79,6 +83,8 @@ class RagClient:
                 messaggio = "Chiave del RAG non valida o scaduta"
             log.warning("RAG %s %s -> %d %s", metodo, percorso, r.status_code, messaggio or r.text[:200])
             raise RagError(messaggio or f"Il RAG ha risposto con l'errore HTTP {r.status_code}", r.status_code)
+        if r.status_code == 204 or not r.content:
+            return {}
         return r.json()
 
     async def topics(self) -> list[dict]:
@@ -95,3 +101,38 @@ class RagClient:
         """Stato della conversione: status queued | running | completed (con content) | failed
         (con error). L'esito finale si riceve una volta sola."""
         return await self._richiesta("GET", f"/convert/{job_id}")
+
+    # --- Sessioni di documenti -----------------------------------------------------------
+
+    async def crea_sessione(self, owner: str) -> dict:
+        """Nuova sessione: session_id, expires_at, limits (max_documents, max_tokens...)."""
+        return await self._richiesta("POST", "/sessions", json={"owner": owner})
+
+    async def sessione(self, session_id: str) -> dict:
+        """Documenti (doc_id, file_name, status, tokens, sections, error), token usati, limiti."""
+        return await self._richiesta("GET", f"/sessions/{session_id}")
+
+    async def chiudi_sessione(self, session_id: str) -> None:
+        await self._richiesta("DELETE", f"/sessions/{session_id}")
+
+    async def carica_documento(self, session_id: str, contenuto: bytes, nome: str) -> dict:
+        """Avvia conversione e indicizzazione: doc_id e status (queued)."""
+        return await self._richiesta("POST", f"/sessions/{session_id}/documents", files={"file": (nome, contenuto)})
+
+    async def documento(self, session_id: str, doc_id: str) -> dict:
+        return await self._richiesta("GET", f"/sessions/{session_id}/documents/{doc_id}")
+
+    async def togli_documento(self, session_id: str, doc_id: str) -> None:
+        await self._richiesta("DELETE", f"/sessions/{session_id}/documents/{doc_id}")
+
+    async def cerca(self, session_id: str, domanda: str, doc_ids: list[str], quanti: int) -> dict:
+        """Sezioni pertinenti (passages: doc_id, file_name, parent_index, content, headings, score)."""
+        return await self._richiesta(
+            "POST", f"/sessions/{session_id}/search", json={"query": domanda, "doc_ids": doc_ids, "top_k": quanti}
+        )
+
+    async def sezioni(self, session_id: str, doc_id: str, da: int = 0, quante: int = 20) -> dict:
+        """Sezioni del documento in ordine, a blocchi (total, sections: index, content, headings)."""
+        return await self._richiesta(
+            "GET", f"/sessions/{session_id}/documents/{doc_id}/sections", params={"from": da, "limit": quante}
+        )

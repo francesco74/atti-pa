@@ -1,6 +1,7 @@
 """Modulo assistente via HTTP con un LLM e un RAG simulati: conversazione inviata per intero,
 limiti, errori del modello, avviso per i provider esterni, accesso per modulo; collegamento al
-RAG dell'ente (chiave cifrata, mai restituita) e documenti allegati convertiti dal RAG.
+RAG dell'ente (chiave cifrata, mai restituita) e documenti della conversazione nelle sessioni
+del RAG (token firmato, domande con i passaggi e le fonti).
     cd api/tests && python test_assistente_api.py
 """
 
@@ -156,36 +157,53 @@ class AssistenteApi(Installazione):
 
 
 class RagFinto:
-    """API esterne del RAG: chiave "chiave-segreta"; il lavoro "a" * 32 è in corso alla prima
-    richiesta e concluso alla seconda, poi non esiste più (l'esito si consegna una volta)."""
+    """API esterne del RAG con le sessioni di documenti: chiave "chiave-segreta", una sessione
+    "a" * 32 con un documento pronto "d" * 32 e uno in indicizzazione "e" * 32."""
 
     def __init__(self):
         self.richieste: list[httpx.Request] = []
-        self.contenuto = "# Relazione\n\nTesto del documento."
-        self.letture = 0
+        self.passaggi = [
+            {"doc_id": "d" * 32, "file_name": "Delibera 45.pdf", "parent_index": 2, "score": 0.9,
+             "content": "Il contributo è di 15.000 euro.", "headings": {"Header 1": "Dispositivo"}},
+            {"doc_id": "d" * 32, "file_name": "Delibera 45.pdf", "parent_index": 0, "score": 0.4,
+             "content": "Premesse.", "headings": {}},
+        ]  # fmt: skip
 
     def __call__(self, r: httpx.Request) -> httpx.Response:
         self.richieste.append(r)
         if r.headers.get("Authorization") != "Bearer chiave-segreta":
             return httpx.Response(401, json={"error": "Credenziale non valida"})
         percorso = r.url.path.removeprefix("/api/external/v1")
+        s, d = "/sessions/" + "a" * 32, "d" * 32
         if percorso == "/topics":
             return httpx.Response(200, json={"topics": [{"id": "atti", "description": "Atti", "sub_topics": []}]})
-        if percorso == "/convert" and r.method == "POST":
-            return httpx.Response(202, json={"job_id": "a" * 32, "status": "queued"})
-        if percorso == "/convert/" + "a" * 32:
-            self.letture += 1
-            if self.letture == 1:
-                return httpx.Response(200, json={"status": "running"})
-            if self.letture == 2:
-                return httpx.Response(200, json={"status": "completed", "content": self.contenuto})
-        if percorso == "/convert/" + "b" * 32:
-            return httpx.Response(200, json={"status": "failed", "error": "Pagina 3 illeggibile"})
-        return httpx.Response(404, json={"error": "Lavoro di conversione non trovato"})
+        if percorso == "/sessions" and r.method == "POST":
+            return httpx.Response(201, json={"session_id": "a" * 32, "expires_at": "2026-11-12T12:00:00Z",
+                                             "limits": {"max_documents": 10, "max_tokens": 500000}})  # fmt: skip
+        if percorso == s and r.method == "GET":
+            return httpx.Response(200, json={
+                "documents": [
+                    {"doc_id": d, "file_name": "Delibera 45.pdf", "status": "ready", "tokens": 1200, "sections": 3},
+                    {"doc_id": "e" * 32, "file_name": "Legge.pdf", "status": "indexing"},
+                    {"doc_id": "f" * 32, "file_name": "foto.png", "status": "failed", "error": "Nessun testo"},
+                ],
+                "tokens": 1200, "expires_at": "2026-11-12T12:00:00Z",
+                "limits": {"max_documents": 10, "max_tokens": 500000},
+            })  # fmt: skip
+        if percorso in (s, f"{s}/documents/{d}") and r.method == "DELETE":
+            return httpx.Response(204)
+        if percorso == f"{s}/documents" and r.method == "POST":
+            return httpx.Response(202, json={"doc_id": "e" * 32, "file_name": "Legge.pdf", "status": "queued"})
+        if percorso == f"{s}/documents/{d}":
+            return httpx.Response(200, json={"doc_id": d, "file_name": "Delibera 45.pdf", "status": "ready",
+                                             "tokens": 1200, "sections": 3})  # fmt: skip
+        if percorso == f"{s}/search":
+            return httpx.Response(200, json={"passages": self.passaggi, "reranker": "vllm", "not_ready": []})
+        return httpx.Response(404, json={"error": "Sessione non trovata"})
 
 
-class AllegatiApi(Installazione):
-    """Collegamento al RAG e allegati."""
+class DocumentiApi(Installazione):
+    """Collegamento al RAG e documenti della conversazione."""
 
     def setUp(self):
         super().setUp()
@@ -199,14 +217,19 @@ class AllegatiApi(Installazione):
         self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
         return r.get_json()
 
-    def _allega(self, c, nome="relazione.pdf"):
-        return c.post("/api/v1/assistente/allegati", base_url=ENTE, data={"file": (io.BytesIO(b"%PDF-1.7"), nome)},
-                      content_type="multipart/form-data")  # fmt: skip
+    def _sessione(self, c):
+        r = c.post("/api/v1/assistente/sessione", base_url=ENTE)
+        self.assertEqual(r.status_code, 201, r.get_data(as_text=True))
+        return {"X-Assistente-Sessione": r.get_json()["sessione"]}
+
+    def _carica(self, c, h, nome="Legge.pdf"):
+        return c.post("/api/v1/assistente/sessione/documenti", base_url=ENTE, headers=h,
+                      data={"file": (io.BytesIO(b"%PDF-1.7"), nome)}, content_type="multipart/form-data")  # fmt: skip
 
     def test_configurazione_con_chiave_cifrata(self):
         c = self._client()
-        self.assertEqual(c.get("/api/v1/assistente", base_url=ENTE).get_json()["formati_allegati"], [])
-        self.assertEqual(self._allega(c).status_code, 409)
+        self.assertEqual(c.get("/api/v1/assistente", base_url=ENTE).get_json()["formati_documenti"], [])
+        self.assertEqual(c.post("/api/v1/assistente/sessione", base_url=ENTE).status_code, 409)
         self.assertEqual(c.put("/api/v1/ente/rag", base_url=ENTE, json={"url": "https://x.it", "chiave": "k"}).status_code, 403)
         self.assertEqual(
             self.admin.put("/api/v1/ente/rag", base_url=ENTE, json={"url": "https://rag.example.it"}).status_code, 422
@@ -232,47 +255,133 @@ class AllegatiApi(Installazione):
         self.assertEqual(str(self.rag.richieste[-1].url), "https://rag.example.it/api/external/v1/topics")
 
         info = c.get("/api/v1/assistente", base_url=ENTE).get_json()
-        self.assertIn("docx", info["formati_allegati"])
-        self.assertIn("ods", info["formati_allegati"])
+        self.assertIn("docx", info["formati_documenti"])
+        self.assertIn("ods", info["formati_documenti"])
 
     def test_chiave_rifiutata(self):
         self._configura(chiave="sbagliata")
         prova = self.admin.post("/api/v1/ente/rag/prova", base_url=ENTE).get_json()
         self.assertEqual(prova["esito"], "ERRORE")
         self.assertIn("non valida", prova["messaggio"])
-        r = self._allega(self._client())
-        self.assertEqual(r.status_code, 502)
+        self.assertEqual(self._client().post("/api/v1/assistente/sessione", base_url=ENTE).status_code, 502)
 
-    def test_allegato_convertito(self):
+    def test_sessione_e_documenti(self):
         self._configura()
         c = self._client()
-        self.assertEqual(self._allega(c, "foto.gif").status_code, 415)
-        r = self._allega(c)
+        h = self._sessione(c)
+        creazione = self.rag.richieste[-1]
+        owner = json.loads(creazione.content)["owner"]
+        self.assertRegex(owner, r"^[0-9a-f]{32}$")  # impronta, non l'utente in chiaro
+
+        r = c.get("/api/v1/assistente/sessione", base_url=ENTE, headers=h)
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        stato = r.get_json()
+        self.assertEqual(stato["documenti"][0], {"id": "d" * 32, "nome": "Delibera 45.pdf", "stato": "pronto",
+                                                 "token": 1200, "parti": 3})  # fmt: skip
+        self.assertEqual(stato["documenti"][1]["stato"], "indicizzazione")
+        self.assertEqual(stato["documenti"][2]["errore"], "Nessun testo")
+        self.assertEqual(stato["limiti"], {"max_documenti": 10, "max_token": 500000})
+
+        self.assertEqual(self._carica(c, h, "foto.gif").status_code, 415)
+        r = self._carica(c, h)
         self.assertEqual(r.status_code, 202, r.get_data(as_text=True))
-        self.assertEqual(r.get_json(), {"job_id": "a" * 32, "nome": "relazione.pdf"})
-        invio = self.rag.richieste[-1]
-        self.assertIn(b'name="format"', invio.content)
-        self.assertIn(b"markdown", invio.content)
+        self.assertEqual(r.get_json(), {"id": "e" * 32, "nome": "Legge.pdf", "stato": "in_coda"})
+        self.assertEqual(str(self.rag.richieste[-1].url),
+                         "https://rag.example.it/api/external/v1/sessions/" + "a" * 32 + "/documents")  # fmt: skip
 
-        stato = lambda job: c.get(f"/api/v1/assistente/allegati/{job}", base_url=ENTE).get_json()  # noqa: E731
-        self.assertEqual(stato("a" * 32), {"stato": "running"})
-        self.assertEqual(stato("a" * 32), {"stato": "completed", "testo": "# Relazione\n\nTesto del documento."})
-        # risposta persa e richiesta ripetuta: il RAG ha già cancellato il risultato
-        ripetuta = stato("a" * 32)
-        self.assertEqual(ripetuta["stato"], "failed")
-        self.assertIn("allega di nuovo", ripetuta["errore"])
-        self.assertEqual(stato("b" * 32), {"stato": "failed", "errore": "Pagina 3 illeggibile"})
-        self.assertEqual(c.get("/api/v1/assistente/allegati/../x", base_url=ENTE).status_code, 404)
+        doc = c.get("/api/v1/assistente/sessione/documenti/" + "d" * 32, base_url=ENTE, headers=h)
+        self.assertEqual(doc.get_json()["stato"], "pronto")
+        self.assertEqual(c.get("/api/v1/assistente/sessione/documenti/x", base_url=ENTE, headers=h).status_code, 404)
+        self.assertEqual(c.delete("/api/v1/assistente/sessione/documenti/" + "d" * 32, base_url=ENTE, headers=h).status_code, 204)
+        self.assertEqual(c.delete("/api/v1/assistente/sessione", base_url=ENTE, headers=h).status_code, 204)
+        self.assertEqual(self.rag.richieste[-1].method, "DELETE")
 
-    def test_documento_troppo_lungo(self):
+    def test_token_della_sessione(self):
         self._configura()
-        self.rag.contenuto = "x" * 1001
         c = self._client()
-        self._allega(c)
-        c.get("/api/v1/assistente/allegati/" + "a" * 32, base_url=ENTE)
-        r = c.get("/api/v1/assistente/allegati/" + "a" * 32, base_url=ENTE).get_json()
-        self.assertEqual(r["stato"], "failed")
-        self.assertIn("1.001 caratteri", r["errore"])
+        h = self._sessione(c)
+        self.assertEqual(c.get("/api/v1/assistente/sessione", base_url=ENTE).status_code, 404)  # senza token
+        falso = {"X-Assistente-Sessione": "a" * 32 + ".0123456789abcdef0123456789abcdef"}
+        self.assertEqual(c.get("/api/v1/assistente/sessione", base_url=ENTE, headers=falso).status_code, 404)
+        # il token di un utente non vale per un altro dello stesso ente
+        altro = self._client(username="admin")
+        self.assertEqual(altro.get("/api/v1/assistente/sessione", base_url=ENTE, headers=h).status_code, 404)
+        n = len(self.rag.richieste)
+        self.assertEqual(c.get("/api/v1/assistente/sessione", base_url=ENTE, headers=h).status_code, 200)
+        self.assertEqual(len(self.rag.richieste), n + 1)
+
+    def test_sessione_scaduta(self):
+        self._configura()
+        c = self._client()
+        token = c.post("/api/v1/assistente/sessione", base_url=ENTE).get_json()["sessione"]
+        # stesso utente, sessione che il RAG non conosce più
+        self.rag.passaggi = []
+        h = {"X-Assistente-Sessione": token}
+        self.rag.__class__ = type("RagScaduto", (RagFinto,), {
+            "__call__": lambda s, r: httpx.Response(404, json={"error": "Sessione non trovata"})})  # fmt: skip
+        r = c.get("/api/v1/assistente/sessione", base_url=ENTE, headers=h)
+        self.assertEqual(r.status_code, 404)
+        self.assertIn("scaduta", r.get_data(as_text=True))
+        self.assertEqual(c.delete("/api/v1/assistente/sessione", base_url=ENTE, headers=h).status_code, 204)
+
+    def test_domanda_sui_documenti(self):
+        self._configura()
+        c = self._client()
+        h = self._sessione(c)
+        messaggi = [
+            {"role": "user", "content": "Di quanto è il contributo previsto dalla delibera?"},
+            {"role": "assistant", "content": "15.000 euro [Delibera 45.pdf, parte 3]"},
+            {"role": "user", "content": "e a chi va?"},
+        ]
+        r = c.post(PERCORSO, base_url=ENTE, headers=h, json={"messaggi": messaggi, "documenti": ["d" * 32]})
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        risposta = r.get_json()
+        self.assertEqual(risposta["testo"], "Testo rivisto")
+        self.assertEqual(risposta["fonti"], [{"documento": "Delibera 45.pdf", "parte": 3, "id": "d" * 32},
+                                             {"documento": "Delibera 45.pdf", "parte": 1, "id": "d" * 32}])  # fmt: skip
+        ricerca = json.loads(self.rag.richieste[-1].content)
+        self.assertEqual(ricerca["doc_ids"], ["d" * 32])
+        self.assertEqual(ricerca["top_k"], 8)
+        # domanda breve: si cerca insieme alla precedente
+        self.assertIn("contributo previsto", ricerca["query"])
+        self.assertTrue(ricerca["query"].endswith("e a chi va?"))
+
+        inviati = self.llm.ricevuti[-1]
+        self.assertEqual(inviati[:2], messaggi[:2])  # la conversazione resta com'è
+        ultimo = inviati[-1]["content"]
+        self.assertIn("<<< Delibera 45.pdf, parte 3 — Dispositivo >>>", ultimo)
+        self.assertIn("15.000 euro", ultimo)
+        # prima i passaggi, in fondo la domanda e le regole
+        self.assertLess(ultimo.index("15.000 euro"), ultimo.index("e a chi va?"))
+        self.assertLess(ultimo.index("e a chi va?"), ultimo.index("Usa solo le informazioni"))
+
+    def test_domanda_senza_passaggi_e_limiti(self):
+        self._configura()
+        c = self._client()
+        h = self._sessione(c)
+        self.rag.passaggi = []
+        domanda = {"messaggi": [{"role": "user", "content": "Cosa dice sul personale?"}], "documenti": ["d" * 32]}
+        r = c.post(PERCORSO, base_url=ENTE, headers=h, json=domanda)
+        self.assertEqual(r.get_json()["fonti"], [])
+        self.assertIn("nessun passaggio pertinente", self.llm.ricevuti[-1][-1]["content"])
+        # senza token o con documenti non validi la domanda sui documenti non parte
+        self.assertEqual(c.post(PERCORSO, base_url=ENTE, json=domanda).status_code, 404)
+        sbagliata = {**domanda, "documenti": ["../x"]}
+        self.assertEqual(c.post(PERCORSO, base_url=ENTE, headers=h, json=sbagliata).status_code, 422)
+
+    def test_budget_dei_passaggi(self):
+        self._configura()
+        c = self._client()
+        h = self._sessione(c)
+        lungo = {"doc_id": "d" * 32, "file_name": "Legge.pdf", "parent_index": 5, "score": 0.8,
+                 "content": "x" * 30_000, "headings": {}}  # fmt: skip
+        self.rag.passaggi = [lungo, dict(lungo, parent_index=6)]
+        c.post(PERCORSO, base_url=ENTE, headers=h,
+               json={"messaggi": [{"role": "user", "content": "Riassumi"}], "documenti": ["d" * 32]})  # fmt: skip
+        ultimo = self.llm.ricevuti[-1][-1]["content"]
+        self.assertIn("[…]", ultimo)
+        self.assertNotIn("parte 7", ultimo)  # oltre il budget (24.000 caratteri)
+        self.assertLess(len(ultimo), 26_000)
 
 
 class Temperatura(unittest.IsolatedAsyncioTestCase):
