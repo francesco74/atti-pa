@@ -1,8 +1,8 @@
 # Assistente — documenti della conversazione (proposta)
 
-Stato: **fasi 1 e 2 realizzate** (rag: sessioni di documenti; atti-pa: sessione, pannello,
-domande con citazioni). Da fare: azioni Riassumi, Confronta ed Estrai (fase 3) e batteria di
-prova (fase 4). La parte del rag è descritta nel repository `rag`, in `misc/SESSIONI_DOCUMENTI.md`.
+Stato: **fasi 1, 2 e 3 realizzate** (rag: sessioni di documenti; atti-pa: sessione, pannello,
+domande con citazioni, azioni Riassumi, Confronta ed Estrai). Da fare: batteria di prova
+(fase 4). La parte del rag è descritta nel repository `rag`, in `misc/SESSIONI_DOCUMENTI.md`.
 Le differenze rispetto alla proposta iniziale sono nel §10.
 
 ## 1. Obiettivo
@@ -122,7 +122,7 @@ risposte attese si conservano, per ripetere la prova quando cambia il modello.
 1. **rag**: sessioni di documenti (vedi il documento del rag). È il prerequisito. **Fatto.**
 2. **atti-pa**: token di sessione, pannello dei documenti, domande libere con ricerca e
    citazioni. Gli allegati al messaggio si tolgono. **Fatto.**
-3. **atti-pa**: azioni Riassumi, Confronta ed Estrai nel worker.
+3. **atti-pa**: azioni Riassumi, Confronta ed Estrai nel worker. **Fatto.**
 4. **Batteria di prova** e regolazioni.
 5. **Dopo**, se serve: aggiungere al pannello articoli dalla libreria delle norme (Normattiva)
    invece del PDF della legge intera.
@@ -161,3 +161,38 @@ sessione (impostazioni `SESSION_*` del rag).
 - **App**: pannello "Documenti" a lato da 1000 pixel di larghezza, dal basso sotto; casella di
   selezione, stato, parti e token, barra dello spazio usato. "Nuova conversazione" chiude la
   sessione nel rag. Se la sessione è scaduta i documenti risultano in errore e vanno ricaricati.
+
+## 11. Come sono state realizzate le azioni (fase 3)
+
+- **Lavoro nel worker**: tabella `assistente_lavori` (`deploy/k8s/sql/0005_assistente_lavori.sql`,
+  idempotente), coda `assistente`, `worker/src/assistente.py`. Le azioni hanno un turno proprio
+  nel worker, separato da quello delle verifiche: l'utente le aspetta. La logica è in
+  `common/assistente_azioni.py`.
+- **API**: `POST /api/v1/assistente/azioni` (`tipo` riassunto, confronto, estrazione; `documenti`;
+  `istruzioni`, obbligatorie per l'estrazione), `GET /azioni/<id>` (stato, avanzamento, testo),
+  `DELETE /azioni/<id>` (annulla: il worker si ferma al passo successivo). Un'azione è visibile
+  solo all'utente che l'ha avviata.
+- **Map-reduce**: le parti di ogni documento si leggono dal rag in ordine e si raggruppano in
+  blocchi consecutivi (`ASSISTENTE_CARATTERI_BLOCCO`, 12.000 caratteri); ogni parte porta
+  l'etichetta "[documento, parte n]" che l'LLM cita. Ogni blocco va all'LLM da solo, i risultati
+  parziali si uniscono a gruppi finché non stanno in una chiamata
+  (`ASSISTENTE_CARATTERI_PASSAGGI`), poi una chiamata finale scrive il risultato.
+  - *Riassumi*: un documento che sta in un blocco si riassume con una sola chiamata; uno lungo
+    con il riassunto di ogni blocco e poi quello finale. Con più documenti, un riassunto per
+    documento.
+  - *Confronta*: una scheda per blocco (tipo e oggetto, soggetti, importi, date, obblighi, norme),
+    unita in una scheda per documento; il confronto finale ha una tabella, le differenze e le
+    incoerenze.
+  - *Estrai*: gli elementi richiesti blocco per blocco (i blocchi senza elementi rispondono
+    NESSUNO e si scartano), poi una tabella senza duplicati con la colonna "Fonte".
+- **Limiti**: al massimo `ASSISTENTE_MAX_BLOCCHI` (120) blocchi per azione, cioè circa 1,4
+  milioni di caratteri: oltre si chiede di selezionare meno documenti.
+- **Errori**: sessione scaduta o documento senza testo chiudono subito l'azione; LLM o rag non
+  disponibili si ritentano fino a `WORKER_MAX_TENTATIVI`. Un'azione senza avanzamenti da 10
+  minuti (worker terminato) torna in coda. Le azioni si cancellano dopo un giorno, concluse o
+  no: il risultato contiene testo dei documenti.
+- **App**: pulsanti Riassumi, Confronta (almeno due documenti selezionati) ed Estrai… (scelte
+  rapide: scadenze, importi, obblighi, soggetti, o testo libero) nel pannello; nella chat
+  l'avanzamento ("passo 3 di 9") con Annulla. Il risultato diventa una risposta
+  dell'assistente, su cui si possono fare altre domande.
+

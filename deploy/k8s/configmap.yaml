@@ -53,6 +53,9 @@ data:
   # un max_model_len più ampio)
   ASSISTENTE_PASSAGGI: "8"
   ASSISTENTE_CARATTERI_PASSAGGI: "24000"
+  # Azioni sui documenti (worker): caratteri per blocco e blocchi al massimo per azione
+  ASSISTENTE_CARATTERI_BLOCCO: "12000"
+  ASSISTENTE_MAX_BLOCCHI: "120"
   # API del RAG (indirizzo e chiave nella configurazione di ogni ente)
   RAG_TIMEOUT: "30"
   # Posta in uscita: attesa del server SMTP, tentativi per email, email per giro del worker

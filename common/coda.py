@@ -5,6 +5,7 @@ Flusso di un controllo:
     API --conversione--> converter --convertiti--> worker
     API --verifica-----------------------------> worker   (rianalisi, bozze)
     API --trasparenza--------------------------> worker   (analisi, estrazioni)
+    API --assistente---------------------------> worker   (azioni sui documenti)
 
 Messaggi (JSON, persistenti, code durevoli `<RABBITMQ_PREFISSO>.<coda>`):
 - conversione: {"atto_id", "verifica_id", "percorso", "nome_file"}  (percorso relativo
@@ -14,6 +15,7 @@ Messaggi (JSON, persistenti, code durevoli `<RABBITMQ_PREFISSO>.<coda>`):
   oppure {"testo_norma_id", "markdown", "errore"}
 - verifica:    {"verifica_id"}
 - trasparenza: {"lavoro_id"}                                          (tabella trasparenza_lavori)
+- assistente:  {"lavoro_id"}                                          (tabella assistente_lavori)
 
 Lo stato resta nel database (tabella verifiche, stato dell'atto): un messaggio è solo un
 avviso che c'è lavoro. Se l'invio fallisce, o un messaggio si perde, il worker lo reinvia
@@ -38,7 +40,8 @@ CONVERSIONE = "conversione"
 CONVERTITI = "convertiti"
 VERIFICA = "verifica"
 TRASPARENZA = "trasparenza"
-CODE = (CONVERSIONE, CONVERTITI, VERIFICA, TRASPARENZA)
+ASSISTENTE = "assistente"
+CODE = (CONVERSIONE, CONVERTITI, VERIFICA, TRASPARENZA, ASSISTENTE)
 
 Gestore = Callable[[dict[str, Any]], Awaitable[None]]
 

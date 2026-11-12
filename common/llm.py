@@ -129,6 +129,14 @@ SEGNAPOSTO = {
     "dati_personali_utente": {"parte", "testo_atto"},
     "assistente_sistema": set(),
     "assistente_documenti": {"passaggi", "domanda"},
+    "azioni_sistema": set(),
+    "azione_riassunto_parte": {"documento", "parti", "testo", "istruzioni"},
+    "azione_riassunto": {"documento", "contenuto", "istruzioni"},
+    "azione_unisci": {"compito", "parziali", "istruzioni"},
+    "azione_scheda": {"documento", "parti", "testo", "istruzioni"},
+    "azione_confronto": {"schede", "istruzioni"},
+    "azione_estrai_parte": {"documento", "parti", "testo", "istruzioni"},
+    "azione_estrai": {"elementi", "istruzioni"},
     "relazione_sistema": set(),
     "relazione_utente": {"ente", "relazione", "sezione", "dati"},
 }
@@ -351,6 +359,11 @@ class LlmClient:
         """Testo libero (redazione): richiesta interattiva, con il suo timeout."""
         messaggi = [{"role": "user", "content": testo}]
         return await self._chiama(sistema, messaggi, formato=None, redazione=True)
+
+    async def elabora(self, sistema: str, testo: str) -> str:
+        """Testo libero per un passo di un lavoro del worker (azioni dell'assistente sui
+        documenti): temperatura delle valutazioni e timeout lungo."""
+        return await self._chiama(sistema, [{"role": "user", "content": testo}], formato=None, redazione=False)
 
     async def conversa(self, messaggi: list[dict]) -> str:
         """Risposta dell'assistente a una conversazione (ruoli `user`/`assistant`). Usa il

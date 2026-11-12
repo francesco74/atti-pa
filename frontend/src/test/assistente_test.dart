@@ -156,6 +156,50 @@ void main() {
     expect(richieste.last.url.path, '/api/v1/assistente/sessione');
   });
 
+  testWidgets('azione Riassumi: avanzamento, risultato nella conversazione', (tester) async {
+    final richieste = <http.Request>[];
+    var letture = 0;
+    final id = 'd' * 32;
+    final api = ApiClient('http://api.test', client: MockClient((r) async {
+      richieste.add(r);
+      switch (r.url.path) {
+        case '/api/v1/assistente':
+          return _json({'llm_esterno': false, 'formati_documenti': ['pdf']});
+        case '/api/v1/assistente/sessione':
+          return _json({'sessione': 't', 'limiti': {'max_documenti': 10, 'max_token': 500000}}, 201);
+        case '/api/v1/assistente/sessione/documenti':
+          return _json({'id': id, 'nome': 'Legge.pdf', 'stato': 'pronto', 'token': 90000, 'parti': 60}, 202);
+        case '/api/v1/assistente/azioni':
+          return _json({'id': 'lavoro-1', 'tipo': 'riassunto', 'stato': 'in_coda', 'avanzamento': {'fatti': 0, 'totale': 0}}, 202);
+      }
+      return _json(++letture == 1
+          ? {'stato': 'in_corso', 'avanzamento': {'fatti': 3, 'totale': 9}}
+          : {'stato': 'completata', 'avanzamento': {'fatti': 9, 'totale': 9}, 'testo': 'La legge disciplina il turismo.'});
+    }));
+    final c = ConversazioneAssistente();
+    await _apri(tester, api, c);
+    c.carica(api, FileScelto('Legge.pdf', Uint8List.fromList([1])));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Confronta'), findsOneWidget);
+    final confronta = tester.widget<OutlinedButton>(find.ancestor(of: find.text('Confronta'), matching: find.byType(OutlinedButton)));
+    expect(confronta.onPressed, isNull); // un solo documento
+
+    await tester.tap(find.text('Riassumi'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Riassunto in corso: passo 3 di 9'), findsOneWidget);
+    final avvio = richieste.firstWhere((r) => r.url.path == '/api/v1/assistente/azioni');
+    expect(jsonDecode(avvio.body), {'tipo': 'riassunto', 'documenti': [id], 'istruzioni': ''});
+    expect(avvio.headers['X-Assistente-Sessione'], 't');
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('La legge disciplina il turismo', findRichText: true), findsOneWidget);
+    expect(c.inAttesa, isFalse);
+    expect(c.messaggi.first['content'], 'Riassumi: Legge.pdf');
+  });
+
   testWidgets('sessione scaduta nel RAG: i documenti vanno ricaricati', (tester) async {
     final api = ApiClient('http://api.test', client: MockClient((r) async {
       switch (r.url.path) {

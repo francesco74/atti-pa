@@ -8,6 +8,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0002_proposte_performance.sql` | proposte sugli obiettivi della performance (iter di approvazione) |
 | `0003_indicatori_performance.sql` | indicatori delle azioni e misure degli obiettivi della performance |
 | `0004_password_amministratori.sql` | gli amministratori locali cambiano la password al prossimo accesso (minimo 16 caratteri) |
+| `0005_assistente_lavori.sql` | azioni dell'assistente sui documenti (Riassumi, Confronta, Estrai) eseguite dal worker |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

@@ -19,13 +19,13 @@ RADICE = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RADICE), str(RADICE / "api" / "src")]
 
 import httpx  # noqa: E402
-from sqlalchemy import select  # noqa: E402
+from sqlalchemy import select, update  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 
 from auth import password as pw  # noqa: E402
 from common.config import Settings  # noqa: E402
 from common.llm import LlmError, crea_llm  # noqa: E402
-from common.models import Base, Ente, EnteDominio, Modulo, Ruolo, User  # noqa: E402
+from common.models import AssistenteLavoro, Base, Ente, EnteDominio, Modulo, Ruolo, User  # noqa: E402
 
 PASSWORD = "Password-di-prova-1"
 ENTE = "http://assistente.example.it"
@@ -202,8 +202,8 @@ class RagFinto:
         return httpx.Response(404, json={"error": "Sessione non trovata"})
 
 
-class DocumentiApi(Installazione):
-    """Collegamento al RAG e documenti della conversazione."""
+class ConRag(Installazione):
+    """RAG simulato, collegamento da configurare, sessione e caricamento."""
 
     def setUp(self):
         super().setUp()
@@ -225,6 +225,11 @@ class DocumentiApi(Installazione):
     def _carica(self, c, h, nome="Legge.pdf"):
         return c.post("/api/v1/assistente/sessione/documenti", base_url=ENTE, headers=h,
                       data={"file": (io.BytesIO(b"%PDF-1.7"), nome)}, content_type="multipart/form-data")  # fmt: skip
+
+
+
+class DocumentiApi(ConRag):
+    """Collegamento al RAG e documenti della conversazione."""
 
     def test_configurazione_con_chiave_cifrata(self):
         c = self._client()
@@ -382,6 +387,69 @@ class DocumentiApi(Installazione):
         self.assertIn("[…]", ultimo)
         self.assertNotIn("parte 7", ultimo)  # oltre il budget (24.000 caratteri)
         self.assertLess(len(ultimo), 26_000)
+
+
+class AzioniApi(ConRag):
+    """Riassumi, Confronta, Estrai: validazione, lavoro accodato, stato solo per chi l'ha avviata."""
+
+    def _avvia(self, c, h, **corpo):
+        return c.post("/api/v1/assistente/azioni", base_url=ENTE, headers=h, json=corpo)
+
+    def test_validazione(self):
+        self._configura()
+        c = self._client()
+        h = self._sessione(c)
+        d, e = "d" * 32, "e" * 32
+        self.assertEqual(self._avvia(c, {}, tipo="riassunto", documenti=[d]).status_code, 404)  # senza sessione
+        self.assertEqual(self._avvia(c, h, tipo="confronto", documenti=[d]).status_code, 422)  # almeno due
+        self.assertEqual(self._avvia(c, h, tipo="estrazione", documenti=[d]).status_code, 422)  # cosa estrarre
+        self.assertEqual(self._avvia(c, h, tipo="traduzione", documenti=[d]).status_code, 422)
+        self.assertEqual(self._avvia(c, h, tipo="riassunto", documenti=[d, d]).status_code, 422)
+        self.assertEqual(self._avvia(c, h, tipo="riassunto", documenti=["0" * 32]).status_code, 404)
+        r = self._avvia(c, h, tipo="riassunto", documenti=[e])  # ancora in indicizzazione
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("Legge.pdf", r.get_data(as_text=True))
+
+    def test_azione_accodata_e_seguita(self):
+        self._configura()
+        c = self._client()
+        h = self._sessione(c)
+        r = self._avvia(c, h, tipo="estrazione", documenti=["d" * 32], istruzioni=" le scadenze ")
+        self.assertEqual(r.status_code, 202, r.get_data(as_text=True))
+        azione = r.get_json()
+        self.assertEqual({k: azione[k] for k in ("tipo", "stato")}, {"tipo": "estrazione", "stato": "in_coda"})
+        self.assertEqual(azione["avanzamento"], {"fatti": 0, "totale": 0})
+
+        async def leggi():
+            motore = create_async_engine(self.url)
+            async with AsyncSession(motore) as db:
+                lavoro = await db.get(AssistenteLavoro, azione["id"])
+            await motore.dispose()
+            return lavoro
+
+        lavoro = asyncio.run(leggi())
+        self.assertEqual(lavoro.tipo, "ESTRAZIONE")
+        self.assertEqual(lavoro.richiesta, {"sessione": "a" * 32, "istruzioni": "le scadenze",
+                                            "documenti": [{"id": "d" * 32, "nome": "Delibera 45.pdf"}]})  # fmt: skip
+
+        async def concludi():
+            motore = create_async_engine(self.url)
+            async with motore.begin() as conn:
+                await conn.execute(update(AssistenteLavoro).where(AssistenteLavoro.id == azione["id"]).values(
+                    stato="COMPLETATA", risultato="| Scadenza | Fonte |", avanzamento={"fatti": 3, "totale": 3}))
+            await motore.dispose()
+
+        asyncio.run(concludi())
+        stato = c.get(f"/api/v1/assistente/azioni/{azione['id']}", base_url=ENTE).get_json()
+        self.assertEqual(stato["stato"], "completata")
+        self.assertEqual(stato["testo"], "| Scadenza | Fonte |")
+        self.assertEqual(stato["avanzamento"], {"fatti": 3, "totale": 3})
+        # un altro utente non la vede né la annulla
+        altro = self._client(username="admin")
+        self.assertEqual(altro.get(f"/api/v1/assistente/azioni/{azione['id']}", base_url=ENTE).status_code, 404)
+        self.assertEqual(altro.delete(f"/api/v1/assistente/azioni/{azione['id']}", base_url=ENTE).status_code, 404)
+        self.assertEqual(c.delete(f"/api/v1/assistente/azioni/{azione['id']}", base_url=ENTE).status_code, 204)
+        self.assertEqual(c.get(f"/api/v1/assistente/azioni/{azione['id']}", base_url=ENTE).status_code, 404)
 
 
 class Temperatura(unittest.IsolatedAsyncioTestCase):

@@ -622,6 +622,33 @@ class TrasparenzaLavoro(Base):
 
 
 
+class AssistenteLavoro(Base):
+    """Azione dell'assistente sui documenti della conversazione (Riassumi, Confronta, Estrai),
+    eseguita dal worker (coda "assistente") sulla sessione del RAG. Il risultato contiene testo
+    dei documenti: il worker cancella i lavori dopo un giorno."""
+
+    __tablename__ = "assistente_lavori"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(12))  # RIASSUNTO, CONFRONTO, ESTRAZIONE
+    stato: Mapped[str] = mapped_column(String(20), default=StatoVerifica.IN_CODA)  # come le verifiche
+    # sessione del RAG, documenti (id e nomi), istruzioni
+    richiesta: Mapped[dict[str, Any]] = mapped_column(JSON)
+    avanzamento: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # {"fatti", "totale"}
+    risultato: Mapped[str | None] = mapped_column(Text, deferred=True)
+    errore: Mapped[str | None] = mapped_column(Text)
+    modello_llm: Mapped[str | None] = mapped_column(String(100))
+    tentativi: Mapped[int] = mapped_column(Integer, default=0)
+    worker: Mapped[str | None] = mapped_column(String(100))
+    avviato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    # ultimo avanzamento: un lavoro in corso fermo da troppo ha perso il worker
+    aggiornato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    completato_il: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 # --- modulo anticorruzione (progettazione/anticorruzione.md) --------------------------------
 
 

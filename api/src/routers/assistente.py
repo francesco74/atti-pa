@@ -8,6 +8,10 @@ A ogni domanda sui documenti selezionati il RAG restituisce i passaggi pertinent
 risponde solo da quelli, citandoli: nessun documento entra intero nel prompt, quindi si
 lavora anche su leggi lunghe. atti-pa fa da tramite: la chiave del RAG non arriva all'app.
 
+Azioni (Riassumi, Confronta, Estrai): leggono i documenti per intero, a blocchi, con decine di
+chiamate all'LLM; le esegue il worker (coda "assistente", tabella assistente_lavori) e l'app
+ne segue l'avanzamento. Il risultato diventa un messaggio dell'assistente nella conversazione.
+
 La sessione non ha tabelle: l'app riceve un token (id della sessione del RAG con una firma
 che lo lega a ente e utente) e lo rimanda nell'intestazione X-Assistente-Sessione. La sessione
 si perde ricaricando la pagina o con "Nuova conversazione", e nel RAG scade da sola.
@@ -21,11 +25,14 @@ from typing import Literal
 
 from flask import Blueprint, request
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import undefer
 
-from deps import autenticato, ente, ente_id, risorse, utente
+from deps import autenticato, db, ente, ente_id, notifica, risorse, utente
 from web import ErroreApi, corpo, file_caricato
+from common import coda
+from common.assistente_azioni import CONFRONTO, ESTRAZIONE, RIASSUNTO
 from common.llm import PROVIDER_ESTERNI, LlmError, testo_prompt
-from common.models import Modulo
+from common.models import AssistenteLavoro, Modulo, StatoVerifica
 from common.rag import FORMATI_CONVERSIONE, RagClient, RagError
 
 bp = Blueprint("assistente", __name__, url_prefix="/api/v1/assistente")
@@ -303,3 +310,90 @@ async def messaggio():
     if not testo:
         raise ErroreApi(HTTPStatus.BAD_GATEWAY, "Il modello non ha restituito alcuna risposta")
     return {"testo": testo, "fonti": fonti} if dati.documenti else {"testo": testo}
+
+
+# --- Azioni sui documenti -------------------------------------------------------------------
+
+TIPI_AZIONE = {"riassunto": RIASSUNTO, "confronto": CONFRONTO, "estrazione": ESTRAZIONE}
+STATI_AZIONE = {StatoVerifica.IN_CODA: "in_coda", StatoVerifica.IN_CORSO: "in_corso",
+                StatoVerifica.COMPLETATA: "completata", StatoVerifica.ERRORE: "errore"}  # fmt: skip
+
+
+class AzioneIn(BaseModel):
+    tipo: Literal["riassunto", "confronto", "estrazione"]
+    documenti: list[str] = Field(min_length=1, max_length=20)
+    # riassunto e confronto: indicazioni facoltative; estrazione: cosa estrarre
+    istruzioni: str = Field(default="", max_length=2000)
+
+
+def _azione(lavoro: AssistenteLavoro, con_testo: bool = False) -> dict:
+    vista = {
+        "id": lavoro.id,
+        "tipo": next(k for k, v in TIPI_AZIONE.items() if v == lavoro.tipo),
+        "stato": STATI_AZIONE.get(lavoro.stato, "in_coda"),
+        "avanzamento": lavoro.avanzamento or {"fatti": 0, "totale": 0},
+    }
+    if lavoro.stato == StatoVerifica.ERRORE:
+        vista["errore"] = lavoro.errore or "Azione non riuscita"
+    if con_testo and lavoro.stato == StatoVerifica.COMPLETATA:
+        vista["testo"] = lavoro.risultato or ""
+    return vista
+
+
+async def _lavoro_utente(lavoro_id: str) -> AssistenteLavoro:
+    lavoro = await db().get(AssistenteLavoro, lavoro_id, options=[undefer(AssistenteLavoro.risultato)])
+    if lavoro is None or lavoro.ente_id != ente_id() or lavoro.utente_id != utente().id:
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Azione non trovata")
+    return lavoro
+
+
+@bp.post("/azioni")
+@utente_assistente
+async def avvia_azione():
+    """Avvia Riassumi, Confronta o Estrai sui documenti indicati (pronti nella sessione)."""
+    dati = corpo(AzioneIn)
+    session_id = _sessione()
+    if not all(ID_RAG.match(d) for d in dati.documenti) or len(set(dati.documenti)) != len(dati.documenti):
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Documenti non validi")
+    if dati.tipo == "confronto" and len(dati.documenti) < 2:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Per confrontare servono almeno due documenti")
+    if dati.tipo == "estrazione" and not dati.istruzioni.strip():
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Indica cosa estrarre")
+    try:
+        stato = await _rag_obbligatorio().sessione(session_id)
+    except RagError as e:
+        raise _errore_rag(e) from e
+    documenti = {d["doc_id"]: d for d in stato.get("documents", [])}
+    for d in dati.documenti:
+        if d not in documenti:
+            raise ErroreApi(HTTPStatus.NOT_FOUND, "Documento non trovato nella sessione")
+        if documenti[d].get("status") != "ready":
+            raise ErroreApi(HTTPStatus.CONFLICT, f"Il documento {documenti[d]['file_name']} non è ancora pronto")
+    lavoro = AssistenteLavoro(
+        ente_id=ente_id(), utente_id=utente().id, tipo=TIPI_AZIONE[dati.tipo],
+        richiesta={"sessione": session_id, "istruzioni": dati.istruzioni.strip(),
+                   "documenti": [{"id": d, "nome": documenti[d]["file_name"]} for d in dati.documenti]},
+    )  # fmt: skip
+    sessione = db()
+    sessione.add(lavoro)
+    await sessione.commit()
+    await sessione.refresh(lavoro)
+    await notifica(coda.ASSISTENTE, {"lavoro_id": lavoro.id})
+    return _azione(lavoro), HTTPStatus.ACCEPTED
+
+
+@bp.get("/azioni/<lavoro_id>")
+@utente_assistente
+async def stato_azione(lavoro_id: str):
+    """Stato e avanzamento ({fatti, totale} chiamate all'LLM); a lavoro concluso il testo."""
+    return _azione(await _lavoro_utente(lavoro_id), con_testo=True)
+
+
+@bp.delete("/azioni/<lavoro_id>")
+@utente_assistente
+async def annulla_azione(lavoro_id: str):
+    """Annulla l'azione: il worker si ferma al passo successivo."""
+    lavoro = await _lavoro_utente(lavoro_id)
+    await db().delete(lavoro)
+    await db().commit()
+    return "", HTTPStatus.NO_CONTENT

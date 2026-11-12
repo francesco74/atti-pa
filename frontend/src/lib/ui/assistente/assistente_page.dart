@@ -59,11 +59,17 @@ class DocumentoSessione {
 class ConversazioneAssistente extends ChangeNotifier {
   /// role e content (inviati al modello). Per i messaggi dell'utente anche `documenti` (nomi
   /// dei documenti su cui si chiede, separati da a capo) e `ids` (i loro id, separati da
-  /// virgola); per le risposte `fonti` (righe "documento|parte").
+  /// virgola), e per le azioni `azione` (riassunto, confronto, estrazione) e `istruzioni`;
+  /// per le risposte `fonti` (righe "documento|parte").
   final messaggi = <Map<String, String>>[];
   final documenti = <DocumentoSessione>[];
   bool inAttesa = false;
   String? errore;
+
+  /// Azione in corso (Riassumi, Confronta, Estrai): id e avanzamento (chiamate all'LLM).
+  String? azioneId;
+  int azioneFatti = 0;
+  int azioneTotale = 0;
 
   /// Se il modello è esterno all'ente; null finché non si sa.
   bool? llmEsterno;
@@ -210,6 +216,7 @@ class ConversazioneAssistente extends ChangeNotifier {
   }
 
   Future<void> riprova(ApiClient api) async {
+    if (messaggi.last['azione'] != null) return _eseguiAzione(api);
     final turno = ++_turno;
     inAttesa = true;
     errore = null;
@@ -241,9 +248,93 @@ class ConversazioneAssistente extends ChangeNotifier {
     _aggiorna();
   }
 
+  static const nomiAzioni = {'riassunto': 'Riassumi', 'confronto': 'Confronta', 'estrazione': 'Estrai'};
+
+  /// Riassumi, Confronta o Estrai sui documenti selezionati: lavoro del worker, che legge i
+  /// documenti per intero a blocchi; il risultato diventa una risposta dell'assistente.
+  Future<void> azione(ApiClient api, String tipo, {String istruzioni = ''}) async {
+    final scelti = selezionati;
+    if (scelti.isEmpty || inAttesa) return;
+    final nomi = scelti.map((d) => d.nome).join(', ');
+    messaggi.add({
+      'role': 'user',
+      'content': '${nomiAzioni[tipo]}: $nomi${istruzioni.isNotEmpty ? ' — $istruzioni' : ''}',
+      'documenti': scelti.map((d) => d.nome).join('\n'),
+      'ids': scelti.map((d) => d.id!).join(','),
+      'azione': tipo,
+      'istruzioni': istruzioni,
+    });
+    await _eseguiAzione(api);
+  }
+
+  Future<void> _eseguiAzione(ApiClient api) async {
+    final m = messaggi.last;
+    final turno = ++_turno;
+    inAttesa = true;
+    errore = null;
+    azioneFatti = azioneTotale = 0;
+    notifyListeners();
+    bool attivo() => turno == _turno && !_chiusa;
+    try {
+      final r = await api.post('/api/v1/assistente/azioni', {
+        'tipo': m['azione'],
+        'documenti': m['ids']!.split(','),
+        'istruzioni': m['istruzioni'] ?? '',
+      }, _intestazioni) as Map<String, dynamic>;
+      if (!attivo()) return;
+      azioneId = r['id'] as String;
+      final limite = DateTime.now().add(const Duration(hours: 2));
+      while (attivo()) {
+        await Future<void>.delayed(_intervalloStato);
+        if (!attivo() || azioneId == null) return;
+        final s = await api.get('/api/v1/assistente/azioni/$azioneId') as Map<String, dynamic>;
+        if (!attivo()) return;
+        final avanzamento = s['avanzamento'] as Map<String, dynamic>? ?? const {};
+        azioneFatti = (avanzamento['fatti'] as num?)?.toInt() ?? 0;
+        azioneTotale = (avanzamento['totale'] as num?)?.toInt() ?? 0;
+        if (s['stato'] == 'completata') {
+          messaggi.add({'role': 'assistant', 'content': s['testo'] as String? ?? ''});
+          break;
+        }
+        if (s['stato'] == 'errore') {
+          errore = s['errore'] as String? ?? 'Azione non riuscita';
+          break;
+        }
+        if (DateTime.now().isAfter(limite)) {
+          errore = 'L\'azione non è terminata in due ore';
+          break;
+        }
+        _aggiorna();
+      }
+    } on ApiException catch (e) {
+      if (!attivo()) return;
+      if (e.status == 404 && azioneId == null) _sessioneScaduta();
+      errore = e.messaggio;
+    } catch (e) {
+      if (!attivo()) return;
+      errore = e.toString();
+    }
+    azioneId = null;
+    inAttesa = false;
+    _aggiorna();
+  }
+
+  /// Ferma l'azione in corso: il worker si ferma al passo successivo.
+  void annullaAzione(ApiClient api) {
+    final id = azioneId;
+    if (id == null) return;
+    azioneId = null;
+    api.delete('/api/v1/assistente/azioni/$id').catchError((_) {});
+    if (messaggi.isNotEmpty && messaggi.last['azione'] != null) messaggi.removeLast();
+    _turno++;
+    inAttesa = false;
+    _aggiorna();
+  }
+
   /// Nuova conversazione: la sessione dei documenti si chiude e il RAG li cancella subito.
   void nuova(ApiClient api) {
     _turno++;
+    annullaAzione(api);
     if (_sessione != null) {
       api.delete('/api/v1/assistente/sessione', null, _intestazioni).catchError((_) {});
     }
@@ -368,7 +459,8 @@ class _AssistentePageState extends State<AssistentePage> {
 
   Widget _messaggio(Map<String, String> m, ColorScheme tema) {
     if (m['role'] == 'user') {
-      final documenti = m['documenti']?.split('\n') ?? const <String>[];
+      // nelle azioni i nomi dei documenti sono già nel testo del messaggio
+      final documenti = m['azione'] != null ? const <String>[] : m['documenti']?.split('\n') ?? const <String>[];
       return _riquadro(
         aDestra: true,
         colore: tema.primaryContainer,
@@ -479,6 +571,31 @@ class _AssistentePageState extends State<AssistentePage> {
                     ),
                 ]),
         ),
+        if (_c.documenti.any((d) => d.pronto))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Wrap(spacing: 8, runSpacing: 8, children: [
+              OutlinedButton.icon(
+                onPressed: _c.inAttesa || _c.selezionati.isEmpty ? null : () => _c.azione(apiDi(context), 'riassunto'),
+                icon: const Icon(Icons.short_text),
+                label: const Text('Riassumi'),
+              ),
+              Tooltip(
+                message: 'Seleziona almeno due documenti',
+                child: OutlinedButton.icon(
+                  onPressed:
+                      _c.inAttesa || _c.selezionati.length < 2 ? null : () => _c.azione(apiDi(context), 'confronto'),
+                  icon: const Icon(Icons.compare_arrows),
+                  label: const Text('Confronta'),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _c.inAttesa || _c.selezionati.isEmpty ? null : _estrai,
+                icon: const Icon(Icons.table_rows_outlined),
+                label: const Text('Estrai…'),
+              ),
+            ]),
+          ),
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
@@ -486,6 +603,61 @@ class _AssistentePageState extends State<AssistentePage> {
             'conversazione", al ricaricamento della pagina o dopo due ore senza uso.',
             style: testi.bodySmall?.copyWith(color: tema.onSurfaceVariant),
           ),
+        ),
+      ]),
+    );
+  }
+
+  /// Cosa estrarre: scelte rapide o testo libero.
+  Future<void> _estrai() async {
+    const scelte = ['le scadenze e i termini', 'gli importi', 'gli obblighi e gli adempimenti', 'i soggetti coinvolti'];
+    final campo = TextEditingController();
+    final istruzioni = await showDialog<String>(
+      context: context,
+      builder: (contesto) => AlertDialog(
+        title: const Text('Cosa estrarre dai documenti selezionati?'),
+        content: SizedBox(
+          width: 480,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final s in scelte) ActionChip(label: Text(s), onPressed: () => Navigator.pop(contesto, s)),
+            ]),
+            const SizedBox(height: 16),
+            TextField(
+              controller: campo,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Altro (es. le norme citate)', border: OutlineInputBorder()),
+              onSubmitted: (v) => Navigator.pop(contesto, v.trim()),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(contesto), child: const Text('Annulla')),
+          FilledButton(onPressed: () => Navigator.pop(contesto, campo.text.trim()), child: const Text('Estrai')),
+        ],
+      ),
+    );
+    campo.dispose();
+    if (istruzioni == null || istruzioni.isEmpty || !mounted) return;
+    _c.azione(apiDi(context), 'estrazione', istruzioni: istruzioni);
+  }
+
+  /// Avanzamento di un'azione: chiamate all'LLM fatte su quelle previste.
+  Widget _avanzamentoAzione(ColorScheme tema) {
+    final totale = _c.azioneTotale;
+    final tipo = _c.messaggi.isNotEmpty ? _c.messaggi.last['azione'] : null;
+    final nome = switch (tipo) { 'riassunto' => 'Riassunto', 'confronto' => 'Confronto', _ => 'Estrazione' };
+    return _riquadro(
+      colore: tema.surfaceContainerHighest,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(totale == 0
+            ? '$nome: lettura dei documenti…'
+            : '$nome in corso: passo ${_c.azioneFatti} di $totale'),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(value: totale == 0 ? null : (_c.azioneFatti / totale).clamp(0.0, 1.0)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(onPressed: () => _c.annullaAzione(apiDi(context)), child: const Text('Annulla')),
         ),
       ]),
     );
@@ -548,7 +720,9 @@ class _AssistentePageState extends State<AssistentePage> {
                 ]),
               ),
             for (final m in _c.messaggi) _messaggio(m, tema),
-            if (_c.inAttesa)
+            if (_c.inAttesa && _c.messaggi.isNotEmpty && _c.messaggi.last['azione'] != null)
+              _avanzamentoAzione(tema)
+            else if (_c.inAttesa)
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()),

@@ -168,6 +168,13 @@ class Settings(BaseSettings):
     # con un max_model_len più ampio si possono alzare.
     assistente_passaggi: int = 8
     assistente_caratteri_passaggi: int = 24_000
+    # Azioni sui documenti (Riassumi, Confronta, Estrai, nel worker): caratteri di ogni blocco
+    # letto dall'LLM e blocchi al massimo per azione (oltre si chiede di selezionare meno
+    # documenti). I risultati parziali si uniscono fino a ASSISTENTE_CARATTERI_PASSAGGI.
+    assistente_caratteri_blocco: int = 12_000
+    assistente_max_blocchi: int = 120
+    # Un'azione in corso senza avanzamenti da questi minuti ha perso il worker: torna in coda
+    assistente_minuti_senza_avanzamento: int = 10
 
     # Job notturno di aggiornamento normative
     sync_giorni_iniziali: int = 7  # prima esecuzione: modifiche dell'ultima settimana

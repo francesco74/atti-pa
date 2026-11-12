@@ -1,4 +1,4 @@
-"""Avvio del worker (verifiche degli atti e lavori della trasparenza): `python /app`
+"""Avvio del worker (verifiche degli atti, lavori della trasparenza, azioni dell'assistente): `python /app`
 (esegue questo file; `src` è piatto).
 
 Gestisce SIGTERM (arresto del pod): termina la verifica in corso e poi esce.
@@ -7,6 +7,8 @@ Il file di heartbeat è usato dalla liveness probe di Kubernetes.
 
 import asyncio
 import signal
+
+import httpx
 from pathlib import Path
 
 from common.coda import Coda
@@ -30,6 +32,7 @@ async def main() -> None:
     llm = crea_llm(settings)
     coda = Coda(settings.rabbitmq_url, settings.rabbitmq_prefisso)
     documenti = DocumentiClient(settings.documenti_url, timeout=settings.documenti_timeout)
+    rag_http = httpx.AsyncClient(timeout=settings.rag_timeout)  # azioni dell'assistente
     worker = Worker(
         crea_sessionmaker(engine),
         normattiva,
@@ -38,6 +41,7 @@ async def main() -> None:
         coda,
         heartbeat=Path(settings.worker_heartbeat),
         documenti=documenti,
+        rag_http=rag_http,
     )
 
     loop = asyncio.get_running_loop()
@@ -48,6 +52,7 @@ async def main() -> None:
     finally:
         await coda.chiudi()
         await documenti.close()
+        await rag_http.aclose()
         await llm.close()
         await normattiva.close()
         await engine.dispose()

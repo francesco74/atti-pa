@@ -22,6 +22,14 @@ senza toccare il codice: le modifiche valgono al riavvio di API e worker.
 | `dati_personali_utente.md` | messaggio con il testo (o una sua parte) in cui cercare i dati | `parte`, `testo_atto` |
 | `assistente_sistema.md` | prompt di sistema della chat dell'assistente | — |
 | `assistente_documenti.md` | messaggio di una domanda sui documenti caricati: passaggi trovati dal RAG, domanda e regole di risposta (citazioni) | `passaggi`, `domanda` |
+| `azioni_sistema.md` | prompt di sistema delle azioni dell'assistente sui documenti (Riassumi, Confronta, Estrai) | — |
+| `azione_riassunto_parte.md` | riassunto di un blocco di parti di un documento | `documento`, `parti`, `testo`, `istruzioni` |
+| `azione_riassunto.md` | riassunto finale di un documento dal testo o dai riassunti delle parti | `documento`, `contenuto`, `istruzioni` |
+| `azione_unisci.md` | unione di risultati parziali (riassunti, schede, elementi estratti) | `compito`, `parziali`, `istruzioni` |
+| `azione_scheda.md` | scheda di un blocco di un documento per il confronto | `documento`, `parti`, `testo`, `istruzioni` |
+| `azione_confronto.md` | confronto finale tra le schede dei documenti | `schede`, `istruzioni` |
+| `azione_estrai_parte.md` | elementi richiesti dall'utente in un blocco (o NESSUNO) | `documento`, `parti`, `testo`, `istruzioni` |
+| `azione_estrai.md` | tabella finale degli elementi estratti, senza duplicati | `elementi`, `istruzioni` |
 | `relazione_sistema.md` | prompt di sistema della scrittura di una sezione di relazione (RPCT, PIAO, performance) solo dai dati forniti | — |
 | `relazione_utente.md` | messaggio con l'ente, la relazione, la sezione e i suoi dati (JSON) | `ente`, `relazione`, `sezione`, `dati` |
 
