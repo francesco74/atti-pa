@@ -52,9 +52,14 @@ spec:
               drop: ["ALL"]
           volumeMounts:
             - { name: tmp, mountPath: /tmp }
+            - { name: marchio, mountPath: /etc/atti-pa/marchio, readOnly: true }
       volumes:
         - name: tmp
           emptyDir: {}
+        # Logo dell'installazione, facoltativo (senza ConfigMap resta il martelletto):
+        #   kubectl -n atti-pa create configmap atti-pa-marchio --from-file=logo.png
+        - name: marchio
+          configMap: { name: atti-pa-marchio, optional: true }
 ---
 apiVersion: v1
 kind: Service

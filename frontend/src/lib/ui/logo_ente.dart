@@ -4,9 +4,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../config.dart';
 import '../stato/auth_state.dart';
 
-/// Icona dell'app: il logo dell'ente se caricato, altrimenti il martelletto.
+/// Icona dell'app: il logo dell'ente se caricato, altrimenti quello dell'installazione
+/// ([Config.logo]), altrimenti il martelletto.
 class IconaEnte extends StatelessWidget {
   const IconaEnte({super.key, required this.logo, this.dimensione = 40});
 
@@ -15,7 +17,7 @@ class IconaEnte extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final immagine = logo;
+    final immagine = logo ?? Config.logo;
     if (immagine == null) {
       return Icon(Icons.gavel, color: Theme.of(context).colorScheme.primary, size: dimensione * 0.8);
     }
@@ -26,8 +28,8 @@ class IconaEnte extends StatelessWidget {
   }
 }
 
-/// Fondo di ogni pagina dell'app: il colore del tema con il logo dell'ente (o il martelletto,
-/// prima dell'accesso o senza logo). Lo applica [TransizioneConSfondo] a tutte le pagine,
+/// Fondo di ogni pagina dell'app: il colore del tema con il logo dell'ente (prima dell'accesso o
+/// senza logo, quello dell'installazione o il martelletto). Lo applica [TransizioneConSfondo] a tutte le pagine,
 /// anche quelle aperte sopra il menu; gli Scaffold sono trasparenti (tema in main.dart).
 class SfondoEnte extends StatelessWidget {
   const SfondoEnte({super.key, required this.child});
@@ -36,7 +38,7 @@ class SfondoEnte extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logo = context.select<AuthState, Uint8List?>((a) => a.logo);
+    final logo = context.select<AuthState, Uint8List?>((a) => a.logo) ?? Config.logo;
     return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
       // Material trasparente sopra il fondo: le righe cliccabili (ListTile) disegnano lì

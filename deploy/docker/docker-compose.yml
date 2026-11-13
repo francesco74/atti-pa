@@ -203,6 +203,10 @@ services:
       API_URL: ""  # stessa origine: /api passa da Caddy
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     tmpfs: [/tmp, /var/cache/nginx]
+    # Logo dell'installazione, facoltativo: marchio/logo.png accanto a questo file
+    # (senza, la cartella resta vuota e l'app usa il martelletto)
+    volumes:
+      - ./marchio:/etc/atti-pa/marchio:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 15s

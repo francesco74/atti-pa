@@ -57,6 +57,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
   final Map<String, List<Map<String, TextEditingController>>> _elenchi = {};
   final Map<String, TextEditingController> _risposteTesto = {};
   final Set<String> _svuotati = {}; // campi svuotati dall'utente: restano vuoti
+  final Set<String> _inRiscrittura = {}; // campi in attesa del testo riscritto dal modello
   Timer? _salvataggioDifferito;
 
   // capoversi modificabili direttamente nel testo
@@ -543,18 +544,27 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
         ],
       ),
     );
-    if (ok != true || !mounted) return;
+    if (ok != true || !mounted) {
+      appunti.dispose();
+      return;
+    }
+    final nome = campo['nome'] as String;
+    setState(() => _inRiscrittura.add(nome));
     try {
       final r = await apiDi(context).post('/api/v1/bozze/espandi', {
         'sezione': campo['etichetta'],
         'appunti': appunti.text,
         'oggetto': _bozza!['oggetto'] ?? '',
       });
+      if (!mounted) return;
       controller.text = (r as Map<String, dynamic>)['testo'] as String;
+      _svuotati.remove(nome);
+      _salvaPiuTardi();
     } catch (e) {
       if (mounted) mostraErrore(context, e);
     } finally {
       appunti.dispose();
+      if (mounted) setState(() => _inRiscrittura.remove(nome));
     }
   }
 
@@ -1309,11 +1319,13 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
       default:
         final lungo = c['tipo'] == 'testo_lungo';
         final numerico = c['tipo'] == 'importo' || c['tipo'] == 'numero';
+        final inRiscrittura = _inRiscrittura.contains(nome);
         return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: TextField(
               controller: controller,
               focusNode: _focusCampo(nome),
+              readOnly: inRiscrittura, // il testo in arrivo sovrascriverebbe quello digitato
               onChanged: (v) {
                 v.isEmpty ? _svuotati.add(nome) : _svuotati.remove(nome);
                 _salvaPiuTardi();
@@ -1327,7 +1339,7 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
               decoration: InputDecoration(
                 labelText: etichetta,
                 helperText: aiuto.isEmpty ? null : aiuto,
-                suffixIcon: controller.text.isEmpty
+                suffixIcon: controller.text.isEmpty || inRiscrittura
                     ? null
                     : IconButton(
                         tooltip: 'Svuota',
@@ -1343,9 +1355,11 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
           ),
           if (lungo)
             IconButton(
-              tooltip: 'Riscrivi dagli appunti (IA)',
-              icon: const Icon(Icons.auto_fix_high),
-              onPressed: () => _espandi(c),
+              tooltip: inRiscrittura ? 'Riscrittura in corso…' : 'Riscrivi dagli appunti (IA)',
+              icon: inRiscrittura
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.auto_fix_high),
+              onPressed: inRiscrittura ? null : () => _espandi(c),
             ),
         ]);
     }

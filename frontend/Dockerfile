@@ -22,9 +22,14 @@ LABEL org.opencontainers.image.title="atti-pa-frontend" \
       org.opencontainers.image.source="https://github.com/francesco74/atti-pa"
 COPY LICENSE NOTICE /usr/share/licenses/atti-pa/
 
+# ImageMagick: icone generate all'avvio dal logo dell'installazione (config-app.sh)
+USER root
+RUN apk add --no-cache imagemagick
+USER 101
+
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/build/web /usr/share/nginx/html
-# Genera config.json all'avvio da API_URL e LOG_LEVEL
+# Genera config.json (e le icone del logo, se montato) all'avvio
 COPY --chmod=755 frontend/config-app.sh /docker-entrypoint.d/40-config-app.sh
 ENV API_URL="" \
     LOG_LEVEL=INFO

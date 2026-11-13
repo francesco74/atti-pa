@@ -122,6 +122,21 @@ parte. Per tornare senza rag basta rimettere il commento e rifare `docker compos
 **Rag su un altro server.** Non serve `COMPOSE_FILE`: in atti-pa si indica l'indirizzo del gateway
 del rag, raggiungibile dal server di atti-pa (vedi la guida del rag, `RAG_INDIRIZZO`).
 
+## Logo dell'installazione
+
+Al posto del martelletto si può mostrare un proprio logo: pagina di accesso, sfondo, icona
+della scheda del browser e dell'app installata. Il logo caricato da un ente in Amministrazione
+resta prioritario dopo l'accesso. In `/opt/atti-pa/deploy/docker`:
+
+1. mettere il logo in `marchio/logo.png` (quadrato o quasi, almeno 512×512 px, fondo
+   trasparente); la cartella `marchio` è montata nel frontend da `docker-compose.yml`;
+2. `docker compose restart frontend`.
+
+Le icone si generano all'avvio del container: `docker compose logs frontend` mostra
+`logo dell'installazione, icone generate`, oppure l'errore se il file non è leggibile (in quel
+caso restano le icone predefinite). Per cambiare logo basta sostituire il file e riavviare;
+per tornare al martelletto, togliere il file e riavviare.
+
 ## Rilascio di una nuova versione
 
 Dal computer di sviluppo, dopo `docker login`:

@@ -30,6 +30,22 @@ Se `API_URL` è su un'origine diversa, va aggiunta a `connect-src` nella CSP di 
 La cartella `/editor/` (editor dei documenti della trasparenza, aperto dall'app in un iframe)
 ha in `nginx.conf` una CSP propria: va mantenuta allineata nei due file `nginx*.conf`.
 
+### Logo dell'installazione
+
+Un'installazione può usare un proprio logo al posto del martelletto: basta montare nel
+container la cartella `/etc/atti-pa/marchio` con il file `logo.png` (quadrato o quasi, almeno
+512 px, fondo trasparente). All'avvio `config-app.sh` lo copia in `/tmp/atti-pa/marchio` e con
+ImageMagick genera l'icona del browser (`favicon.svg`) e quelle dell'app installata
+(`icons/Icon-*.png`, le *maskable* con il logo nella zona sicura su fondo `#f5f6f8`); nginx le
+serve al posto delle predefinite e `config.json` riporta `"LOGO": true`. L'app mostra il logo
+nella pagina di accesso, nella filigrana dello sfondo e come icona dell'app quando l'ente non ha
+caricato un logo proprio, che resta prioritario. Senza il file, o con un file non leggibile
+(segnalato nel log del container), restano le icone dell'immagine.
+
+In Kubernetes il logo è il ConfigMap facoltativo `atti-pa-marchio` (`deploy/k8s/frontend.yaml`),
+in Docker un volume (`deploy/docker/docker-compose.yml`). Dopo averlo cambiato va riavviato il
+frontend; i browser che hanno l'app installata possono tenere la vecchia icona per un po'.
+
 In sviluppo con `flutter run` si usa `src/web/config.json`, oppure i valori passati con
 `--dart-define=API_URL=...` e `--dart-define=LOG_LEVEL=DEBUG` quando nel file sono vuoti.
 

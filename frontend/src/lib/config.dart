@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -25,6 +26,10 @@ class Config {
   static const sorgentePredefinito = 'https://github.com/francesco74/atti-pa';
   static String sorgenteUrl = sorgentePredefinito;
 
+  /// Logo dell'installazione (`marchio/logo.png`, montato nel container nginx): sostituisce il
+  /// martelletto quando l'ente non ha un logo proprio. null = martelletto.
+  static Uint8List? logo;
+
   static Future<void> carica() async {
     var valori = <String, dynamic>{};
     try {
@@ -45,6 +50,14 @@ class Config {
     logLevel = valore('LOG_LEVEL', _logLevelCompilazione);
     sorgenteUrl = valore('SORGENTE_URL', sorgentePredefinito);
     Log.imposta(logLevel);
+    if (valori['LOGO'] == true) {
+      try {
+        final r = await http.get(Uri.base.resolve('marchio/logo.png'));
+        if (r.statusCode == 200) logo = r.bodyBytes;
+      } catch (_) {
+        // logo non raggiungibile: resta il martelletto
+      }
+    }
     Log.info('Configurazione: API $apiUrl, log ${Log.livello.name.toUpperCase()}');
   }
 }

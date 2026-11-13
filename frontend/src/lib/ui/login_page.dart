@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../stato/auth_state.dart';
 import 'comuni.dart';
+import 'logo_ente.dart';
 
 /// Accesso all'ente del dominio: con l'account di dominio (Active Directory dell'ente) o con
 /// un utente dell'applicazione, secondo come l'ente è configurato.
@@ -93,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.gavel, size: 48, color: tema.colorScheme.primary),
+                        const Center(child: IconaEnte(logo: null, dimensione: 60)),
                         const SizedBox(height: 12),
                         Text(
                           'Atti PA',
