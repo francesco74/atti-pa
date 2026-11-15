@@ -134,9 +134,8 @@ class RigaVoce extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, vincoli) {
-        // spazio stretto (telefono, zoom, testo ingrandito): stato e azioni vanno sotto il
-        // testo invece che a destra, così la riga non esce dalla pagina (WCAG 1.4.10)
-        final stretto = vincoli.maxWidth < 360 * MediaQuery.textScalerOf(context).scale(1);
+        // spazio stretto: stato e azioni vanno sotto il testo invece che a destra
+        final stretto = spazioStretto(context, vincoli.maxWidth);
         final dettaglio = dettagli.isEmpty ? null : Text(dettagli.join(' · '));
         return ListTile(
           leading: Icon(icona),

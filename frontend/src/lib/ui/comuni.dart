@@ -107,31 +107,42 @@ class Sezione extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final intestazione = Semantics(
+      header: true,
+      headingLevel: 2,
+      child: Text(titolo, style: Theme.of(context).textTheme.titleMedium),
+    );
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Expanded(
-                child: Semantics(
-                  header: true,
-                  headingLevel: 2,
-                  child: Text(titolo, style: Theme.of(context).textTheme.titleMedium),
-                ),
-              ),
-              ...?azioni,
-            ]),
-            const SizedBox(height: 8),
-            child,
-          ],
+        child: LayoutBuilder(
+          builder: (context, vincoli) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // spazio stretto: le azioni vanno sotto il titolo, che resta a tutta larghezza
+              if (azioni == null || azioni!.isEmpty)
+                intestazione
+              else if (spazioStretto(context, vincoli.maxWidth)) ...[
+                intestazione,
+                Wrap(spacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: azioni!),
+              ] else
+                Row(children: [Expanded(child: intestazione), ...azioni!]),
+              const SizedBox(height: 8),
+              child,
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+/// Spazio stretto (telefono, zoom, testo ingrandito): le azioni e gli stati che stanno a
+/// destra di un testo vanno sotto, perché il testo non resti chiuso in una colonna sottile
+/// (WCAG 1.4.10).
+bool spazioStretto(BuildContext context, double larghezza) =>
+    larghezza < 560 * MediaQuery.textScalerOf(context).scale(1);
 
 /// Schermo piccolo o basso: i menu e le schede mostrano solo le icone.
 bool schermoPiccolo(BuildContext context) {

@@ -678,29 +678,35 @@ class _AssistentePageState extends State<AssistentePage> {
     final conDocumenti = _c.formati.isNotEmpty;
     final largo = MediaQuery.of(context).size.width >= 1000;
     final scelti = _c.selezionati.length;
+    // telefono: la descrizione su una riga a sé, i pulsanti sotto con le etichette corte
+    final stretto = spazioStretto(context, MediaQuery.sizeOf(context).width);
+    final descrizione = Text(
+      'Scrive e rivede testi, riassume, risponde sui documenti che carichi. Non legge gli '
+      'atti dell\'ente: verifica sempre ciò che propone.',
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+    final pulsanti = [
+      if (conDocumenti && !largo)
+        TextButton.icon(
+          onPressed: () => _apriPannello(tema),
+          icon: const Icon(Icons.folder_open_outlined),
+          label: Text('Documenti (${_c.documenti.length})'),
+        ),
+      TextButton.icon(
+        onPressed: _c.messaggi.isEmpty && _c.documenti.isEmpty && !_c.inAttesa ? null : () => _c.nuova(apiDi(context)),
+        icon: const Icon(Icons.add_comment_outlined),
+        label: Text(stretto ? 'Nuova' : 'Nuova conversazione'),
+      ),
+    ];
     final chat = Column(children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        child: Row(children: [
-          Expanded(
-            child: Text(
-              'Scrive e rivede testi, riassume, risponde sui documenti che carichi. Non legge gli '
-              'atti dell\'ente: verifica sempre ciò che propone.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          if (conDocumenti && !largo)
-            TextButton.icon(
-              onPressed: () => _apriPannello(tema),
-              icon: const Icon(Icons.folder_open_outlined),
-              label: Text('Documenti (${_c.documenti.length})'),
-            ),
-          TextButton.icon(
-            onPressed: _c.messaggi.isEmpty && _c.documenti.isEmpty && !_c.inAttesa ? null : () => _c.nuova(apiDi(context)),
-            icon: const Icon(Icons.add_comment_outlined),
-            label: const Text('Nuova conversazione'),
-          ),
-        ]),
+        child: stretto
+            ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                descrizione,
+                Wrap(alignment: WrapAlignment.end, children: pulsanti),
+              ])
+            : Row(children: [Expanded(child: descrizione), ...pulsanti]),
       ),
       Expanded(
         child: ListView(
@@ -749,10 +755,11 @@ class _AssistentePageState extends State<AssistentePage> {
               minLines: 1,
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: scelti > 0
-                    ? 'Domanda su ${scelti == 1 ? 'il documento selezionato' : 'i $scelti documenti selezionati'}'
-                        ' (Maiusc+Invio per andare a capo)'
-                    : 'Scrivi un messaggio o incolla un testo (Maiusc+Invio per andare a capo)',
+                // sul telefono non c'è Maiusc+Invio: il suggerimento resta su una riga
+                hintText: (scelti > 0
+                        ? 'Domanda su ${scelti == 1 ? 'il documento selezionato' : 'i $scelti documenti selezionati'}'
+                        : 'Scrivi un messaggio o incolla un testo') +
+                    (stretto ? '' : ' (Maiusc+Invio per andare a capo)'),
                 border: const OutlineInputBorder(),
               ),
             ),

@@ -32,7 +32,7 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
   String? _procedimentoId; // procedimento aperto
   Future<Map<String, dynamic>>? _scheda;
   final _testo = TextEditingController();
-  late final _registro = RegistroRicerche(apiDi(context).post, '$apiPubblico/ricerche', 'PROCEDIMENTI');
+  late final RegistroRicerche _registro;
   late final _ricerca = RicercaTesto(
     (testo) => apiDi(context).get('$apiPubblico/procedimenti/ricerca', query: {'testo': testo}),
     setState,
@@ -42,6 +42,8 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
   @override
   void initState() {
     super.initState();
+    // subito, non al primo uso: chiudendo la pagina il context non si può più usare
+    _registro = RegistroRicerche(apiDi(context).post, '$apiPubblico/ricerche', 'PROCEDIMENTI');
     _carica();
   }
 

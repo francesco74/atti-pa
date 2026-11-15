@@ -33,7 +33,7 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   String? _struttura, _livello, _tipo;
   final _testo = TextEditingController(); // ricerca in tutte le aree
   final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
-  late final _registro = RegistroRicerche(apiDi(context).post, '/api/v1/ricerche', 'MAPPATURA');
+  late final RegistroRicerche _registro;
   late final _ricerca = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
   late final _ricercaArea = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
 
@@ -45,6 +45,8 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
+    // subito, non al primo uso: chiudendo la pagina il context non si può più usare
+    _registro = RegistroRicerche(apiDi(context).post, '/api/v1/ricerche', 'MAPPATURA');
     _carica();
   }
 

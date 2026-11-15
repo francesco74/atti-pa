@@ -157,7 +157,7 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
   bool _crescente = true;
   int _righePerPagina = 25;
   final _testo = TextEditingController();
-  late final _registro = RegistroRicerche(apiDi(context).post, '/api/v1/ricerche', 'ELENCO');
+  late final RegistroRicerche _registro;
   late final _ricerca = RicercaTesto(
     (t) => apiDi(context).get('$apiAnticorruzione/elenco/ricerca', query: {'testo': t, 'livello': _livello}),
     setState,
@@ -170,6 +170,8 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
   @override
   void initState() {
     super.initState();
+    // subito, non al primo uso: chiudendo la pagina il context non si può più usare
+    _registro = RegistroRicerche(apiDi(context).post, '/api/v1/ricerche', 'ELENCO');
     _carica();
   }
 

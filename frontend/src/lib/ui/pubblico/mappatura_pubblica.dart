@@ -111,7 +111,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   String? _struttura, _livello, _tipo;
   final _testo = TextEditingController(); // ricerca in tutte le aree
   final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
-  late final _registro = RegistroRicerche(apiDi(context).post, '/api/v1/pubblico/ricerche', 'MAPPATURA');
+  late final RegistroRicerche _registro;
   late final _ricerca = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
   late final _ricercaArea = RicercaTesto(_chiamaRicerca, setState, registro: _registro);
 
@@ -120,6 +120,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   @override
   void initState() {
     super.initState();
+    // subito, non al primo uso: chiudendo la pagina il context non si può più usare
+    _registro = RegistroRicerche(apiDi(context).post, '/api/v1/pubblico/ricerche', 'MAPPATURA');
     _carica();
   }
 
