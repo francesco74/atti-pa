@@ -135,6 +135,19 @@ class MappaturaPiatta {
     if (livello == 'MISURA' && x['struttura_id'] != null) return (id: x['struttura_id'] as String, ereditata: false);
     return (id: processo?['struttura_id'] as String?, ereditata: livello != 'PROCESSO' && processo?['struttura_id'] != null);
   }
+
+  /// Strutture coinvolte dell'elemento: quelle del processo e della sua attività (per il
+  /// processo anche quelle di tutte le sue attività). Servono ai filtri, non alla responsabilità.
+  Set<String> coinvolte(String livello, Map<String, dynamic> x) {
+    Iterable<String> di(Map<String, dynamic>? e) => ((e?['coinvolte'] as List?) ?? const []).cast<String>();
+    final processo = processoDi(livello, x);
+    final attivita = livello == 'ATTIVITA' ? x : percorso(livello, x).attivita;
+    return {
+      ...di(processo),
+      ...di(attivita),
+      if (livello == 'PROCESSO') for (final a in figliDi(x['id'])) ...di(a),
+    };
+  }
 }
 
 /// Elenco piatto della mappatura: un livello alla volta (aree, processi e procedimenti,
@@ -252,10 +265,12 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
     }
     if (_tipo != null && _livello != 'AREA' && processo?['tipo'] != _tipo) return false;
     if (strutture != null) {
+      // responsabile o coinvolta
       bool ok(String? id) => id == null ? _trasversali : strutture.contains(id);
+      bool coinvolta(String livello, Map<String, dynamic> e) => m.coinvolte(livello, e).any(strutture.contains);
       if (_livello == 'AREA') {
-        if (!(m.processiDi[x['id']] ?? const []).any((p) => ok(p['struttura_id'] as String?))) return false;
-      } else if (!ok(m.struttura(_livello, x).id)) {
+        if (!(m.processiDi[x['id']] ?? const []).any((p) => ok(p['struttura_id'] as String?) || coinvolta('PROCESSO', p))) return false;
+      } else if (!ok(m.struttura(_livello, x).id) && !coinvolta(_livello, x)) {
         return false;
       }
     }
@@ -327,6 +342,7 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           _Colonna('Processo o procedimento', testo, largo: true),
           _Colonna('Tipo', (x) => etichettaTipo(x['tipo']), secondaria: true),
           _Colonna('Struttura', struttura, testo: true),
+          _Colonna('Strutture coinvolte', (x) => dati.coinvolte(x['coinvolte']) ?? '', testo: true, secondaria: true),
           _Colonna('Attività', (x) => quanti(m.figliDi(x['id'])), numerica: true),
           _Colonna('Rischi', (x) => quanti(m.rischiSotto('PROCESSO', x)), numerica: true),
           _Colonna('Misure', (x) => quanti(m.misureSotto('PROCESSO', x)), numerica: true),
@@ -350,6 +366,7 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           _Colonna('Codice', codice, ordine: codice),
           _Colonna('Attività', testo, largo: true),
           _Colonna('Struttura', struttura, testo: true),
+          _Colonna('Strutture coinvolte', (x) => dati.coinvolte(x['coinvolte']) ?? '', testo: true, secondaria: true),
           _Colonna('Rischi', (x) => quanti(m.figliDi(x['id'])), numerica: true),
           _Colonna('Misure', (x) => quanti(m.misureSotto('ATTIVITA', x)), numerica: true),
           livello,
@@ -796,6 +813,7 @@ class SchedaElementoPage extends StatelessWidget {
           ('Tipo', etichettaTipo(x['tipo'])),
           ('Denominazione', x['denominazione']),
           ('Struttura responsabile', struttura()),
+          ('Strutture coinvolte', dati.coinvolte(x['coinvolte'])),
           ('Descrizione', x['descrizione']),
           ('Tempi', x['tempi']),
           ('Attori esterni', x['attori_esterni']),
@@ -806,7 +824,8 @@ class SchedaElementoPage extends StatelessWidget {
         ],
       'ATTIVITA' => [
           ('Descrizione', x['descrizione']),
-          ('Strutture coinvolte', x['strutture_coinvolte']),
+          ('Strutture coinvolte', dati.coinvolte(x['coinvolte'])),
+          ('Note sulle strutture coinvolte', x['strutture_coinvolte']),
           ('Struttura responsabile', struttura()),
         ],
       'RISCHIO' => [

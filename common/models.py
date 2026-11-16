@@ -707,6 +707,9 @@ class AcProcesso(Base):
     # procedimento: dati propri dell'art. 35 d.lgs. 33/2013 (common/anticorruzione/art35.py)
     art35: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    # strutture coinvolte (id dell'anagrafica), oltre alla responsabile: servono a trovare il
+    # processo tra quelli di una struttura, non a proporne modifiche
+    coinvolte: Mapped[list[str] | None] = mapped_column(JSON)
     impronta: Mapped[str | None] = mapped_column(String(64))
     pacchetto: Mapped[str | None] = mapped_column(String(150))
     impronta_base: Mapped[str | None] = mapped_column(String(64))
@@ -724,7 +727,8 @@ class AcAttivita(Base):
     processo: Mapped["AcProcesso"] = relationship(lazy="raise")
     codice: Mapped[str] = mapped_column(String(50))  # es. A.1.1
     descrizione: Mapped[str] = mapped_column(Text)
-    strutture_coinvolte: Mapped[str | None] = mapped_column(Text)
+    strutture_coinvolte: Mapped[str | None] = mapped_column(Text)  # note libere sulle strutture coinvolte
+    coinvolte: Mapped[list[str] | None] = mapped_column(JSON)  # strutture coinvolte (id dell'anagrafica)
 
 
 class AcRischio(Base):

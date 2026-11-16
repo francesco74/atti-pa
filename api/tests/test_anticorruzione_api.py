@@ -54,9 +54,10 @@ class AnticorruzioneApi(unittest.TestCase):
                 db.add(settore)
                 await db.flush()
                 uo = Struttura(ente_id=ente.id, codice="U.O. 2.1", descrizione="Personale", padre_id=settore.id)
-                db.add(uo)
+                lavori = Struttura(ente_id=ente.id, codice="SETTORE 5", descrizione="Lavori pubblici")
+                db.add_all([uo, lavori])
                 await db.flush()
-                cls.settore, cls.uo = settore.id, uo.id
+                cls.settore, cls.uo, cls.lavori = settore.id, uo.id, lavori.id
                 for dominio, e in [("lucca.example.it", ente), ("altro.example.it", altro), ("atti.example.it", senza)]:
                     db.add(EnteDominio(dominio=dominio, ente_id=e.id))
                 for e, username, ruoli in [
@@ -370,6 +371,44 @@ class AnticorruzioneApi(unittest.TestCase):
         self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"area_id": area["id"], "denominazione": "p"}), 201)
         self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
             "tipo": "ELIMINA", "oggetto": "AREA", "elemento_id": area["id"]}).status_code, 409)  # fmt: skip
+
+    def test_strutture_coinvolte(self):
+        """Oltre alla responsabile, strutture coinvolte nel processo e nelle attività: il processo
+        si trova tra quelli della struttura coinvolta (e delle sopra), che però non lo propone."""
+        rpct, ref = self._client("rpct"), self._client("referente")
+        p = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
+            "denominazione": "Lavori con il personale", "struttura_id": self.lavori,
+            "coinvolte": [self.uo, self.uo, self.lavori]}), 201)  # fmt: skip
+        self.assertEqual(p["coinvolte"], [self.uo])  # senza doppioni né la responsabile
+        q = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Solo lavori", "struttura_id": self.lavori}), 201)
+        self.assertEqual(rpct.post(f"{API}/processi", base_url=ENTE, json={
+            "denominazione": "x", "coinvolte": ["inesistente"]}).status_code, 422)  # fmt: skip
+
+        def della(struttura):
+            return {x["id"] for x in self._ok(rpct.get(f"{API}/processi?struttura={struttura}", base_url=ENTE))}
+
+        self.assertIn(p["id"], della(self.uo))
+        self.assertIn(p["id"], della(self.settore))  # la U.O. coinvolta sta sotto il settore
+        self.assertNotIn(q["id"], della(self.uo))
+        # coinvolta in una sola attività: il processo si trova lo stesso
+        a = self._ok(rpct.post(f"{API}/processi/{q['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "Collaudo", "strutture_coinvolte": "con l'ufficio del personale", "coinvolte": [self.uo]}), 201)  # fmt: skip
+        self.assertEqual((a["coinvolte"], a["strutture_coinvolte"]), ([self.uo], "con l'ufficio del personale"))
+        self.assertIn(q["id"], della(self.uo))
+        # la struttura coinvolta vede, non propone
+        self.assertFalse(self._ok(ref.get(f"{API}/processi/{p['id']}", base_url=ENTE))["proponibile"])
+        # senza il campo le coinvolte restano; con l'elenco vuoto si tolgono
+        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={"denominazione": "Rinominato", "struttura_id": self.lavori}))
+        self.assertEqual(self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["coinvolte"], [self.uo])
+        self._ok(rpct.put(f"{API}/attivita/{a['id']}", base_url=ENTE, json={"descrizione": "Collaudo finale"}))
+        albero = self._ok(rpct.get(f"{API}/processi/{q['id']}", base_url=ENTE))
+        self.assertEqual(albero["attivita"][0]["coinvolte"], [self.uo])
+        # la coinvolta che diventa responsabile non resta anche coinvolta
+        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={"denominazione": "Rinominato", "struttura_id": self.uo}))
+        self.assertEqual(self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["coinvolte"], [])
+        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={
+            "denominazione": "Rinominato", "struttura_id": self.lavori, "coinvolte": []}))  # fmt: skip
+        self.assertNotIn(p["id"], della(self.uo))
 
     def test_monitoraggio(self):
         rpct, ref, dir_ = self._client("rpct"), self._client("referente"), self._client("dirigente")

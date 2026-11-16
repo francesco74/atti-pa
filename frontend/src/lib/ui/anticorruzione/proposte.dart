@@ -277,7 +277,7 @@ class _PropostaPageState extends State<PropostaPage> {
     final v = await switch (_proposta!['oggetto']) {
       'AREA' => modificaArea(context, dati),
       'PROCESSO' => modificaProcesso(context, d, dati),
-      'ATTIVITA' => modificaAttivita(context, dati),
+      'ATTIVITA' => modificaAttivita(context, d, dati),
       'RISCHIO' => modificaRischio(context, d, dati),
       _ => modificaMisura(context, d, dati),
     };
@@ -485,7 +485,8 @@ const _etichetteCampi = {
   'termine_conclusione': 'Termine di conclusione',
   'norma_riferimento': 'Norma di riferimento',
   'struttura_id': 'Struttura',
-  'strutture_coinvolte': 'Strutture coinvolte',
+  'coinvolte': 'Strutture coinvolte',
+  'strutture_coinvolte': 'Note sulle strutture coinvolte',
   'evento': 'Evento rischioso',
   'fattore_abilitante': 'Fattore abilitante',
   'valutazione': 'Valutazione',
@@ -518,7 +519,7 @@ class TabellaCampi extends StatelessWidget {
       campo.startsWith('art35.') ? 'Art. 35 - ${etichetteArt35[campo.substring(6)]}' : _etichetteCampi[campo];
 
   String _testo(String campo, Object? v) {
-    if (v == null || v == '') return '—';
+    if (v == null || v == '' || (v is List && v.isEmpty)) return '—';
     if (campo.startsWith('art35.')) {
       if (campo.endsWith('_struttura_id')) return dati.struttura(v) ?? '—';
       if (v is List) return v.map((o) => '${(o as Map)['giorni']} dalle ${o['ora_inizio']} alle ${o['ora_fine']}').join('; ');
@@ -527,6 +528,7 @@ class TabellaCampi extends StatelessWidget {
     return switch (campo) {
       'area_id' => dati.area(v) ?? '—',
       'struttura_id' => dati.struttura(v) ?? '—',
+      'coinvolte' => dati.coinvolte(v) ?? '—',
       'tipo' => const {'PROCESSO': 'Processo', 'PROCEDIMENTO': 'Procedimento', 'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
       'valutazione' => '${(v as Map)['livello'] ?? 'Non valutato'} (P ${v['probabilita'] ?? v['probabilita_calcolata']} · '
           'I ${v['impatto'] ?? v['impatto_calcolato']})${v['motivazione_correzione'] != null ? ', corretta: ${v['motivazione_correzione']}' : ''}',

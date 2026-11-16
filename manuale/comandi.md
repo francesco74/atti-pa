@@ -402,7 +402,9 @@ Al posto di `FILE.zip` si può indicare una cartella con la struttura del pacche
 
 ---
 
-## 8. Manutenzione delle norme (`riprocessa_norme.py`)
+## 8. Manutenzione (`deploy/manutenzione/`)
+
+### Norme (`riprocessa_norme.py`)
 
 Dopo una correzione del parser di Normattiva (`common/normattiva/parser.py`): ricalcola
 struttura, impronta e rinvii degli articoli già salvati, senza riscaricare nulla. In sviluppo:
@@ -415,6 +417,23 @@ python deploy/manutenzione/riprocessa_norme.py --dry-run
 Aggiornare il database:
 ```bash
 python deploy/manutenzione/riprocessa_norme.py
+```
+
+### Strutture coinvolte delle attività (`strutture_coinvolte.py`)
+
+Dopo la migrazione `0007_strutture_coinvolte.sql`: ricava le strutture coinvolte delle
+attività dalle note scritte a mano (codici dell'anagrafica, es. "U.O. 2.1", e descrizioni
+intere abbastanza lunghe) e le aggiunge a quelle scelte; le note restano. Elenca anche le
+attività in cui non riconosce nessuna struttura, da sistemare a mano.
+
+Vedere cosa aggiungerebbe, senza modificare:
+```bash
+python deploy/manutenzione/strutture_coinvolte.py --dry-run
+```
+
+Aggiornare il database (si può rieseguire: aggiunge solo le mancanti):
+```bash
+python deploy/manutenzione/strutture_coinvolte.py
 ```
 
 ---

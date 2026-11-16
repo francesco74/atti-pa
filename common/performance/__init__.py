@@ -176,7 +176,8 @@ def controlli_obiettivo(
     {tipo, descrizione, impegno, scadenza (date), misura_id, indicatori (se noti) e, per le azioni
     copiate da un'attività della mappatura, processo_id, attivita_id, mappatura_codice};
     [strutture_misure]: misura_id -> struttura responsabile della misura; [strutture_mappatura]:
-    id dell'attività -> struttura responsabile del suo processo (None: trasversale)."""
+    id dell'attività -> strutture del suo processo, la responsabile e le coinvolte (None:
+    trasversale)."""
     esito: list[dict] = []
 
     def c(livello: str, testo: str) -> None:
@@ -210,7 +211,8 @@ def controlli_obiettivo(
             attivita = x.get("attivita_id")
             if not attivita:
                 c(AVVISO, f"{nome}: l'attività {x['mappatura_codice']} non è più nella mappatura dei rischi")
-            elif strutture_mappatura is not None and strutture_mappatura.get(attivita) not in (None, struttura_id):
+            elif strutture_mappatura is not None and strutture_mappatura.get(attivita) and \
+                    struttura_id not in strutture_mappatura[attivita]:
                 c(INFO, f"{nome}: l'attività è di un processo di un'altra struttura nella mappatura")
     return sorted(esito, key=lambda v: v["livello"] != AVVISO)
 

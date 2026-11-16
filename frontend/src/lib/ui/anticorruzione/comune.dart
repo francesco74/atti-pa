@@ -60,6 +60,12 @@ class DatiAnticorruzione {
     return null;
   }
 
+  /// Nomi delle strutture coinvolte (elenco di id), separati da virgola; null se non ce ne sono.
+  String? coinvolte(Object? ids) {
+    final nomi = [for (final id in (ids as List?) ?? const []) struttura(id) ?? '?'];
+    return nomi.isEmpty ? null : nomi.join(', ');
+  }
+
   /// Valore più frequente; a parità il più alto nella scala (come il server).
   String moda(Iterable<String> valori) {
     final conteggi = <String, int>{};
@@ -223,7 +229,7 @@ String? testoOppureNull(TextEditingController c) => c.text.trim().isEmpty ? null
 /// Finestra di modifica con campi di testo (multilinea dove serve) e menu a tendina: usata
 /// per aree, processi, attività, rischi e misure.
 class Campo {
-  const Campo(this.chiave, this.etichetta, {this.righe = 1, this.obbligatorio = false, this.scelte, this.aiuto});
+  const Campo(this.chiave, this.etichetta, {this.righe = 1, this.obbligatorio = false, this.scelte, this.aiuto, this.multipla = false});
 
   final String chiave;
   final String etichetta;
@@ -231,6 +237,38 @@ class Campo {
   final bool obbligatorio;
   final List<(String?, String)>? scelte; // (valore, etichetta): menu a tendina
   final String? aiuto;
+  final bool multipla; // con le scelte: più valori (elenco), es. le strutture coinvolte
+}
+
+/// Campo a scelta multipla: i valori scelti come etichette (si tolgono con la x) e
+/// "Aggiungi" per sceglierne un altro.
+Widget _campoMultiplo(BuildContext context, Campo campo, List<String> scelti, void Function(VoidCallback) aggiorna) {
+  final nomi = {for (final (v, e) in campo.scelte!) ?v: e};
+  return InputDecorator(
+    decoration: InputDecoration(labelText: campo.etichetta, helperText: campo.aiuto, helperMaxLines: 3),
+    child: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      for (final v in scelti)
+        InputChip(
+          label: Text(nomi[v] ?? v, overflow: TextOverflow.ellipsis),
+          deleteButtonTooltipMessage: 'Togli',
+          onDeleted: () => aggiorna(() => scelti.remove(v)),
+        ),
+      ActionChip(
+        avatar: const Icon(Icons.add, size: 18),
+        label: const Text('Aggiungi'),
+        onPressed: () async {
+          final v = await showDialog<String>(
+            context: context,
+            builder: (d) => SimpleDialog(title: Text(campo.etichetta), children: [
+              for (final (id, e) in campo.scelte!)
+                if (id != null && !scelti.contains(id)) SimpleDialogOption(onPressed: () => Navigator.pop(d, id), child: Text(e)),
+            ]),
+          );
+          if (v != null) aggiorna(() => scelti.add(v));
+        },
+      ),
+    ]),
+  );
 }
 
 Future<Map<String, dynamic>?> modificaCampi(
@@ -245,7 +283,11 @@ Future<Map<String, dynamic>?> modificaCampi(
   };
   final scelte = <String, String?>{
     for (final c in campi)
-      if (c.scelte != null) c.chiave: valori[c.chiave] as String?,
+      if (c.scelte != null && !c.multipla) c.chiave: valori[c.chiave] as String?,
+  };
+  final multiple = <String, List<String>>{
+    for (final c in campi)
+      if (c.multipla) c.chiave: [...((valori[c.chiave] as List?) ?? const []).cast<String>()],
   };
   String? errore;
   final ok = await showDialog<bool>(
@@ -260,7 +302,9 @@ Future<Map<String, dynamic>?> modificaCampi(
               for (final campo in campi)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: campo.scelte == null
+                  child: campo.multipla
+                      ? _campoMultiplo(c, campo, multiple[campo.chiave]!, aggiorna)
+                      : campo.scelte == null
                       ? TextField(
                           controller: testi[campo.chiave],
                           minLines: campo.righe == 1 ? 1 : 2,
@@ -306,6 +350,7 @@ Future<Map<String, dynamic>?> modificaCampi(
   final risultato = <String, dynamic>{
     for (final e in testi.entries) e.key: testoOppureNull(e.value),
     ...scelte,
+    ...multiple,
   };
   for (final t in testi.values) {
     t.dispose();

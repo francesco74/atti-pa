@@ -10,6 +10,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0004_password_amministratori.sql` | gli amministratori locali cambiano la password al prossimo accesso (minimo 16 caratteri) |
 | `0005_assistente_lavori.sql` | azioni dell'assistente sui documenti (Riassumi, Confronta, Estrai) eseguite dal worker |
 | `0006_azioni_da_mappatura.sql` | azioni degli obiettivi della performance copiate dalle attività della mappatura dei rischi; rieseguibile |
+| `0007_strutture_coinvolte.sql` | strutture coinvolte nei processi e nelle attività della mappatura (oltre alla responsabile); rieseguibile |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

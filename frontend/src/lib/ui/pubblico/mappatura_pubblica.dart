@@ -368,7 +368,8 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           titolo: 'Attività ${aperta['codice']}',
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('${aperta['descrizione']}'),
-            if (aperta['strutture_coinvolte'] != null) Text('Strutture coinvolte: ${aperta['strutture_coinvolte']}'),
+            if (dati.coinvolte(aperta['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(aperta['coinvolte'])}'),
+            if (aperta['strutture_coinvolte'] != null) Text('Note sulle strutture coinvolte: ${aperta['strutture_coinvolte']}'),
           ]),
         ),
         Sezione(

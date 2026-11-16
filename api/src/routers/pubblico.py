@@ -37,10 +37,10 @@ bp = Blueprint("pubblico", __name__, url_prefix="/api/v1/pubblico")
 # campi pubblicati di ogni elemento della mappatura
 _PROCESSO = (
     "id", "codice", "tipo", "area_id", "denominazione", "descrizione", "tempi", "attori_esterni",
-    "termine_conclusione", "norma_riferimento", "struttura_id",
+    "termine_conclusione", "norma_riferimento", "struttura_id", "coinvolte",
 )  # fmt: skip
 _CONTEGGI = ("attivita", "rischi", "misure", "livello_massimo")
-_ATTIVITA = ("id", "codice", "descrizione", "strutture_coinvolte")
+_ATTIVITA = ("id", "codice", "descrizione", "strutture_coinvolte", "coinvolte")
 _RISCHIO = ("id", "codice", "evento", "fattore_abilitante", "livello")
 _MISURA = (
     "id", "codice", "descrizione", "tipo", "categoria", "obbligo_trasparenza", "fasi", "tempi",

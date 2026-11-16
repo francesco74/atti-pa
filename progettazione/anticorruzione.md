@@ -10,7 +10,7 @@ Gestisce la **mappatura dei processi** e la **gestione del rischio corruttivo** 
 
 | Funzione | Contenuto |
 |---|---|
-| **Mappatura** | gerarchia Processo → Attività → Rischio (evento rischioso) → Misura; processo con area di rischio, responsabilità (U.O.), tempi, attori esterni; attività con strutture coinvolte |
+| **Mappatura** | gerarchia Processo → Attività → Rischio (evento rischioso) → Misura; processo con area di rischio, struttura responsabile (una) e strutture coinvolte (più d'una), tempi, attori esterni; attività con strutture coinvolte (dall'anagrafica) e note |
 | **Valutazione del rischio** | 9 indicatori di probabilità e 4 di impatto (Basso/Medio/Alto), moda dei valori, matrice → livello (in v1 Minimo, Basso, Medio, Critico, Alto; dalla v2 Critico è il più grave), fattore abilitante (8 predefiniti) |
 | **Proposte** | gli utenti non amministratori non modificano: propongono la creazione, modifica o eliminazione di un processo intero (JSON con attività, rischi, misure, valutazioni); l'amministratore approva, respinge o restituisce |
 | **Monitoraggio delle misure** | per annualità: ogni U.O. dichiara lo stato di attuazione delle proprie misure (attuata, parzialmente, non attuata, con motivazione, indicatore, target, evidenze); il RPCT verifica o contesta; la dichiarazione conserva una copia dei dati della misura; cruscotto per U.O. e confronto tra anni; esportazione Excel |
@@ -184,9 +184,11 @@ Decisioni del 04/11/2026:
     proposta restituita, corretta e salvata, torna da sola al RPCT.
 15. **Struttura del referente**: propone solo sui processi della propria struttura (dal
     profilo utente) e delle sottostanti, perché il referente rappresenta il dirigente e i
-    processi possono essere assegnati alle U.O. del settore. Senza struttura nel profilo non
-    propone; i processi trasversali restano al RPCT; le aree, che non hanno struttura, le può
-    proporre ogni referente. La struttura la assegna l'amministratore (Amministrazione →
+    processi possono essere assegnati alle U.O. del settore, e sui **processi trasversali**, che
+    riguardano tutte le strutture (16/11/2026: renderli trasversali o crearne di nuovi resta al
+    RPCT). Senza struttura nel profilo non propone; le aree, che non hanno struttura, le può
+    proporre ogni referente. Le **strutture coinvolte** di un processo o di un'attività non
+    danno il diritto di proporre: servono a trovare il processo (vedi punto 28). La struttura la assegna l'amministratore (Amministrazione →
     Utenti); l'utente che non ce l'ha la può scegliere da sé, **una sola volta**, in "Il mio
     profilo" tra quelle attive: dopo, per cambiarla, serve l'amministratore, perché da lei
     dipendono proposte e monitoraggio.
@@ -353,3 +355,16 @@ Decisioni del 04/11/2026:
     record eliminati si tolgono solo dalle ricerche che conoscono tutti gli elementi della
     mappatura (l'elenco): la ricerca sui soli procedimenti non cancella più i vettori degli
     altri.
+
+28. **Strutture coinvolte** (16/11/2026): il processo ha una **struttura responsabile** (o
+    nessuna: trasversale) e può avere **strutture coinvolte**, più d'una, scelte
+    dall'anagrafica; anche l'attività ha le sue coinvolte (con le note libere di prima). Le
+    coinvolte servono a **trovare** il processo: il filtro per struttura (API dei processi,
+    Elenco, Excel) prende i processi in cui la struttura, o una sottostante, è responsabile o
+    coinvolta, nel processo o in una sua attività. **Non** danno il diritto di proporre
+    modifiche (quello resta della responsabile e dei trasversali) e non cambiano l'art. 35 né il
+    monitoraggio. Nella performance un'azione copiata da un'attività non è segnalata "di
+    un'altra struttura" se la struttura dell'obiettivo è coinvolta. Colonna `coinvolte` (JSON)
+    in `ac_processi` e `ac_attivita` (migrazione `0007_strutture_coinvolte.sql`); lo script
+    `deploy/manutenzione/strutture_coinvolte.py` ricava le coinvolte dalle note delle attività
+    (codici dell'anagrafica e descrizioni lunghe; `--dry-run` per vedere prima).

@@ -419,18 +419,20 @@ def _mappatura(x: PfElemento) -> dict:
     return {"processo_id": x.processo_id, "attivita_id": x.attivita_id, "mappatura_codice": x.mappatura_codice}
 
 
-async def _strutture_mappatura(elementi: list) -> dict[str, str | None]:
-    """Struttura responsabile (quella del loro processo) delle attività da cui sono copiate le
-    azioni, per id dell'attività."""
+async def _strutture_mappatura(elementi: list) -> dict[str, list[str] | None]:
+    """Strutture delle attività da cui sono copiate le azioni, per id dell'attività: la
+    responsabile del processo e le coinvolte (del processo e dell'attività); None se il
+    processo è trasversale."""
     def campo(x, nome):
         return x.get(nome) if isinstance(x, dict) else getattr(x, nome)
 
-    attivita = {i for x in elementi if (i := campo(x, "attivita_id"))}
-    esito: dict[str, str | None] = {}
-    if attivita:
-        righe = await db().execute(select(AcAttivita.id, AcProcesso.struttura_id).join(AcProcesso, AcProcesso.id == AcAttivita.processo_id)
-                                   .where(AcAttivita.id.in_(attivita)))  # fmt: skip
-        esito.update(dict(righe.all()))
+    ids = {i for x in elementi if (i := campo(x, "attivita_id"))}
+    esito: dict[str, list[str] | None] = {}
+    if ids:
+        righe = await db().execute(select(AcAttivita, AcProcesso).join(AcProcesso, AcProcesso.id == AcAttivita.processo_id)
+                                   .where(AcAttivita.id.in_(ids)))  # fmt: skip
+        for a, p in righe.all():
+            esito[a.id] = None if p.struttura_id is None else [p.struttura_id, *(p.coinvolte or []), *(a.coinvolte or [])]
     return esito
 
 

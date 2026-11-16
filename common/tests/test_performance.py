@@ -95,8 +95,12 @@ class Controlli(unittest.TestCase):
                  "processo_id": "p1", "attivita_id": "a1", "mappatura_codice": "C.3.1"}  # fmt: skip
         gara = {**bando, "descrizione": "Gara", "attivita_id": "a2", "mappatura_codice": "C.3.2"}
         testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [bando, gara], misure_attive=True,
-                                                          strutture_mappatura={"a1": None, "a2": "s2"})]  # fmt: skip
+                                                          strutture_mappatura={"a1": None, "a2": ["s2"]})]  # fmt: skip
         self.assertEqual(testi, ["Azione «Gara»: l'attività è di un processo di un'altra struttura nella mappatura"])
+        # la struttura dell'obiettivo coinvolta nel processo: niente da segnalare
+        testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [gara | {"impegno": 100}], misure_attive=True,
+                                                          strutture_mappatura={"a2": ["s2", "s1"]})]  # fmt: skip
+        self.assertEqual(testi, [])
         tolta = {**bando, "attivita_id": None, "impegno": 100}
         testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [tolta], misure_attive=True)]
         self.assertEqual(testi, ["Azione «Bando»: l'attività C.3.1 non è più nella mappatura dei rischi"])

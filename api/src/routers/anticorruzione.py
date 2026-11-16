@@ -361,14 +361,20 @@ def _processo(p: AcProcesso) -> dict:
         "denominazione": p.denominazione, "descrizione": p.descrizione, "tempi": p.tempi,
         "attori_esterni": p.attori_esterni, "termine_conclusione": p.termine_conclusione,
         "norma_riferimento": p.norma_riferimento, "art35": p.art35, "struttura_id": p.struttura_id,
-        "pacchetto": p.pacchetto,
+        "coinvolte": p.coinvolte or [], "pacchetto": p.pacchetto,
         "updated_at": p.updated_at.isoformat() if p.updated_at else None,
     }  # fmt: skip
 
 
 def _attivita(a: AcAttivita) -> dict:
     return {"id": a.id, "processo_id": a.processo_id, "codice": a.codice, "descrizione": a.descrizione,
-            "strutture_coinvolte": a.strutture_coinvolte}  # fmt: skip
+            "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or []}  # fmt: skip
+
+
+def strutture_del_processo(p: AcProcesso, attivita: list[AcAttivita] = ()) -> set[str]:
+    """Strutture a cui il processo appartiene per i filtri: la responsabile e le coinvolte (del
+    processo e delle sue attività). Vuoto per un trasversale senza coinvolte."""
+    return {s for s in [p.struttura_id, *(p.coinvolte or []), *(x for a in attivita for x in (a.coinvolte or []))] if s}
 
 
 def _rischio(r: AcRischio) -> dict:
@@ -397,7 +403,7 @@ def _per_codice(righe):
 
 class FiltriProcessi(BaseModel):
     area: str | None = None  # id dell'area
-    struttura: str | None = None  # id: la struttura e le sottostanti, più i processi trasversali
+    struttura: str | None = None  # id: la struttura e le sottostanti (responsabili o coinvolte), più i trasversali
     livello: str | None = None  # livello massimo di rischio del processo
     tipo: Literal["PROCESSO", "PROCEDIMENTO"] | None = None
     testo: str | None = Field(default=None, max_length=200)
@@ -420,10 +426,15 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
     if f.tipo:
         q = q.where(AcProcesso.tipo == f.tipo)
     elenco = list(await sessione.scalars(q))
-    if f.struttura:
-        ammesse = _sottostanti(await _strutture_ente(sessione), f.struttura)
-        elenco = [p for p in elenco if p.struttura_id is None or p.struttura_id in ammesse]
     attivita = list(await sessione.scalars(select(AcAttivita).where(AcAttivita.ente_id == ente_id())))
+    if f.struttura:
+        # della struttura (o sottostanti) come responsabile o coinvolta, e i trasversali
+        ammesse = _sottostanti(await _strutture_ente(sessione), f.struttura)
+        attivita_di: dict[str, list[AcAttivita]] = {}
+        for a in attivita:
+            attivita_di.setdefault(a.processo_id, []).append(a)
+        elenco = [p for p in elenco
+                  if p.struttura_id is None or strutture_del_processo(p, attivita_di.get(p.id, [])) & ammesse]  # fmt: skip
     rischi = list(await sessione.scalars(select(AcRischio).where(AcRischio.ente_id == ente_id())))
     misure = list(await sessione.scalars(select(AcMisura.rischio_id).where(AcMisura.ente_id == ente_id())))
     processo_di_attivita = {a.id: a.processo_id for a in attivita}
@@ -727,11 +738,14 @@ class ProcessoIn(BaseModel):
     norma_riferimento: str | None = None  # procedimento
     art35: dati_art35.DatiArt35 | None = None  # procedimento: dati propri dell'art. 35
     struttura_id: str | None = None  # vuota: processo trasversale
+    # strutture coinvolte oltre alla responsabile; None (assenti): restano come sono
+    coinvolte: list[str] | None = Field(default=None, max_length=200)
 
 
 class AttivitaIn(BaseModel):
     descrizione: str = Field(min_length=1)
-    strutture_coinvolte: str | None = None
+    strutture_coinvolte: str | None = None  # note libere
+    coinvolte: list[str] | None = Field(default=None, max_length=200)  # None (assenti): restano come sono
 
 
 class RischioIn(BaseModel):
@@ -780,8 +794,19 @@ class RischioModificato(RischioIn):
     valutazione: ValutazioneProposta | None = None
 
 
+async def _strutture_valide(sessione, ids: list[str] | None) -> None:
+    for i in ids or []:
+        await _struttura_valida(sessione, i)
+
+
+def _coinvolte(ids: list[str], *escluse: str | None) -> list[str] | None:
+    """Senza doppioni né la struttura responsabile; None se non ne resta nessuna."""
+    return sorted(set(ids) - set(escluse)) or None
+
+
 async def _verifica_processo(sessione, dati: ProcessoIn) -> AcArea | None:
     await _struttura_valida(sessione, dati.struttura_id)
+    await _strutture_valide(sessione, dati.coinvolte)
     if dati.art35 is not None:
         for campo in dati_art35.STRUTTURE:
             await _struttura_valida(sessione, getattr(dati.art35, campo))
@@ -789,8 +814,12 @@ async def _verifica_processo(sessione, dati: ProcessoIn) -> AcArea | None:
 
 
 def _imposta_processo(p: AcProcesso, dati: ProcessoIn) -> None:
-    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields) - {"art35"}).items():
+    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields) - {"art35", "coinvolte"}).items():
         setattr(p, campo, valore)
+    if dati.coinvolte is not None:
+        p.coinvolte = _coinvolte(dati.coinvolte, p.struttura_id)
+    elif p.coinvolte and p.struttura_id in p.coinvolte:  # la nuova responsabile non è anche coinvolta
+        p.coinvolte = _coinvolte(p.coinvolte, p.struttura_id)
     # dati dell'art. 35: un oggetto li sostituisce, null o assenti li lasciano come sono
     if dati.art35 is not None:
         p.art35 = dati.art35.model_dump(exclude_none=True) or None
@@ -830,16 +859,21 @@ async def _elimina_processo(sessione, p: AcProcesso) -> None:
 
 
 async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivita:
+    await _strutture_valide(sessione, dati.coinvolte)
     a = AcAttivita(id=nuovo_id(), ente_id=ente_id(), processo_id=p.id,
                    codice=await _nuovo_codice(sessione, AcAttivita, f"{p.codice}."),
-                   descrizione=dati.descrizione, strutture_coinvolte=dati.strutture_coinvolte)  # fmt: skip
+                   descrizione=dati.descrizione, strutture_coinvolte=dati.strutture_coinvolte,
+                   coinvolte=_coinvolte(dati.coinvolte or []))  # fmt: skip
     sessione.add(a)
     await _tocca(sessione, p.id)
     return a
 
 
 async def _modifica_attivita(sessione, a: AcAttivita, dati: AttivitaIn) -> None:
+    await _strutture_valide(sessione, dati.coinvolte)
     a.descrizione, a.strutture_coinvolte = dati.descrizione, dati.strutture_coinvolte
+    if dati.coinvolte is not None:
+        a.coinvolte = _coinvolte(dati.coinvolte)
     await _tocca(sessione, a.processo_id)
 
 
@@ -1216,6 +1250,14 @@ def _valutazione_di(r: AcRischio) -> dict | None:
     return {k: getattr(r, k) for k in campi}
 
 
+def _senza_coinvolte_vuote(dati: dict) -> dict:
+    """Le strutture coinvolte solo se ci sono: le proposte nate prima che esistessero restano
+    uguali all'elemento com'è."""
+    if not dati.get("coinvolte"):
+        dati.pop("coinvolte", None)
+    return dati
+
+
 async def _istantanea(sessione, oggetto: str, el, *, figli: bool = False) -> dict:
     """L'elemento com'è, nella forma dei dati delle proposte (con il codice); con `figli`
     anche gli elementi sottostanti (eliminazione)."""
@@ -1231,12 +1273,12 @@ async def _istantanea(sessione, oggetto: str, el, *, figli: bool = False) -> dic
             dati["misure"] = [await _istantanea(sessione, "MISURA", x) for x in misure]
         return dati
     if oggetto == "ATTIVITA":
-        dati = {"codice": el.codice, **{k: getattr(el, k) for k in AttivitaIn.model_fields}}
+        dati = _senza_coinvolte_vuote({"codice": el.codice, **{k: getattr(el, k) for k in AttivitaIn.model_fields}})
         if figli:
             rischi = _per_codice(await sessione.scalars(select(AcRischio).where(AcRischio.attivita_id == el.id)))
             dati["rischi"] = [await _istantanea(sessione, "RISCHIO", r, figli=True) for r in rischi]
         return dati
-    dati = {"codice": el.codice, **{k: getattr(el, k) for k in ProcessoIn.model_fields}}
+    dati = _senza_coinvolte_vuote({"codice": el.codice, **{k: getattr(el, k) for k in ProcessoIn.model_fields}})
     dati["tipo"] = dati["tipo"] or "PROCESSO"
     if figli:
         attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.processo_id == el.id)))

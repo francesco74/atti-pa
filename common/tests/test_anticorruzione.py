@@ -145,3 +145,16 @@ class ControlliProposte(unittest.TestCase):
         self.assertTrue(any("unica misura" in t for t in self._testi(elimina)))
         processo = controlli_proposta("PROCESSO", "ELIMINA", {"attivita": [{"rischi": [{"misure": [{}, {}]}]}]}, None, self.ctx)
         self.assertIn("Si eliminano anche: 1 attività, 1 rischi, 2 misure", self._testi(processo))
+
+
+class StruttureDaTesto(unittest.TestCase):
+    def test_riconosce_codici_e_descrizioni_lunghe(self):
+        from common.anticorruzione.strutture import riconosci_strutture
+
+        anagrafica = [("s1", "U.O. 2.1", "Personale"), ("s2", "U.O. 2.10", "Gare"), ("s3", "SETTORE 3", "Lavori pubblici e manutenzioni")]
+        self.assertEqual(riconosci_strutture("U.O. 2.1 e settore 3", anagrafica), ["s1", "s3"])
+        self.assertEqual(riconosci_strutture("UO 2.10", anagrafica), [])  # il codice va scritto com'è
+        self.assertEqual(riconosci_strutture("u.o.  2.10, Gare", anagrafica), ["s2"])  # 2.10 non è 2.1; "Gare" è corta
+        self.assertEqual(riconosci_strutture("U.O. 2.1.3", anagrafica), [])
+        self.assertEqual(riconosci_strutture("con i lavori pubblici e  manutenzioni", anagrafica), ["s3"])
+        self.assertEqual(riconosci_strutture(None, anagrafica), [])

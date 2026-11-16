@@ -47,6 +47,7 @@ void main() {
             {'id': 'p1', 'codice': 'C.1', 'tipo': 'PROCESSO', 'area_id': 'c', 'denominazione': 'Gare', 'struttura_id': 'uo'},
             {'id': 'p3', 'codice': 'C.2', 'tipo': 'PROCESSO', 'area_id': 'c', 'denominazione': 'Affidamenti diretti', 'struttura_id': 's3'},
             {'id': 'p2', 'codice': 'D.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'd', 'denominazione': 'Concorsi', 'struttura_id': null,
+             'coinvolte': ['s3'],
              'art35_mancanti': ['Tipologia di procedimento: obbligatorio', 'Silenzio assenso: obbligatorio'],
              'scheda_art35': {'denominazione': 'Concorsi', 'istanza_di_parte': 'SI', 'ist_ufficio': 'Ufficio personale'}},
           ],
@@ -192,6 +193,20 @@ void main() {
     expect(find.text('C.1.1_R.1_M.1 - Doppia verifica'), findsOneWidget);
   });
 
+  testWidgets('strutture coinvolte: il filtro trova anche il processo in cui la struttura è coinvolta', (tester) async {
+    await apri(tester);
+    await scegli(tester, 'Struttura organizzativa', 'SETTORE 3 - Finanze');
+    // Affidamenti diretti è del settore; Concorsi è trasversale, con il settore coinvolto
+    expect(find.text('2 processi e procedimenti su 3'), findsOneWidget);
+    expect(find.text('Affidamenti diretti'), findsOneWidget);
+    expect(find.text('Concorsi'), findsOneWidget);
+    await tester.tap(find.text('Concorsi'));
+    await tester.pumpAndSettle();
+    // nella scheda, tra le strutture coinvolte
+    expect(find.textContaining('Strutture coinvolte', findRichText: true), findsOneWidget);
+    expect(find.textContaining('SETTORE 3 - Finanze', findRichText: true), findsOneWidget);
+  });
+
   testWidgets('schermo di 1024 px: la tabella sta nella pagina, le colonne secondarie si scelgono', (tester) async {
     // il font vero dell'app: quello dei test ha tutti i caratteri larghi quanto il corpo, e le
     // colonne misurate sul testo risulterebbero larghe il doppio
@@ -233,6 +248,6 @@ void main() {
     // la scelta vale per il livello: tornando ai processi, Area resta nascosta
     await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Processi e procedimenti')));
     await tester.pumpAndSettle();
-    expect(find.text('Colonne (7 di 10)'), findsOneWidget);
+    expect(find.text('Colonne (7 di 11)'), findsOneWidget);
   });
 }

@@ -21,7 +21,7 @@ Map<String, dynamic> daAlbero(Map<String, dynamic> albero) {
     'processo': {
       for (final k in const [
         'id', 'codice', 'tipo', 'area_id', 'denominazione', 'descrizione', 'tempi', 'attori_esterni',
-        'termine_conclusione', 'norma_riferimento', 'art35', 'struttura_id',
+        'termine_conclusione', 'norma_riferimento', 'art35', 'struttura_id', 'coinvolte',
       ])
         k: albero[k],
     },
@@ -232,6 +232,15 @@ List<(String?, String)> _sceltaStrutture(DatiAnticorruzione d, String vuota) => 
       for (final s in d.strutture.where((s) => s['attiva'] == true)) (s['id'] as String, '${s['codice']} - ${s['descrizione']}'),
     ];
 
+/// Strutture da scegliere come coinvolte: le attive e quelle già scelte (anche se non più attive).
+List<(String?, String)> _scelteCoinvolte(DatiAnticorruzione d, Object? gia) {
+  final scelte = {for (final id in (gia as List?) ?? const []) id};
+  return [
+    for (final s in d.strutture.where((s) => s['attiva'] == true || scelte.contains(s['id'])))
+      (s['id'] as String, '${s['codice']} - ${s['descrizione']}'),
+  ];
+}
+
 /// Area di rischio (il codice lo assegna il sistema; l'elenco segue la descrizione breve).
 Future<Map<String, dynamic>?> modificaArea(BuildContext context, [Map<String, dynamic>? a]) =>
     modificaCampi(context, titolo: a?['codice'] == null ? 'Nuova area di rischio' : 'Area ${a!['codice']}', valori: a ?? const {}, campi: const [
@@ -255,14 +264,17 @@ Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticor
       const Campo('termine_conclusione', 'Termine di conclusione', aiuto: 'Solo per i procedimenti (es. 30 giorni)'),
       const Campo('norma_riferimento', 'Norma di riferimento', righe: 2, aiuto: 'Solo per i procedimenti'),
       Campo('struttura_id', 'Struttura responsabile', scelte: _sceltaStrutture(d, 'Tutte (processo trasversale)')),
+      Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, p?['coinvolte']),
+          aiuto: 'Oltre alla responsabile: il processo si trova anche tra quelli di queste strutture (che non ne propongono modifiche)'),
     ]);
 
 String etichettaTipo(Object? tipo) => tipo == 'PROCEDIMENTO' ? 'Procedimento' : 'Processo';
 
-Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, [Map<String, dynamic>? a]) =>
-    modificaCampi(context, titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}', valori: a ?? const {}, campi: const [
-      Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
-      Campo('strutture_coinvolte', 'Strutture coinvolte', righe: 2),
+Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? a]) =>
+    modificaCampi(context, titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}', valori: a ?? const {}, campi: [
+      const Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
+      Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
+      const Campo('strutture_coinvolte', 'Note sulle strutture coinvolte', righe: 2),
     ]);
 
 Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? r]) {
@@ -464,13 +476,16 @@ class AlberoProcesso extends StatelessWidget {
           child: ExpansionTile(
             initiallyExpanded: attivita.length <= 3,
             title: Text('${a['codice'] ?? 'Nuova'} - ${a['descrizione']}'),
-            subtitle: Text('${_lista(a['rischi']).length} rischi'
-                '${a['strutture_coinvolte'] != null ? ' · ${a['strutture_coinvolte']}' : ''}'),
+            subtitle: Text([
+              '${_lista(a['rischi']).length} rischi',
+              ?dati.coinvolte(a['coinvolte']),
+              ?a['strutture_coinvolte'] as String?,
+            ].join(' · ')),
             trailing: ops == null
                 ? null
                 : Wrap(children: [
                     IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica l\'attività'), () => eseguiOperazione(context, onCambiato, () async {
-                          final v = await modificaAttivita(context, a);
+                          final v = await modificaAttivita(context, dati, a);
                           if (v != null) await ops.modificaAttivita(a, v);
                         })),
                     IconaAzione(Icons.add_alert_outlined, etichettaAzione(ops, 'Aggiungi un rischio'), () => eseguiOperazione(context, onCambiato, () async {
@@ -496,7 +511,7 @@ class AlberoProcesso extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('Aggiungi un\'attività'),
             onPressed: () => eseguiOperazione(context, onCambiato, () async {
-              final v = await modificaAttivita(context);
+              final v = await modificaAttivita(context, dati);
               if (v != null) await ops.aggiungiAttivita(v);
             }),
           ),
@@ -646,6 +661,7 @@ class IntestazioneProcesso extends StatelessWidget {
     final righe = [
       ('Area di rischio', dati.area(processo['area_id'])),
       ('Struttura responsabile', processo['struttura_id'] == null ? 'Tutte (processo trasversale)' : dati.struttura(processo['struttura_id'])),
+      ('Strutture coinvolte', dati.coinvolte(processo['coinvolte'])),
       ('Descrizione', processo['descrizione']),
       ('Tempi', processo['tempi']),
       ('Attori esterni', processo['attori_esterni']),

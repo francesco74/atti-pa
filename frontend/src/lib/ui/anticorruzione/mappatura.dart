@@ -457,7 +457,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
         LivelloChip(dati, _livelloMassimo(dati, rischi)),
         if (ops != null) ...[
           IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica l\'attività'), () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaAttivita(context, a);
+                final v = await modificaAttivita(context, dati, a);
                 if (v != null) await ops.modificaAttivita(a, v);
               })),
           IconaAzione(Icons.delete_outline, etichettaAzione(ops, 'Elimina l\'attività'), () => eseguiOperazione(context, _carica, () async {
@@ -480,7 +480,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaAttivita(context, a);
+                final v = await modificaAttivita(context, dati, a);
                 if (v != null) await ops.modificaAttivita(a, v);
               }),
             ),
@@ -499,7 +499,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
         ],
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${a['descrizione']}'),
-          if (a['strutture_coinvolte'] != null) Text('Strutture coinvolte: ${a['strutture_coinvolte']}'),
+          if (dati.coinvolte(a['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(a['coinvolte'])}'),
+          if (a['strutture_coinvolte'] != null) Text('Note sulle strutture coinvolte: ${a['strutture_coinvolte']}'),
         ]),
       ),
       Sezione(
@@ -570,7 +571,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
             icon: const Icon(Icons.add, size: 18),
             label: Text(etichettaAzione(ops, 'Nuova attività')),
             onPressed: () => eseguiOperazione(context, _carica, () async {
-              final v = await modificaAttivita(context);
+              final v = await modificaAttivita(context, dati);
               if (v != null) await ops.aggiungiAttivita(v);
             }),
           ),
