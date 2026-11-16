@@ -722,19 +722,15 @@ class ValoriIndicatori extends StatelessWidget {
   }
 }
 
-/// Obiettivi della performance collegati al processo: lo prendono come azione (intero o una
-/// sua attività) o contengono una sua misura. Sola lettura; niente se non ce ne sono.
+/// Obiettivi della performance collegati al processo: hanno azioni copiate dalle sue attività o
+/// sue misure. Sola lettura; niente se non ce ne sono.
 class ObiettiviPerformance extends StatelessWidget {
   const ObiettiviPerformance({super.key, required this.dati, required this.obiettivi});
 
   final DatiAnticorruzione dati;
   final List<Map<String, dynamic>> obiettivi;
 
-  static String _tramite(Map t) => switch (t['tipo']) {
-        'MISURA' => 'contiene la misura ${t['codice']}',
-        'ATTIVITA' => 'azione: l\'attività ${t['codice']}',
-        _ => 'azione: l\'intero processo',
-      };
+  static String _codici(List voci) => [for (final v in voci) (v as Map)['codice'] ?? '?'].join(', ');
 
   @override
   Widget build(BuildContext context) {
@@ -751,11 +747,12 @@ class ObiettiviPerformance extends StatelessWidget {
             subtitle: Text([
               '${o['piao']} · anno ${o['anno']}',
               dati.struttura(o['struttura_id']) ?? '',
-              _tramite(o['tramite'] as Map),
+              if ((o['azioni'] as List).isNotEmpty) 'azioni: ${_codici(o['azioni'] as List)}',
+              if ((o['misure'] as List).isNotEmpty) 'misure: ${_codici(o['misure'] as List)}',
               if (o['completamento'] != null) 'completato al ${(o['completamento'] as num).round()}%',
             ].where((t) => t.isNotEmpty).join(' · ')),
           ),
-        Text('Si gestiscono nel modulo Performance.', style: piccolo),
+        Text('Azioni e misure sono copie: si gestiscono nel modulo Performance.', style: piccolo),
       ]),
     );
   }

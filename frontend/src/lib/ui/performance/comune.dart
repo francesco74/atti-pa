@@ -600,7 +600,6 @@ Future<Map<String, dynamic>?> modificaElemento(
   required String tipo,
   Map<String, dynamic>? x,
   Map<String, dynamic>? misura, // misura scelta (nuova misura)
-  Map<String, dynamic>? riferimento, // processo o attività della mappatura (nuova azione presa da lì)
   required int disponibile,
   required int anno,
   bool proposta = false,
@@ -619,8 +618,8 @@ Future<Map<String, dynamic>?> modificaElemento(
   ];
   String? errore;
   final azione = tipo == 'AZIONE';
-  // azione presa dalla mappatura: la descrizione viene da lì e non si scrive
-  final dallaMappatura = azione && (riferimento != null || x?['mappatura_codice'] != null);
+  // azione copiata da un'attività della mappatura: la descrizione viene da lì e non si scrive
+  final copiata = azione && x?['mappatura_codice'] != null;
   final risultato = await showDialog<Map<String, dynamic>>(
     context: context,
     builder: (_) => _ConControllori([descrizione, impegno, completamento, nota], (c) => StatefulBuilder(
@@ -630,13 +629,9 @@ Future<Map<String, dynamic>?> modificaElemento(
           width: 560,
           child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (dallaMappatura) ...[
-                Text('${x?['mappatura_codice'] ?? riferimento?['codice']} - ${x?['descrizione'] ?? riferimento?['descrizione']}',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(
-                    (x?['attivita_id'] ?? (riferimento?['tipo'] == 'ATTIVITA' ? riferimento!['id'] : null)) != null
-                        ? 'Attività della mappatura dei rischi, con i suoi rischi e le sue misure'
-                        : 'Processo della mappatura dei rischi, con le sue attività, i rischi e le misure',
+              if (copiata) ...[
+                Text(titoloElemento(x!), style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('Copiata da un\'attività della mappatura dei rischi: la descrizione resta quella copiata.',
                     style: Theme.of(c).textTheme.bodySmall),
               ] else if (azione)
                 TextField(controller: descrizione, maxLines: 4, minLines: 2, decoration: const InputDecoration(labelText: 'Descrizione *'))
@@ -722,7 +717,7 @@ Future<Map<String, dynamic>?> modificaElemento(
           FilledButton(
             onPressed: () {
               final i = _intero(impegno), comp = _intero(completamento);
-              if (azione && !dallaMappatura && descrizione.text.trim().isEmpty) return aggiorna(() => errore = 'Descrivi l\'azione');
+              if (azione && !copiata && descrizione.text.trim().isEmpty) return aggiorna(() => errore = 'Descrivi l\'azione');
               if (i == null || i < 0 || i > disponibile) {
                 return aggiorna(() => errore = 'L\'impegno è un numero tra 0 e $disponibile');
               }
@@ -731,7 +726,7 @@ Future<Map<String, dynamic>?> modificaElemento(
                 return aggiorna(() => errore = 'Il completamento è un numero tra 0 e 100');
               }
               Navigator.pop(c, {
-                if (azione && !dallaMappatura) 'descrizione': descrizione.text.trim(),
+                if (azione && !copiata) 'descrizione': descrizione.text.trim(),
                 'impegno': i,
                 if (!proposta) 'completamento': manuale ? comp : (x?['completamento'] ?? 0),
                 'scadenza': isoData(scadenza),
@@ -879,114 +874,175 @@ String titoloElemento(Map x) {
   return codice == null ? '${x['descrizione']}' : '$codice - ${x['descrizione']}';
 }
 
-/// Azione presa dalla mappatura dei rischi (processo o attività).
+/// Azione copiata da un'attività della mappatura dei rischi.
 bool dallaMappatura(Map x) => x['mappatura_codice'] != null;
 
-/// Azione presa dalla mappatura il cui processo o attività è stato poi eliminato.
-bool fuoriMappatura(Map x) => dallaMappatura(x) && x['processo_id'] == null && x['attivita_id'] == null;
+/// Azione copiata da un'attività poi eliminata dalla mappatura.
+bool fuoriMappatura(Map x) => dallaMappatura(x) && x['attivita_id'] == null;
 
 /// Icona di un'azione o misura, con la spiegazione.
 Widget iconaElemento(Map x) {
   final (icona, testo) = x['tipo'] == 'MISURA'
       ? (Icons.shield_outlined, 'Misura della mappatura dei rischi')
       : dallaMappatura(x)
-          ? (Icons.account_tree_outlined, x['attivita_id'] != null ? 'Azione: attività della mappatura dei rischi'
-              : 'Azione: processo della mappatura dei rischi')
+          ? (Icons.account_tree_outlined, 'Azione copiata da un\'attività della mappatura dei rischi')
           : (Icons.directions_run, 'Azione');
   return Tooltip(message: testo, child: Icon(icona));
 }
 
-/// Ciò che un'azione presa dalla mappatura si porta dietro: le attività del processo (o la sola
-/// attività) con i rischi e le misure, letti dalla mappatura quando si apre.
-class AlberoMappatura extends StatefulWidget {
-  const AlberoMappatura(this.x, {super.key});
-
-  final Map x;
-
-  @override
-  State<AlberoMappatura> createState() => _AlberoMappaturaState();
+/// Le attività (che diventano azioni) e le misure di un processo o di una sola attività della
+/// mappatura, da spuntare per copiarle nell'obiettivo; i rischi restano fuori. Restituisce gli
+/// elementi da aggiungere, con impegno 0% e scadenza a fine anno: ognuno poi si modifica o si
+/// toglie da solo. Quelli già nell'obiettivo non si scelgono.
+Future<List<Map<String, dynamic>>?> scegliDaCopiare(BuildContext context, Map<String, dynamic> voce,
+    {required int anno, required Set<String> attivitaPresenti, required Set<String> misurePresenti}) {
+  return showDialog<List<Map<String, dynamic>>>(
+    context: context,
+    builder: (c) => _DaCopiare(voce: voce, anno: anno, attivitaPresenti: attivitaPresenti, misurePresenti: misurePresenti),
+  );
 }
 
-class _AlberoMappaturaState extends State<AlberoMappatura> {
-  Future<Map<String, dynamic>>? _albero;
+class _DaCopiare extends StatefulWidget {
+  const _DaCopiare({required this.voce, required this.anno, required this.attivitaPresenti, required this.misurePresenti});
+
+  final Map<String, dynamic> voce;
+  final int anno;
+  final Set<String> attivitaPresenti, misurePresenti;
+
+  @override
+  State<_DaCopiare> createState() => _DaCopiareState();
+}
+
+class _DaCopiareState extends State<_DaCopiare> {
+  late Future<Map<String, dynamic>> _albero;
+  final _scelte = <String>{}; // id delle attività e delle misure spuntate
+
+  @override
+  void initState() {
+    super.initState();
+    _carica();
+  }
 
   void _carica() => setState(() {
+        final v = widget.voce;
         _albero = apiDi(context).get('$apiPerformance/mappatura/albero', query: {
-          if (widget.x['attivita_id'] != null) 'attivita_id': widget.x['attivita_id'] as String
-          else 'processo_id': widget.x['processo_id'] as String,
-        }).then((v) => v as Map<String, dynamic>);
+          if (v['tipo'] == 'ATTIVITA') 'attivita_id': v['id'] as String else 'processo_id': v['id'] as String,
+        }).then((a) {
+          final albero = a as Map<String, dynamic>;
+          // tutto spuntato, tranne ciò che è già nell'obiettivo
+          if (mounted) {
+            setState(() {
+              _scelte.clear();
+              for (final at in (albero['attivita'] as List).cast<Map<String, dynamic>>()) {
+                if (!widget.attivitaPresenti.contains(at['id'])) _scelte.add(at['id'] as String);
+                for (final m in _misure(at)) {
+                  if (!widget.misurePresenti.contains(m['id'])) _scelte.add(m['id'] as String);
+                }
+              }
+            });
+          }
+          return albero;
+        });
       });
+
+  /// Le misure di un'attività (dai suoi rischi), senza doppioni.
+  static List<Map<String, dynamic>> _misure(Map<String, dynamic> attivita) {
+    final viste = <Object?>{};
+    return [
+      for (final r in (attivita['rischi'] as List).cast<Map<String, dynamic>>())
+        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>())
+          if (viste.add(m['id'])) m,
+    ];
+  }
+
+  List<Map<String, dynamic>> _elementi(Map<String, dynamic> albero) {
+    final scadenza = '${widget.anno}-12-31';
+    final processo = (albero['processo'] as Map)['id'];
+    return [
+      for (final a in (albero['attivita'] as List).cast<Map<String, dynamic>>()) ...[
+        if (_scelte.contains(a['id']))
+          {'tipo': 'AZIONE', 'attivita_id': a['id'], 'processo_id': processo, 'mappatura_codice': a['codice'],
+           'descrizione': a['descrizione'], 'impegno': 0, 'scadenza': scadenza, 'indicatori': <Map<String, dynamic>>[]},
+        for (final m in _misure(a))
+          if (_scelte.contains(m['id']))
+            {'tipo': 'MISURA', 'misura_id': m['id'], 'misura_codice': m['codice'], 'descrizione': m['descrizione'],
+             'impegno': 0, 'scadenza': scadenza, 'indicatori': [?indicatoreDaMisura(m)]},
+      ],
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final piccolo = tema.textTheme.bodySmall;
-    return Theme(
-      data: tema.copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        dense: true,
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 8),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        title: Text(widget.x['attivita_id'] != null ? 'Rischi e misure dell\'attività' : 'Attività, rischi e misure del processo',
-            style: piccolo?.copyWith(color: tema.colorScheme.primary)),
-        onExpansionChanged: (aperto) {
-          if (aperto && _albero == null) _carica();
-        },
-        children: [
-          if (_albero != null)
-            Caricamento<Map<String, dynamic>>(
-              future: _albero!,
-              riprova: _carica,
-              builder: (context, a) {
-                final attivita = (a['attivita'] as List).cast<Map<String, dynamic>>();
-                if (attivita.isEmpty) return Text('Nessuna attività nella mappatura.', style: piccolo);
-                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  for (final at in attivita) ...[
-                    Text('${at['codice']} - ${at['descrizione']}', style: piccolo?.copyWith(fontWeight: FontWeight.w600)),
-                    if ((at['rischi'] as List).isEmpty)
-                      Padding(padding: const EdgeInsets.only(left: 16), child: Text('Nessun rischio.', style: piccolo)),
-                    for (final r in (at['rischi'] as List).cast<Map<String, dynamic>>()) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16, top: 2),
-                        child: Text('${r['codice']} - ${r['evento']} · rischio ${(r['livello'] as String?)?.toLowerCase() ?? 'non valutato'}',
-                            style: piccolo),
-                      ),
-                      for (final m in (r['misure'] as List).cast<Map<String, dynamic>>())
-                        Padding(
-                          padding: const EdgeInsets.only(left: 32, top: 2),
-                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Icon(Icons.shield_outlined, size: 14, color: tema.colorScheme.onSurfaceVariant),
-                            const SizedBox(width: 4),
-                            Expanded(child: Text('${m['codice']} - ${m['descrizione']}', style: piccolo)),
-                          ]),
-                        ),
-                    ],
-                    const SizedBox(height: 4),
+    final v = widget.voce;
+    final piccolo = Theme.of(context).textTheme.bodySmall;
+    return AlertDialog(
+      title: Text('Copia da ${v['codice']} - ${v['descrizione']}'),
+      content: SizedBox(
+        width: 640,
+        height: 480,
+        child: Caricamento<Map<String, dynamic>>(
+          future: _albero,
+          riprova: _carica,
+          builder: (context, albero) {
+            final attivita = (albero['attivita'] as List).cast<Map<String, dynamic>>();
+            if (attivita.isEmpty) return const Center(child: Text('Nessuna attività nella mappatura.'));
+            Widget casella(String id, String testo, String sotto, {required bool presente, double rientro = 0}) => CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.only(left: rientro),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: presente || _scelte.contains(id),
+                  onChanged: presente ? null : (s) => setState(() => s! ? _scelte.add(id) : _scelte.remove(id)),
+                  title: Text(testo),
+                  subtitle: Text(presente ? 'già nell\'obiettivo' : sotto, style: piccolo),
+                );
+            return Column(children: [
+              Text('Le attività diventano azioni, le misure restano misure; i rischi non entrano nell\'obiettivo. '
+                  'Si copiano con impegno 0%: impegno, scadenza e indicatori si impostano poi su ciascuna. '
+                  'Se la mappatura cambia, l\'obiettivo resta com\'è.', style: piccolo),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView(children: [
+                  for (final a in attivita) ...[
+                    casella(a['id'] as String, '${a['codice']} - ${a['descrizione']}', 'Azione',
+                        presente: widget.attivitaPresenti.contains(a['id'])),
+                    for (final m in _misure(a))
+                      casella(m['id'] as String, '${m['codice']} - ${m['descrizione']}',
+                          ['Misura', if (m['indicatore'] != null) 'indicatore: ${m['indicatore']}'].join(' · '),
+                          presente: widget.misurePresenti.contains(m['id']), rientro: 32),
                   ],
-                ]);
-              },
-            ),
-        ],
+                ]),
+              ),
+            ]);
+          },
+        ),
       ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _albero,
+          builder: (context, snap) => FilledButton(
+            onPressed: !snap.hasData || _scelte.isEmpty ? null : () => Navigator.pop(context, _elementi(snap.data!)),
+            child: Text(_scelte.isEmpty ? 'Copia' : 'Copia ${_scelte.length}'),
+          ),
+        ),
+      ],
     );
   }
 }
 
-/// Scelta di un processo o di una sola attività della mappatura dei rischi da prendere come
-/// azione (quelli della struttura per primi).
-Future<Map<String, dynamic>?> scegliDallaMappatura(BuildContext context, String strutturaId, Set<String> giaPresenti) {
+/// Scelta di un processo o di una sola attività della mappatura dei rischi da cui copiare azioni
+/// e misure (quelli della struttura per primi).
+Future<Map<String, dynamic>?> scegliDallaMappatura(BuildContext context, String strutturaId) {
   return showDialog<Map<String, dynamic>>(
     context: context,
-    builder: (c) => _SceltaMappatura(strutturaId: strutturaId, giaPresenti: giaPresenti),
+    builder: (c) => _SceltaMappatura(strutturaId: strutturaId),
   );
 }
 
 class _SceltaMappatura extends StatefulWidget {
-  const _SceltaMappatura({required this.strutturaId, required this.giaPresenti});
+  const _SceltaMappatura({required this.strutturaId});
 
   final String strutturaId;
-  final Set<String> giaPresenti;
 
   @override
   State<_SceltaMappatura> createState() => _SceltaMappaturaState();
@@ -1022,7 +1078,8 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
           width: 640,
           height: 460,
           child: Column(children: [
-            Text('Il processo porta con sé tutte le sue attività, i rischi e le misure; l\'attività solo i suoi.',
+            Text('Dal processo si copiano le sue attività (come azioni) e le sue misure; dall\'attività solo lei e le sue misure. '
+                'Al passo successivo si sceglie cosa copiare.',
                 style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 8),
             TextField(
@@ -1041,7 +1098,6 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
                         for (final v in voci)
                           ListTile(
                             dense: true,
-                            enabled: !widget.giaPresenti.contains(v['id']),
                             contentPadding: EdgeInsets.only(left: v['tipo'] == 'ATTIVITA' ? 40 : 16, right: 16),
                             leading: Icon(v['tipo'] == 'ATTIVITA' ? Icons.subdirectory_arrow_right : Icons.account_tree_outlined, size: 20),
                             title: Text('${v['codice']} - ${v['descrizione']}'),
@@ -1049,7 +1105,6 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
                               if (v['tipo'] == 'ATTIVITA') 'Attività di ${v['processo']}'
                               else v['processo_tipo'] == 'PROCEDIMENTO' ? 'Procedimento' : 'Processo',
                               if (v['struttura_id'] == null) 'trasversale' else if (v['struttura_id'] == widget.strutturaId) 'della struttura',
-                              if (widget.giaPresenti.contains(v['id'])) 'già nell\'obiettivo',
                             ].join(' · ')),
                             onTap: () => Navigator.pop(context, v),
                           ),

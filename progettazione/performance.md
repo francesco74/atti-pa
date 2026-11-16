@@ -16,16 +16,17 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
   codice nel PIAO (facoltativo, es. `P2_OS3_OO1_OG1_26_2`), titolo, descrizione, tipo
   (Operativo, Funzionamento, Miglioramento, come in Si.Ge.Ri.Co.) e la **percentuale di
   impegno** rispetto agli altri obiettivi della struttura nello stesso anno.
-- **Azioni e misure** dell'obiettivo: l'azione è descrittiva, oppure si **prende dalla
-  mappatura dei rischi**: un **processo**, che porta con sé tutto il suo albero (attività,
-  rischi e misure), o una **sola attività** con i suoi rischi e misure (es. obiettivo
-  "costruzione del ponte", azione "affidamento di lavori"). La misura si sceglie tra quelle
-  della mappatura dei rischi (modulo anticorruzione). Delle azioni prese dalla mappatura e delle
-  misure si tiene una copia di codice e descrizione: il riferimento resta se la mappatura cambia;
-  l'albero invece si legge dalla mappatura com'è (`GET /performance/mappatura/albero`). Il
-  collegamento si vede anche dall'anticorruzione: la scheda del processo elenca gli obiettivi
-  che lo prendono come azione (intero o una sua attività) o che contengono una sua misura
-  (16/11/2026, migrazione `0006_azioni_da_mappatura.sql`). Ciascuna ha la percentuale di **impegno**
+- **Azioni e misure** dell'obiettivo: l'azione è descrittiva o **copiata da un'attività della
+  mappatura dei rischi**; la misura si sceglie tra quelle della mappatura (modulo
+  anticorruzione). Con **"Dalla mappatura"** si sceglie un processo o procedimento (o una sola
+  attività) e si spuntano le sue **attività, che diventano azioni, e le sue misure**; i
+  **rischi non entrano** nell'obiettivo. Si copiano con impegno 0% e scadenza a fine anno:
+  ognuna poi è un elemento a sé (impegno, scadenza, indicatori, avanzamento) e si toglie da
+  sola. Sono **copie**: se il processo cambia nella mappatura l'obiettivo resta com'era (codice
+  e descrizione copiati; l'azione ricorda l'attività e il processo da cui viene, la misura la
+  misura). Il collegamento si vede anche dall'anticorruzione: la scheda del processo elenca gli
+  obiettivi con le azioni e le misure copiate da lì (16/11/2026, migrazione
+  `0006_azioni_da_mappatura.sql`). Ciascuna ha la percentuale di **impegno**
   rispetto alle altre dello stesso obiettivo, quella di **completamento** e la **data massima
   di completamento**.
 - **Indicatori** di un'azione o misura (anche più d'uno): cosa si misura e il **valore da
@@ -57,8 +58,8 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
 ## 2-bis. Controlli (07/11/2026)
 
 Sull'obiettivo, senza modello (`controlli_obiettivo` in `common/performance`): impegno 0% (di
-obiettivi, azioni o misure), scadenze fuori dall'anno dell'obiettivo, misure, processi e
-attività non più nella mappatura o attribuiti nella mappatura a un'altra struttura, obiettivo senza azioni o senza
+obiettivi, azioni o misure), scadenze fuori dall'anno dell'obiettivo, misure e attività non
+più nella mappatura o attribuite nella mappatura a un'altra struttura, obiettivo senza azioni o senza
 misure della mappatura, azioni e misure **senza indicatori** (informazione: l'indicatore è
 facoltativo, ma nel PIAO gli obiettivi devono essere misurabili). Nell'elenco il numero degli
 avvisi, nel dettaglio l'elenco; nel riepilogo il numero delle azioni e misure senza indicatori

@@ -411,24 +411,22 @@ def _controlli(impegno: int, anno: int, struttura_id: str, elementi: list, strut
 
 
 def _mappatura(x: PfElemento) -> dict:
-    """Riferimento alla mappatura di un'azione presa da lì (vuoto per le altre: così le
-    istantanee delle proposte nate prima restano uguali)."""
+    """Riferimento alla mappatura di un'azione copiata da un'attività (vuoto per le altre: così
+    le istantanee delle proposte nate prima restano uguali): l'attività, il processo da cui
+    viene e il codice dell'attività."""
     if x.mappatura_codice is None:
         return {}
     return {"processo_id": x.processo_id, "attivita_id": x.attivita_id, "mappatura_codice": x.mappatura_codice}
 
 
 async def _strutture_mappatura(elementi: list) -> dict[str, str | None]:
-    """Struttura responsabile dei processi e delle attività (quella del loro processo) a cui
-    rimandano le azioni, per id."""
+    """Struttura responsabile (quella del loro processo) delle attività da cui sono copiate le
+    azioni, per id dell'attività."""
     def campo(x, nome):
         return x.get(nome) if isinstance(x, dict) else getattr(x, nome)
 
-    processi = {i for x in elementi if (i := campo(x, "processo_id"))}
     attivita = {i for x in elementi if (i := campo(x, "attivita_id"))}
     esito: dict[str, str | None] = {}
-    if processi:
-        esito.update(dict((await db().execute(select(AcProcesso.id, AcProcesso.struttura_id).where(AcProcesso.id.in_(processi)))).all()))
     if attivita:
         righe = await db().execute(select(AcAttivita.id, AcProcesso.struttura_id).join(AcProcesso, AcProcesso.id == AcAttivita.processo_id)
                                    .where(AcAttivita.id.in_(attivita)))  # fmt: skip
@@ -720,8 +718,7 @@ class ElementoDati(BaseModel):
 class ElementoNuovo(ElementoDati):
     tipo: Literal["AZIONE", "MISURA"]
     misura_id: str | None = None
-    # azione presa dalla mappatura: un processo o una sola attività (in alternativa alla descrizione)
-    processo_id: str | None = None
+    # azione copiata da un'attività della mappatura (in alternativa alla descrizione)
     attivita_id: str | None = None
 
 
@@ -760,31 +757,25 @@ async def _misura_dell_ente(misura_id: str | None) -> AcMisura:
     return m
 
 
-async def _dalla_mappatura(processo_id: str | None, attivita_id: str | None) -> dict:
-    """Riferimento di un'azione presa dalla mappatura: il processo (con il suo albero) o la sola
-    attività, con codice e descrizione copiati."""
+async def _dalla_mappatura(attivita_id: str | None) -> dict:
+    """Azione copiata da un'attività della mappatura: codice e descrizione dell'attività, con il
+    processo da cui viene. È una copia: se poi la mappatura cambia, l'azione resta com'è."""
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "I processi vengono dalla mappatura dei rischi: modulo non attivo")
-    if attivita_id:
-        a = await db().get(AcAttivita, attivita_id)
-        if a is None or a.ente_id != ente_id():
-            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un'attività della mappatura dei rischi")
-        return {"processo_id": None, "attivita_id": a.id, "mappatura_codice": a.codice, "descrizione": a.descrizione}
-    p = await db().get(AcProcesso, processo_id) if processo_id else None
-    if p is None or p.ente_id != ente_id():
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un processo della mappatura dei rischi")
-    return {"processo_id": p.id, "attivita_id": None, "mappatura_codice": p.codice, "descrizione": p.denominazione}
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Le attività vengono dalla mappatura dei rischi: modulo non attivo")
+    a = await db().get(AcAttivita, attivita_id) if attivita_id else None
+    if a is None or a.ente_id != ente_id():
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un'attività della mappatura dei rischi")
+    return {"processo_id": a.processo_id, "attivita_id": a.id, "mappatura_codice": a.codice, "descrizione": a.descrizione}
 
 
 def _gia_presente(riferimento: dict) -> str:
-    cosa = "L'attività" if riferimento["attivita_id"] else "Il processo"
-    return f"{cosa} {riferimento['mappatura_codice']} è già nell'obiettivo"
+    return f"L'attività {riferimento['mappatura_codice']} è già un'azione dell'obiettivo"
 
 
 @bp.post("/obiettivi/<obiettivo_id>/elementi")
 @approvatore
 async def crea_elemento(obiettivo_id: str):
-    """Nuova azione (con la descrizione, o presa dalla mappatura: processo o attività) o misura
+    """Nuova azione (con la descrizione, o copiata da un'attività della mappatura) o misura
     (scelta dalla mappatura dei rischi), con gli indicatori."""
     dati = corpo(ElementoNuovo)
     sessione = db()
@@ -792,10 +783,9 @@ async def crea_elemento(obiettivo_id: str):
     definizioni = [_definizione(i) for i in dati.indicatori or []]
     x = PfElemento(id=nuovo_id(), ente_id=ente_id(), obiettivo_id=o.id, tipo=dati.tipo, impegno=dati.impegno,
                    completamento=dati.completamento, scadenza=dati.scadenza)  # fmt: skip
-    if dati.tipo == "AZIONE" and (dati.processo_id or dati.attivita_id):
-        r = await _dalla_mappatura(dati.processo_id, dati.attivita_id)
-        stessa = PfElemento.attivita_id == r["attivita_id"] if r["attivita_id"] else PfElemento.processo_id == r["processo_id"]
-        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, stessa)):
+    if dati.tipo == "AZIONE" and dati.attivita_id:
+        r = await _dalla_mappatura(dati.attivita_id)
+        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, PfElemento.attivita_id == r["attivita_id"])):
             raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
         x.processo_id, x.attivita_id, x.mappatura_codice, x.descrizione = (
             r["processo_id"], r["attivita_id"], r["mappatura_codice"], r["descrizione"])
@@ -959,8 +949,8 @@ class FiltriMappatura(BaseModel):
 @bp.get("/mappatura")
 @lettore
 async def processi_e_attivita():
-    """Processi e attività della mappatura dei rischi da prendere come azioni (al massimo 200):
-    il processo porta con sé tutto il suo albero, l'attività solo il suo."""
+    """Processi e attività della mappatura dei rischi da cui copiare azioni e misure (al massimo
+    200): dal processo le sue attività e misure, dall'attività le sue misure."""
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
         return []
     f = parametri(FiltriMappatura)
@@ -994,8 +984,9 @@ class FiltriAlbero(BaseModel):
 @bp.get("/mappatura/albero")
 @lettore
 async def albero_mappatura():
-    """Ciò che un'azione presa dalla mappatura si porta dietro: le attività del processo (o la
-    sola attività) con i rischi, il loro livello e le misure. Si legge dalla mappatura com'è."""
+    """Ciò che si può copiare nell'obiettivo da un processo (o da una sola attività): le attività,
+    che diventano azioni, e le misure, con l'indicatore e il target della mappatura. I rischi
+    restano fuori dall'obiettivo: servono solo a raggruppare le misure."""
     f = parametri(FiltriAlbero)
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Mappatura non disponibile")
@@ -1021,7 +1012,9 @@ async def albero_mappatura():
                      "struttura_id": p.struttura_id},
         "attivita": [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "rischi": [
             {"id": r.id, "codice": r.codice, "evento": r.evento, "livello": r.livello, "misure": [
-                {"id": m.id, "codice": m.codice, "descrizione": m.descrizione} for m in ordina(misure) if m.rischio_id == r.id]}
+                {"id": m.id, "codice": m.codice, "descrizione": m.descrizione, "tipo": m.tipo, "categoria": m.categoria,
+                 "struttura_id": m.struttura_id, "indicatore": m.indicatore, "target": m.target}
+                for m in ordina(misure) if m.rischio_id == r.id]}
             for r in ordina(rischi) if r.attivita_id == a.id]} for a in ordina(attivita)],
     }  # fmt: skip
 
@@ -1029,7 +1022,7 @@ async def albero_mappatura():
 # --- proposte -------------------------------------------------------------------------------
 # La proposta di creazione o modifica porta l'obiettivo intero: {codice, titolo, descrizione,
 # tipo, impegno, elementi: [{id, tipo, descrizione, misura_id, misura_codice, (solo per le
-# azioni prese dalla mappatura: processo_id, attivita_id, mappatura_codice), impegno,
+# azioni copiate da un'attività: processo_id, attivita_id, mappatura_codice), impegno,
 # scadenza, indicatori: [{id, descrizione, tipo, unita, partenza, target, target_data, verso,
 # fonte}]}]}. Gli elementi (e gli indicatori) con l'id di uno esistente lo modificano, gli altri
 # sono nuovi (l'id si assegna all'approvazione), quelli che mancano si eliminano. L'avanzamento
@@ -1042,8 +1035,7 @@ class ElementoProposto(BaseModel):
     tipo: Literal["AZIONE", "MISURA"]
     descrizione: str | None = Field(default=None, max_length=10000)
     misura_id: str | None = None
-    processo_id: str | None = None  # azione presa dalla mappatura: processo
-    attivita_id: str | None = None  # o attività
+    attivita_id: str | None = None  # azione copiata da un'attività della mappatura
     impegno: int = Field(ge=0, le=TOTALE)
     scadenza: date
     indicatori: list[IndicatoreIn] = Field(default_factory=list, max_length=50)
@@ -1118,14 +1110,13 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
         if vecchio is None and (not (x.id or "").startswith("nuovo-") or x.id in visti):
             e["id"] = f"nuovo-{nuovo_id()}"
         visti.add(e["id"])
-        if x.tipo == "AZIONE" and (x.processo_id or x.attivita_id):
-            if vecchio is not None and vecchio.get("mappatura_codice") is not None and (x.processo_id, x.attivita_id) == (
-                    vecchio.get("processo_id"), vecchio.get("attivita_id")):
-                # già nell'obiettivo: la copia resta (anche se tolto dalla mappatura)
+        if x.tipo == "AZIONE" and (x.attivita_id or (vecchio or {}).get("mappatura_codice")):
+            if vecchio is not None and vecchio.get("mappatura_codice") is not None and x.attivita_id == vecchio.get("attivita_id"):
+                # già nell'obiettivo: la copia resta com'è (anche se l'attività è cambiata o è stata tolta)
                 r = {k: vecchio.get(k) for k in ("processo_id", "attivita_id", "mappatura_codice", "descrizione")}
             else:
-                r = await _dalla_mappatura(x.processo_id, x.attivita_id)
-            chiave = ("ATTIVITA", r["attivita_id"]) if r["attivita_id"] else ("PROCESSO", r["processo_id"])
+                r = await _dalla_mappatura(x.attivita_id)
+            chiave = r["attivita_id"] or r["mappatura_codice"]
             if chiave in riferimenti:
                 raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
             riferimenti.add(chiave)

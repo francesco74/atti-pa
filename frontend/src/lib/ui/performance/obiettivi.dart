@@ -317,28 +317,47 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
     }
   }
 
-  /// Nuova azione (scritta o, con [dallaMappatura], un processo o un'attività della mappatura)
-  /// o misura.
-  Future<void> _nuovoElemento(Map<String, dynamic> o, String tipo, {bool dallaMappatura = false}) => _esegui(() async {
+  Future<void> _nuovoElemento(Map<String, dynamic> o, String tipo) => _esegui(() async {
         final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
-        Map<String, dynamic>? misura, riferimento;
+        Map<String, dynamic>? misura;
         if (tipo == 'MISURA') {
           misura = await scegliMisura(context, o['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
           if (misura == null || !mounted) return;
-        } else if (dallaMappatura) {
-          riferimento = await scegliDallaMappatura(context, o['struttura_id'] as String,
-              {for (final x in elementi) ...[?x['processo_id'] as String?, ?x['attivita_id'] as String?]});
-          if (riferimento == null || !mounted) return;
         }
         final v = await modificaElemento(context,
-            tipo: tipo, misura: misura, riferimento: riferimento, disponibile: 100 - (o['impegno_elementi'] as int), anno: o['anno'] as int);
+            tipo: tipo, misura: misura, disponibile: 100 - (o['impegno_elementi'] as int), anno: o['anno'] as int);
         if (v == null || !mounted) return;
         await apiDi(context).post('$apiPerformance/obiettivi/${o['id']}/elementi', {
           ...v,
           'tipo': tipo,
           if (misura != null) 'misura_id': misura['id'],
-          if (riferimento != null) riferimento['tipo'] == 'ATTIVITA' ? 'attivita_id' : 'processo_id': riferimento['id'],
         });
+      });
+
+  /// Copia nell'obiettivo attività (come azioni) e misure di un processo o di un'attività della
+  /// mappatura, con impegno 0%: ognuna poi si modifica o si toglie da sola.
+  Future<void> _copiaDallaMappatura(Map<String, dynamic> o) => _esegui(() async {
+        final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
+        final voce = await scegliDallaMappatura(context, o['struttura_id'] as String);
+        if (voce == null || !mounted) return;
+        final copie = await scegliDaCopiare(context, voce,
+            anno: o['anno'] as int,
+            attivitaPresenti: {for (final x in elementi) ?x['attivita_id'] as String?},
+            misurePresenti: {for (final x in elementi) ?x['misura_id'] as String?});
+        if (copie == null || !mounted) return;
+        final api = apiDi(context);
+        for (final e in copie) {
+          await api.post('$apiPerformance/obiettivi/${o['id']}/elementi', {
+            'tipo': e['tipo'],
+            if (e['attivita_id'] != null) 'attivita_id': e['attivita_id'],
+            if (e['misura_id'] != null) 'misura_id': e['misura_id'],
+            'impegno': 0,
+            'completamento': 0,
+            'scadenza': e['scadenza'],
+            'indicatori': e['indicatori'],
+          });
+        }
+        if (mounted) mostraMessaggio(context, _copiati(copie));
       });
 
   Future<void> _modificaElemento(Map<String, dynamic> o, Map<String, dynamic> x) => _esegui(() async {
@@ -403,7 +422,6 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
           if ((x['indicatori'] as List? ?? const []).isEmpty) const Etichetta('Senza indicatori', Colors.blueGrey),
         ]),
         ElencoIndicatori((x['indicatori'] as List? ?? const []).cast<Map<String, dynamic>>(), rilevati: true),
-        if (dallaMappatura(x) && !fuoriMappatura(x)) AlberoMappatura(x),
       ]),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         BarraCompletamento(x['completamento'] as num?, larghezza: 100),
@@ -484,15 +502,15 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
           Sezione(
             titolo: 'Azioni e misure',
             azioni: [
-              if (modificabile && impegnoElementi < 100) ...[
+              if (modificabile && impegnoElementi < 100)
                 TextButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Azione'), onPressed: () => _nuovoElemento(o, 'AZIONE')),
-                if (dati.misureDisponibili) ...[
-                  TextButton.icon(icon: const Icon(Icons.account_tree_outlined, size: 18), label: const Text('Azione dalla mappatura'),
-                      onPressed: () => _nuovoElemento(o, 'AZIONE', dallaMappatura: true)),
-                  TextButton.icon(icon: const Icon(Icons.add_moderator_outlined, size: 18), label: const Text('Misura'),
-                      onPressed: () => _nuovoElemento(o, 'MISURA')),
-                ],
-              ],
+              // si copia con impegno 0%: anche con le azioni e misure già al 100%
+              if (modificabile && dati.misureDisponibili)
+                TextButton.icon(icon: const Icon(Icons.account_tree_outlined, size: 18), label: const Text('Dalla mappatura'),
+                    onPressed: () => _copiaDallaMappatura(o)),
+              if (modificabile && impegnoElementi < 100 && dati.misureDisponibili)
+                TextButton.icon(icon: const Icon(Icons.add_moderator_outlined, size: 18), label: const Text('Misura'),
+                    onPressed: () => _nuovoElemento(o, 'MISURA')),
             ],
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Align(alignment: Alignment.centerLeft, child: TotaleImpegno(impegnoElementi, testo: 'Impegno delle azioni e misure')),
@@ -541,4 +559,11 @@ class _MotivoAggiunta extends StatelessWidget {
       Flexible(child: Text(testo, style: TextStyle(color: colori.onSurfaceVariant))),
     ]);
   }
+}
+
+/// Messaggio dopo la copia dalla mappatura.
+String _copiati(List<Map<String, dynamic>> copie) {
+  final azioni = copie.where((e) => e['tipo'] == 'AZIONE').length, misure = copie.length - azioni;
+  return 'Copiate ${azioni == 1 ? '1 azione' : '$azioni azioni'} e ${misure == 1 ? '1 misura' : '$misure misure'}: '
+      'imposta impegno, scadenza e indicatori di ciascuna';
 }

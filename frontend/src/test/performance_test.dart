@@ -130,7 +130,8 @@ void main() {
           'attivita': [
             {'id': 'at1', 'codice': 'C.3.1', 'descrizione': 'Predisposizione del bando', 'rischi': [
               {'id': 'r1', 'codice': 'C.3.1_R.1', 'evento': 'Requisiti su misura', 'livello': 'Alto', 'misure': [
-                {'id': 'm9', 'codice': 'C.3.1_R.1_M.1', 'descrizione': 'Doppia verifica dei requisiti'},
+                {'id': 'm9', 'codice': 'C.3.1_R.1_M.1', 'descrizione': 'Doppia verifica dei requisiti', 'tipo': 'SPECIFICA',
+                 'categoria': null, 'struttura_id': null, 'indicatore': 'Bandi verificati', 'target': '100%'},
               ]},
             ]},
           ],
@@ -200,39 +201,40 @@ void main() {
     expect(find.text('Il PIAO è chiuso: non si aggiungono obiettivi.'), findsOneWidget);
   });
 
-  testWidgets('azione presa dalla mappatura: il processo con il suo albero', (tester) async {
+  testWidgets('dalla mappatura: si copiano attività (come azioni) e misure scelte, con impegno 0', (tester) async {
     final anno = DateTime.now().year;
     await apri(tester, approvatore: true, obiettivo: {
-      'impegno_elementi': 60,
       'elementi': [
-        {'id': 'e3', 'tipo': 'AZIONE', 'descrizione': 'Affidamento di lavori', 'misura_id': null, 'misura_codice': null,
-         'processo_id': 'pc1', 'attivita_id': null, 'mappatura_codice': 'C.3', 'impegno': 60, 'completamento': 0,
+        {'id': 'e3', 'tipo': 'AZIONE', 'descrizione': 'Sopralluogo', 'misura_id': null, 'misura_codice': null,
+         'processo_id': 'pc1', 'attivita_id': null, 'mappatura_codice': 'C.3.0', 'impegno': 100, 'completamento': 0,
          'scadenza': '$anno-12-31', 'in_ritardo': false, 'calcolato': false, 'indicatori': []},
       ],
     });
     await tester.tap(find.text('P2_OS3 - Digitalizzare i concorsi'));
     await tester.pumpAndSettle();
-    expect(find.text('C.3 - Affidamento di lavori'), findsOneWidget);
-    expect(find.byTooltip('Azione: processo della mappatura dei rischi'), findsOneWidget);
-    // l'albero si legge dalla mappatura quando si apre
-    await tester.tap(find.text('Attività, rischi e misure del processo'));
-    await tester.pumpAndSettle();
-    expect(find.text('C.3.1 - Predisposizione del bando'), findsOneWidget);
-    expect(find.text('C.3.1_R.1 - Requisiti su misura · rischio alto'), findsOneWidget);
-    expect(find.text('C.3.1_R.1_M.1 - Doppia verifica dei requisiti'), findsOneWidget);
+    // l'azione copiata: codice dell'attività; l'attività tolta dalla mappatura si segnala
+    expect(find.text('C.3.0 - Sopralluogo'), findsOneWidget);
+    expect(find.byTooltip('Azione copiata da un\'attività della mappatura dei rischi'), findsOneWidget);
+    expect(find.text('Non più nella mappatura'), findsOneWidget);
 
-    // nuova azione: una sola attività; il processo già presente non si sceglie
-    await tester.tap(find.text('Azione dalla mappatura'));
+    // anche con le azioni e misure al 100%: si copiano a 0%
+    expect(find.text('Azione'), findsNothing);
+    await tester.tap(find.text('Dalla mappatura'));
     await tester.pumpAndSettle();
-    expect(tester.widget<ListTile>(find.widgetWithText(ListTile, 'C.3 - Affidamento di lavori').last).enabled, isFalse);
-    await tester.tap(find.text('C.3.1 - Predisposizione del bando').last);
+    await tester.tap(find.text('C.3 - Affidamento di lavori'));
     await tester.pumpAndSettle();
-    expect(find.text('Attività della mappatura dei rischi, con i suoi rischi e le sue misure'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Descrizione *'), findsNothing);
-    await tester.tap(find.text('Salva'));
+    // attività e misure spuntate, i rischi no
+    expect(find.text('C.3.1 - Predisposizione del bando'), findsOneWidget);
+    expect(find.text('C.3.1_R.1_M.1 - Doppia verifica dei requisiti'), findsOneWidget);
+    expect(find.textContaining('Requisiti su misura'), findsNothing);
+    expect(find.text('Copia 2'), findsOneWidget);
+    await tester.tap(find.text('C.3.1_R.1_M.1 - Doppia verifica dei requisiti')); // la misura non serve
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Copia 1'));
     await tester.pumpAndSettle();
     final corpo = corpi['POST /api/v1/performance/obiettivi/o1/elementi'] as Map;
-    expect((corpo['tipo'], corpo['attivita_id'], corpo.containsKey('descrizione')), ('AZIONE', 'at1', false));
+    expect((corpo['tipo'], corpo['attivita_id'], corpo['impegno'], corpo['scadenza']), ('AZIONE', 'at1', 0, '$anno-12-31'));
+    expect(find.textContaining('Copiate 1 azione e 0 misure'), findsOneWidget);
   });
 
   testWidgets('indicatori: target, valore rilevato e avanzamento', (tester) async {

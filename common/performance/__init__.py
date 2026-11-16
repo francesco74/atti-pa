@@ -174,9 +174,9 @@ def controlli_obiettivo(
     dall'anno, misure, processi e attività non più nella mappatura o di altre strutture, azioni e
     misure senza indicatori, obiettivo senza azioni o senza misure della mappatura. [elementi]:
     {tipo, descrizione, impegno, scadenza (date), misura_id, indicatori (se noti) e, per le azioni
-    prese dalla mappatura, processo_id, attivita_id, mappatura_codice}; [strutture_misure]:
-    misura_id -> struttura responsabile della misura; [strutture_mappatura]: id del processo o
-    dell'attività -> struttura responsabile del processo (None: trasversale)."""
+    copiate da un'attività della mappatura, processo_id, attivita_id, mappatura_codice};
+    [strutture_misure]: misura_id -> struttura responsabile della misura; [strutture_mappatura]:
+    id dell'attività -> struttura responsabile del suo processo (None: trasversale)."""
     esito: list[dict] = []
 
     def c(livello: str, testo: str) -> None:
@@ -187,7 +187,7 @@ def controlli_obiettivo(
     if not elementi:
         c(AVVISO, "Nessuna azione o misura: il completamento non si può calcolare")
     elif misure_attive and not any(x["tipo"] == "MISURA" or x.get("mappatura_codice") for x in elementi):
-        c(INFO, "Nessuna misura o processo della mappatura dei rischi collegati all'obiettivo")
+        c(INFO, "Nessuna misura o attività della mappatura dei rischi collegata all'obiettivo")
     for x in elementi:
         nome = f"{'Azione' if x['tipo'] == 'AZIONE' else 'Misura'} «{(x['descrizione'] or '')[:60]}»"
         if (x.get("impegno") or 0) == 0:
@@ -206,13 +206,11 @@ def controlli_obiettivo(
                 responsabile = strutture_misure.get(x["misura_id"])
                 if responsabile and responsabile != struttura_id:
                     c(INFO, f"{nome}: la misura è attribuita a un'altra struttura nella mappatura")
-        elif x.get("mappatura_codice"):
-            riferimento = x.get("attivita_id") or x.get("processo_id")
-            if not riferimento:
-                c(AVVISO, f"{nome}: {x['mappatura_codice']} non è più nella mappatura dei rischi")
-            elif strutture_mappatura is not None and strutture_mappatura.get(riferimento):
-                if strutture_mappatura[riferimento] != struttura_id:
-                    cosa = "l'attività" if x.get("attivita_id") else "il processo"
-                    c(INFO, f"{nome}: {cosa} è di un'altra struttura nella mappatura")
+        elif x.get("mappatura_codice"):  # azione copiata da un'attività della mappatura
+            attivita = x.get("attivita_id")
+            if not attivita:
+                c(AVVISO, f"{nome}: l'attività {x['mappatura_codice']} non è più nella mappatura dei rischi")
+            elif strutture_mappatura is not None and strutture_mappatura.get(attivita) not in (None, struttura_id):
+                c(INFO, f"{nome}: l'attività è di un processo di un'altra struttura nella mappatura")
     return sorted(esito, key=lambda v: v["livello"] != AVVISO)
 

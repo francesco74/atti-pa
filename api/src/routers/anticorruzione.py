@@ -641,14 +641,14 @@ async def processo(processo_id: str):
 
 
 async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[dict]:
-    """Obiettivi della performance che prendono come azione il processo o una sua attività, o
-    che contengono una sua misura, con l'elemento attraverso cui sono collegati (sola lettura,
-    se l'ente ha anche il modulo performance)."""
+    """Obiettivi della performance che hanno azioni copiate dalle attività del processo o
+    misure del processo, uno per obiettivo con i codici di quelle azioni e misure (sola
+    lettura, se l'ente ha anche il modulo performance)."""
     if not ente().modulo_attivo(Modulo.PERFORMANCE):
         return []
     attivita = [a["id"] for a in albero["attivita"]]
     misure = [m["id"] for a in albero["attivita"] for r in a["rischi"] for m in r["misure"]]
-    condizioni = [PfElemento.processo_id == p.id]
+    condizioni = [PfElemento.processo_id == p.id]  # anche se l'attività è stata poi tolta
     if attivita:
         condizioni.append(PfElemento.attivita_id.in_(attivita))
     if misure:
@@ -664,18 +664,20 @@ async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[di
             select(PfElemento.obiettivo_id, PfElemento.impegno, PfElemento.completamento)
             .where(PfElemento.obiettivo_id.in_({o.id for _, o, _ in righe}))):  # fmt: skip
         pesi.setdefault(obiettivo_id, []).append((impegno, completamento))
-
-    def tramite(x: PfElemento) -> dict:
+    per_obiettivo: dict[str, dict] = {}
+    for x, o, piao in righe:
+        v = per_obiettivo.setdefault(o.id, {
+            "obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno, "struttura_id": o.struttura_id,
+            "piao": piao.titolo, "piao_aperto": piao.stato == "APERTO", "completamento": media_pesata(pesi.get(o.id, [])),
+            "azioni": [], "misure": []})  # fmt: skip
         if x.misura_id:
-            return {"tipo": "MISURA", "id": x.misura_id, "codice": x.misura_codice}
-        if x.attivita_id:
-            return {"tipo": "ATTIVITA", "id": x.attivita_id, "codice": x.mappatura_codice}
-        return {"tipo": "PROCESSO", "id": x.processo_id, "codice": x.mappatura_codice}
-
-    esito = [{"obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno, "struttura_id": o.struttura_id,
-              "piao": piao.titolo, "piao_aperto": piao.stato == "APERTO", "completamento": media_pesata(pesi.get(o.id, [])),
-              "tramite": tramite(x)} for x, o, piao in righe]  # fmt: skip
-    return sorted(esito, key=lambda v: (-v["anno"], chiave_naturale(v["codice"] or ""), v["titolo"], v["tramite"]["codice"] or ""))
+            v["misure"].append({"id": x.misura_id, "codice": x.misura_codice})
+        else:
+            v["azioni"].append({"id": x.attivita_id, "codice": x.mappatura_codice})
+    for v in per_obiettivo.values():
+        for chiave in ("azioni", "misure"):
+            v[chiave].sort(key=lambda e: chiave_naturale(e["codice"] or ""))
+    return sorted(per_obiettivo.values(), key=lambda v: (-v["anno"], chiave_naturale(v["codice"] or ""), v["titolo"]))
 
 
 async def albero_processo(sessione, p: AcProcesso) -> dict:

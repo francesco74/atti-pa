@@ -208,39 +208,34 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
     if (v != null && mounted) await _salva({...d, ...v});
   }
 
-  /// Nuova azione (scritta o, con [dallaMappatura], un processo o un'attività della mappatura)
-  /// o misura.
-  Future<void> _nuovoElemento(String tipo, {bool dallaMappatura = false}) async {
+  Future<void> _nuovoElemento(String tipo) async {
     final elementi = _elementi;
-    Map<String, dynamic>? misura, riferimento;
+    Map<String, dynamic>? misura;
     if (tipo == 'MISURA') {
       misura = await scegliMisura(context, _p!['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
       if (misura == null || !mounted) return;
-    } else if (dallaMappatura) {
-      riferimento = await scegliDallaMappatura(context, _p!['struttura_id'] as String,
-          {for (final x in elementi) ...[?x['processo_id'] as String?, ?x['attivita_id'] as String?]});
-      if (riferimento == null || !mounted) return;
     }
     final v = await modificaElemento(context,
-        tipo: tipo,
-        misura: misura,
-        riferimento: riferimento,
-        disponibile: 100 - (_p!['impegno_elementi'] as int),
-        anno: _p!['anno'] as int,
-        proposta: true);
+        tipo: tipo, misura: misura, disponibile: 100 - (_p!['impegno_elementi'] as int), anno: _p!['anno'] as int, proposta: true);
     if (v == null || !mounted) return;
     await _salva({
       ..._dati,
-      'elementi': [
-        ...elementi,
-        {
-          ...v,
-          'tipo': tipo,
-          if (misura != null) 'misura_id': misura['id'],
-          if (riferimento != null) riferimento['tipo'] == 'ATTIVITA' ? 'attivita_id' : 'processo_id': riferimento['id'],
-        },
-      ],
+      'elementi': [...elementi, {...v, 'tipo': tipo, if (misura != null) 'misura_id': misura['id']}],
     });
+  }
+
+  /// Copia nella proposta attività (come azioni) e misure di un processo o di un'attività della
+  /// mappatura, con impegno 0%: ognuna poi si modifica o si toglie da sola.
+  Future<void> _copiaDallaMappatura() async {
+    final elementi = _elementi;
+    final voce = await scegliDallaMappatura(context, _p!['struttura_id'] as String);
+    if (voce == null || !mounted) return;
+    final copie = await scegliDaCopiare(context, voce,
+        anno: _p!['anno'] as int,
+        attivitaPresenti: {for (final x in elementi) ?x['attivita_id'] as String?},
+        misurePresenti: {for (final x in elementi) ?x['misura_id'] as String?});
+    if (copie == null || !mounted) return;
+    await _salva({..._dati, 'elementi': [...elementi, ...copie]});
   }
 
   Future<void> _modificaElemento(Map<String, dynamic> x) async {
@@ -338,7 +333,6 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
           if (fuoriMappatura(x)) const Etichetta('Non più nella mappatura', Colors.blueGrey),
         ]),
         ElencoIndicatori([for (final i in (x['indicatori'] as List? ?? const [])) (i as Map).cast<String, dynamic>()]),
-        if (dallaMappatura(x) && !fuoriMappatura(x)) AlberoMappatura(x),
         if (stato == 'MODIFICATO') _cambiamenti((confronto!['campi'] as Map).cast<String, dynamic>(), tema.textTheme.bodySmall),
       ]),
       trailing: modificabile && !eliminato
@@ -470,19 +464,15 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
         Sezione(
           titolo: 'Azioni e misure',
           azioni: [
-            if (modificabile && impegnoElementi < 100) ...[
+            if (modificabile && impegnoElementi < 100)
               TextButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Azione'), onPressed: () => _nuovoElemento('AZIONE')),
-              if (dati.misureDisponibili) ...[
-                TextButton.icon(
-                    icon: const Icon(Icons.account_tree_outlined, size: 18),
-                    label: const Text('Azione dalla mappatura'),
-                    onPressed: () => _nuovoElemento('AZIONE', dallaMappatura: true)),
-                TextButton.icon(
-                    icon: const Icon(Icons.add_moderator_outlined, size: 18),
-                    label: const Text('Misura'),
-                    onPressed: () => _nuovoElemento('MISURA')),
-              ],
-            ],
+            // si copia con impegno 0%: anche con le azioni e misure già al 100%
+            if (modificabile && dati.misureDisponibili)
+              TextButton.icon(
+                  icon: const Icon(Icons.account_tree_outlined, size: 18), label: const Text('Dalla mappatura'), onPressed: _copiaDallaMappatura),
+            if (modificabile && impegnoElementi < 100 && dati.misureDisponibili)
+              TextButton.icon(
+                  icon: const Icon(Icons.add_moderator_outlined, size: 18), label: const Text('Misura'), onPressed: () => _nuovoElemento('MISURA')),
           ],
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Align(alignment: Alignment.centerLeft, child: TotaleImpegno(impegnoElementi, testo: 'Impegno delle azioni e misure')),

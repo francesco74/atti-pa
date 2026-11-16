@@ -1,7 +1,7 @@
--- Modulo performance: un'azione di un obiettivo si può prendere dalla mappatura dei rischi
--- (modulo anticorruzione), scegliendo un processo (con il suo albero di attività, rischi e
--- misure) o una sola attività. Del riferimento si tiene una copia del codice: se il processo o
--- l'attività vengono eliminati dalla mappatura l'azione resta, con il codice.
+-- Modulo performance: un'azione di un obiettivo si può copiare da un'attività della mappatura
+-- dei rischi (modulo anticorruzione): attivita_id è l'attività, processo_id il processo da cui
+-- viene, mappatura_codice il codice dell'attività copiato. È una copia: se poi l'attività o il
+-- processo vengono eliminati dalla mappatura l'azione resta, con il codice.
 --
 -- Aggiunge solo colonne vuote (le azioni e misure esistenti restano come sono). Si può
 -- rieseguire: ogni passo controlla prima se è già stato fatto.
