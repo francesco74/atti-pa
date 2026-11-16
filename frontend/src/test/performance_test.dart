@@ -18,7 +18,8 @@ final _schedaPiao = find.descendant(of: find.byType(TabBar), matching: find.text
 void main() {
   final corpi = <String, Object?>{}; // corpo delle richieste, per metodo e percorso
 
-  Future<List<String>> apri(WidgetTester tester, {bool amministratore = false, bool approvatore = false}) async {
+  Future<List<String>> apri(WidgetTester tester,
+      {bool amministratore = false, bool approvatore = false, Map<String, Object?> elenco = const {}}) async {
     tester.view.physicalSize = const Size(1400, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -93,6 +94,7 @@ void main() {
             {'id': 'pr2', 'tipo': 'CREA', 'stato': 'INVIATA', 'titolo': 'Formazione del personale', 'impegno': 40},
           ],
           'impegno_totale': 60, 'completo': false, 'completamento': 65.0, 'aggiunta': approvatore ? 'DIRETTA' : 'PROPOSTA',
+          ...elenco,
         };
       } else if (p.endsWith('/obiettivi/o1')) {
         corpo = {
@@ -164,6 +166,18 @@ void main() {
     await tester.tap(find.textContaining('Obiettivi ${DateTime.now().year}'));
     await tester.pumpAndSettle();
     expect(find.text('Proponi un nuovo obiettivo'), findsOneWidget);
+  });
+
+  testWidgets('senza il pulsante del nuovo obiettivo si legge il motivo', (tester) async {
+    await apri(tester, elenco: {'impegno_totale': 100, 'completo': true});
+    expect(find.text('Proponi un nuovo obiettivo'), findsNothing);
+    expect(find.textContaining('Impegno già al 100%: per un nuovo obiettivo proponi prima'), findsOneWidget);
+  });
+
+  testWidgets('con il PIAO chiuso si legge il motivo', (tester) async {
+    await apri(tester, elenco: {'aggiunta': null, 'motivo_aggiunta': 'Il PIAO è chiuso: non si aggiungono obiettivi.'});
+    expect(find.text('Proponi un nuovo obiettivo'), findsNothing);
+    expect(find.text('Il PIAO è chiuso: non si aggiungono obiettivi.'), findsOneWidget);
   });
 
   testWidgets('indicatori: target, valore rilevato e avanzamento', (tester) async {

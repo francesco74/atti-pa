@@ -9,7 +9,7 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
 
 ## 1. Concetti
 
-- **PIAO**: triennale (es. 2026-2028), creato dall'amministratore della performance con titolo
+- **PIAO**: triennale (es. 2026-2028), creato dall'amministratore PIAO con titolo
   e atto di approvazione. **Aperto**: gli obiettivi si dichiarano e si aggiornano. **Chiuso**:
   tutto in sola lettura (l'amministratore può riaprirlo). Si elimina solo se non ha obiettivi.
 - **Obiettivo**: di una struttura (servizio o ufficio) per **un anno** del triennio. Ha il
@@ -61,10 +61,10 @@ per struttura.
 
 | Ruolo | Può |
 |---|---|
-| `PERFORMANCE_RESPONSABILE` (dirigente di un servizio, responsabile di un ufficio) | **proporre** la creazione, la modifica e l'eliminazione degli obiettivi della **propria struttura** (quella del suo utente); aggiornarne l'**avanzamento** (valori rilevati degli indicatori, o completamento di azioni e misure senza indicatori) senza approvazione; vedere in sola lettura quelli delle strutture sottostanti |
-| `PERFORMANCE_APPROVATORE` (es. segretario o direttore generale) | vedere gli obiettivi di tutte le strutture; **approvare, restituire o respingere** le proposte; modificare gli obiettivi direttamente |
-| `PERFORMANCE_AMMINISTRATORE` | creare, aprire, chiudere ed eliminare i PIAO; vedere tutti gli obiettivi e proporre, come i responsabili, per qualsiasi struttura; aggiornare l'avanzamento; consultare lo storico dell'intero PIAO |
-| `ADMIN` | come l'amministratore della performance e l'approvatore (come in tutti i controlli dei ruoli); le email delle proposte vanno però solo a chi ha il ruolo di approvatore |
+| `PERFORMANCE_RESPONSABILE` — **Referente / dirigente performance** (dirigente di un servizio, responsabile di un ufficio) | **proporre** la creazione, la modifica e l'eliminazione degli obiettivi della **propria struttura e di quelle sottostanti** (dalla struttura del suo utente), e gestirne le bozze; aggiornare l'**avanzamento** (valori rilevati degli indicatori, o completamento di azioni e misure senza indicatori) senza approvazione, per gli obiettivi della propria struttura |
+| `PERFORMANCE_APPROVATORE` — **Approvatore degli obiettivi** (es. segretario o direttore generale) | vedere gli obiettivi di tutte le strutture; **approvare, restituire o respingere** le proposte; modificare gli obiettivi direttamente |
+| `PERFORMANCE_AMMINISTRATORE` — **Amministratore PIAO** | creare, aprire, chiudere ed eliminare i PIAO; vedere tutti gli obiettivi e proporre, come i referenti, per qualsiasi struttura; aggiornare l'avanzamento; consultare lo storico dell'intero PIAO |
+| `ADMIN` | come l'amministratore PIAO e l'approvatore (come in tutti i controlli dei ruoli); le email delle proposte vanno però solo a chi ha il ruolo di approvatore |
 
 Gruppi di Active Directory predefiniti: `ATTI-PA-Performance-Responsabili`,
 `ATTI-PA-Performance-Approvatori`, `ATTI-PA-Performance-Amministratori`.

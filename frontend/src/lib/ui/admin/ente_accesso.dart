@@ -10,9 +10,9 @@ const _etichetteRuoli = {
   'TRASPARENZA': 'Operatore della trasparenza',
   'ANTICORRUZIONE_REFERENTE': 'Referente / dirigente anticorruzione',
   'ANTICORRUZIONE_RPCT': 'RPCT e staff anticorruzione',
-  'PERFORMANCE_RESPONSABILE': 'Dirigente / responsabile (performance)',
+  'PERFORMANCE_RESPONSABILE': 'Referente / dirigente performance',
   'PERFORMANCE_APPROVATORE': 'Approvatore degli obiettivi (performance)',
-  'PERFORMANCE_AMMINISTRATORE': 'Amministratore della performance',
+  'PERFORMANCE_AMMINISTRATORE': 'Amministratore PIAO',
   'ANALISI_RICERCHE': 'Analisi delle ricerche e dei feedback',
   'ADMIN': 'Amministratore dell\'ente',
 };

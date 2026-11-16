@@ -1,17 +1,18 @@
 """Modulo performance: PIAO triennali, obiettivi annuali delle strutture con azioni e misure,
 percentuali di impegno e di completamento, scadenze, iter di approvazione e storico.
 
-Gli obiettivi cambiano solo con l'approvazione. Il responsabile (dirigente di un servizio o
-responsabile di un ufficio, secondo la struttura del suo utente) propone la creazione, la
-modifica o l'eliminazione di un obiettivo della propria struttura: la proposta porta la versione
-completa dell'obiettivo con le azioni e misure, si prepara in bozza e si invia. L'approvatore
-(ruolo PERFORMANCE_APPROVATORE) la approva (e la modifica si applica), la respinge o la
-restituisce per una correzione; modifica anche direttamente. Il completamento di azioni e misure
-è monitoraggio, non programmazione: il responsabile lo aggiorna senza approvazione.
+Gli obiettivi cambiano solo con l'approvazione. Il referente (ruolo PERFORMANCE_RESPONSABILE:
+dirigente di un servizio o responsabile di un ufficio, secondo la struttura del suo utente)
+propone la creazione, la modifica o l'eliminazione di un obiettivo della propria struttura e di
+quelle sottostanti: la proposta porta la versione completa dell'obiettivo con le azioni e
+misure, si prepara in bozza e si invia. L'approvatore (ruolo PERFORMANCE_APPROVATORE) la approva
+(e la modifica si applica), la respinge o la restituisce per una correzione; modifica anche
+direttamente. Il completamento di azioni e misure è monitoraggio, non programmazione: il
+referente lo aggiorna senza approvazione, per gli obiettivi della propria struttura.
 
-L'amministratore della performance (o l'amministratore dell'ente) crea, apre e chiude i PIAO,
-vede tutto e propone come i responsabili, per qualsiasi struttura. Il responsabile vede in sola
-lettura gli obiettivi delle strutture sottostanti. Con il PIAO chiuso nulla si modifica.
+L'amministratore PIAO (ruolo PERFORMANCE_AMMINISTRATORE, o l'amministratore dell'ente) crea,
+apre e chiude i PIAO, vede tutto e propone come i referenti, per qualsiasi struttura. Con il
+PIAO chiuso nulla si modifica.
 
 Gli impegni degli obiettivi di una struttura in un anno, e quelli delle azioni e misure di un
 obiettivo, non possono superare 100; il completamento si calcola (common/performance). Le misure
@@ -27,10 +28,11 @@ raggiungimento, altrimenti si inserisce a mano.
 from __future__ import annotations
 
 from datetime import date, datetime
+from functools import wraps
 from http import HTTPStatus
 from typing import Literal
 
-from flask import Blueprint, request
+from flask import Blueprint, g, request
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import delete, func, or_, select
 
@@ -49,10 +51,28 @@ from common.performance import (
 
 bp = Blueprint("performance", __name__, url_prefix="/api/v1/performance")
 
-lettore = autenticato(Ruolo.PERFORMANCE_RESPONSABILE, Ruolo.PERFORMANCE_APPROVATORE, Ruolo.PERFORMANCE_AMMINISTRATORE,
-                      modulo=Modulo.PERFORMANCE)  # fmt: skip
-amministratore = autenticato(Ruolo.PERFORMANCE_AMMINISTRATORE, modulo=Modulo.PERFORMANCE)
-approvatore = autenticato(Ruolo.PERFORMANCE_APPROVATORE, modulo=Modulo.PERFORMANCE)
+
+
+def _con_strutture(controllo):
+    """Dopo il controllo dei ruoli, le strutture su cui l'utente propone (la sua e le
+    sottostanti), per i controlli dei permessi che non leggono il database."""
+
+    def decoratore(vista):
+        @wraps(vista)
+        async def con_strutture(*args, **kwargs):
+            sid = utente().struttura_id
+            g.pf_proprie = _sottostanti(await _strutture(), sid) if sid else set()
+            return await vista(*args, **kwargs)
+
+        return controllo(con_strutture)
+
+    return decoratore
+
+
+lettore = _con_strutture(autenticato(Ruolo.PERFORMANCE_RESPONSABILE, Ruolo.PERFORMANCE_APPROVATORE,
+                                     Ruolo.PERFORMANCE_AMMINISTRATORE, modulo=Modulo.PERFORMANCE))  # fmt: skip
+amministratore = _con_strutture(autenticato(Ruolo.PERFORMANCE_AMMINISTRATORE, modulo=Modulo.PERFORMANCE))
+approvatore = _con_strutture(autenticato(Ruolo.PERFORMANCE_APPROVATORE, modulo=Modulo.PERFORMANCE))
 
 APERTE = ("BOZZA", "INVIATA", "RESTITUITA")  # proposte non ancora decise
 
@@ -95,10 +115,10 @@ async def _visibili() -> set[str] | None:
 
 
 def _della_struttura(struttura_id: str | None) -> bool:
-    """Gestisce le proposte della struttura: il responsabile per la sua, l'amministratore per
-    tutte. L'approvatore modifica direttamente."""
+    """Gestisce le proposte della struttura: il referente per la sua e le sottostanti,
+    l'amministratore PIAO per tutte. L'approvatore modifica direttamente."""
     return not _e_approvatore() and (
-        _e_amministratore() or (struttura_id is not None and struttura_id == utente().struttura_id))
+        _e_amministratore() or (struttura_id is not None and struttura_id in g.get("pf_proprie", set())))
 
 
 def _proponibile(struttura_id: str | None, piao: PfPiao) -> bool:
@@ -448,7 +468,7 @@ async def obiettivi():
     oggi = date.today()
     elenco = [_obiettivo(o, p, _per_scadenza(elementi[o.id]), oggi, aperte.get(o.id)) for o in righe]
     impegno = sum(o["impegno"] for o in elenco)
-    nuovi, aggiunta = [], None
+    nuovi, aggiunta, motivo = [], None, None
     if f.anno and f.struttura_id and (visibili is None or f.struttura_id in visibili):
         nuovi = [_sintesi(pr) for pr in await db().scalars(select(PfProposta).where(
             PfProposta.piao_id == p.id, PfProposta.anno == f.anno, PfProposta.struttura_id == f.struttura_id,
@@ -458,6 +478,8 @@ async def obiettivi():
             aggiunta = "DIRETTA"
         elif _proponibile(f.struttura_id, p):
             aggiunta = "PROPOSTA"
+        elif p.stato != "APERTO":
+            motivo = "Il PIAO è chiuso: non si aggiungono obiettivi."
     return {
         "obiettivi": elenco,
         "proposte": nuovi,  # nuovi obiettivi proposti, non ancora approvati
@@ -465,6 +487,7 @@ async def obiettivi():
         "completo": impegno == TOTALE,
         "completamento": media_pesata((o["impegno"], o["completamento"]) for o in elenco),
         "aggiunta": aggiunta,  # come si aggiunge un obiettivo: DIRETTA, PROPOSTA o None
+        "motivo_aggiunta": motivo,  # perché non si può aggiungere (oltre all'impegno già al 100%)
     }
 
 

@@ -1,6 +1,6 @@
 """Modulo performance via HTTP: PIAO (solo l'amministratore, triennio, chiuso in sola lettura),
-obiettivi annuali della propria struttura (il dirigente vede quelli delle sottostanti senza
-modificarli), iter di approvazione (proposte dei responsabili, decise dall'approvatore), impegni che non superano 100, completamento calcolato, azioni e misure della
+obiettivi annuali della propria struttura (il dirigente propone anche per le sottostanti, ma
+non ne aggiorna l'avanzamento), iter di approvazione (proposte dei referenti, decise dall'approvatore), impegni che non superano 100, completamento calcolato, azioni e misure della
 mappatura dei rischi, ritardi, storico delle modifiche con i valori prima e dopo, riepilogo,
 permessi per ruolo e modulo, separazione tra enti.
     cd api/tests && python test_performance_api.py
@@ -210,9 +210,12 @@ class PerformanceApi(unittest.TestCase):
         self._ok(resp.put(f"{API}/elementi/{az['id']}/avanzamento", base_url=ENTE, json={"completamento": 100}))
         self.assertEqual(len(self._ok(resp.get(f"{API}/obiettivi/{o['id']}/storico", base_url=ENTE))), len(storico))
 
-        # il dirigente vede l'ufficio sottostante ma non lo modifica né lo propone; l'altro settore non lo vede
+        # il dirigente propone anche per l'ufficio sottostante, ma non ne aggiorna l'avanzamento;
+        # l'altro settore non lo vede
         vista = self._ok(dirig.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
-        self.assertEqual((vista["modificabile"], vista["proponibile"], vista["avanzamento"]), (False, False, False))
+        self.assertEqual((vista["modificabile"], vista["proponibile"], vista["avanzamento"]), (False, True, False))
+        elenco_uo = self._ok(dirig.get(f"{API}/obiettivi?piao_id={p['id']}&anno={anno}&struttura_id={self.uo}", base_url=ENTE))
+        self.assertEqual((elenco_uo["aggiunta"], elenco_uo["motivo_aggiunta"]), ("PROPOSTA", None))
         self.assertEqual(dirig.put(f"{API}/elementi/{az['id']}/avanzamento", base_url=ENTE, json={"completamento": 0}).status_code, 403)
         self.assertEqual(self._client("senzastruttura").get(f"{API}/obiettivi/{o['id']}", base_url=ENTE).status_code, 404)
         riepilogo = self._ok(dirig.get(f"{API}/riepilogo?piao_id={p['id']}&anno={anno}", base_url=ENTE))
@@ -232,6 +235,8 @@ class PerformanceApi(unittest.TestCase):
         self._ok(amm.put(f"{API}/piao/{p['id']}", base_url=ENTE, json={"titolo": p["titolo"], "stato": "CHIUSO"}))
         chiuso = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
         self.assertEqual((chiuso["proponibile"], chiuso["avanzamento"]), (False, False))
+        elenco = self._ok(resp.get(f"{API}/obiettivi?piao_id={p['id']}&anno={anno}&struttura_id={self.uo}", base_url=ENTE))
+        self.assertEqual((elenco["aggiunta"], elenco["motivo_aggiunta"]), (None, "Il PIAO è chiuso: non si aggiungono obiettivi."))
         self.assertEqual(appr.put(f"{API}/obiettivi/{o['id']}", base_url=ENTE, json=nuovo).status_code, 409)
         self.assertEqual(appr.delete(f"{API}/elementi/{az['id']}", base_url=ENTE).status_code, 409)
         self.assertEqual(resp.put(f"{API}/elementi/{az['id']}/avanzamento", base_url=ENTE, json={"completamento": 0}).status_code, 409)
@@ -267,9 +272,10 @@ class PerformanceApi(unittest.TestCase):
         self.assertTrue(all(x["id"].startswith("nuovo-") for x in pr["dati"]["elementi"]))
         elenco = self._ok(resp.get(f"{API}/obiettivi?piao_id={p['id']}&anno={anno}&struttura_id={self.uo}", base_url=ENTE))
         self.assertEqual((elenco["obiettivi"], [x["id"] for x in elenco["proposte"]]), ([], [pr["id"]]))
-        # la bozza la vede solo la struttura
+        # la bozza la vedono la struttura e il dirigente sopra di lei (che propone anche per lei),
+        # non l'approvatore
         self.assertEqual(self._ok(appr.get(f"{API}/proposte?piao_id={p['id']}", base_url=ENTE)), [])
-        self.assertEqual(self._ok(dirig.get(f"{API}/proposte?piao_id={p['id']}", base_url=ENTE)), [])
+        self.assertEqual([x["id"] for x in self._ok(dirig.get(f"{API}/proposte?piao_id={p['id']}", base_url=ENTE))], [pr["id"]])
 
         # correzione in bozza, poi invio
         dati = {**pr["dati"], "descrizione": "Entro 30 giorni"}
@@ -342,9 +348,11 @@ class PerformanceApi(unittest.TestCase):
         storico = self._ok(resp.get(f"{API}/obiettivi/{o['id']}/storico", base_url=ENTE))
         self.assertIn(("MISURA", "ELIMINATO"), [(m["oggetto"], m["azione"]) for m in storico])
 
-        # bozza scartata
+        # bozza scartata: dalla struttura o dal dirigente sopra di lei, non dall'approvatore
         pb = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "MODIFICA", "obiettivo_id": o["id"]}), 201)
-        self.assertEqual(dirig.delete(f"{API}/proposte/{pb['id']}", base_url=ENTE).status_code, 403)
+        self.assertEqual(appr.delete(f"{API}/proposte/{pb['id']}", base_url=ENTE).status_code, 403)
+        self._ok(dirig.delete(f"{API}/proposte/{pb['id']}", base_url=ENTE), 204)
+        pb = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "MODIFICA", "obiettivo_id": o["id"]}), 201)
         self._ok(resp.delete(f"{API}/proposte/{pb['id']}", base_url=ENTE), 204)
 
         # eliminazione: va subito all'approvatore; respinta resta, approvata elimina

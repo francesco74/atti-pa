@@ -8,7 +8,7 @@ import 'proposte.dart';
 
 /// Obiettivi di una struttura in un anno del PIAO, con il totale degli impegni e il
 /// completamento, e i nuovi obiettivi proposti; aprendone uno, le sue azioni e misure e lo
-/// storico delle modifiche. Il responsabile propone (l'approvatore decide) e aggiorna
+/// storico delle modifiche. Il referente propone (l'approvatore decide) e aggiorna
 /// l'avanzamento; l'approvatore modifica direttamente.
 class ObiettiviTab extends StatefulWidget {
   const ObiettiviTab({super.key});
@@ -189,7 +189,7 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
       return Center(
         child: Text(dati.amministratore
             ? 'Nessun PIAO: crealo nella scheda PIAO.'
-            : 'Nessun PIAO: lo apre l\'amministratore della performance.'),
+            : 'Nessun PIAO: lo apre l\'amministratore PIAO.'),
       );
     }
     if (dati.struttureVisibili.isEmpty) {
@@ -227,7 +227,13 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
                 onPressed: () => _nuovo(100 - totale, diretto: aggiunta == 'DIRETTA'),
                 icon: const Icon(Icons.add),
                 label: Text(aggiunta == 'DIRETTA' ? 'Nuovo obiettivo' : 'Proponi un nuovo obiettivo'),
-              ),
+              )
+            // il motivo al posto del pulsante, per non lasciarlo sparire senza spiegazione
+            else if (aggiunta != null || elenco['motivo_aggiunta'] != null)
+              _MotivoAggiunta(elenco['motivo_aggiunta'] as String? ??
+                  (aggiunta == 'DIRETTA'
+                      ? 'Impegno già al 100%: per un nuovo obiettivo riduci prima l\'impegno di un altro.'
+                      : 'Impegno già al 100%: per un nuovo obiettivo proponi prima di ridurre l\'impegno di un altro.')),
           ]),
           const SizedBox(height: 16),
           if (obiettivi.isEmpty && proposti.isEmpty) const Center(child: Text('Nessun obiettivo per la struttura in questo anno.')),
@@ -241,7 +247,7 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
 
 /// Obiettivo con le azioni e le misure (impegno, completamento, scadenza, indicatori con il
 /// valore rilevato) e lo storico.
-/// L'approvatore lo modifica direttamente; il responsabile propone modifiche ed eliminazione
+/// L'approvatore lo modifica direttamente; il referente propone modifiche ed eliminazione
 /// e aggiorna l'avanzamento.
 class VistaObiettivo extends StatefulWidget {
   const VistaObiettivo({super.key, required this.obiettivoId, required this.onChiuso});
@@ -508,5 +514,22 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         ]);
       },
     );
+  }
+}
+
+/// Perché non si può aggiungere un obiettivo (impegno già al 100%, PIAO chiuso).
+class _MotivoAggiunta extends StatelessWidget {
+  const _MotivoAggiunta(this.testo);
+
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(Icons.info_outline, size: 18, color: colori.onSurfaceVariant),
+      const SizedBox(width: 6),
+      Flexible(child: Text(testo, style: TextStyle(color: colori.onSurfaceVariant))),
+    ]);
   }
 }

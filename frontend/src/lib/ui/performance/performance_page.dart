@@ -9,7 +9,7 @@ import '../relazioni/relazioni.dart';
 
 /// Modulo performance: obiettivi annuali delle strutture nel PIAO triennale, con azioni e
 /// misure; proposte sugli obiettivi (decise dall'approvatore); riepilogo per struttura; PIAO
-/// (solo l'amministratore della performance).
+/// (solo l'amministratore PIAO).
 class PerformancePage extends StatefulWidget {
   const PerformancePage({super.key});
 
@@ -274,7 +274,7 @@ class _PiaoTabState extends State<PiaoTab> {
       chiudi ? 'Chiudere il ${p['titolo']}?' : 'Riaprire il ${p['titolo']}?',
       chiudi
           ? 'Obiettivi, azioni e misure non si potranno più modificare (resta possibile riaprirlo).'
-          : 'Dirigenti e responsabili potranno di nuovo modificare gli obiettivi.',
+          : 'I referenti potranno di nuovo proporre modifiche agli obiettivi.',
     );
     if (nota == null || !mounted) return;
     await _esegui(() => apiDi(context).put('$apiPerformance/piao/${p['id']}', {

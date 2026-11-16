@@ -5,7 +5,7 @@ import '../anticorruzione/comune.dart' show IconaAzione, RigaVoce;
 import '../comuni.dart';
 import 'comune.dart';
 
-/// Proposte sugli obiettivi: il responsabile vede quelle delle sue strutture, l'approvatore
+/// Proposte sugli obiettivi: il referente vede quelle delle sue strutture, l'approvatore
 /// tutte (partendo da quelle da decidere).
 class ProposteTab extends StatefulWidget {
   const ProposteTab({super.key, this.onCambiato});
