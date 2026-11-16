@@ -109,6 +109,80 @@ class PerformanceApi(unittest.TestCase):
         return self._ok(rpct.post(f"{AC}/rischi/{r['id']}/misure", base_url=ENTE, json={
             "descrizione": "Rotazione dei commissari", "struttura_id": self.uo}), 201)  # fmt: skip
 
+    def test_azioni_dalla_mappatura(self):
+        """Un'azione presa dalla mappatura: un processo (con il suo albero fino alle misure) o una
+        sola attività; il collegamento si vede anche dalla scheda del processo nell'anticorruzione."""
+        amm, appr, resp, rpct = self._client("amm"), self._client("approvatore"), self._client("responsabile"), self._client("rpct")
+        p = self._piao(amm, 2070)
+        scad = "2070-12-31"
+        area = self._ok(rpct.post(f"{AC}/aree", base_url=ENTE, json={"descrizione": "Contratti"}), 201)
+        gare = self._ok(rpct.post(f"{AC}/processi", base_url=ENTE, json={
+            "area_id": area["id"], "denominazione": "Affidamento di lavori", "struttura_id": self.altra}), 201)  # fmt: skip
+        bando = self._ok(rpct.post(f"{AC}/processi/{gare['id']}/attivita", base_url=ENTE, json={"descrizione": "Predisposizione del bando"}), 201)
+        rischio = self._ok(rpct.post(f"{AC}/attivita/{bando['id']}/rischi", base_url=ENTE, json={"evento": "Requisiti su misura"}), 201)
+        misura = self._ok(rpct.post(f"{AC}/rischi/{rischio['id']}/misure", base_url=ENTE, json={
+            "descrizione": "Doppia verifica dei requisiti"}), 201)  # fmt: skip
+
+        # catalogo: processi e attività (anche cercando il nome del processo)
+        voci = {(v["tipo"], v["id"]) for v in self._ok(resp.get(f"{API}/mappatura?testo=affidamento", base_url=ENTE))}
+        self.assertTrue({("PROCESSO", gare["id"]), ("ATTIVITA", bando["id"])} <= voci, voci)
+
+        o = self._ok(appr.post(f"{API}/obiettivi", base_url=ENTE, json={
+            "piao_id": p["id"], "anno": 2070, "struttura_id": self.uo, "titolo": "Costruire il ponte", "impegno": 50}), 201)  # fmt: skip
+        az = self._ok(appr.post(f"{API}/obiettivi/{o['id']}/elementi", base_url=ENTE, json={
+            "tipo": "AZIONE", "processo_id": gare["id"], "impegno": 60, "scadenza": scad,
+            "indicatori": [{"descrizione": "Contratto firmato", "tipo": "SI_NO"}]}), 201)  # fmt: skip
+        self.assertEqual((az["descrizione"], az["mappatura_codice"], az["processo_id"], az["attivita_id"]),
+                         ("Affidamento di lavori", gare["codice"], gare["id"], None))  # fmt: skip
+        self.assertEqual(appr.post(f"{API}/obiettivi/{o['id']}/elementi", base_url=ENTE, json={
+            "tipo": "AZIONE", "processo_id": gare["id"], "impegno": 10, "scadenza": scad}).status_code, 409)  # fmt: skip
+        sola = self._ok(appr.post(f"{API}/obiettivi/{o['id']}/elementi", base_url=ENTE, json={
+            "tipo": "AZIONE", "attivita_id": bando["id"], "impegno": 40, "scadenza": scad}), 201)  # fmt: skip
+        self.assertEqual((sola["mappatura_codice"], sola["processo_id"]), (bando["codice"], None))
+        # la descrizione viene dalla mappatura: non si cambia
+        self._ok(appr.put(f"{API}/elementi/{az['id']}", base_url=ENTE, json={
+            "descrizione": "Altro", "impegno": 60, "completamento": 0, "scadenza": scad}))  # fmt: skip
+        d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
+        self.assertIn("Affidamento di lavori", [x["descrizione"] for x in d["elementi"]])
+        self.assertTrue(any("il processo è di un'altra struttura" in c["testo"] for c in d["controlli"]), d["controlli"])
+
+        # l'albero che l'azione si porta dietro
+        albero = self._ok(resp.get(f"{API}/mappatura/albero?processo_id={gare['id']}", base_url=ENTE))
+        self.assertEqual([(a["codice"], [m["codice"] for r in a["rischi"] for m in r["misure"]]) for a in albero["attivita"]],
+                         [(bando["codice"], [misura["codice"]])])  # fmt: skip
+        solo = self._ok(resp.get(f"{API}/mappatura/albero?attivita_id={bando['id']}", base_url=ENTE))
+        self.assertEqual((solo["processo"]["id"], len(solo["attivita"])), (gare["id"], 1))
+
+        # dalla scheda del processo nell'anticorruzione
+        collegati = self._ok(rpct.get(f"{AC}/processi/{gare['id']}", base_url=ENTE))["obiettivi"]
+        self.assertEqual(sorted(x["tramite"]["tipo"] for x in collegati), ["ATTIVITA", "PROCESSO"])
+        self.assertEqual({x["titolo"] for x in collegati}, {"Costruire il ponte"})
+
+        # proposta: l'azione dal processo resta, l'attività si toglie, si aggiunge la misura
+        pr = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "MODIFICA", "obiettivo_id": o["id"]}), 201)
+        tenuti = [e for e in pr["dati"]["elementi"] if e.get("processo_id")]
+        self.assertEqual(len(tenuti), 1)
+        dati = {**pr["dati"], "elementi": tenuti + [{"tipo": "MISURA", "misura_id": misura["id"], "impegno": 40, "scadenza": scad}]}
+        pr = self._ok(resp.put(f"{API}/proposte/{pr['id']}", base_url=ENTE, json={"dati": dati}))
+        self.assertEqual(sorted(e["stato"] for e in pr["confronto"]["elementi"]), ["ELIMINATO", "INVARIATO", "NUOVO"])
+        self._ok(resp.post(f"{API}/proposte/{pr['id']}/invia", base_url=ENTE, json={}))
+        self._ok(appr.post(f"{API}/proposte/{pr['id']}/approva", base_url=ENTE, json={}))
+        collegati = self._ok(rpct.get(f"{AC}/processi/{gare['id']}", base_url=ENTE))["obiettivi"]
+        self.assertEqual(sorted(x["tramite"]["tipo"] for x in collegati), ["MISURA", "PROCESSO"])
+        # una nuova attività proposta dalla mappatura
+        pr = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "MODIFICA", "obiettivo_id": o["id"]}), 201)
+        doppio = {**pr["dati"], "elementi": pr["dati"]["elementi"] + [
+            {"tipo": "AZIONE", "processo_id": gare["id"], "impegno": 0, "scadenza": scad}]}  # fmt: skip
+        self.assertEqual(resp.put(f"{API}/proposte/{pr['id']}", base_url=ENTE, json={"dati": doppio}).status_code, 409)
+        self._ok(resp.delete(f"{API}/proposte/{pr['id']}", base_url=ENTE), 204)
+
+        # il processo eliminato dalla mappatura: l'azione resta con il codice, con un avviso
+        self._ok(rpct.delete(f"{AC}/processi/{gare['id']}", base_url=ENTE), 204)
+        d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
+        azione = next(x for x in d["elementi"] if x["tipo"] == "AZIONE")
+        self.assertEqual((azione["processo_id"], azione["mappatura_codice"]), (None, gare["codice"]))
+        self.assertTrue(any("non è più nella mappatura" in c["testo"] for c in d["controlli"]), d["controlli"])
+
     def test_piao(self):
         amm, resp = self._client("amm"), self._client("responsabile")
         self.assertEqual(resp.post(f"{API}/piao", base_url=ENTE, json={"anno_inizio": 2030, "titolo": "x"}).status_code, 403)

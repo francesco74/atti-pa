@@ -29,6 +29,7 @@ configMapGenerator:
       - sql/0003_indicatori_performance.sql
       - sql/0004_password_amministratori.sql
       - sql/0005_assistente_lavori.sql
+      - sql/0006_azioni_da_mappatura.sql
     options:
       disableNameSuffixHash: true   # cambiare lo schema non riavvia MySQL
 

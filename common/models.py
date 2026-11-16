@@ -906,6 +906,11 @@ class PfElemento(Base):
     descrizione: Mapped[str] = mapped_column(Text)  # dell'azione, o copia di quella della misura
     misura_id: Mapped[str | None] = mapped_column(ForeignKey("ac_misure.id", ondelete="SET NULL"))
     misura_codice: Mapped[str | None] = mapped_column(String(70))
+    # azione presa dalla mappatura: un processo (con il suo albero fino alle misure) o una sola
+    # attività; il codice copiato resta anche se la mappatura cambia
+    processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="SET NULL"))
+    attivita_id: Mapped[str | None] = mapped_column(ForeignKey("ac_attivita.id", ondelete="SET NULL"))
+    mappatura_codice: Mapped[str | None] = mapped_column(String(70))
     impegno: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
     completamento: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
     scadenza: Mapped[date] = mapped_column(Date)

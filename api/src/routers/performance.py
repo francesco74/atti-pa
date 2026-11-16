@@ -41,7 +41,7 @@ from web import ErroreApi, corpo, nessun_contenuto, parametri
 from common import posta
 from common.anticorruzione.metodologia import chiave_naturale
 from common.models import (
-    AcMisura, Ente, Modulo, PfElemento, PfIndicatore, PfModifica, PfObiettivo, PfPiao, PfProposta, Ruolo, Struttura, User,
+    AcAttivita, AcMisura, AcProcesso, AcRischio, Ente, Modulo, PfElemento, PfIndicatore, PfModifica, PfObiettivo, PfPiao, PfProposta, Ruolo, Struttura, User,
     nuovo_id,
 )  # fmt: skip
 from common.performance import (
@@ -357,7 +357,7 @@ def _nel_triennio(p: PfPiao, anno: int) -> None:
 def _elemento(x: PfElemento, oggi: date, indicatori: list[PfIndicatore]) -> dict:
     return {
         "id": x.id, "obiettivo_id": x.obiettivo_id, "tipo": x.tipo, "descrizione": x.descrizione,
-        "misura_id": x.misura_id, "misura_codice": x.misura_codice, "impegno": x.impegno,
+        "misura_id": x.misura_id, "misura_codice": x.misura_codice, **_mappatura(x), "impegno": x.impegno,
         "completamento": x.completamento, "scadenza": x.scadenza.isoformat(),
         "in_ritardo": in_ritardo(x.scadenza, x.completamento, oggi),
         "indicatori": [_indicatore(i) for i in indicatori],
@@ -395,18 +395,45 @@ def _obiettivo(o: PfObiettivo, p: PfPiao, elementi: list[PfElemento], oggi: date
 
 
 def _controlli(impegno: int, anno: int, struttura_id: str, elementi: list, strutture_misure: dict | None = None,
-               indicatori: dict[str, list] | None = None) -> list[dict]:  # fmt: skip
+               indicatori: dict[str, list] | None = None, strutture_mappatura: dict | None = None) -> list[dict]:  # fmt: skip
     """Controlli oggettivi; elementi: PfElemento (con i loro [indicatori], se noti) o dict delle
     proposte (scadenza ISO, con gli indicatori)."""
     voci = []
     for x in elementi:
         if not isinstance(x, dict):
             x = {"tipo": x.tipo, "descrizione": x.descrizione, "impegno": x.impegno, "scadenza": x.scadenza,
-                 "misura_id": x.misura_id, **({} if indicatori is None else {"indicatori": indicatori.get(x.id, [])})}  # fmt: skip
+                 "misura_id": x.misura_id, **_mappatura(x),
+                 **({} if indicatori is None else {"indicatori": indicatori.get(x.id, [])})}  # fmt: skip
         scadenza = date.fromisoformat(x["scadenza"]) if isinstance(x.get("scadenza"), str) else x.get("scadenza")
         voci.append({**x, "scadenza": scadenza})
     return controlli_obiettivo(impegno, anno, struttura_id, voci, misure_attive=ente().modulo_attivo(Modulo.ANTICORRUZIONE),
-                               strutture_misure=strutture_misure)  # fmt: skip
+                               strutture_misure=strutture_misure, strutture_mappatura=strutture_mappatura)  # fmt: skip
+
+
+def _mappatura(x: PfElemento) -> dict:
+    """Riferimento alla mappatura di un'azione presa da lì (vuoto per le altre: così le
+    istantanee delle proposte nate prima restano uguali)."""
+    if x.mappatura_codice is None:
+        return {}
+    return {"processo_id": x.processo_id, "attivita_id": x.attivita_id, "mappatura_codice": x.mappatura_codice}
+
+
+async def _strutture_mappatura(elementi: list) -> dict[str, str | None]:
+    """Struttura responsabile dei processi e delle attività (quella del loro processo) a cui
+    rimandano le azioni, per id."""
+    def campo(x, nome):
+        return x.get(nome) if isinstance(x, dict) else getattr(x, nome)
+
+    processi = {i for x in elementi if (i := campo(x, "processo_id"))}
+    attivita = {i for x in elementi if (i := campo(x, "attivita_id"))}
+    esito: dict[str, str | None] = {}
+    if processi:
+        esito.update(dict((await db().execute(select(AcProcesso.id, AcProcesso.struttura_id).where(AcProcesso.id.in_(processi)))).all()))
+    if attivita:
+        righe = await db().execute(select(AcAttivita.id, AcProcesso.struttura_id).join(AcProcesso, AcProcesso.id == AcAttivita.processo_id)
+                                   .where(AcAttivita.id.in_(attivita)))  # fmt: skip
+        esito.update(dict(righe.all()))
+    return esito
 
 
 async def _strutture_misure(ids: list[str | None]) -> dict:
@@ -500,10 +527,12 @@ async def obiettivo(obiettivo_id: str):
     indicatori = await _indicatori_di([x.id for x in elementi])
     oggi = date.today()
     strutture_misure = await _strutture_misure([x.misura_id for x in elementi])
+    strutture_mappatura = await _strutture_mappatura(elementi)
     proposta = (await _proposte_aperte([o.id])).get(o.id)
     return {**_obiettivo(o, p, elementi, oggi, proposta, indicatori),
             "elementi": [_elemento(x, oggi, indicatori[x.id]) for x in elementi], "piao": _piao(p),
-            "controlli": _controlli(o.impegno, o.anno, o.struttura_id, elementi, strutture_misure, indicatori)}  # fmt: skip
+            "controlli": _controlli(o.impegno, o.anno, o.struttura_id, elementi, strutture_misure, indicatori,
+                                    strutture_mappatura)}  # fmt: skip
 
 
 @bp.post("/obiettivi")
@@ -691,6 +720,9 @@ class ElementoDati(BaseModel):
 class ElementoNuovo(ElementoDati):
     tipo: Literal["AZIONE", "MISURA"]
     misura_id: str | None = None
+    # azione presa dalla mappatura: un processo o una sola attività (in alternativa alla descrizione)
+    processo_id: str | None = None
+    attivita_id: str | None = None
 
 
 def _campi_elemento(x: PfElemento) -> dict:
@@ -698,7 +730,7 @@ def _campi_elemento(x: PfElemento) -> dict:
 
 
 def _nome_elemento(x: PfElemento) -> str:
-    return _nome(x.misura_codice, x.descrizione)
+    return _nome(x.misura_codice or x.mappatura_codice, x.descrizione)
 
 
 async def _controlla_impegno_elementi(x: PfElemento) -> None:
@@ -728,18 +760,46 @@ async def _misura_dell_ente(misura_id: str | None) -> AcMisura:
     return m
 
 
+async def _dalla_mappatura(processo_id: str | None, attivita_id: str | None) -> dict:
+    """Riferimento di un'azione presa dalla mappatura: il processo (con il suo albero) o la sola
+    attività, con codice e descrizione copiati."""
+    if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "I processi vengono dalla mappatura dei rischi: modulo non attivo")
+    if attivita_id:
+        a = await db().get(AcAttivita, attivita_id)
+        if a is None or a.ente_id != ente_id():
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un'attività della mappatura dei rischi")
+        return {"processo_id": None, "attivita_id": a.id, "mappatura_codice": a.codice, "descrizione": a.descrizione}
+    p = await db().get(AcProcesso, processo_id) if processo_id else None
+    if p is None or p.ente_id != ente_id():
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un processo della mappatura dei rischi")
+    return {"processo_id": p.id, "attivita_id": None, "mappatura_codice": p.codice, "descrizione": p.denominazione}
+
+
+def _gia_presente(riferimento: dict) -> str:
+    cosa = "L'attività" if riferimento["attivita_id"] else "Il processo"
+    return f"{cosa} {riferimento['mappatura_codice']} è già nell'obiettivo"
+
+
 @bp.post("/obiettivi/<obiettivo_id>/elementi")
 @approvatore
 async def crea_elemento(obiettivo_id: str):
-    """Nuova azione (con la descrizione) o misura (scelta dalla mappatura dei rischi), con gli
-    indicatori."""
+    """Nuova azione (con la descrizione, o presa dalla mappatura: processo o attività) o misura
+    (scelta dalla mappatura dei rischi), con gli indicatori."""
     dati = corpo(ElementoNuovo)
     sessione = db()
     o, p = await _obiettivo_modificabile(obiettivo_id)
     definizioni = [_definizione(i) for i in dati.indicatori or []]
     x = PfElemento(id=nuovo_id(), ente_id=ente_id(), obiettivo_id=o.id, tipo=dati.tipo, impegno=dati.impegno,
                    completamento=dati.completamento, scadenza=dati.scadenza)  # fmt: skip
-    if dati.tipo == "AZIONE":
+    if dati.tipo == "AZIONE" and (dati.processo_id or dati.attivita_id):
+        r = await _dalla_mappatura(dati.processo_id, dati.attivita_id)
+        stessa = PfElemento.attivita_id == r["attivita_id"] if r["attivita_id"] else PfElemento.processo_id == r["processo_id"]
+        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, stessa)):
+            raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
+        x.processo_id, x.attivita_id, x.mappatura_codice, x.descrizione = (
+            r["processo_id"], r["attivita_id"], r["mappatura_codice"], r["descrizione"])
+    elif dati.tipo == "AZIONE":
         if not (dati.descrizione or "").strip():
             raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi l'azione")
         x.descrizione = dati.descrizione.strip()
@@ -762,12 +822,12 @@ async def crea_elemento(obiettivo_id: str):
 @approvatore
 async def aggiorna_elemento(elemento_id: str):
     """Impegno, scadenza, indicatori (se indicati), completamento (senza indicatori) e, per le
-    azioni, la descrizione."""
+    azioni scritte (non prese dalla mappatura), la descrizione."""
     dati = corpo(ElementoDati)
     sessione = db()
     x, o, p = await _elemento_visibile(elemento_id)
     prima = _campi_elemento(x)
-    if x.tipo == "AZIONE" and dati.descrizione is not None:
+    if x.tipo == "AZIONE" and x.mappatura_codice is None and dati.descrizione is not None:
         if not dati.descrizione.strip():
             raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi l'azione")
         x.descrizione = dati.descrizione.strip()
@@ -891,9 +951,85 @@ async def misure():
             for m in righe[:200]]  # fmt: skip
 
 
+class FiltriMappatura(BaseModel):
+    testo: str | None = Field(default=None, max_length=200)
+    struttura_id: str | None = None  # i suoi processi (e quelli trasversali) per primi
+
+
+@bp.get("/mappatura")
+@lettore
+async def processi_e_attivita():
+    """Processi e attività della mappatura dei rischi da prendere come azioni (al massimo 200):
+    il processo porta con sé tutto il suo albero, l'attività solo il suo."""
+    if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
+        return []
+    f = parametri(FiltriMappatura)
+    testo = (f.testo or "").strip()
+    processi = list(await db().scalars(select(AcProcesso).where(AcProcesso.ente_id == ente_id())))
+    per_id = {p.id: p for p in processi}
+    attivita = list(await db().scalars(select(AcAttivita).where(AcAttivita.ente_id == ente_id())))
+
+    def trovato(*campi) -> bool:
+        return not testo or any(testo.lower() in (c or "").lower() for c in campi)
+
+    def priorita(p: AcProcesso) -> int:
+        return 0 if f.struttura_id and p.struttura_id == f.struttura_id else 1 if p.struttura_id is None else 2
+
+    voci = [(p, None) for p in processi if trovato(p.codice, p.denominazione)]
+    voci += [(per_id[a.processo_id], a) for a in attivita
+             if a.processo_id in per_id and trovato(a.codice, a.descrizione, per_id[a.processo_id].denominazione)]  # fmt: skip
+    voci.sort(key=lambda v: (priorita(v[0]), chiave_naturale(v[0].codice), v[1] is not None,
+                             chiave_naturale(v[1].codice) if v[1] else ""))  # fmt: skip
+    return [{"tipo": "ATTIVITA" if a else "PROCESSO", "id": (a or p).id, "codice": (a or p).codice,
+             "descrizione": a.descrizione if a else p.denominazione, "processo_tipo": p.tipo or "PROCESSO",
+             "processo": f"{p.codice} - {p.denominazione}", "struttura_id": p.struttura_id}
+            for p, a in voci[:200]]  # fmt: skip
+
+
+class FiltriAlbero(BaseModel):
+    processo_id: str | None = None
+    attivita_id: str | None = None
+
+
+@bp.get("/mappatura/albero")
+@lettore
+async def albero_mappatura():
+    """Ciò che un'azione presa dalla mappatura si porta dietro: le attività del processo (o la
+    sola attività) con i rischi, il loro livello e le misure. Si legge dalla mappatura com'è."""
+    f = parametri(FiltriAlbero)
+    if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Mappatura non disponibile")
+    sessione = db()
+    if f.attivita_id:
+        a = await sessione.get(AcAttivita, f.attivita_id)
+        if a is None or a.ente_id != ente_id():
+            raise ErroreApi(HTTPStatus.NOT_FOUND, "Attività non più nella mappatura")
+        p, attivita = await sessione.get(AcProcesso, a.processo_id), [a]
+    else:
+        p = await sessione.get(AcProcesso, f.processo_id) if f.processo_id else None
+        if p is None or p.ente_id != ente_id():
+            raise ErroreApi(HTTPStatus.NOT_FOUND, "Processo non più nella mappatura")
+        attivita = list(await sessione.scalars(select(AcAttivita).where(AcAttivita.processo_id == p.id)))
+    rischi = list(await sessione.scalars(select(AcRischio).where(AcRischio.attivita_id.in_([a.id for a in attivita]))))
+    misure = list(await sessione.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))))
+
+    def ordina(righe):
+        return sorted(righe, key=lambda x: chiave_naturale(x.codice))
+
+    return {
+        "processo": {"id": p.id, "codice": p.codice, "denominazione": p.denominazione, "tipo": p.tipo or "PROCESSO",
+                     "struttura_id": p.struttura_id},
+        "attivita": [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "rischi": [
+            {"id": r.id, "codice": r.codice, "evento": r.evento, "livello": r.livello, "misure": [
+                {"id": m.id, "codice": m.codice, "descrizione": m.descrizione} for m in ordina(misure) if m.rischio_id == r.id]}
+            for r in ordina(rischi) if r.attivita_id == a.id]} for a in ordina(attivita)],
+    }  # fmt: skip
+
+
 # --- proposte -------------------------------------------------------------------------------
 # La proposta di creazione o modifica porta l'obiettivo intero: {codice, titolo, descrizione,
-# tipo, impegno, elementi: [{id, tipo, descrizione, misura_id, misura_codice, impegno,
+# tipo, impegno, elementi: [{id, tipo, descrizione, misura_id, misura_codice, (solo per le
+# azioni prese dalla mappatura: processo_id, attivita_id, mappatura_codice), impegno,
 # scadenza, indicatori: [{id, descrizione, tipo, unita, partenza, target, target_data, verso,
 # fonte}]}]}. Gli elementi (e gli indicatori) con l'id di uno esistente lo modificano, gli altri
 # sono nuovi (l'id si assegna all'approvazione), quelli che mancano si eliminano. L'avanzamento
@@ -906,6 +1042,8 @@ class ElementoProposto(BaseModel):
     tipo: Literal["AZIONE", "MISURA"]
     descrizione: str | None = Field(default=None, max_length=10000)
     misura_id: str | None = None
+    processo_id: str | None = None  # azione presa dalla mappatura: processo
+    attivita_id: str | None = None  # o attività
     impegno: int = Field(ge=0, le=TOTALE)
     scadenza: date
     indicatori: list[IndicatoreIn] = Field(default_factory=list, max_length=50)
@@ -921,12 +1059,12 @@ class ObiettivoProposto(BaseModel):
 
 
 _CAMPI_OBIETTIVO = ("codice", "titolo", "descrizione", "tipo", "impegno")
-_CAMPI_ELEMENTO = ("descrizione", "misura_codice", "impegno", "scadenza", "indicatori")
+_CAMPI_ELEMENTO = ("descrizione", "misura_codice", "mappatura_codice", "impegno", "scadenza", "indicatori")
 
 
 def _elemento_proposto(x: PfElemento, indicatori: list[PfIndicatore]) -> dict:
     return {"id": x.id, "tipo": x.tipo, "descrizione": x.descrizione, "misura_id": x.misura_id,
-            "misura_codice": x.misura_codice, "impegno": x.impegno, "scadenza": x.scadenza.isoformat(),
+            "misura_codice": x.misura_codice, **_mappatura(x), "impegno": x.impegno, "scadenza": x.scadenza.isoformat(),
             "indicatori": [_definizione_di(i) for i in indicatori]}  # fmt: skip
 
 
@@ -970,7 +1108,7 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
     [base]: l'obiettivo com'è (modifica), da cui vengono le misure esistenti già copiate."""
     d = _valida(dati)
     esistenti = {x["id"]: x for x in (base or {}).get("elementi", [])}
-    elementi, visti, misure = [], set(), set()
+    elementi, visti, misure, riferimenti = [], set(), set(), set()
     for x in d.elementi:
         e = {"id": x.id, "tipo": x.tipo, "impegno": x.impegno, "scadenza": x.scadenza.isoformat()}
         # id di un'azione o misura esistente, o provvisorio ("nuovo-...") di una nuova
@@ -980,7 +1118,19 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
         if vecchio is None and (not (x.id or "").startswith("nuovo-") or x.id in visti):
             e["id"] = f"nuovo-{nuovo_id()}"
         visti.add(e["id"])
-        if x.tipo == "AZIONE":
+        if x.tipo == "AZIONE" and (x.processo_id or x.attivita_id):
+            if vecchio is not None and vecchio.get("mappatura_codice") is not None and (x.processo_id, x.attivita_id) == (
+                    vecchio.get("processo_id"), vecchio.get("attivita_id")):
+                # già nell'obiettivo: la copia resta (anche se tolto dalla mappatura)
+                r = {k: vecchio.get(k) for k in ("processo_id", "attivita_id", "mappatura_codice", "descrizione")}
+            else:
+                r = await _dalla_mappatura(x.processo_id, x.attivita_id)
+            chiave = ("ATTIVITA", r["attivita_id"]) if r["attivita_id"] else ("PROCESSO", r["processo_id"])
+            if chiave in riferimenti:
+                raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
+            riferimenti.add(chiave)
+            e.update(misura_id=None, misura_codice=None, **r)
+        elif x.tipo == "AZIONE":
             if not (x.descrizione or "").strip():
                 raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi ogni azione")
             e.update(descrizione=x.descrizione.strip(), misura_id=None, misura_codice=None)
@@ -1076,7 +1226,8 @@ async def _dettaglio(pr: PfProposta) -> dict:
         "impegno_elementi": sum(x["impegno"] for x in elementi),
         "disponibile": resta,  # impegno che resta all'obiettivo nella struttura
         "controlli": _controlli(versione.get("impegno", 0), pr.anno, pr.struttura_id, elementi,
-                                await _strutture_misure([x.get("misura_id") for x in elementi])) if versione else [],
+                                await _strutture_misure([x.get("misura_id") for x in elementi]),
+                                strutture_mappatura=await _strutture_mappatura(elementi)) if versione else [],
         # l'obiettivo è cambiato (o è stato eliminato) dopo che la proposta è nata
         "cambiato": pr.tipo != "CREA" and pr.stato in APERTE and not _uguali(attuale, pr.prima),
         "eliminato": pr.tipo != "CREA" and pr.stato in APERTE and attuale is None,
@@ -1349,6 +1500,7 @@ async def _applica_elementi(o: PfObiettivo, esistenti: list[PfElemento], indicat
         else:
             prima, azione = _campi_elemento(x), "MODIFICATO"
         x.descrizione, x.misura_id, x.misura_codice = e["descrizione"], e["misura_id"], e["misura_codice"]
+        x.processo_id, x.attivita_id, x.mappatura_codice = e.get("processo_id"), e.get("attivita_id"), e.get("mappatura_codice")
         x.impegno, x.scadenza = e["impegno"], date.fromisoformat(e["scadenza"])
         await _sincronizza_indicatori(x, indicatori.get(x.id, []), e.get("indicatori", []), piao_id=o.piao_id, nota=nota)
         if campi := _differenze(prima, _campi_elemento(x)):

@@ -20,11 +20,11 @@ from typing import Literal
 
 from flask import Blueprint
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import undefer
 
 import ricerca as servizio_ricerca
-from deps import audit, autenticato, db, ente_id, utente
+from deps import audit, autenticato, db, ente, ente_id, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
 from common.ricerca import Documento
@@ -35,8 +35,9 @@ from common.anticorruzione.controlli import controlli_proposta
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
     AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio,
-    Ente, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
+    Ente, Modulo, PfElemento, PfObiettivo, PfPiao, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
 )  # fmt: skip
+from common.performance import media_pesata
 from common.trasparenza.registro import SCHEMI
 
 bp = Blueprint("anticorruzione", __name__, url_prefix="/api/v1/anticorruzione")
@@ -625,15 +626,56 @@ async def processo_dell_ente(sessione, processo_id: str) -> AcProcesso:
 @bp.get("/processi/<processo_id>")
 @lettore
 async def processo(processo_id: str):
-    """Processo con l'albero delle attività, dei rischi e delle misure; per il referente dice
-    anche se può fare proposte (processo della sua struttura o trasversale)."""
+    """Processo con l'albero delle attività, dei rischi e delle misure e gli obiettivi della
+    performance collegati; per il referente dice anche se può fare proposte (processo della sua
+    struttura o trasversale)."""
     sessione = db()
     p = await processo_dell_ente(sessione, processo_id)
-    risultato = {**await albero_processo(sessione, p), "proponibile": _proponibile(p, await _strutture_dell_utente(sessione))}
+    albero = await albero_processo(sessione, p)
+    risultato = {**albero, "proponibile": _proponibile(p, await _strutture_dell_utente(sessione)),
+                 "obiettivi": await _obiettivi_collegati(sessione, p, albero)}  # fmt: skip
     if p.tipo == "PROCEDIMENTO":
         elemento = dati_art35.scheda(p, await _strutture_ente(sessione))
         risultato |= {"scheda_art35": elemento, "art35_mancanti": dati_art35.mancanti(elemento)}
     return risultato
+
+
+async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[dict]:
+    """Obiettivi della performance che prendono come azione il processo o una sua attività, o
+    che contengono una sua misura, con l'elemento attraverso cui sono collegati (sola lettura,
+    se l'ente ha anche il modulo performance)."""
+    if not ente().modulo_attivo(Modulo.PERFORMANCE):
+        return []
+    attivita = [a["id"] for a in albero["attivita"]]
+    misure = [m["id"] for a in albero["attivita"] for r in a["rischi"] for m in r["misure"]]
+    condizioni = [PfElemento.processo_id == p.id]
+    if attivita:
+        condizioni.append(PfElemento.attivita_id.in_(attivita))
+    if misure:
+        condizioni.append(PfElemento.misura_id.in_(misure))
+    righe = (await sessione.execute(
+        select(PfElemento, PfObiettivo, PfPiao).join(PfObiettivo, PfObiettivo.id == PfElemento.obiettivo_id)
+        .join(PfPiao, PfPiao.id == PfObiettivo.piao_id).where(PfElemento.ente_id == ente_id(), or_(*condizioni))
+    )).all()  # fmt: skip
+    if not righe:
+        return []
+    pesi: dict[str, list] = {}
+    for obiettivo_id, impegno, completamento in await sessione.execute(
+            select(PfElemento.obiettivo_id, PfElemento.impegno, PfElemento.completamento)
+            .where(PfElemento.obiettivo_id.in_({o.id for _, o, _ in righe}))):  # fmt: skip
+        pesi.setdefault(obiettivo_id, []).append((impegno, completamento))
+
+    def tramite(x: PfElemento) -> dict:
+        if x.misura_id:
+            return {"tipo": "MISURA", "id": x.misura_id, "codice": x.misura_codice}
+        if x.attivita_id:
+            return {"tipo": "ATTIVITA", "id": x.attivita_id, "codice": x.mappatura_codice}
+        return {"tipo": "PROCESSO", "id": x.processo_id, "codice": x.mappatura_codice}
+
+    esito = [{"obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno, "struttura_id": o.struttura_id,
+              "piao": piao.titolo, "piao_aperto": piao.stato == "APERTO", "completamento": media_pesata(pesi.get(o.id, [])),
+              "tramite": tramite(x)} for x, o, piao in righe]  # fmt: skip
+    return sorted(esito, key=lambda v: (-v["anno"], chiave_naturale(v["codice"] or ""), v["titolo"], v["tramite"]["codice"] or ""))
 
 
 async def albero_processo(sessione, p: AcProcesso) -> dict:

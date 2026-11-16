@@ -121,6 +121,7 @@ const _etichetteCampi = {
   'impegno': 'Impegno',
   'scadenza': 'Scadenza',
   'misura_codice': 'Misura',
+  'mappatura_codice': 'Processo o attività',
   'indicatori': 'Indicatori',
 };
 
@@ -207,19 +208,38 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
     if (v != null && mounted) await _salva({...d, ...v});
   }
 
-  Future<void> _nuovoElemento(String tipo) async {
+  /// Nuova azione (scritta o, con [dallaMappatura], un processo o un'attività della mappatura)
+  /// o misura.
+  Future<void> _nuovoElemento(String tipo, {bool dallaMappatura = false}) async {
     final elementi = _elementi;
-    Map<String, dynamic>? misura;
+    Map<String, dynamic>? misura, riferimento;
     if (tipo == 'MISURA') {
       misura = await scegliMisura(context, _p!['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
       if (misura == null || !mounted) return;
+    } else if (dallaMappatura) {
+      riferimento = await scegliDallaMappatura(context, _p!['struttura_id'] as String,
+          {for (final x in elementi) ...[?x['processo_id'] as String?, ?x['attivita_id'] as String?]});
+      if (riferimento == null || !mounted) return;
     }
     final v = await modificaElemento(context,
-        tipo: tipo, misura: misura, disponibile: 100 - (_p!['impegno_elementi'] as int), anno: _p!['anno'] as int, proposta: true);
+        tipo: tipo,
+        misura: misura,
+        riferimento: riferimento,
+        disponibile: 100 - (_p!['impegno_elementi'] as int),
+        anno: _p!['anno'] as int,
+        proposta: true);
     if (v == null || !mounted) return;
     await _salva({
       ..._dati,
-      'elementi': [...elementi, {...v, 'tipo': tipo, if (misura != null) 'misura_id': misura['id']}],
+      'elementi': [
+        ...elementi,
+        {
+          ...v,
+          'tipo': tipo,
+          if (misura != null) 'misura_id': misura['id'],
+          if (riferimento != null) riferimento['tipo'] == 'ATTIVITA' ? 'attivita_id' : 'processo_id': riferimento['id'],
+        },
+      ],
     });
   }
 
@@ -303,25 +323,22 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
       );
 
   Widget _rigaElemento(Map<String, dynamic> x, Map<String, dynamic>? confronto, bool modificabile) {
-    final misura = x['tipo'] == 'MISURA';
     final stato = confronto?['stato'] as String?;
     final eliminato = stato == 'ELIMINATO';
     final tema = Theme.of(context);
     return ListTile(
-      leading: Tooltip(
-        message: misura ? 'Misura della mappatura dei rischi' : 'Azione',
-        child: Icon(misura ? Icons.shield_outlined : Icons.directions_run),
-      ),
-      title: Text(misura ? '${x['misura_codice']} - ${x['descrizione']}' : '${x['descrizione']}',
-          style: eliminato ? const TextStyle(decoration: TextDecoration.lineThrough) : null),
+      leading: iconaElemento(x),
+      title: Text(titoloElemento(x), style: eliminato ? const TextStyle(decoration: TextDecoration.lineThrough) : null),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text('Impegno ${x['impegno']}% · entro il ${formatData(x['scadenza'])}'),
           if (stato == 'NUOVO') const Etichetta('Nuova', Colors.green),
           if (stato == 'MODIFICATO') const Etichetta('Modificata', Colors.blue),
           if (eliminato) const Etichetta('Tolta', Colors.red),
+          if (fuoriMappatura(x)) const Etichetta('Non più nella mappatura', Colors.blueGrey),
         ]),
         ElencoIndicatori([for (final i in (x['indicatori'] as List? ?? const [])) (i as Map).cast<String, dynamic>()]),
+        if (dallaMappatura(x) && !fuoriMappatura(x)) AlberoMappatura(x),
         if (stato == 'MODIFICATO') _cambiamenti((confronto!['campi'] as Map).cast<String, dynamic>(), tema.textTheme.bodySmall),
       ]),
       trailing: modificabile && !eliminato
@@ -455,11 +472,16 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
           azioni: [
             if (modificabile && impegnoElementi < 100) ...[
               TextButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Azione'), onPressed: () => _nuovoElemento('AZIONE')),
-              if (dati.misureDisponibili)
+              if (dati.misureDisponibili) ...[
+                TextButton.icon(
+                    icon: const Icon(Icons.account_tree_outlined, size: 18),
+                    label: const Text('Azione dalla mappatura'),
+                    onPressed: () => _nuovoElemento('AZIONE', dallaMappatura: true)),
                 TextButton.icon(
                     icon: const Icon(Icons.add_moderator_outlined, size: 18),
                     label: const Text('Misura'),
                     onPressed: () => _nuovoElemento('MISURA')),
+              ],
             ],
           ],
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

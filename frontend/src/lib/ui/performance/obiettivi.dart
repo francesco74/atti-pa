@@ -317,20 +317,27 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
     }
   }
 
-  Future<void> _nuovoElemento(Map<String, dynamic> o, String tipo) => _esegui(() async {
+  /// Nuova azione (scritta o, con [dallaMappatura], un processo o un'attività della mappatura)
+  /// o misura.
+  Future<void> _nuovoElemento(Map<String, dynamic> o, String tipo, {bool dallaMappatura = false}) => _esegui(() async {
         final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
-        Map<String, dynamic>? misura;
+        Map<String, dynamic>? misura, riferimento;
         if (tipo == 'MISURA') {
           misura = await scegliMisura(context, o['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
           if (misura == null || !mounted) return;
+        } else if (dallaMappatura) {
+          riferimento = await scegliDallaMappatura(context, o['struttura_id'] as String,
+              {for (final x in elementi) ...[?x['processo_id'] as String?, ?x['attivita_id'] as String?]});
+          if (riferimento == null || !mounted) return;
         }
         final v = await modificaElemento(context,
-            tipo: tipo, misura: misura, disponibile: 100 - (o['impegno_elementi'] as int), anno: o['anno'] as int);
+            tipo: tipo, misura: misura, riferimento: riferimento, disponibile: 100 - (o['impegno_elementi'] as int), anno: o['anno'] as int);
         if (v == null || !mounted) return;
         await apiDi(context).post('$apiPerformance/obiettivi/${o['id']}/elementi', {
           ...v,
           'tipo': tipo,
           if (misura != null) 'misura_id': misura['id'],
+          if (riferimento != null) riferimento['tipo'] == 'ATTIVITA' ? 'attivita_id' : 'processo_id': riferimento['id'],
         });
       });
 
@@ -385,19 +392,18 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
     final misura = x['tipo'] == 'MISURA';
     final ritardo = x['in_ritardo'] == true;
     return ListTile(
-      leading: Tooltip(
-        message: misura ? 'Misura della mappatura dei rischi' : 'Azione',
-        child: Icon(misura ? Icons.shield_outlined : Icons.directions_run),
-      ),
-      title: Text(misura ? '${x['misura_codice']} - ${x['descrizione']}' : '${x['descrizione']}'),
+      leading: iconaElemento(x),
+      title: Text(titoloElemento(x)),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text('Impegno ${x['impegno']}% · entro il ${formatData(x['scadenza'])}'),
           if (ritardo) const Etichetta('In ritardo', Colors.orange),
           if (misura && x['misura_id'] == null) const Etichetta('Misura non più nella mappatura', Colors.blueGrey),
+          if (fuoriMappatura(x)) const Etichetta('Non più nella mappatura', Colors.blueGrey),
           if ((x['indicatori'] as List? ?? const []).isEmpty) const Etichetta('Senza indicatori', Colors.blueGrey),
         ]),
         ElencoIndicatori((x['indicatori'] as List? ?? const []).cast<Map<String, dynamic>>(), rilevati: true),
+        if (dallaMappatura(x) && !fuoriMappatura(x)) AlberoMappatura(x),
       ]),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         BarraCompletamento(x['completamento'] as num?, larghezza: 100),
@@ -480,9 +486,12 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
             azioni: [
               if (modificabile && impegnoElementi < 100) ...[
                 TextButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Azione'), onPressed: () => _nuovoElemento(o, 'AZIONE')),
-                if (dati.misureDisponibili)
+                if (dati.misureDisponibili) ...[
+                  TextButton.icon(icon: const Icon(Icons.account_tree_outlined, size: 18), label: const Text('Azione dalla mappatura'),
+                      onPressed: () => _nuovoElemento(o, 'AZIONE', dallaMappatura: true)),
                   TextButton.icon(icon: const Icon(Icons.add_moderator_outlined, size: 18), label: const Text('Misura'),
                       onPressed: () => _nuovoElemento(o, 'MISURA')),
+                ],
               ],
             ],
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

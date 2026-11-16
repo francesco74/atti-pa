@@ -29,6 +29,8 @@ Map<String, dynamic> daAlbero(Map<String, dynamic> albero) {
     'scheda_art35': albero['scheda_art35'],
     'art35_mancanti': albero['art35_mancanti'],
     'proponibile': albero['proponibile'] == true, // processo della struttura del referente
+    // obiettivi della performance che usano il processo, una sua attività o una sua misura
+    'obiettivi': (albero['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>(),
     'attivita': [
       for (final a in (albero['attivita'] as List).cast<Map<String, dynamic>>())
         {
@@ -717,5 +719,44 @@ class ValoriIndicatori extends StatelessWidget {
               '${valutazione['motivazione_correzione']}'),
         ),
     ]);
+  }
+}
+
+/// Obiettivi della performance collegati al processo: lo prendono come azione (intero o una
+/// sua attività) o contengono una sua misura. Sola lettura; niente se non ce ne sono.
+class ObiettiviPerformance extends StatelessWidget {
+  const ObiettiviPerformance({super.key, required this.dati, required this.obiettivi});
+
+  final DatiAnticorruzione dati;
+  final List<Map<String, dynamic>> obiettivi;
+
+  static String _tramite(Map t) => switch (t['tipo']) {
+        'MISURA' => 'contiene la misura ${t['codice']}',
+        'ATTIVITA' => 'azione: l\'attività ${t['codice']}',
+        _ => 'azione: l\'intero processo',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    if (obiettivi.isEmpty) return const SizedBox.shrink();
+    final piccolo = Theme.of(context).textTheme.bodySmall;
+    return Sezione(
+      titolo: 'Obiettivi di performance',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        for (final o in obiettivi)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.flag_outlined),
+            title: Text(o['codice'] == null ? '${o['titolo']}' : '${o['codice']} - ${o['titolo']}'),
+            subtitle: Text([
+              '${o['piao']} · anno ${o['anno']}',
+              dati.struttura(o['struttura_id']) ?? '',
+              _tramite(o['tramite'] as Map),
+              if (o['completamento'] != null) 'completato al ${(o['completamento'] as num).round()}%',
+            ].where((t) => t.isNotEmpty).join(' · ')),
+          ),
+        Text('Si gestiscono nel modulo Performance.', style: piccolo),
+      ]),
+    );
   }
 }

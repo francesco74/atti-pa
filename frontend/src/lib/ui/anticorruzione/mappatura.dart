@@ -418,6 +418,26 @@ class _VistaProcessoState extends State<VistaProcesso> {
     }
   }
 
+  /// Obiettivi della performance collegati: tutti per il processo; con un'attività aperta quelli
+  /// che prendono l'intero processo, quell'attività o una sua misura.
+  List<Map<String, dynamic>> _obiettiviDi(Map<String, dynamic> albero, Map<String, dynamic>? aperta) {
+    final tutti = (albero['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>();
+    if (aperta == null) return tutti;
+    final misure = {
+      for (final r in (aperta['rischi'] as List).cast<Map<String, dynamic>>())
+        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>()) m['id'],
+    };
+    return [
+      for (final o in tutti)
+        if (switch ((o['tramite'] as Map)['tipo']) {
+          'ATTIVITA' => (o['tramite'] as Map)['id'] == aperta['id'],
+          'MISURA' => misure.contains((o['tramite'] as Map)['id']),
+          _ => true,
+        })
+          o,
+    ];
+  }
+
   /// Il livello più alto tra i rischi dell'attività.
   String? _livelloMassimo(DatiAnticorruzione dati, List<Map<String, dynamic>> rischi) {
     String? massimo;
@@ -593,6 +613,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
             ..._livelloAttivita(dati, aperta, operazioni)
           else
             ..._livelloProcesso(dati, albero, operazioni),
+          ObiettiviPerformance(dati: dati, obiettivi: _obiettiviDi(albero, aperta)),
         ]);
       },
     );

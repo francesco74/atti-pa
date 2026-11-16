@@ -37,6 +37,14 @@ void main() {
       } else if (r.url.path.endsWith('/processi/p1')) {
         corpo = {
           'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare',
+          'obiettivi': [
+            {'obiettivo_id': 'o1', 'codice': 'OB1', 'titolo': 'Costruire il ponte', 'anno': 2026, 'struttura_id': null,
+             'piao': 'PIAO 2026', 'piao_aperto': true, 'completamento': 40.0,
+             'tramite': {'tipo': 'PROCESSO', 'id': 'p1', 'codice': 'C.1'}},
+            {'obiettivo_id': 'o2', 'codice': 'OB2', 'titolo': 'Gare trasparenti', 'anno': 2026, 'struttura_id': null,
+             'piao': 'PIAO 2026', 'piao_aperto': true, 'completamento': null,
+             'tramite': {'tipo': 'ATTIVITA', 'id': 'a2', 'codice': 'C.1.2'}},
+          ],
           'attivita': [
             {'id': 'a1', 'codice': 'C.1.1', 'descrizione': 'Bando', 'rischi': [
               {'id': 'r1', 'codice': 'C.1.1_R.1', 'evento': 'Bando su misura', 'valori_probabilita': null, 'misure': [
@@ -106,10 +114,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('C.1.1 - Bando'), findsOneWidget);
     expect(find.text('Bando su misura'), findsNothing);
+    // obiettivi della performance collegati al processo
+    expect(find.text('Obiettivi di performance'), findsOneWidget);
+    expect(find.text('OB1 - Costruire il ponte'), findsOneWidget);
+    expect(find.textContaining('azione: l\'intero processo · completato al 40%'), findsOneWidget);
+    expect(find.textContaining('azione: l\'attività C.1.2'), findsOneWidget);
 
     await tester.tap(find.text('C.1.1 - Bando'));
     await tester.pumpAndSettle();
     expect(find.text('Bando su misura'), findsOneWidget);
+    // nell'attività: chi prende l'intero processo sì, chi prende un'altra attività no
+    expect(find.text('OB1 - Costruire il ponte'), findsOneWidget);
+    expect(find.text('OB2 - Gare trasparenti'), findsNothing);
     expect(find.text('C.1.1_R.1_M.1 - Doppia verifica'), findsOneWidget);
 
     // il percorso riporta indietro di un livello alla volta

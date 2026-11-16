@@ -89,4 +89,15 @@ class Controlli(unittest.TestCase):
         self.assertEqual([c["livello"] for c in vuoto], [AVVISO, AVVISO])
         solo_azioni = controlli_obiettivo(100, 2026, "s1", [elementi[0] | {"impegno": 100, "scadenza": date(2026, 5, 1)}],
                                           misure_attive=True)  # fmt: skip
-        self.assertEqual([c["testo"] for c in solo_azioni], ["Nessuna misura della mappatura dei rischi collegata all'obiettivo"])
+        self.assertEqual([c["testo"] for c in solo_azioni], ["Nessuna misura o processo della mappatura dei rischi collegati all'obiettivo"])
+        # azioni prese dalla mappatura: il processo porta le sue misure; tolto dalla mappatura,
+        # o di un'altra struttura, si segnala
+        processo = {"tipo": "AZIONE", "descrizione": "Affidamento", "impegno": 50, "scadenza": date(2026, 5, 1),
+                    "processo_id": "p1", "attivita_id": None, "mappatura_codice": "C.3"}  # fmt: skip
+        attivita = {**processo, "processo_id": None, "attivita_id": "a1", "mappatura_codice": "C.3.1"}
+        testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [processo, attivita], misure_attive=True,
+                                                          strutture_mappatura={"p1": None, "a1": "s2"})]  # fmt: skip
+        self.assertEqual(testi, ["Azione «Affidamento»: l'attività è di un'altra struttura nella mappatura"])
+        tolto = {**processo, "processo_id": None}
+        testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [tolto | {"impegno": 100}], misure_attive=True)]
+        self.assertEqual(testi, ["Azione «Affidamento»: C.3 non è più nella mappatura dei rischi"])
