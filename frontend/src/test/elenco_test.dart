@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:atti_pa/api/api_client.dart';
 import 'package:atti_pa/stato/auth_state.dart';
 import 'package:atti_pa/ui/anticorruzione/comune.dart';
 import 'package:atti_pa/ui/anticorruzione/elenco.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -17,8 +19,8 @@ void main() {
   late List<String> chiamate;
   late Map<String, Object?> corpi;
 
-  Future<void> apri(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1800, 1600);
+  Future<void> apri(WidgetTester tester, {double larghezza = 1800}) async {
+    tester.view.physicalSize = Size(larghezza, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     chiamate = [];
@@ -188,5 +190,49 @@ void main() {
     expect(find.text('Rischio C.1.1_R.1'), findsOneWidget);
     expect(find.text('Misure (2)'), findsOneWidget);
     expect(find.text('C.1.1_R.1_M.1 - Doppia verifica'), findsOneWidget);
+  });
+
+  testWidgets('schermo di 1024 px: la tabella sta nella pagina, le colonne secondarie si scelgono', (tester) async {
+    // il font vero dell'app: quello dei test ha tutti i caratteri larghi quanto il corpo, e le
+    // colonne misurate sul testo risulterebbero larghe il doppio
+    await tester.runAsync(() async {
+      final roboto = FontLoader('Roboto');
+      for (final f in ['Regular', 'Medium', 'Bold']) {
+        roboto.addFont(File('assets/fonts/Roboto-$f.ttf').readAsBytes().then(ByteData.sublistView));
+      }
+      await roboto.load();
+    });
+    await apri(tester, larghezza: 944); // 1024 meno il menu laterale
+    final pagina = tester.getSize(find.byType(ElencoTab)).width;
+    double tabella() => tester.getSize(find.byType(DataTable)).width;
+
+    for (final livello in ['Aree', 'Processi e procedimenti', 'Attività', 'Rischi', 'Misure']) {
+      await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text(livello)));
+      await tester.pumpAndSettle();
+      expect(tabella(), lessThanOrEqualTo(pagina - 32), reason: livello);
+    }
+
+    // nelle misure categoria e struttura partono nascoste; si aggiungono con "Colonne"
+    Finder inTabella(String testo) => find.descendant(of: find.byType(DataTable), matching: find.text(testo));
+    expect(inTabella('Categoria'), findsNothing);
+    expect(find.text('Colonne (6 di 8)'), findsOneWidget);
+    await tester.tap(find.text('Colonne (6 di 8)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(CheckboxListTile, 'Categoria'));
+    await tester.tap(find.text('Applica'));
+    await tester.pumpAndSettle();
+    expect(inTabella('Categoria'), findsOneWidget);
+    expect(find.text('Colonne (7 di 8)'), findsOneWidget);
+
+    // l'Excel ha sempre tutte le colonne
+    await tester.tap(find.text('Esporta in Excel'));
+    await tester.pumpAndSettle();
+    final esportato = corpi['POST /api/v1/anticorruzione/elenco/esporta'] as Map;
+    expect(esportato['intestazioni'], containsAll(['Categoria', 'Struttura']));
+
+    // la scelta vale per il livello: tornando ai processi, Area resta nascosta
+    await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Processi e procedimenti')));
+    await tester.pumpAndSettle();
+    expect(find.text('Colonne (7 di 10)'), findsOneWidget);
   });
 }

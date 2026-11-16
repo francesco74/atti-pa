@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -156,6 +157,9 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
   int? _colonna; // ordinamento scelto (null: per codice, o per pertinenza mentre si cerca)
   bool _crescente = true;
   int _righePerPagina = 25;
+  // colonne scelte con "Colonne", per livello (indici); senza scelta valgono quelle di partenza
+  final _visibili = <String, Set<int>>{};
+  final _scorrimento = ScrollController(); // orizzontale, per la barra sempre visibile
   final _testo = TextEditingController();
   late final RegistroRicerche _registro;
   late final _ricerca = RicercaTesto(
@@ -178,6 +182,7 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
   @override
   void dispose() {
     _testo.dispose();
+    _scorrimento.dispose();
     _ricerca.dispose();
     super.dispose();
   }
@@ -294,8 +299,10 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
 
     final livello = _Colonna('Livello', (x) => _livelloRischio(dati, m, x) ?? '',
         ordine: (x) => dati.livelli.indexOf(_livelloRischio(dati, m, x) ?? ''),
-        cella: (x) => LivelloChip(dati, _livelloRischio(dati, m, x)));
-    final area = _Colonna('Area', (x) => codice(m.percorso(_livello, x).area), ordine: (x) => codice(m.percorso(_livello, x).area));
+        cella: (x) => LivelloChip(dati, _livelloRischio(dati, m, x)),
+        testoCella: (x) => _livelloRischio(dati, m, x) ?? 'Non valutato');
+    final area = _Colonna('Area', (x) => codice(m.percorso(_livello, x).area),
+        ordine: (x) => codice(m.percorso(_livello, x).area), secondaria: true);
     final processo = _Colonna('Processo', (x) {
       final p = m.percorso(_livello, x).processo;
       return p == null ? '' : '${p['codice']} - ${p['denominazione']}';
@@ -318,8 +325,8 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           area,
           _Colonna('Codice', codice, ordine: codice),
           _Colonna('Processo o procedimento', testo, largo: true),
-          _Colonna('Tipo', (x) => etichettaTipo(x['tipo'])),
-          _Colonna('Struttura', struttura),
+          _Colonna('Tipo', (x) => etichettaTipo(x['tipo']), secondaria: true),
+          _Colonna('Struttura', struttura, testo: true),
           _Colonna('Attività', (x) => quanti(m.figliDi(x['id'])), numerica: true),
           _Colonna('Rischi', (x) => quanti(m.rischiSotto('PROCESSO', x)), numerica: true),
           _Colonna('Misure', (x) => quanti(m.misureSotto('PROCESSO', x)), numerica: true),
@@ -331,14 +338,18 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           }, ordine: (x) => (x['art35_mancanti'] as List?)?.length ?? -1, cella: (x) {
             final mancanti = x['art35_mancanti'] as List?;
             return x['tipo'] != 'PROCEDIMENTO' || mancanti == null ? const SizedBox.shrink() : CompletezzaArt35(mancanti.length);
-          }),
+          }, testoCella: (x) {
+            final mancanti = x['art35_mancanti'] as List?;
+            if (x['tipo'] != 'PROCEDIMENTO' || mancanti == null) return '';
+            return mancanti.isEmpty ? 'Art. 35 completo' : 'Art. 35: mancano ${mancanti.length} dati';
+          }, secondaria: true),
         ],
       'ATTIVITA' => [
           area,
           processo,
           _Colonna('Codice', codice, ordine: codice),
           _Colonna('Attività', testo, largo: true),
-          _Colonna('Struttura', struttura),
+          _Colonna('Struttura', struttura, testo: true),
           _Colonna('Rischi', (x) => quanti(m.figliDi(x['id'])), numerica: true),
           _Colonna('Misure', (x) => quanti(m.misureSotto('ATTIVITA', x)), numerica: true),
           livello,
@@ -362,10 +373,46 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           _Colonna('Codice', codice, ordine: codice),
           _Colonna('Misura', testo, largo: true),
           _Colonna('Tipo', (x) => x['tipo'] == 'GENERALE' ? 'Generale' : 'Specifica'),
-          _Colonna('Categoria', (x) => '${x['categoria'] ?? ''}'),
-          _Colonna('Struttura', struttura),
+          _Colonna('Categoria', (x) => '${x['categoria'] ?? ''}', testo: true, secondaria: true),
+          _Colonna('Struttura', struttura, testo: true, secondaria: true),
         ],
     };
+  }
+
+  /// Le colonne da vedere nella tabella del livello; l'Excel le esporta comunque tutte.
+  Future<void> _scegliColonne(List<_Colonna> colonne, Set<int> attuali) async {
+    final scelte = {...attuali};
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, aggiorna) => AlertDialog(
+          title: const Text('Colonne da vedere'),
+          content: SizedBox(
+            width: 360,
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                for (final (i, col) in colonne.indexed)
+                  CheckboxListTile(
+                    title: Text(col.titolo),
+                    value: scelte.contains(i),
+                    // almeno una colonna resta
+                    onChanged: scelte.length == 1 && scelte.contains(i)
+                        ? null
+                        : (v) => aggiorna(() => v! ? scelte.add(i) : scelte.remove(i)),
+                  ),
+                const SizedBox(height: 8),
+                Text('L\'esportazione in Excel contiene sempre tutte le colonne.', style: Theme.of(c).textTheme.bodySmall),
+              ]),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Applica')),
+          ],
+        ),
+      ),
+    );
+    if (ok == true && mounted) setState(() => _visibili[_livello] = scelte);
   }
 
   Future<void> _esporta(List<_Colonna> colonne, List<Map<String, dynamic>> righe) async {
@@ -496,7 +543,16 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           });
         }
         final nome = livelliElenco[_livello]!.toLowerCase();
-        return ListView(padding: const EdgeInsets.all(16), children: [
+        return LayoutBuilder(builder: (context, vincoli) {
+          // lo spazio della tabella: sotto i 1300 px colonne secondarie nascoste e spazi ridotti
+          final disponibile = vincoli.maxWidth - 32;
+          final stretto = disponibile < 1300;
+          final spazio = stretto ? 12.0 : 24.0;
+          final scelte = _visibili[_livello] ?? {for (final (i, c) in colonne.indexed) if (!(stretto && c.secondaria)) i};
+          final indici = [for (var i = 0; i < colonne.length; i++) if (scelte.contains(i)) i];
+          final mostrate = [for (final i in indici) colonne[i]];
+          final larghezze = _larghezzeColonne(context, mostrate, righe, disponibile: disponibile, spazio: spazio, margine: spazio);
+          return ListView(padding: const EdgeInsets.all(16), children: [
           SegmentedButton<String>(
             segments: [for (final e in livelliElenco.entries) ButtonSegment(value: e.key, label: Text(e.value))],
             selected: {_livello},
@@ -515,6 +571,12 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
                     style: Theme.of(context).textTheme.titleSmall),
               ),
             ),
+            TextButton.icon(
+              onPressed: () => _scegliColonne(colonne, scelte),
+              icon: const Icon(Icons.view_column_outlined),
+              label: Text(mostrate.length == colonne.length ? 'Colonne' : 'Colonne (${mostrate.length} di ${colonne.length})'),
+            ),
+            const SizedBox(width: 8),
             OutlinedButton.icon(
               onPressed: righe.isEmpty ? null : () => _esporta(colonne, righe),
               icon: const Icon(Icons.table_view_outlined),
@@ -528,37 +590,56 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
               child: Center(child: Text(_ricerca.inCorso ? '' : (tutti.isEmpty ? 'La mappatura è vuota.' : 'Nessun elemento con questi filtri.'))),
             )
           else
-            PaginatedDataTable(
-              key: ValueKey('$_livello-${righe.length}-$_righePerPagina'),
-              columns: [
-                for (final (i, c) in colonne.indexed)
-                  DataColumn(
-                    label: Text(c.titolo),
-                    numeric: c.numerica,
-                    onSort: (_, _) => setState(() {
-                      _crescente = _colonna == i ? !_crescente : true;
-                      _colonna = i;
-                    }),
-                  ),
-              ],
-              sortColumnIndex: _colonna,
-              sortAscending: _crescente,
-              source: _Righe(righe, colonne, (x) => _apri(m, x)),
-              // se le righe stanno in una pagina la tabella è alta quanto loro (niente righe
-              // vuote in fondo) e la scelta delle righe per pagina non serve
-              rowsPerPage: righe.length < _righePerPagina ? righe.length : _righePerPagina,
-              availableRowsPerPage: const [25, 50, 100],
-              onRowsPerPageChanged: righe.length < _righePerPagina
-                  ? null
-                  : (n) => setState(() => _righePerPagina = n ?? _righePerPagina),
-              showCheckboxColumn: false,
-              dataRowMinHeight: 48,
-              dataRowMaxHeight: 72,
-              columnSpacing: 24,
-              showFirstLastButtons: true,
+            // se la tabella non sta nella pagina scorre di lato: la barra resta visibile e si
+            // può trascinare anche con il mouse
+            ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false, dragDevices: PointerDeviceKind.values.toSet()),
+              child: Scrollbar(
+                controller: _scorrimento,
+                thumbVisibility: true,
+                notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
+                child: PaginatedDataTable(
+                  key: ValueKey('$_livello-${righe.length}-$_righePerPagina-${indici.join(',')}'),
+                  controller: _scorrimento,
+                  horizontalMargin: spazio,
+                  columns: [
+                    for (final (k, i) in indici.indexed)
+                      DataColumn(
+                        // titolo delle colonne di testo largo quanto la colonna: va a capo
+                        label: larghezze[k] == null
+                            ? Text(colonne[i].titolo)
+                            : ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: larghezze[k]! - _frecciaOrdinamento),
+                                child: Text(colonne[i].titolo),
+                              ),
+                        numeric: colonne[i].numerica,
+                        onSort: (_, _) => setState(() {
+                          _crescente = _colonna == i ? !_crescente : true;
+                          _colonna = i;
+                        }),
+                      ),
+                  ],
+                  sortColumnIndex: _colonna == null || !indici.contains(_colonna) ? null : indici.indexOf(_colonna!),
+                  sortAscending: _crescente,
+                  source: _Righe(righe, mostrate, larghezze, (x) => _apri(m, x)),
+                  // se le righe stanno in una pagina la tabella è alta quanto loro (niente righe
+                  // vuote in fondo) e la scelta delle righe per pagina non serve
+                  rowsPerPage: righe.length < _righePerPagina ? righe.length : _righePerPagina,
+                  availableRowsPerPage: const [25, 50, 100],
+                  onRowsPerPageChanged: righe.length < _righePerPagina
+                      ? null
+                      : (n) => setState(() => _righePerPagina = n ?? _righePerPagina),
+                  showCheckboxColumn: false,
+                  dataRowMinHeight: 48,
+                  dataRowMaxHeight: 72,
+                  columnSpacing: spazio,
+                  showFirstLastButtons: true,
+                ),
+              ),
             ),
           FeedbackRicerca(_ricerca),
         ]);
+        });
       },
     );
   }
@@ -567,24 +648,75 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
 String _titolo(Map<String, dynamic> e) => '${e['denominazione'] ?? e['evento'] ?? e['descrizione'] ?? ''}';
 
 /// Colonna dell'elenco: valore (anche per l'Excel), chiave di ordinamento, cella.
+/// Le colonne di testo ([largo] o [testo]) si dividono lo spazio lasciato dalle altre e vanno
+/// a capo; le [secondaria] partono nascoste quando lo spazio è poco (l'Excel le ha sempre).
 class _Colonna {
-  _Colonna(this.titolo, this.valore, {this.numerica = false, this.largo = false, Object? Function(Map<String, dynamic>)? ordine, this.cella})
+  _Colonna(this.titolo, this.valore,
+      {this.numerica = false, this.largo = false, this.testo = false, this.secondaria = false,
+      Object? Function(Map<String, dynamic>)? ordine, this.cella, this.testoCella})
       : _ordine = ordine;
 
   final String titolo;
   final Object? Function(Map<String, dynamic>) valore;
-  final bool numerica, largo;
+  final bool numerica, largo, testo, secondaria;
   final Object? Function(Map<String, dynamic>)? _ordine;
   final Widget Function(Map<String, dynamic>)? cella;
+  final String Function(Map<String, dynamic>)? testoCella; // il testo della cella, per misurarla
 
   Object? chiave(Map<String, dynamic> x) => (_ordine ?? valore)(x);
+
+  /// Quota dello spazio libero: 2 i testi lunghi, 1 gli altri testi, 0 le colonne a misura.
+  int get peso => largo ? 2 : (testo ? 1 : 0);
+}
+
+const _frecciaOrdinamento = 18.0; // freccia dell'ordinamento accanto al titolo, con il margine
+
+/// Larghezza delle colonne di testo (null per quelle a misura del contenuto): si dividono
+/// lo spazio lasciato dalle altre, tra un minimo e un massimo; se non basta, la tabella scorre.
+List<double?> _larghezzeColonne(BuildContext context, List<_Colonna> colonne, List<Map<String, dynamic>> righe,
+    {required double disponibile, required double spazio, required double margine}) {
+  final scala = MediaQuery.textScalerOf(context);
+  final tema = Theme.of(context).textTheme;
+  double misura(String testo, TextStyle? stile) {
+    final p = TextPainter(text: TextSpan(text: testo, style: stile), textDirection: TextDirection.ltr, textScaler: scala)..layout();
+    final w = p.width;
+    p.dispose();
+    return w;
+  }
+
+  var fisse = 0.0;
+  var pesi = 0;
+  for (final c in colonne) {
+    if (c.peso > 0) {
+      pesi += c.peso;
+      continue;
+    }
+    // si misura solo il valore più lungo, per non misurare tutte le righe a ogni ricerca
+    String testo(Map<String, dynamic> x) => c.testoCella?.call(x) ?? '${c.valore(x) ?? ''}';
+    final piuLungo = righe.fold('', (String a, x) {
+      final t = testo(x);
+      return t.length > a.length ? t : a;
+    });
+    final cella = c.cella != null
+        ? misura(piuLungo, const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)) + 24
+        : misura(piuLungo, tema.bodyMedium);
+    final titolo = misura(c.titolo, tema.titleSmall) + _frecciaOrdinamento;
+    fisse += cella > titolo ? cella : titolo;
+  }
+  final libero = disponibile - fisse - spazio * (colonne.length - 1) - 2 * margine - 8;
+  final unita = pesi == 0 ? 0.0 : libero / pesi;
+  return [
+    for (final c in colonne)
+      if (c.peso == 0) null else (unita * c.peso).clamp(c.largo ? 160.0 : 110.0, c.largo ? 360.0 : 220.0),
+  ];
 }
 
 class _Righe extends DataTableSource {
-  _Righe(this.righe, this.colonne, this.apri);
+  _Righe(this.righe, this.colonne, this.larghezze, this.apri);
 
   final List<Map<String, dynamic>> righe;
   final List<_Colonna> colonne;
+  final List<double?> larghezze;
   final ValueChanged<Map<String, dynamic>> apri;
 
   @override
@@ -595,10 +727,10 @@ class _Righe extends DataTableSource {
       index: index,
       onSelectChanged: (_) => apri(x),
       cells: [
-        for (final c in colonne)
+        for (final (i, c) in colonne.indexed)
           DataCell(c.cella?.call(x) ??
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: c.largo ? 360 : 220),
+                constraints: BoxConstraints(maxWidth: larghezze[i] ?? 220),
                 child: Text('${c.valore(x) ?? ''}', maxLines: 3, overflow: TextOverflow.ellipsis),
               )),
       ],
