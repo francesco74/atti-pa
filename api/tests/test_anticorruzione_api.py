@@ -333,11 +333,27 @@ class AnticorruzioneApi(unittest.TestCase):
         del_settore = self._ok(rpct.post(f"{API}/processi", base_url=ENTE,
                                          json={"denominazione": "Del settore", "struttura_id": self.settore}), 201)  # fmt: skip
         trasversale = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Di tutti"}), 201)
-        for processo in (del_settore, trasversale):  # la U.O. non propone sul settore né sui trasversali
-            r = ref.post(f"{API}/proposte", base_url=ENTE, json={
-                "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": processo["id"], "dati": {"descrizione": "x"}})  # fmt: skip
-            self.assertEqual(r.status_code, 403, processo["denominazione"])
+        # la U.O. non propone sul settore che sta sopra di lei
+        r = ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": del_settore["id"], "dati": {"descrizione": "x"}})  # fmt: skip
+        self.assertEqual(r.status_code, 403)
         self.assertFalse(self._ok(ref.get(f"{API}/processi/{del_settore['id']}", base_url=ENTE))["proponibile"])
+        # sui trasversali sì: riguardano tutte le strutture
+        self.assertTrue(self._ok(ref.get(f"{API}/processi/{trasversale['id']}", base_url=ENTE))["proponibile"])
+        self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": trasversale["id"], "dati": {"descrizione": "x"}}), 201)  # fmt: skip
+        self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "MODIFICA", "oggetto": "PROCESSO", "elemento_id": trasversale["id"],
+            "dati": {"denominazione": "Di tutti, rivisto", "struttura_id": None}}), 201)  # fmt: skip
+        # ma rendere trasversale un processo, o crearne uno, spetta al RPCT
+        mio = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Mio", "struttura_id": self.uo}), 201)
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "MODIFICA", "oggetto": "PROCESSO", "elemento_id": mio["id"],
+            "dati": {"denominazione": "Mio", "struttura_id": None}}).status_code, 403)  # fmt: skip
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "CREA", "oggetto": "PROCESSO", "dati": {"denominazione": "Nuovo di tutti"}}).status_code, 403)  # fmt: skip
+        # senza struttura nel profilo nemmeno sui trasversali
+        self.assertFalse(self._ok(self._client("senzastruttura").get(f"{API}/processi/{trasversale['id']}", base_url=ENTE))["proponibile"])
         self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
             "tipo": "CREA", "oggetto": "PROCESSO", "dati": {"denominazione": "x", "struttura_id": self.settore}}).status_code, 403)  # fmt: skip
         self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={

@@ -626,11 +626,10 @@ async def processo_dell_ente(sessione, processo_id: str) -> AcProcesso:
 @lettore
 async def processo(processo_id: str):
     """Processo con l'albero delle attività, dei rischi e delle misure; per il referente dice
-    anche se può fare proposte (processo della sua struttura)."""
+    anche se può fare proposte (processo della sua struttura o trasversale)."""
     sessione = db()
     p = await processo_dell_ente(sessione, processo_id)
-    ammesse = await _strutture_dell_utente(sessione)
-    risultato = {**await albero_processo(sessione, p), "proponibile": ammesse is not None and p.struttura_id in ammesse}
+    risultato = {**await albero_processo(sessione, p), "proponibile": _proponibile(p, await _strutture_dell_utente(sessione))}
     if p.tipo == "PROCEDIMENTO":
         elemento = dati_art35.scheda(p, await _strutture_ente(sessione))
         risultato |= {"scheda_art35": elemento, "art35_mancanti": dati_art35.mancanti(elemento)}
@@ -1223,17 +1222,25 @@ async def _verifica_dati(sessione, d: BaseModel, m: Metodologia) -> dict:
     return risultato
 
 
+def _proponibile(processo: AcProcesso, ammesse: set[str] | None) -> bool:
+    """Il referente propone sui processi della sua struttura e delle sottostanti, e su quelli
+    trasversali (senza struttura), che riguardano tutte le strutture."""
+    return bool(ammesse) and (processo.struttura_id is None or processo.struttura_id in ammesse)
+
+
 async def _controlla_permesso(sessione, processo: AcProcesso | None, strutture: list[str | None]) -> None:
-    """Il referente propone solo per i processi della sua struttura e delle sottostanti; le
-    aree non hanno struttura. Il RPCT non ha limiti."""
+    """Il referente propone solo per i processi della sua struttura e delle sottostanti e per
+    quelli trasversali; le aree non hanno struttura. Un processo si assegna alla sua struttura,
+    o resta trasversale se lo è già: renderlo trasversale spetta al RPCT, che non ha limiti."""
     ammesse = await _strutture_dell_utente(sessione)
     if ammesse is None:
         return
     if not ammesse:
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Per fare proposte serve la tua struttura nel profilo: chiedila all'amministratore")
-    if processo is not None and processo.struttura_id not in ammesse:
-        raise ErroreApi(HTTPStatus.FORBIDDEN, "Puoi fare proposte solo sui processi della tua struttura")
-    if any(s not in ammesse for s in strutture):
+    if processo is not None and not _proponibile(processo, ammesse):
+        raise ErroreApi(HTTPStatus.FORBIDDEN, "Puoi fare proposte solo sui processi della tua struttura e su quelli trasversali")
+    resta_trasversale = processo is not None and processo.struttura_id is None
+    if any(s not in ammesse and not (s is None and resta_trasversale) for s in strutture):
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Il processo va assegnato alla tua struttura (o a una sottostante)")
 
 
