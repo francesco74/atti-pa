@@ -2,6 +2,8 @@
 
     anticorruzione/metodologia.yaml       metodologia di valutazione del rischio
     anticorruzione/aree.yaml              aree di rischio (create se mancano, mai cancellate)
+    anticorruzione/catalogo.yaml          voci standard di attività, rischi e misure (create se
+                                          mancano, mai cancellate: common/anticorruzione/catalogo.py)
     anticorruzione/processi/*.yaml        processi standard, un file per area
 
 Un processo standard porta attività, rischi (con una valutazione proposta) e misure. Il
@@ -10,7 +12,8 @@ attività, rischi e misure. Restano fuori, perché sono scelte dell'ente, le str
 responsabili e le valutazioni: la valutazione proposta entra solo nei rischi nuovi.
 Applicando un aggiornamento gli elementi si abbinano per codice: quelli con lo stesso codice
 si aggiornano (conservano i monitoraggi), i nuovi si aggiungono e
-quelli tolti dallo standard si eliminano.
+quelli tolti dallo standard si eliminano. Gli elementi nuovi si collegano alla voce del
+catalogo con lo stesso testo (o a una nuova dell'ente).
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from common.anticorruzione.catalogo import Catalogo
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.configurazione import impronta
 from common.models import (
@@ -224,9 +228,11 @@ async def applica_processo(
     await db.execute(delete(AcRischio).where(AcRischio.id.in_(via_r)))
     await db.execute(delete(AcAttivita).where(AcAttivita.id.in_(via_a)))
 
+    catalogo = Catalogo(db, ente_id)
     for a_std in std.attivita:
         a = attivita.get(a_std.codice) or AcAttivita(id=nuovo_id(), ente_id=ente_id, codice=a_std.codice)
         a.processo_id, a.descrizione = p.id, a_std.descrizione
+        await catalogo.collega("ATTIVITA", a)
         db.add(a)
         for r_std in a_std.rischi:
             r = rischi.get(r_std.codice)
@@ -242,12 +248,14 @@ async def applica_processo(
                         r.probabilita_calcolata, r.impatto_calcolato = v.probabilita_calcolata, v.impatto_calcolato
                         r.probabilita, r.impatto, r.livello = v.probabilita, v.impatto, v.livello
             r.attivita_id, r.evento, r.fattore_abilitante = a.id, r_std.evento, r_std.fattore_abilitante
+            await catalogo.collega("RISCHIO", r)
             db.add(r)
             for x_std in r_std.misure:
                 x = misure.get(x_std.codice) or AcMisura(id=nuovo_id(), ente_id=ente_id, codice=x_std.codice)
                 x.rischio_id = r.id
                 for campo, valore in x_std.model_dump(exclude={"codice"}).items():
                     setattr(x, campo, valore)
+                await catalogo.collega("MISURA", x)
                 db.add(x)
     await db.flush()
     return p

@@ -18,7 +18,7 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Literal
 
-from flask import Blueprint
+from flask import Blueprint, g
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import undefer
@@ -29,6 +29,7 @@ from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
 from common.ricerca import Documento
 from common.anticorruzione import art35 as dati_art35
+from common.anticorruzione.catalogo import Catalogo
 from common.anticorruzione import excel
 from common.anticorruzione.controlli import Contesto as ContestoControlli
 from common.anticorruzione.controlli import controlli_proposta
@@ -368,7 +369,7 @@ def _processo(p: AcProcesso) -> dict:
 
 def _attivita(a: AcAttivita) -> dict:
     return {"id": a.id, "processo_id": a.processo_id, "codice": a.codice, "descrizione": a.descrizione,
-            "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or []}  # fmt: skip
+            "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or [], "voce_id": a.voce_id}  # fmt: skip
 
 
 def strutture_del_processo(p: AcProcesso, attivita: list[AcAttivita] = ()) -> set[str]:
@@ -379,7 +380,7 @@ def strutture_del_processo(p: AcProcesso, attivita: list[AcAttivita] = ()) -> se
 
 def _rischio(r: AcRischio) -> dict:
     return {
-        "id": r.id, "attivita_id": r.attivita_id, "codice": r.codice, "evento": r.evento,
+        "id": r.id, "attivita_id": r.attivita_id, "codice": r.codice, "evento": r.evento, "voce_id": r.voce_id,
         "fattore_abilitante": r.fattore_abilitante, "valori_probabilita": r.valori_probabilita,
         "valori_impatto": r.valori_impatto, "probabilita_calcolata": r.probabilita_calcolata,
         "impatto_calcolato": r.impatto_calcolato, "probabilita": r.probabilita, "impatto": r.impatto,
@@ -390,7 +391,7 @@ def _rischio(r: AcRischio) -> dict:
 
 def _misura(m: AcMisura) -> dict:
     return {
-        "id": m.id, "rischio_id": m.rischio_id, "codice": m.codice, "descrizione": m.descrizione,
+        "id": m.id, "rischio_id": m.rischio_id, "codice": m.codice, "descrizione": m.descrizione, "voce_id": m.voce_id,
         "tipo": m.tipo, "categoria": m.categoria, "obbligo_trasparenza": m.obbligo_trasparenza,
         "fasi": m.fasi, "tempi": m.tempi, "struttura_id": m.struttura_id,
         "indicatore": m.indicatore, "target": m.target,
@@ -858,12 +859,21 @@ async def _elimina_processo(sessione, p: AcProcesso) -> None:
     await sessione.delete(p)
 
 
+async def _collega_al_catalogo(sessione, tipo: str, el) -> None:
+    """L'elemento nuovo prende la voce del catalogo con lo stesso testo (o ne crea una
+    dell'ente); il catalogo si carica una volta per richiesta."""
+    if getattr(g, "ac_catalogo", None) is None:
+        g.ac_catalogo = Catalogo(sessione, ente_id())
+    await g.ac_catalogo.collega(tipo, el)
+
+
 async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivita:
     await _strutture_valide(sessione, dati.coinvolte)
     a = AcAttivita(id=nuovo_id(), ente_id=ente_id(), processo_id=p.id,
                    codice=await _nuovo_codice(sessione, AcAttivita, f"{p.codice}."),
                    descrizione=dati.descrizione, strutture_coinvolte=dati.strutture_coinvolte,
                    coinvolte=_coinvolte(dati.coinvolte or []))  # fmt: skip
+    await _collega_al_catalogo(sessione, "ATTIVITA", a)
     sessione.add(a)
     await _tocca(sessione, p.id)
     return a
@@ -920,6 +930,7 @@ async def _crea_rischio(sessione, a: AcAttivita, dati: RischioIn) -> AcRischio:
     r = AcRischio(id=nuovo_id(), ente_id=ente_id(), attivita_id=a.id,
                   codice=await _nuovo_codice(sessione, AcRischio, f"{a.codice}_R."),
                   evento=dati.evento, fattore_abilitante=dati.fattore_abilitante)  # fmt: skip
+    await _collega_al_catalogo(sessione, "RISCHIO", r)
     sessione.add(r)
     await _tocca(sessione, a.processo_id)
     return r
@@ -946,6 +957,7 @@ async def _crea_misura(sessione, r: AcRischio, dati: MisuraIn) -> AcMisura:
     await _verifica_misura(sessione, dati)
     x = AcMisura(id=nuovo_id(), ente_id=ente_id(), rischio_id=r.id,
                  codice=await _nuovo_codice(sessione, AcMisura, f"{r.codice}_M."), **dati.model_dump())  # fmt: skip
+    await _collega_al_catalogo(sessione, "MISURA", x)
     sessione.add(x)
     await _tocca(sessione, await _processo_del_rischio(sessione, r))
     return x

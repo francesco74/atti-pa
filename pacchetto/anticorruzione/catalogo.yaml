@@ -1,0 +1,2512 @@
+# Catalogo standard della mappatura: le voci (radici) di attività, rischi (evento) e misure
+# da cui nascono gli elementi dei processi. Ricavato il 17/11/2026 dai processi standard di
+# questo pacchetto, con i testi uguali riuniti in una voce sola. Le voci si creano negli enti
+# se mancano e non si cancellano mai; i codici non vanno cambiati né riusati: una voce nuova
+# prende il numero successivo. I codici delle voci create dagli enti hanno la E (ATT-E001).
+attivita:
+- codice: ATT-0001
+  descrizione: verifica dell'eventuale disponibilità di un alloggio adatto a coloro che sono collocati
+    in posizione utile all'interno della graduatoria per l'assegnazione di alloggi di edilizia residenziale
+    pubblica
+- codice: ATT-0002
+  descrizione: verifica del mantenimento dei requisiti necessari previsti per l'assegnazione tramite richiesta
+    di documentazione all'utente
+- codice: ATT-0003
+  descrizione: Proposta dell'alloggio all'avente diritto; in caso di accettazione, predisposizione di
+    determina dirigenziale di assegnazione
+- codice: ATT-0004
+  descrizione: in caso di rifiuto da parte dell'avente diritto, valutazione della sussistenza di una valida
+    motivazione. Se la rinuncia non è giustificata, cancellazione dalla graduatoria
+- codice: ATT-0005
+  descrizione: Ricezione richiesta
+- codice: ATT-0006
+  descrizione: Visita dell'agente incaricato al domicilio dell'interessato
+- codice: ATT-0007
+  descrizione: Ricezione istanza
+- codice: ATT-0008
+  descrizione: Istruttoria
+- codice: ATT-0009
+  descrizione: Rilascio parere
+- codice: ATT-0010
+  descrizione: Dichiarazione del cittadino/professionista di inizio di attività
+- codice: ATT-0011
+  descrizione: Controlli
+- codice: ATT-0012
+  descrizione: 'Esito in caso di non conformità: provvedimento, lettera di diffida, richiesta documentazione'
+- codice: ATT-0013
+  descrizione: Ricezione richiesta- istruttoria
+- codice: ATT-0014
+  descrizione: Accoglimento/diniego
+- codice: ATT-0015
+  descrizione: Rilascio autorizzazione
+- codice: ATT-0016
+  descrizione: Supporto alla consultazione, ricerca documenti, rilascio copia e riposizionamento documenti
+- codice: ATT-0017
+  descrizione: Ricezione domanda e ricerca documenti
+- codice: ATT-0018
+  descrizione: Predisposizione copie
+- codice: ATT-0019
+  descrizione: Ricezione richiesta parere
+- codice: ATT-0020
+  descrizione: Emissione parere vincolante
+- codice: ATT-0021
+  descrizione: Rilascio parere alla società Metro
+- codice: ATT-0022
+  descrizione: Ricevimento istanza
+- codice: ATT-0023
+  descrizione: Verifica e valutazione sulla localizzazione in relazione a problematiche legate al traffico
+    ed eventuale sopralluogo
+- codice: ATT-0024
+  descrizione: Richiesta eventuali pareri ad altri enti
+- codice: ATT-0025
+  descrizione: Rilascio autorizzazione/diniego
+- codice: ATT-0026
+  descrizione: Ricezione dell'istanza
+- codice: ATT-0027
+  descrizione: Istruttoria dell'ufficio volta al corretto esame della domanda
+- codice: ATT-0028
+  descrizione: Accoglimento/diniego/differimento dell'accesso
+- codice: ATT-0029
+  descrizione: Rilascio autorizzazione/emissione ordinanza o diniego e archiviazione della pratica
+- codice: ATT-0030
+  descrizione: Accoglimento bando predisposto dal Tavolo Tecnico e deliberato dall'Assemblea del Lode
+    Lucchese tramite determina dirigenziale e sua pubblicazione
+- codice: ATT-0031
+  descrizione: Presentazione domande di partecipazione tramite protocollo comunale
+- codice: ATT-0032
+  descrizione: Inserimento delle domande sul gestionale Urbi a seguito di istruttoria dell'ufficio volta
+    ad accertare la sussistenza dei requisiti prescritti dal bando e ad attribuire i punteggi
+- codice: ATT-0033
+  descrizione: Determinazione dirigenziale di approvazione della graduatoria provvisoria
+- codice: ATT-0034
+  descrizione: Eventuali ricorsi presentati avverso la graduatoria, accolti o respinti da parte della
+    Commissione Intercomunale
+- codice: ATT-0035
+  descrizione: Determinazione Dirigenziale di approvazione della Graduatoria definitiva
+- codice: ATT-0036
+  descrizione: Predisposizione bando in base alle linee guida indicate dalla Regione Toscana e sua pubblicazione
+- codice: ATT-0037
+  descrizione: presentazione domande
+- codice: ATT-0038
+  descrizione: Istruttoria domande e inserimento sul portale dedicato della Regione Toscana
+- codice: ATT-0039
+  descrizione: Determinazione Dirigenziale di approvazione della graduatoria provvisoria e sua pubblicazione
+- codice: ATT-0040
+  descrizione: Eventuali ricorsi presentati avverso la graduatoria, accolti o respinti dalla commissione
+    intercomunale e aggiornamento del portale RT
+- codice: ATT-0041
+  descrizione: Pubblicazione della graduatoria definitiva
+- codice: ATT-0042
+  descrizione: Liquidazione dei contributi spettanti e relativa rendicontazione alla Regione Toscana entro
+    il 30/09 dell'anno successivo a quello di emanazione del bando
+- codice: ATT-0043
+  descrizione: Istruttoria e conclusione del procedimento
+- codice: ATT-0044
+  descrizione: Ricezione dell'istanza bollo - utilizzo di modulo predisposto- pagamento diritti- allegati
+    tecnici
+- codice: ATT-0045
+  descrizione: Predisposizione cartello e licenza e relativo consegna entro 30 gg. Dal ricevimento dell'istanza
+- codice: ATT-0046
+  descrizione: Domanda in carta semplice da presentarsi all'Ufficio del Protocollo Generale n. 2 copie
+    planimetria di zona ;ricevuta pagamento diritti tecnici
+- codice: ATT-0047
+  descrizione: Istruttoria e rilascio invio certificazione - entro 30 gg
+- codice: ATT-0048
+  descrizione: Presentazione richiesta da parte del tecnico incaricato dal committente dei lavori;
+- codice: ATT-0049
+  descrizione: Rilascio autorizzazione con eventuali prescrizioni o diniego entro 30 gg
+- codice: ATT-0050
+  descrizione: In caso di diniego applicazione delle procedure previste dal'art. 10 bis della L.241-1990
+    e ss.mm.ii
+- codice: ATT-0051
+  descrizione: Ricevimento della richiesta, valutazione del progetto e eventuale sopralluogo
+- codice: ATT-0052
+  descrizione: Eventuale rinvio e richiesta documentazione integrativa;
+- codice: ATT-0053
+  descrizione: Emissione del nulla-osta o comunicazione di parere negativo e applicazione delle procedure
+    previste dal'art. 10 bis della L.241-1990 e ss.mm.ii
+- codice: ATT-0054
+  descrizione: Concessione Contributi
+- codice: ATT-0055
+  descrizione: Valutazione requisiti - istruttoria
+- codice: ATT-0056
+  descrizione: Adozione provvedimento
+- codice: ATT-0057
+  descrizione: Ricezione cose smarrite o abbandonate
+- codice: ATT-0058
+  descrizione: Ricerca proprietario
+- codice: ATT-0059
+  descrizione: Consegna delle cose smarrite e ritrovate
+- codice: ATT-0060
+  descrizione: 1. Ricevimento tramite l'apposita piattaforma (PCC) messa a disposizione dal Ministero
+    delle Finanze dell'istanza di certificazione del credito
+- codice: ATT-0061
+  descrizione: '2. Verifica dei requisiti di legge richiesti per il rilascio della certificazione: - liquidazione
+    del credito da parte del responsabile del procedimento - verifica, per crediti di importo superiore
+    a 5.000╒, di eventuali inadempienze tributarie da parte del soggetto beneficiario del pagamento stesso,
+    mediante apposita richiesta da inoltrare a Equitalia Servizi S.p.a'
+- codice: ATT-0062
+  descrizione: 3. Rilascio, tramite la piattaforma, della certificazione del credito richiesta
+- codice: ATT-0063
+  descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
+    in carico. Redazione di relazione sociale con proposta di intervento economico. Attivazione su domanda
+    dell'utente.
+- codice: ATT-0064
+  descrizione: Esame della domanda del cittadino e della proposta assistenziale redatta dal Servizio Sociale
+    Professionale. Istruttoria delle domande da parte dell'ufficio per il successivo inoltro alla Commissione
+    Tecnica ai fini della concessione del beneficio/economico/contributi/sussidio agli utenti.
+- codice: ATT-0065
+  descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
+    in carico. Redazione di relazione sociale.
+- codice: ATT-0066
+  descrizione: Analisi situazione personale e contesto familiare dell'utente, presa in carico da parte
+    dell'A.S. di riferimento fini della valutazione dell'UVM per la predisposizione del PAP
+- codice: ATT-0067
+  descrizione: Ricevimento e valutazione del contenuto della certificazione ISEE o reddituale presentata
+    per l'accesso della compartecipazione da parte del Comune e/o esenzione dal pagamento ed adeguamento
+    della misura in ragione dell'aggiornamento della certificazione ISEE
+- codice: ATT-0068
+  descrizione: Adeguamento della misura della compartecipazione in ragione dell'aggiornamento della certificazione
+    ISEE.
+- codice: ATT-0069
+  descrizione: Istanza di parte/d'Ufficio
+- codice: ATT-0070
+  descrizione: Valutazione sociale
+- codice: ATT-0071
+  descrizione: Valutazione commissione
+- codice: ATT-0072
+  descrizione: Approvazione degli interventi decisi in Commissione con Determinazione Dirigenziale
+- codice: ATT-0073
+  descrizione: Liquidazione del contributo dietro presentazione della ricevuta attestante l'avvenuto pagamento
+    del canone di locazione o a fronte di delega del conduttore a favore del locatore.
+- codice: ATT-0074
+  descrizione: Presentazione delle istanze on-line (su sistema gestionale E-civis) per l'esenzione o le
+    agevolazioni tariffarie, nel periodo stabilito dall'ufficio;
+- codice: ATT-0075
+  descrizione: Istruttoria dell'ufficio volta a verificare la correttezza formale delle istanze con particolare
+    riferimento a controllo valore ISEE dichiarato tramite accesso alle banche dati sul sito dell'INPS
+    e a verifica luogo di residenza;
+- codice: ATT-0076
+  descrizione: Accettazione o respingimento dell'istanza presentata e comunicazione all'interessato tramite
+    portale.
+- codice: ATT-0077
+  descrizione: Valutazione delle istanze presentate dopo la scadenza dei termini previsti dall'ufficio
+    con relativa accettazione o respingimento.
+- codice: ATT-0078
+  descrizione: Predisposizione bando comunale secondo indirizzi espressi con Deliberazione Giunta Regionale;
+- codice: ATT-0079
+  descrizione: Presentazione delle domande di partecipazione tramite modulo on-line su gestionale in uso
+    all'ufficio;
+- codice: ATT-0080
+  descrizione: Istruttoria dell'ufficio volta ad accertare la sussistenza dei requisiti prescritti dal
+    bando.
+- codice: ATT-0081
+  descrizione: determinazione dirigenziale di approvazione della graduatoria provvisoria degli ammessi
+    al concorso, in quanto in possesso dei requisiti previsti dal bando.
+- codice: ATT-0082
+  descrizione: possibilità per coloro che hanno presentato domanda di partecipazione al concorso di inoltrare
+    ricorso avverso la graduatoria di cui alla fase precedente entro i 30 giorni successivi alla sua pubblicazione
+- codice: ATT-0083
+  descrizione: verifica con le scuole, l' ISCRIZIONE scolastica degli studenti assegnatari dei benefici.
+- codice: ATT-0084
+  descrizione: approvazione graduatoria degli ammessi al concorso (aventi i requisiti).
+- codice: ATT-0085
+  descrizione: approvazione Graduatoria definitiva dei beneficiari IN BASE ALLE RISORSE ASSEGNATE DALLA
+    REGIONE TOSCANA
+- codice: ATT-0086
+  descrizione: Ricezione della comunicazione online, verifica della completezza e rilascio ricevuta
+- codice: ATT-0087
+  descrizione: Trasmissione ad altri uffici di quanto di competenza in tempi definiti dalla legge
+- codice: ATT-0088
+  descrizione: Analisi della pratica nel suo insieme
+- codice: ATT-0089
+  descrizione: Ricezione della domanda online, verifica della completezza e rilascio ricevuta
+- codice: ATT-0090
+  descrizione: Trasmissione ad altri uffici di quanto di competenza
+- codice: ATT-0091
+  descrizione: I titolari di posto si presentano nelle ore antecedenti la Fiera per occupare i posti.
+    Gli altri operatori non titolari occupano posti abusivamente senza procedura di spunta
+- codice: ATT-0092
+  descrizione: L'assegnazione dei suddetti posti avviene tramite il procedimento della spunta.
+- codice: ATT-0093
+  descrizione: 'Situazioni eccezionali: ritardi nell''arrivo degli operatori fissi'
+- codice: ATT-0094
+  descrizione: Assegnazione spazi
+- codice: ATT-0095
+  descrizione: Provvedimento accoglimento/rigetto
+- codice: ATT-0096
+  descrizione: Definizione del programma di interventi per lavori su edifici di culto, inviato da enti
+    religiosi.
+- codice: ATT-0097
+  descrizione: Analisi delle richieste di ammissibilità al contributo.
+- codice: ATT-0098
+  descrizione: Liquidazione contributo
+- codice: ATT-0099
+  descrizione: Valutazione della domanda di concessione d'uso Verifica disponibilità
+- codice: ATT-0100
+  descrizione: Verifica dei requisiti oggettivi e soggettivi
+- codice: ATT-0101
+  descrizione: Verifica pagamento tariffa o della presenza della condizione che giustifica la gratuità
+- codice: ATT-0102
+  descrizione: Concessione d'uso
+- codice: ATT-0103
+  descrizione: Atto programmatorio/dispositivo della concessione o locazione l'immobile (non strumentaleall'esercizio
+    delle funzioni istituzionali dell'ente) stima canone di locazione/di concessione
+- codice: ATT-0104
+  descrizione: individuazione concessionario o locatario.
+- codice: ATT-0105
+  descrizione: stipula contratto di concessione o locazione
+- codice: ATT-0106
+  descrizione: Istanza di concessione
+- codice: ATT-0107
+  descrizione: Verifiche in relazione all'inserimento dell'area nel piano della telefonia approvato dal
+    Comune
+- codice: ATT-0108
+  descrizione: determinazione del canone in base alle apposite tariffe COSAP
+- codice: ATT-0109
+  descrizione: stipula contratto di concessione
+- codice: ATT-0110
+  descrizione: Pubblicazione avviso spazi/immobili disponibili e relativi canoni
+- codice: ATT-0111
+  descrizione: Esame delle richieste, verifica requisiti, valutazione attività dei richiedenti, individuazione
+    assegnatari
+- codice: ATT-0112
+  descrizione: stipula convenzione
+- codice: ATT-0113
+  descrizione: Ricezione della richiesta IstruttoriaPredisposizione dell'attoPagamento della tariffa
+- codice: ATT-0114
+  descrizione: Assegnazione
+- codice: ATT-0115
+  descrizione: Esame della richiesta con concessione del contributo economico.
+- codice: ATT-0116
+  descrizione: Individuazione del bisogno sociale del territorio, raccordo con ETS per individuazione
+    modalità di intervento (attraverso rapporto Convenzionale ai sensi del D.Lgs 117/2017)
+- codice: ATT-0117
+  descrizione: Manifestazione interesse per l'individuazione soggetto con cui co-progettare i servizi
+    innovativi, avvio della fase di coprogettazione e selezione soggetto
+- codice: ATT-0118
+  descrizione: Ricezione istanza e istruttoria pratica seguendo ordine di arrivo dell'istanza al Protocollo
+    Generale e in base alle disponibilità previste in Bilancio
+- codice: ATT-0119
+  descrizione: Verifica esecuzione lavori e erogazione contributo
+- codice: ATT-0120
+  descrizione: 'Quadro esigenziale: Individuazione delle OO.LL.SS e FF da inserire nelle relative programmazioni'
+- codice: ATT-0121
+  descrizione: Adozione della deliberazione di GM e successiva approvazione del C.C per SS.FF.PP (da Euro
+    140.000/00)
+- codice: ATT-0122
+  descrizione: Adozione della deliberazione di GM e successiva approvazione del C.C per OO.LL.PP (da Euro
+    100.000/00)
+- codice: ATT-0123
+  descrizione: Progettazione, individuazione delle specifiche tecniche, dei requisiti di partecipazione
+    e criterio di selezione (oepv o prezzo più basso)
+- codice: ATT-0124
+  descrizione: DD a contrarre per le procedure negoziate/aperte/ristrette
+- codice: ATT-0125
+  descrizione: Individuazione degli operarori economici da invitare
+- codice: ATT-0126
+  descrizione: Invito su sistema di negoziazione
+- codice: ATT-0127
+  descrizione: Acquisizione su sistema di acquisto
+- codice: ATT-0128
+  descrizione: Seggio di gara (esame busta amministrativa, soccorsi istruttori, DD ammissione ed esclusione,
+    comunicazione ai partecipanti, verifica offerte economiche (in caso di prezzo più basso)
+- codice: ATT-0129
+  descrizione: Nomina commissione per oepv
+- codice: ATT-0130
+  descrizione: Valutazione offerte tecniche ed economiche in caso di oepv (Commissione di gara)
+- codice: ATT-0131
+  descrizione: Congruità dell'offerta e valutazione costo della manodopera (RUP)
+- codice: ATT-0132
+  descrizione: Determinazione di affidamento/aggiudicazione
+- codice: ATT-0133
+  descrizione: Controlli di ordine generale sull'aggiudicatario
+- codice: ATT-0134
+  descrizione: Controlli speciali (tecnico-professionali) sull'aggiudicatario
+- codice: ATT-0135
+  descrizione: Adempimenti inerenti e conseguenti l'affidamento
+- codice: ATT-0136
+  descrizione: Redazione contratto
+- codice: ATT-0137
+  descrizione: Sottoscrizione del Contratto affidamenti diretti
+- codice: ATT-0138
+  descrizione: Sottoscrizione Contratto procedure negoziate/aperte/ristrette
+- codice: ATT-0139
+  descrizione: Gestione del contratto, liquidazione delle fatture e relativi adempimenti
+- codice: ATT-0140
+  descrizione: Emissione di Certificato di regolare esecuzione/collaudo
+- codice: ATT-0141
+  descrizione: Emissione della Verifica di conformità
+- codice: ATT-0142
+  descrizione: Resoconto della gestione finanziaria OO, LL, SS e FF
+- codice: ATT-0143
+  descrizione: Individuazione del professionista
+- codice: ATT-0144
+  descrizione: Progettazione Lavoro Pubblico (per qualsiasi tipologia ed importo)
+- codice: ATT-0145
+  descrizione: Esecuzione dei lavori - contabilità
+- codice: ATT-0146
+  descrizione: Fine Lavori
+- codice: ATT-0147
+  descrizione: Identificazone lavori
+- codice: ATT-0148
+  descrizione: Selezione del contraente
+- codice: ATT-0149
+  descrizione: Accertamento somma urgenza (ai sensi dell'art. 163 del D.Lgs 50/2016) e istruttoria pratica
+    mediante affidamento diretto dei lavori da eseguire
+- codice: ATT-0150
+  descrizione: Esecuzione lavori in somma urgenza e verifica della regolare esecuzione
+- codice: ATT-0151
+  descrizione: Predisposizione bando di concorso in attuazione della programmazione triennale del fabbisogno
+    di personale.
+- codice: ATT-0152
+  descrizione: Determinazione dirigenziale di approvazione del bando.
+- codice: ATT-0153
+  descrizione: Pubblicazione sul portale InPA e sito istituzionale dell'Ente e secondo quanto previsto
+    dal Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici
+    e dei Servizi dell'Ente)
+- codice: ATT-0154
+  descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione dirigenziale
+    di ammissione con riserva ed eventuale esclusione dei candidati. Comunicazione ai concorrenti della
+    esclusione e pubblicazione sul portale InPA e sito istituzionale dell'Ente dei concorrenti ammessi
+    con riserva ed eventuali esclusi.
+- codice: ATT-0155
+  descrizione: Nomina della commissione esaminatrice.
+- codice: ATT-0156
+  descrizione: Predisposizione fascicolo degli atti del concorso per la Commissione Esaminatrice.
+- codice: ATT-0157
+  descrizione: Ausilio alla Commissione Esaminatrice per eventuali problemi o pareri durante lo svolgimento
+    del concorso.
+- codice: ATT-0158
+  descrizione: Svolgimento procedura di selezione (valutazione dei titoli e svolgimento prove la cui responsabilità
+    è in capo alla Commissione Esaminatrice). Formulazione graduatoria di merito da parte della Commissione
+    esaminatrice e trasmissione atti all'Ufficio personale.
+- codice: ATT-0159
+  descrizione: Ricevimento atti della Commissione Esaminatrice.
+- codice: ATT-0160
+  descrizione: Predisposizione e adozione determinazione di approvazione dei lavori della Commissione.
+- codice: ATT-0161
+  descrizione: Approvazione graduatoria finale con applicazione delle eventuali riserve e preferenze e
+    nomina dei vincitori.
+- codice: ATT-0162
+  descrizione: Invio del bando di concorso al Centro per l'Impiego per la pubblicazione.
+- codice: ATT-0163
+  descrizione: Ricevimento della graduatoria dal Centro per l'Impiego.
+- codice: ATT-0164
+  descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti idonei da parte della
+    Commissione Esaminatrice; trasmissione atti all'Ufficio personale.
+- codice: ATT-0165
+  descrizione: Predisposizione e adozione della determinazione di approvazione dei lavori della Commissione
+    esaminatrice e nomina dei vincitori.
+- codice: ATT-0166
+  descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
+    del fabbisogno di personale, dove vengono indicati i posti/profili per i quali si procede a selezione,
+    i requisiti di partecipazione, nonché le modalità di selezione e pubblicazione sulla piattaforma InPA
+    e sul sito istituzionale dell'Ente e secondo quanto previsto dal Regolamento delle Procedure Selettive
+    (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente)
+- codice: ATT-0167
+  descrizione: Determinazione dirigenziale di approvazione dell'avviso.
+- codice: ATT-0168
+  descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione dirigenziale
+    di ammissione con riserva ed eventuale esclusione dei candidati. Pubblicazione sul portale InPA e
+    sito istituzionale dell'Ente dei concorrenti ammessi con riserva ed eventuali esclusi.
+- codice: ATT-0169
+  descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
+    della selezione.
+- codice: ATT-0170
+  descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti scelti per la copertura
+    dei posti mediante formulazione della graduatoria di merito
+- codice: ATT-0171
+  descrizione: Adozione determinazione contenente l'individuazione dei soggetti scelti per la copertura
+    dei posti, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
+- codice: ATT-0172
+  descrizione: Acquisizione del nulla-osta da parte dell'Amministrazione di appartenenza dei soggetti
+    scelti.
+- codice: ATT-0173
+  descrizione: Definizione della data di entrata in servizio, in accordo con l'Amministrazione cedente.
+- codice: ATT-0174
+  descrizione: Sottoscrizione contratto individuale di lavoro.
+- codice: ATT-0175
+  descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
+    del fabbisogno di personale, dove vengono individuati i progetti di tirocinio, gli uffici comunali
+    interessati, i requisiti di partecipazione, nonché le modalità di selezione.
+- codice: ATT-0176
+  descrizione: Pubblicazione all'Albo Pretorio, sul sito istituzionale e su quotidiani a rilevanza locale.
+- codice: ATT-0177
+  descrizione: Ricezione delle domande di partecipazione ed esame delle stesse;determinazione dirigenziale
+    di ammissione con riserva ed esclusione dei candidati. Pubblicazione sul sito istituzionale degli
+    ammessi con riserva e degli esclusi;comunicazione ai concorrenti della esclusione.
+- codice: ATT-0178
+  descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
+    nei progetti formativi oggetto di tirocinio mediante formulazione della graduatoria di merito. Adozione
+    determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti formativi
+    oggetto di tirocinio, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
+- codice: ATT-0179
+  descrizione: Comunicazione dei soggetti individuati al Centro per l'Impiego della Provincia di Lucca
+    (ARTI).
+- codice: ATT-0180
+  descrizione: Inizio tirocinio.
+- codice: ATT-0181
+  descrizione: Individuazione di progetti di Servizio civile da sottoporre alla Regione Toscana per ottenerne
+    il finanziamento.
+- codice: ATT-0182
+  descrizione: Pubblicizzazione sul sito istituzionale e su quotidiani locali del bando per la selezione
+    dei giovani da inserire nei progetti, bando redatto dalla Regione Toscana dove sono indicati i progetti,
+    gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
+- codice: ATT-0183
+  descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
+    nei progetti di Servizio civile regionale mediante formulazione della graduatoria di merito. Adozione
+    determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti, sulla
+    base delle valutazioni effettuate dalla Commissione esaminatrice.
+- codice: ATT-0184
+  descrizione: Comunicazione dei soggetti individuati alla Regione Toscana.
+- codice: ATT-0185
+  descrizione: Inizio progetti.
+- codice: ATT-0186
+  descrizione: Erogazione delle retribuzioni ai dipendenti dell'Ente. Erogazione delle indennità per gli
+    Amministratori in carica. Effettuazione dei versamenti contributivi mensili relativi alle retribuzioni
+    percepite. Effettuazione delle denunce mensili e annuali relative ai contributi versati
+- codice: ATT-0187
+  descrizione: Predisposizione ed aggiornamento SMVP
+- codice: ATT-0188
+  descrizione: Validazione da parte del NDV del documento SMVP
+- codice: ATT-0189
+  descrizione: Comunicazione e cura dei rapporti con gli uffici
+- codice: ATT-0190
+  descrizione: Predisposizione schede, con i fattori valutativi, per la valutazione dei dirigenti e dei
+    dipendenti ( a supporto ai dirigenti, per valutare i propri collaboratori e supporto al NDV/ Sindaco
+    per la valutazione dei Dirigenti)
+- codice: ATT-0191
+  descrizione: Raccolta schede di valutazione e verifica della presenza di tutti gli elementi (firme valutatore
+    e valutato, data certa di consegna e presa visione, assegnazione punteggio)
+- codice: ATT-0192
+  descrizione: Caricamento dato sul data base e verifica di eventuali anomalie
+- codice: ATT-0193
+  descrizione: Elaborazione file valutazione definitive e trasmissione all'ufficio preposto all'erogazione
+    dei premi correlati alla performance
+- codice: ATT-0194
+  descrizione: Archiviazione e conservazione schede di valutazione dirigenti e dipendenti
+- codice: ATT-0195
+  descrizione: Preventiva ricezione dell'autorizzazione alla missione da parte dei soggetti titolati.
+    Successiva ricezione delle pezze d'appoggio attestanti le spese sostenute in occasione della missione
+    e relativo controllo sulla ammissibilità delle spese da rimborsare. Rimborso della missione sul cedolino.
+- codice: ATT-0196
+  descrizione: Verifica del rispetto dei limiti individuali annuali di lavoro straordinario. Verifica
+    del rispetto di requisiti di legge, del CCNL nazionale e/o decentrato nonché di regolamenti per l'erogazione
+    dei trattamenti accessori.
+- codice: ATT-0197
+  descrizione: Comunicazione della risoluzione unilaterale del rapporto di lavoro al dipendente che ha
+    maturato i requisiti pensionistici con un preavviso di 6 mesi e conseguente inserimento, nella posizione
+    assicurativa, delle retribuzioni relative agli ultimi 6 mesi di impiego prima della cessazione (anticipo
+    DMA). Inserimento dati di ultimo miglio per il calcolo del TFS/TFR.
+- codice: ATT-0198
+  descrizione: Invio della CU ordinaria all'AE entro il termine perentorio stabilito. Successivo invio
+    delle CU modello sintetico ai dipendenti e ai percettori di redditi assimilati.
+- codice: ATT-0199
+  descrizione: Certificazione stipendiale rilasciata ai dipendenti e/o finanziarie su delega del dipendente
+    per rilascio finanziamenti.
+- codice: ATT-0200
+  descrizione: Ricezione delle richieste di sistemazione posizione assicurativa da parte di altri enti,
+    degli interessati e/o da parte dell'INPS. Conseguente istruttoria e ricostruzione della posizione
+    richiesta sia da un punto di vista giuridico che economico. Eventuale correzione dei dati in caso
+    di inesattezze sull'applicativo passweb e conseguente certificazione della posizione.
+- codice: ATT-0201
+  descrizione: Tempestiva denuncia (entro 48 h dall'evento) all'istituto nazionale assicurazione contro
+    gli infortuni sul lavoro e successivi adempimenti
+- codice: ATT-0202
+  descrizione: Dichiarazione resa nei confronti del creditore procedente in cui si specifica l'ammontare
+    dello stipendio netto del soggetto pignorato e si dichiarano eventuali e ulteriori pignoramenti e/o
+    cessioni già in corso
+- codice: ATT-0203
+  descrizione: Emissione provvedimento
+- codice: ATT-0204
+  descrizione: Emissione provvedimento di accoglimento o diniego
+- codice: ATT-0205
+  descrizione: Acquisizione degli atti di liquidazione predisposti dai vari uffici comunali
+- codice: ATT-0206
+  descrizione: Effettuazione, secondo i princìpi e le procedure della contabilità pubblica, dei controlli
+    e riscontri amministrativi, contabili e fiscali sugli atti di liquidazione.
+- codice: ATT-0207
+  descrizione: Registrazione della liquidazione contabile nella procedura informatica utilizzata per la
+    tenuta della contabilità finanziaria
+- codice: ATT-0208
+  descrizione: Emissione mandato di pagamento
+- codice: ATT-0209
+  descrizione: Ricezione richiesta rateizzazione
+- codice: ATT-0210
+  descrizione: Provvedimento di accoglimento/diniego
+- codice: ATT-0211
+  descrizione: 'Ricevimento della richiesta da parte del dipendente interessato a partecipare a corsi
+    di formazione fuori sede su specifico modulo firmato dal proprio Dirigente all''Ufficio Personale.
+    Nel modulo sono indicati: i dipendenti interessati all''intervento, la denominazione del corso, il
+    nominativo dell''Agenzia Formativa, l''oggetto del corso, le date, gli orari e la sede, il costo complessivo
+    e le modalità di pagamento.'
+- codice: ATT-0212
+  descrizione: Valutazione della richiesta tenendo conto delle risorse finanziarie a disposizione.
+- codice: ATT-0213
+  descrizione: Autorizzazione da parte del Dirigente del Personale con apposizione della propria firma
+    sul modulo.
+- codice: ATT-0214
+  descrizione: Adozione della Determinazione Dirigenziale di autorizzazione all'iscrizione al corso di
+    formazione fuori sede e impegno di spesa e successiva liquidazione.
+- codice: ATT-0215
+  descrizione: Versamento all'economo da parte degli Staff/settori di somme di denaro corredate da apposita
+    distinta contabile per voci di entrata
+- codice: ATT-0216
+  descrizione: Registrazione dell'entrata nel software di contabilità
+- codice: ATT-0217
+  descrizione: Chiusura giornaliera di cassa con rilevazione di tutte le entrate
+- codice: ATT-0218
+  descrizione: Consegna dell'insieme delle entrate alla Tesoreria comunale
+- codice: ATT-0219
+  descrizione: Trasmissione riepilogo degli incassi economali del mese al Servizio finanziario
+- codice: ATT-0220
+  descrizione: Conto di gestione dell'Economo
+- codice: ATT-0221
+  descrizione: Adozione provvedimento di recupero
+- codice: ATT-0222
+  descrizione: Predisposizione dell'Avviso
+- codice: ATT-0223
+  descrizione: Approvazione e pubblicazione documenti di gara
+- codice: ATT-0224
+  descrizione: Nomina commissione giudicatrice
+- codice: ATT-0225
+  descrizione: Valutazione offerte
+- codice: ATT-0226
+  descrizione: Aggiudicazione definitiva dell'impianto
+- codice: ATT-0227
+  descrizione: Gestione dell'impianto
+- codice: ATT-0228
+  descrizione: Recepimento normative nazionali o regionali di assegnazione contributi all'ente;avviso
+    pubblico;raccolta domande di contributo;istruttoria;sopralluoghi tecnici;valutazione del danno;criteri
+    di elargizione del contributo a favore dei privati
+- codice: ATT-0229
+  descrizione: Decisione acquisto
+- codice: ATT-0230
+  descrizione: avviso pubblico
+- codice: ATT-0231
+  descrizione: Valutazione offerte e parer congruità del prezzo
+- codice: ATT-0232
+  descrizione: Rogito notarile
+- codice: ATT-0233
+  descrizione: Delibera CC approvazione vendita
+- codice: ATT-0234
+  descrizione: stima del valore immobile
+- codice: ATT-0235
+  descrizione: Avviso d'asta
+- codice: ATT-0236
+  descrizione: Rogito di vendita
+- codice: ATT-0237
+  descrizione: Richiesta/offerta di acquisto da parte terzi
+- codice: ATT-0238
+  descrizione: Stima del valore di mercato dell'immobile
+- codice: ATT-0239
+  descrizione: Delibera CC di approvazione vendita
+- codice: ATT-0240
+  descrizione: Delibera di Giunta comunale di ricorrere al mercato per la locazione, previa verifica della
+    indisponibilità di immobili comunali di caratteristiche idonee
+- codice: ATT-0241
+  descrizione: Esame offerte pervenute e verifica congruità del canone
+- codice: ATT-0242
+  descrizione: Individuazione immobile
+- codice: ATT-0243
+  descrizione: Stipula contratto di locazione
+- codice: ATT-0244
+  descrizione: Comunicazione di avvio del procedimento
+- codice: ATT-0245
+  descrizione: Redazione piano particellare di esproprio con stima presunta delle indennità e dei costi
+    indiretti
+- codice: ATT-0246
+  descrizione: occupazione delle aree con redazione stati consistenza
+- codice: ATT-0247
+  descrizione: redazione tipo di frazionamento (a lavori ultimati) per l'effettiva individuazione della
+    aree da acquisire al patrimonio comunale
+- codice: ATT-0248
+  descrizione: Stima delle indennità da corrispondere a ciascun proprietario
+- codice: ATT-0249
+  descrizione: fissazione indennità provvisoria di esproprio
+- codice: ATT-0250
+  descrizione: pagamento diretto indennità condivise e deposito alla cassa DD.PP. di quelle non accettate
+- codice: ATT-0251
+  descrizione: Emissione decreto di esproprio
+- codice: ATT-0252
+  descrizione: Verifica regolarità della prestazione
+- codice: ATT-0253
+  descrizione: Predisposizione atto
+- codice: ATT-0254
+  descrizione: Acquisizione dei conti di gestione resi dagli agenti contabili interni ed esterni entro
+    il termine di 30 gg dalla chiusura dell'esercizio finanziario, ai sensi di quanto disposto dall'art.
+    233, comma 1, D.Lgs. 267/2000
+- codice: ATT-0255
+  descrizione: Controllo concordanza dati contenuti nei conti degli agenti contabili interni ed esterni
+    con le scritture contabili dell'Ente
+- codice: ATT-0256
+  descrizione: Rilascio parificazione del conto da parte del Responsabile del Servizio finanziario
+- codice: ATT-0257
+  descrizione: Gestione del budget di progetto in conformità allo schema di previsione e alle finalità
+    per cui i fondi sono stati concessi
+- codice: ATT-0258
+  descrizione: Rispetto termini di rendicontazione e reportistica nei confronti dell'Ente finanziatore
+- codice: ATT-0259
+  descrizione: Rispetto normativa e obblighi di monitoraggio PNRR
+- codice: ATT-0260
+  descrizione: Individuazione del Gruppo Amministrazione Pubblica e degli enti da includere nel perimetro
+    di consolidamento, ai sensi del D.Lgs. 23.06.2011, n. 118 e relativo aggiornamento
+- codice: ATT-0261
+  descrizione: Predisposizione della nota informativa sulla verifica dei crediti e debiti reciproci tra
+    il Comune di Lucca e gli organismi partecipati ai sensi dell'art. 11, comma 6, lett. j), D.Lgs. 23.06.2011,
+    n. 118
+- codice: ATT-0262
+  descrizione: Predisposizione del bilancio consolidato ai sensi del D.Lgs.n. 118/2011
+- codice: ATT-0263
+  descrizione: Definizione degli obiettivi delle società e organismi partecipati, ai sensi dell'art. 147
+    quater del D.Lgs. n. 267/2000
+- codice: ATT-0264
+  descrizione: Monitoraggio periodico sul raggiungimento degli obiettivi e predisposizione di report periodici
+- codice: ATT-0265
+  descrizione: Acquisto di immobili su offerta/proposta di terzi
+- codice: ATT-0266
+  descrizione: Stima del valore dimercato/parere di congruità dell'immobile
+- codice: ATT-0267
+  descrizione: Deliberazione di consiglio comunale di approvazionedell'acquisto
+- codice: ATT-0268
+  descrizione: aggiornamento inventario degli immobili comunali
+- codice: ATT-0269
+  descrizione: Ricevimento richiesta in bollo e su modulistica predisposta, comprendente la dichiarazione
+    circa il non allontanamento dal territorio italiano per periodi superiori ai 6 mesi e la documentazione
+    comprovante il requisito di soggiorno per almeno 5 anni (contratti di lavoro, buste paga, iscrizioni
+    CCAA e dichiarazione redditi, corsi di studi effettuati, rendiconti bancari ecc) verifica dei requisiti,
+    e rilascio del documento (in bollo e con pagamento diritti)
+- codice: ATT-0270
+  descrizione: Ricevimento (da consolato o direttamente dagli interessati, se iscritti nell'anagrafe della
+    popolazione residente) degli atti di eventi avvenuti all'estero, da trascrivere nei Registri di Stato
+    Civile, verifica dei presupposti di iscrizione nel comune di Lucca e ricostruzione dell'albero genealogico,
+    istruttoria (comprendente per gli atti ricevuti direttamente anche la verifica con il consolato) trascrizione
+    nei nostri Registi dello Stato Civile ed attestato di cittadinanza in ordine cronologico di ricevimento
+    o comunicazione dei motivi di non procedibilità
+- codice: ATT-0271
+  descrizione: Ricevimento della dichiarazione, verifica documentazione e delle informazioni essenziali,
+    registrazione in anagrafe o comunicazione delle motivazioni di non ricevibilità, invio alla PM per
+    verifiche in ordine alla sussistenza effettiva della dimora abituale, comunicazione chiusura procedimento
+    o gestione verifiche negative previa comunicazione preavviso di rigetto all'interessato (sono gestite
+    anche le verifiche negative oltre i termini del silenzio assenso)
+- codice: ATT-0272
+  descrizione: Ricezione eventuale dalla PM
+- codice: ATT-0273
+  descrizione: Istruttoria con analisi delle eventuali difese del trasgressore
+- codice: ATT-0274
+  descrizione: Emissione ordinanza ingiunzione di pagamento o provvedimento di archiviazione
+- codice: ATT-0275
+  descrizione: Elaborazione ed invio della segnalazione qualificata di anomalia alle strutture competenti
+    interne o esterne all'Ente
+- codice: ATT-0276
+  descrizione: Ricevimento dei documento soggetti a controllo
+- codice: ATT-0277
+  descrizione: Rilascio ricevuta
+- codice: ATT-0278
+  descrizione: Su istanza o d'ufficio
+- codice: ATT-0279
+  descrizione: Riesame
+- codice: ATT-0280
+  descrizione: Annullamento totale/parziale dell'atto ovvero conferma della legittimità
+- codice: ATT-0281
+  descrizione: Ricezione accertamento
+- codice: ATT-0282
+  descrizione: Emissione ingiunzione pagamento/archiviazione
+- codice: ATT-0283
+  descrizione: Avvio procedimento d'ufficio o su ricezione segnalazione
+- codice: ATT-0284
+  descrizione: Istruttoria/verifiche
+- codice: ATT-0285
+  descrizione: Avvio del Procedimento
+- codice: ATT-0286
+  descrizione: istruttoria verifiche
+- codice: ATT-0287
+  descrizione: Analisi della documentazione inviata dai titolari dei servizi all'inizio dell'anno educativo,
+    al fine di verificare la permanenza dei requisiti di autorizzazione/accreditamento e richiesta di
+    eventuali integrazioni.
+- codice: ATT-0288
+  descrizione: Effettuazione delle visite ispettive senza preavviso.
+- codice: ATT-0289
+  descrizione: Contestazione scritta al titolare del servizio di eventuali non conformità riscontrate
+    e intimazione a provvedere al ripristino della regolarità (con invio per conoscenza al SUAP, quale
+    ufficio competente al rilascio/sospensione/revoca dell'autorizzazione/accreditamento)
+- codice: ATT-0290
+  descrizione: Analisi controdeduzioni e nuova visita per verificare ripristino dei requisiti di autorizzazione/accreditamento
+- codice: ATT-0291
+  descrizione: Nel caso del venir meno dei requisiti di autorizzazione accreditamento, trasmissione del
+    verbale della visita al SUAP, per avvio del procedimento di irrogazione sanzioni (sospensione/revoca)
+- codice: ATT-0292
+  descrizione: 'Verifica degli esposti da parte di terzi o verifica di ufficio di eventuale opera abusiva:
+    invio a PM'
+- codice: ATT-0293
+  descrizione: Sopralluogo di verifica
+- codice: ATT-0294
+  descrizione: Ordinanza di demolizione e ripristino
+- codice: ATT-0295
+  descrizione: Verifica di esecuzione della demolizione o di inottemperanza - redazione verbale
+- codice: ATT-0296
+  descrizione: Irrogazione sanzione in caso di inottemperanza
+- codice: ATT-0297
+  descrizione: Trasmissione atto sanzione definitivo a Ufficio Patrimonio e a Opere Pubbliche.
+- codice: ATT-0298
+  descrizione: Trascrizione del verbale di inottemperanza e voltura catastale dell'area al conto del Comune.
+    Presa di possesso del manufatto e dell'area acquisiti al patrimonio comunale.
+- codice: ATT-0299
+  descrizione: Preventivazione, individuazione ditta per esecuzione dei lavori, esecuzione dei lavori
+- codice: ATT-0300
+  descrizione: Recupero spese di ripristino
+- codice: ATT-0301
+  descrizione: Analisi della documentazione inviata dai titolari e/o gestori ai Suap competenti
+- codice: ATT-0302
+  descrizione: Sopralluogo presso le strutture ricettive per la verifica delle caratteristiche dei servizi
+    dichiarati
+- codice: ATT-0303
+  descrizione: Invio eventuali contestazioni al titolare/gestore della struttura con richiesta di provvedere
+    entro un termine prestabilito al ripristino della regolarità
+- codice: ATT-0304
+  descrizione: Sopralluogo al termine del periodo concesso per ripristino della regolarità
+- codice: ATT-0305
+  descrizione: Eventuale avvio del procedimento di declassificazione nel caso in cui il titolare non abbia
+    provveduto al ripristino delle irregolarità
+- codice: ATT-0306
+  descrizione: Eventuale comunicazione al Comune competente per territorio a seguito della declassificazione
+    della struttura ricettiva
+- codice: ATT-0307
+  descrizione: Verifica dei requisiti logistici, personali e professionali e degli obblighi previsti per
+    l'esercizio delle attività delle agenzie di viaggio.
+- codice: ATT-0308
+  descrizione: Invio eventuali contestazioni al titolare dell'agenzia di viaggio con richiesta di provvedere
+    entro un termine prestabilito.
+- codice: ATT-0309
+  descrizione: Eventuale provvedimento di sospensione o chiusura nel caso in cui il titolare non abbia
+    provveduto a quanto richiesto nei termini prestabiliti.
+- codice: ATT-0310
+  descrizione: Eventuale sopralluogo a seguito di provvedimento di sospensione o chiusura
+- codice: ATT-0311
+  descrizione: Richiesta agli uffici competenti per l'esecuzione coattiva con apposizione di sigilli nel
+    caso in cui il titolare non provveda volontariamente alla chiusura o sospensione dell'attività.
+- codice: ATT-0312
+  descrizione: Verifica dell'iscrizione all'albo regionale e del possesso dei requisiti professionali
+    a seguito di comunicazione di inizio attività
+- codice: ATT-0313
+  descrizione: Invio eventuali contestazioni al titolare dell'associazione con richiesta di provvedere
+    entro un termine prestabilito.
+- codice: ATT-0314
+  descrizione: Eventuale provvedimento di sospensione o chiusura dell'attività in caso di assenza dei
+    requisiti previsti per lo svolgimento delle attività o nel caso in cui il titolare non abbia provveduto
+    a quanto richiesto nei termini prestabiliti.
+- codice: ATT-0315
+  descrizione: Verifica della documentazione sulle attività svolte
+- codice: ATT-0316
+  descrizione: Eventuale provvedimento di sospensione delle attività in caso di superamento dei limiti
+    annuali di attività previsti, di mancanza dei requisiti professionali o della polizza assicurativa.
+- codice: ATT-0317
+  descrizione: 'Accertamento (attività di controllo ad es: ambientali, annonari, antievasione)'
+- codice: ATT-0318
+  descrizione: Notifica verbale
+- codice: ATT-0319
+  descrizione: Gestione eventuali scritti difensivi e redazione controdeduzioni ufficio
+- codice: ATT-0320
+  descrizione: Trasmissione del rapporto all'autorità competente ad irrogare la sanzione o a procedere
+    all'archiviazione (fase in carico ad altro settore)
+- codice: ATT-0321
+  descrizione: Formazione gestione del ruolo
+- codice: ATT-0322
+  descrizione: Su impulso (eventuale perché il ricorso all'autotutela può/deve essere effettuato d'ufficio)/
+    d'ufficio; Riesame; Annullamento totale/parziale dell'atto ovvero conferma della legittimità
+- codice: ATT-0323
+  descrizione: Estrazione casuale del campione di atti da sottoporre a controllo, tramite strumenti informatici
+    o sorteggio pubblico
+- codice: ATT-0324
+  descrizione: Verifica di regolaritα amministrativa degli atti estratti, con compilazione di check list
+    conformi alle prescrizioni normative e al PTPCT
+- codice: ATT-0325
+  descrizione: Redazione della relazione semestrale sugli esiti dei controlli, comunicazione ai responsabili
+    degli uffici e al Sindaco/Assessore competente
+- codice: ATT-0326
+  descrizione: Scelta dell'operatore
+- codice: ATT-0327
+  descrizione: Ricognizione delle posizioni in scadenza
+- codice: ATT-0328
+  descrizione: Raccolta e verifica sulle candidature pervenute
+- codice: ATT-0329
+  descrizione: Controlli in ordine all'insussistenza di cause di incompatibilità e inconferibilità ai
+    sensi del D.Lgs. n. 39/2013
+- codice: ATT-0330
+  descrizione: Predisposizione dei decreti di nomina
+- codice: ATT-0331
+  descrizione: Ricezione ricorso/citazione ad avvocatura ed all'Ufficio/U.O/Settore competente per materia
+- codice: ATT-0332
+  descrizione: Relazione motivata, di resistere o meno in giudizio del Responsabile del Settore - sempre
+    necessaria anche quando il medesimo ritenga che l'Amministrazione non debba resistere in giudizio
+    - da trasmettere al Sindaco e all'Avvocatura comunale con l'eventuale motivazione della opportunità
+    o necessità di avvalersi di legale esterno
+- codice: ATT-0333
+  descrizione: Agli esiti della valutazione del Sindaco riguardo l'opzione di non avvalersi della Avvocatura
+    Comunale (se del caso rilevata anche dalla stessa Avvocatura, come - per esempio - qualora il procedimento
+    sia radicato in Consiglio di Stato o in Corte di Cassazione), salvo che non vi siano motivazioni rappresentate
+    dal dirigente che giustifichino la scelta di un legale particolare, l'Avvocatura procede alla individuazione
+    di legale esterno acquisendo almeno tre preventivi di Avvocati inseriti nell'elenco Comunale, individuati
+    sulla base della competenza per materia dichiarata nel curriculum.
+- codice: ATT-0334
+  descrizione: Il procedimento si attiva su segnalazione del dirigente cui il dipendente è assegnato all'Ufficio
+    per i procedimenti disciplinari, presso l'Ufficio Personale, dopo che il primo ha valutato che l'eventuale
+    sanzione da applicare sia tra quelle di maggiore gravità stabilite dall'art. 55-bis del D. Lgs 165/2001.
+- codice: ATT-0335
+  descrizione: Il dirigente dell'Ufficio Personale, in qualità di Ufficio per i procedimenti disciplinari,
+    entro il termine legale previsto, provvede alla contestazione scritta dell'addebito.
+- codice: ATT-0336
+  descrizione: Il dipendente viene convocato l'audizione in contraddittorio, cui può partecipare anche
+    un procuratore ovvero un rappresentante dell'associazione sindacale cui il lavoratore aderisce o conferisce
+    mandato. Il dipendente, qualora lo ritenga, può anche depositare memorie scritte.
+- codice: ATT-0337
+  descrizione: Il dirigente dell'Ufficio Personale, in qualità di Ufficio per i procedimenti disciplinari,
+    conduce l'istruttoria e, entro il termine legale previsto, conclude il procedimento con l'irrogazione
+    della sanzione o con l'archiviazione.
+- codice: ATT-0338
+  descrizione: Accertamento
+- codice: ATT-0339
+  descrizione: Eventuale opposizione all'autorità Giudiziaria/ricorso al prefetto, Autotutela
+- codice: ATT-0340
+  descrizione: Presentazione del ricorso da parte del contribuente
+- codice: ATT-0341
+  descrizione: Esame del ricorso per verifica della necessità di costituirsi in giudizio oppure annullare/riformare
+    l'atto impugnato
+- codice: ATT-0342
+  descrizione: Costituzione in giudizio (eventuale)
+- codice: ATT-0343
+  descrizione: Procedimento di autotutela (eventuale)
+- codice: ATT-0344
+  descrizione: Conciliazione Giudiziale (eventuale)
+- codice: ATT-0345
+  descrizione: 'Per il GdP: Ricezione decreto fissazione udienza da parte dell''Autorità giudiziaria competente-
+    Per Prefetto: ricezione ricorso'
+- codice: ATT-0346
+  descrizione: Redazione deduzioni tecniche e preparazione fascicolo
+- codice: ATT-0347
+  descrizione: Difesa in Giudizio
+- codice: ATT-0348
+  descrizione: Arrivo richiesta da cittadino/professionista
+- codice: ATT-0349
+  descrizione: Assegnazione a tecnico della UO
+- codice: ATT-0350
+  descrizione: Analisi richiesta e documentazione
+- codice: ATT-0351
+  descrizione: Integrazione documenti titoli abilitativi edilizi
+- codice: ATT-0352
+  descrizione: Esito istruttoria con la motivata proposta di adozione di provvedimento
+- codice: ATT-0353
+  descrizione: Controlli e Vigilanza in materia edilizia (vedi anche F 11)
+- codice: ATT-0354
+  descrizione: ricevimento segnalazione di disservizio da parte di privati, ditte, enti, ecc.
+- codice: ATT-0355
+  descrizione: inserimento in apposito registro informatico (file excel) e trasmissione al gestore del
+    servizio di igiene urbana per la verifica e successiva risposta al segnalante
+- codice: ATT-0356
+  descrizione: Redazione
+- codice: ATT-0357
+  descrizione: Pubblicazione e raccolta osservazioni
+- codice: ATT-0358
+  descrizione: Approvazione controdeduzioni e approvazione Definitiva
+- codice: ATT-0359
+  descrizione: Rilascio di nulla osta alle richieste di assunzione di personale nelle società e organismi
+    controllati (ai sensi del "Regolamento sul controllo analogo di LH" e del "Regolamento di Gruppo LH")
+- codice: ATT-0360
+  descrizione: Monitoraggio sul rispetto degli "indirizzi e obiettivi di contenimento delle spese di funzionamento
+    delle società controllate dal Comune di Lucca" ai sensi dell'art. 19 del D.Lgs. n. 175/2016 e dell'art.
+    147 quater del D.Lgs. 267/2000 (approvati con deliberazione C.C. n. 26/2023)
+- codice: ATT-0361
+  descrizione: Monitoraggio sulla rilevazione di eccedenze di personale nelle società e organismi controllati,
+    ai sensi dell'art. 19 del D.Lgs. n. 175/2016
+- codice: ATT-0362
+  descrizione: Monitoraggio dell'andamento societario attraverso l'analisi dei bilanci e delle relazioni
+    e delle relazioni annuali e semestrali sul governo societario, con predisposizione di report, ai sensi
+    dell'art. 147 quater del D.Lgs. n. 267/2000 e del D.Lgs. n. 175/2016
+- codice: ATT-0363
+  descrizione: Controllo sulle sezioni "società trasparenti" delle società e organismi partecipati ai
+    sensi del D.Lgs. n. 33/2013, con predisposizione di report annuale
+- codice: ATT-0364
+  descrizione: Cura dei rapporti con gli uffici (supporto, raccolta dati, comunicazioni, incontri con
+    gli uffici, Dirigenti e assessori di riferimento, ecc.)
+- codice: ATT-0365
+  descrizione: 'attività istruttoria per la programmazione e ricognizione Obiettivi di DUP ( strategici
+    ed operativi): definizione Obiettivi, definizione interventi, elaborazione di indicatori, conseguente
+    inserimento nel DUP, ecc'
+- codice: ATT-0366
+  descrizione: Elaborazione dello schema di DUP da presentare alla Giunta
+- codice: ATT-0367
+  descrizione: attività istruttoria per programmazione degli Obiettivi gestionali/esecutivi e definizione
+    indicatori per la misurazione della performance
+- codice: ATT-0368
+  descrizione: Elaborazione piano performance
+- codice: ATT-0369
+  descrizione: Acquisizione del parere da parte della commissione pari opportunità a seguito approvazione
+    schema di DUP da parte della Giunta
+- codice: ATT-0370
+  descrizione: Acquisizione parere tecnico e pesatura obiettivi da parte del NdV per approvazione del
+    piano performance
+- codice: ATT-0371
+  descrizione: Stesura degli atti deliberativi di approvazione dei documenti di programmazione, DUP e
+    piano performance, e relativo caricamento su SICRAWEB
+- codice: ATT-0372
+  descrizione: Adempimenti obbligatori per la trasparenza, per quanto di competenza
+- codice: ATT-0373
+  descrizione: Cura dei rapporti con gli uffici (supporto, raccolta dati, comunicazioni, incontri con
+    gli uffici ecc.)
+- codice: ATT-0374
+  descrizione: Attività istruttoria (monitoraggio intermedio e finale/rendicontazione) sullo stato di
+    avanzamento degli obiettivi e degli indicatori contenuti nel piano performance (misurazione e valutazione)
+    nonché analisi dei dati contabili ed extracontabili raccolti
+- codice: ATT-0375
+  descrizione: Predisposizione:- di eventuale documento di modifica del PIANO PERFORMANCE ( a seguito
+    monitoraggio intermedio- Relazione sulla performance ( a seguito monitoraggio finale/rendicontazione)-
+    Report su controllo di gestione
+- codice: ATT-0376
+  descrizione: Coinvolgimento del NdV nell'attività di monitoraggio intermedio e rendicontazione nonché
+    acquisizione- parere tecnico su proposte di modifica al piano performace (a seguito monitoraggio intermedio)-
+    validazione della relazione sulla performance ( a seguito monitoraggio finale)
+- codice: ATT-0377
+  descrizione: 'Stesura degli atti deliberativi di approvazione: - eventuale modifica del piano performance-
+    Relazione sulla performance- Report controllo di gestioneRelativo caricamento su SICRAWEB'
+- codice: ATT-0378
+  descrizione: 'Cura dei rapporti con i settori e gli assessorati (supporto, raccolta dati, comunicazioni,
+    incontri con: Dirigenti e assessori di riferimento, ecc.)'
+- codice: ATT-0379
+  descrizione: Attività istruttoria per la ricognizione dello stato di attuazione/avanzamento obiettivi
+    strategici ed operativi
+- codice: ATT-0380
+  descrizione: Studio delle diverse fonti informative e raccolta dati
+- codice: ATT-0381
+  descrizione: Stesura del Referto di controllo strategico
+- codice: ATT-0382
+  descrizione: Pubblicazione sul sito istituzionale e intranet per quanto di competenza e necessiti di
+    pubblicità/comunicazione
+- codice: ATT-0383
+  descrizione: Raccolta dei dati utili con il coinvolgimento degli uffici interessati
+- codice: ATT-0384
+  descrizione: Compilazione questionario predisposto dalla Corte dei Conti
+- codice: ATT-0385
+  descrizione: Trasmissione alla Corte dei Conti del Referto tramite i canali deputati
+- codice: ATT-0386
+  descrizione: Raccolta delle segnalazioni interne in materia di antiriciclaggio, istruttoria e approfondimenti
+    con gli uffici competenti ed eventuale trasmissione telematica alla U.I.F. Della Banca d'Italia
+- codice: ATT-0387
+  descrizione: Gestione incontri con il NdV (predisposizione materiale per il NdV e relativa trasmissione,
+    organizzazione incontri, verbalizzazione)
+- codice: ATT-0388
+  descrizione: Supporto al NDV per predisposizione griglia Trasparenza
+- codice: ATT-0389
+  descrizione: Cura e gestione dei rapporti tra NdV e uffici comunali
+- codice: ATT-0390
+  descrizione: Cura delle pubblicazione in Amministrazione Trasparenza della documentazione elaborata
+    da NdV
+- codice: ATT-0391
+  descrizione: Ricezione delle proposte di deliberazione dagli uffici competenti, verifica formale della
+    completezza documentale e dei pareri di regolaritα tecnica e contabile
+- codice: ATT-0392
+  descrizione: Redazione dell'ordine del giorno, predisposizione degli atti di convocazione e trasmissione
+    ai componenti dell'organo collegiale nei termini previsti
+- codice: ATT-0393
+  descrizione: Assistenza durante le sedute degli organi collegiali, verbalizzazione delle deliberazioni
+    e delle votazioni
+- codice: ATT-0394
+  descrizione: Numerazione, repertoriazione e pubblicazione delle deliberazioni adottate; trasmissione
+    ai capigruppo consiliari e agli uffici competenti
+rischi:
+- codice: RIS-0001
+  descrizione: Erronea valutazione dell'adeguatezza degli alloggi disponibili in relazione al nucleo beneficiario
+    e alle sue caratteristiche
+- codice: RIS-0002
+  descrizione: Erronea valutazione della documentazione richiesta all'utente per la verifica del mantenimento
+    dei requisiti
+- codice: RIS-0003
+  descrizione: Apposizione della firma di soggetto non in grado di intendere e di esprimere la propria
+    volontà
+- codice: RIS-0004
+  descrizione: Omessa trattazione delle pratiche secondo l'ordine di arrivo al protocollo
+- codice: RIS-0005
+  descrizione: Omesso rispetto tempi
+- codice: RIS-0006
+  descrizione: Disparità di trattamento nella fase di controllo
+- codice: RIS-0007
+  descrizione: Verifica sussistenza presupposti per il rilascio
+- codice: RIS-0008
+  descrizione: Carenza di informazione ai fini della presentazione dell'istanza
+- codice: RIS-0009
+  descrizione: Mancato rispetto della cronologia nell'esame dell'istanza
+- codice: RIS-0010
+  descrizione: Disparità di trattamento nella fase di accettazione ed esame dell'istanza, in relazione
+    alla verifica di atti o del possesso di requisiti richiesti
+- codice: RIS-0011
+  descrizione: Eventuali atteggiamenti non collaborativi e fattivi del personale
+- codice: RIS-0012
+  descrizione: Errata valutazione presupposti
+- codice: RIS-0013
+  descrizione: Omesso rispetto tempi procedimentali per la trasmissione
+- codice: RIS-0014
+  descrizione: Valutazione nel rilascio dell'Autorizzazione
+- codice: RIS-0015
+  descrizione: Omesso rispetto tempi procedimentali
+- codice: RIS-0016
+  descrizione: Mancato avvio procedimento
+- codice: RIS-0017
+  descrizione: Arbitrarietà nella decisione.Inosservanza delle regole procedurali a garanzia della trasparenza,
+    dell'imparzialità e della completezza dell'accessoAbuso nel rilascio delle copie richieste
+- codice: RIS-0018
+  descrizione: Ritardi nella conclusione del procedimento che possono dare seguito a danni per l'Ente
+- codice: RIS-0019
+  descrizione: Mancata o tardiva registrazione delle istanze
+- codice: RIS-0020
+  descrizione: Abuso nel rilascio di autorizzazioni in ambiti in cui il pubblico ufficio ha funzioniesclusive
+    o preminenti di controllo al fine di agevolare determinati soggetti
+- codice: RIS-0021
+  descrizione: Rilascio tardivo o archiviazione
+- codice: RIS-0022
+  descrizione: Non corretta rilevazione di una causa di esclusione (limite Isee, residenza o occupazione
+    lavorativa nel Comune di Lucca, permesso di soggiorno...)
+- codice: RIS-0023
+  descrizione: Assegnazione punteggio non corretto
+- codice: RIS-0024
+  descrizione: Non corretta rilevazione di una causa di esclusione o di inserimento in una determinata
+    fascia
+- codice: RIS-0025
+  descrizione: Mancato rispetto dell'ordine cronologico di arrivo al protocollo nell'istruttoria delle
+    pratiche
+- codice: RIS-0026
+  descrizione: Mancato rispetto dell'ordine di arrivo della richiesta
+- codice: RIS-0027
+  descrizione: Mancato rispetto dei tempi di rilascio della certificazione
+- codice: RIS-0028
+  descrizione: Mancato rispetto dei tempi
+- codice: RIS-0029
+  descrizione: Diniego- eccesso di prescrizioni
+- codice: RIS-0030
+  descrizione: rilascio con eccesso di prescrizioni
+- codice: RIS-0031
+  descrizione: Ritardi nella conclusione del procedimento
+- codice: RIS-0032
+  descrizione: Rilascio con eccesso di prescrizioni - diniego in mancanza di presupposti adeguati
+- codice: RIS-0033
+  descrizione: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+- codice: RIS-0034
+  descrizione: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
+- codice: RIS-0035
+  descrizione: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
+    disparità di trattamento
+- codice: RIS-0036
+  descrizione: Riconoscimento del diritto al contributo in caso di rendicontazione non congrua
+- codice: RIS-0037
+  descrizione: Non rispetto diritto di precedenza
+- codice: RIS-0038
+  descrizione: Alterazione del corretto svolgimento dell'istruttoria Assecondare la richiesta del richiedente
+    ad avere lo stesso operatore
+- codice: RIS-0039
+  descrizione: Tardività
+- codice: RIS-0040
+  descrizione: Omissione di repertoriare quanto ricevuto o ritrovato
+- codice: RIS-0041
+  descrizione: Consegna a soggetto non avente diritto
+- codice: RIS-0042
+  descrizione: Non effettuazione dei controlli contabili necessari a verificare il sussistere dei requisiti
+    di legge o effettuare controlli insufficienti o inefficaci
+- codice: RIS-0043
+  descrizione: Riconoscimento indebito di un credito verso la P.A.
+- codice: RIS-0044
+  descrizione: Analisi parziale o incompleta nella predisposizione della proposta di assistenza..
+- codice: RIS-0045
+  descrizione: Verifica certificazione ISEE
+- codice: RIS-0046
+  descrizione: Verifica certificazione ISEE e calcolo compartecipazione su parametri prestabiliti
+- codice: RIS-0047
+  descrizione: Errata analisi della situazione rappresentata della documentazione (completezza, adeguatezza...).
+    Reiterazione dei contributi verso i medesimi soggetti ed esclusione di altri
+- codice: RIS-0048
+  descrizione: Attribuzione dell'esenzione e/o agevolazione anche in mancanza dei requisiti previsti.
+- codice: RIS-0049
+  descrizione: Mancata applicazione del principio per cui, in caso di accoglimento della domanda di agevolazione
+    presentata oltre il termine previsto dal competente ufficio comunale, gli effetti dell'applicazione
+    delle tariffe aggiornate decorrono dal primo giorno del mese successivo rispetto alla data di presentazione
+    della medesima istanza.
+- codice: RIS-0050
+  descrizione: Mancata rilevazione di una causa formale di esclusione secondo i requisiti prevista dal
+    bando.
+- codice: RIS-0051
+  descrizione: Accoglimento o respingimento ricorsi per motivazioni non fondate
+- codice: RIS-0052
+  descrizione: Inserimento nella graduatoria di soggetti che non hanno i requisiti previsti dal bando
+- codice: RIS-0053
+  descrizione: Ritardo nella trasmissione/formarsi del silenzio assenso
+- codice: RIS-0054
+  descrizione: Scelta operatori
+- codice: RIS-0055
+  descrizione: Ritardo nella trasmissione al fine di sfavorire alcuni operatori
+- codice: RIS-0056
+  descrizione: Favorire alcuni operatori
+- codice: RIS-0057
+  descrizione: Favorire alcuni operatori sia di ruolo che nuovi assegnatari a seconda della collocazione
+    sul palco
+- codice: RIS-0058
+  descrizione: Inosservanza dei criteri previsti dal regolamento Canone Unico Patrimoniale
+- codice: RIS-0059
+  descrizione: Tardività nell'adozione
+- codice: RIS-0060
+  descrizione: Escludere dalla opportunità culti diversi da quello cattolico
+- codice: RIS-0061
+  descrizione: Eccessiva discrezionalità
+- codice: RIS-0062
+  descrizione: Analisi non corretta della documentazione
+- codice: RIS-0063
+  descrizione: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
+    o agevolato in assenza delle condizioni che giustificano la gratuità)'
+- codice: RIS-0064
+  descrizione: Valutazione discrezionale
+- codice: RIS-0065
+  descrizione: Mancanza di trasparenza nella assegnazione dell'immobile
+- codice: RIS-0066
+  descrizione: Riconoscimento indebito dell'esenzione dal pagamento della tariffa prevista dall'apposito
+    Regolamento d'uso delle Mura urbane
+- codice: RIS-0067
+  descrizione: Modalità assegnazione
+- codice: RIS-0068
+  descrizione: Ripetizione del riconoscimento dei contributi ai medesimi soggetti. Discrezionalità nella
+    determinazione delle somme o dei vantaggi da attribuire. Inadeguatezza della documentazione per l'accesso
+    ai vantaggi che può determinare eventuali disparità di trattamento. Ritardi costanti nella valutazione
+    delle domande pervenute. Alla luce del contesto (interno ed esterno), ex Determinazione ANAC n. 12/2015,
+    occorre graduare il rischio in base alle funzioni effettivamente svolte.
+- codice: RIS-0069
+  descrizione: Parziale individuazione dei bisogni del territorio e interventi messi in atto poco efficaci
+- codice: RIS-0070
+  descrizione: Rischio relativo alla determinazione della congruità della spesa e del corrispondente contributo
+    richiesto dall'utente previsto per l'intervento
+- codice: RIS-0071
+  descrizione: Rischio relativo all'erogazione del contributo anche in presenza di lavori non eseguiti
+    regolarmente
+- codice: RIS-0072
+  descrizione: Definizioni delle specifiche in ordine alle esigenze individuate dal RUP e scelta del criterio
+    inadeguata alle esigenze dell'ente
+- codice: RIS-0073
+  descrizione: Scelta degli operatori da invitare fino alla soglia di rilevanza comunitaria
+- codice: RIS-0074
+  descrizione: Presieduto dal Responsabile della procedura di gara individuato in ambito della U.O. A.3
+    (che può o meno coincidere con il RUP se acquisto esperito dal Provveditorato)
+- codice: RIS-0075
+  descrizione: Verifica quali-quantitativa dell'opera, del lavoro, della fornitura o del servizio da parte
+    del Responsabile Unico del Procedimento (RUP) e del Direttore dell'esecuzione del contratto (DEC),
+    quando previsto.
+- codice: RIS-0076
+  descrizione: Certificazione dal parte del RUP che il servizio/la fornitura è stato/a svolto/a nel pieno
+    rispetto dei tempi e nei modi di esecuzione previsti nel contratto
+- codice: RIS-0077
+  descrizione: Discrezionalità nell'individuazione dell'affidatario dell'incarico
+- codice: RIS-0078
+  descrizione: Carenza di trasparenza sulle modalità di individuazione dei requisiti richiesti per partecipare
+    alla selezione e/o conferimento diretto
+- codice: RIS-0079
+  descrizione: Ripetitività nell'assegnazione dell'incarico al medesimo soggetto
+- codice: RIS-0080
+  descrizione: Mancanza di utilizzo dell'albo, laddove ciò sia previsto
+- codice: RIS-0081
+  descrizione: Ripetizione delle combinazioni d'incarico tra verificatore del progetto esecutivo e RUP
+- codice: RIS-0082
+  descrizione: Mancanza di controllo incrociato dei documenti/atti riguardanti la contabilità di cantiere
+- codice: RIS-0083
+  descrizione: Mancanza di controllo incrociato tra RUP/DD.LL.
+- codice: RIS-0084
+  descrizione: Identificazione dei lavori indispensabili a far fronte all'urgenza
+- codice: RIS-0085
+  descrizione: Abuso dell'affidamento diretto al di fuori dei casi previsti dalla legge al fine di favorire
+    un'impresa
+- codice: RIS-0086
+  descrizione: Ripetizione nell'individuazione dell'operatore economico per l'esecuzione dei lavori
+- codice: RIS-0087
+  descrizione: Predisposizione di un bando contenente requisiti che possano avvantaggiare particolari
+    categorie di soggetti.
+- codice: RIS-0088
+  descrizione: Ammissione di soggetto che non ha i requisiti o esclusione di soggetto che ha i requisiti
+- codice: RIS-0089
+  descrizione: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti.
+- codice: RIS-0090
+  descrizione: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli
+- codice: RIS-0091
+  descrizione: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+- codice: RIS-0092
+  descrizione: Avvantaggiare/svantaggiare i singoli concorrenti nella fase di applicazione delle riserve
+    /preferenze.
+- codice: RIS-0093
+  descrizione: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
+    particolari categorie di soggetti.
+- codice: RIS-0094
+  descrizione: Dichiarare /non dichiarare un soggetto idoneo facendo una valutazione non oggettiva della
+    prova.
+- codice: RIS-0095
+  descrizione: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
+- codice: RIS-0096
+  descrizione: Far conoscere preventivamente i contenuti della selezione ai candidati
+- codice: RIS-0097
+  descrizione: Applicazione di aliquote ridotte o di agevolazioni/esenzioni non spettanti
+- codice: RIS-0098
+  descrizione: Omissione
+- codice: RIS-0099
+  descrizione: Non riconoscimento/riconoscimento dei presupposti per procedere all'accoglimento/diniego
+    al rimborso
+- codice: RIS-0100
+  descrizione: Analisi della completezza e della adeguatezza della situazione rappresentata e della documentazione
+- codice: RIS-0101
+  descrizione: Assegnazione che prescinda dalla previa analisi di situazioni pendenti di richiesta di
+    mobilità
+- codice: RIS-0102
+  descrizione: Analisi della condizione di morosità pregressa
+- codice: RIS-0103
+  descrizione: Pagamento di somme non dovute (per mancata verifica ai sensi dell'art 48-bis del D.P.R.
+    n. 602/1973 e s.m.i. per pagamenti di importo superiore a 5.000╒; a seguito di accertata inadempienza
+    ai sensi dell'art 48-bis del D.P.R. n. 602/1973 e s.m.i.; in caso di crediti pignorati)
+- codice: RIS-0104
+  descrizione: Mancato rispetto dei tempi di pagamento e dell'ordine cronologico degli atti di liquidazione
+    e/o data fattura- nota di debito
+- codice: RIS-0105
+  descrizione: Valutare presupposti per il diniego o l'accoglimento
+- codice: RIS-0106
+  descrizione: Mancata valutazione della richiesta e mancata consegna della richiesta al Dirigente del
+    Personale per l'autorizzazione/diniego.
+- codice: RIS-0107
+  descrizione: Autorizzare /non autorizzare la formazione richiesta al fine di avvantaggiare una determinata
+    agenzia formativa
+- codice: RIS-0108
+  descrizione: Registrazione non accurata
+- codice: RIS-0109
+  descrizione: Rilevazione non accurata
+- codice: RIS-0110
+  descrizione: Consegna non accurata
+- codice: RIS-0111
+  descrizione: Trasmissione non accurata
+- codice: RIS-0112
+  descrizione: Conto non accurato
+- codice: RIS-0113
+  descrizione: Non riconoscimento/riconoscimento dei presupposti per procedere al recupero
+- codice: RIS-0114
+  descrizione: Individuazione dei componenti
+- codice: RIS-0115
+  descrizione: Verifica delle attività del concessionario e del pagamento del canone
+- codice: RIS-0116
+  descrizione: Scorretto riconoscimento del danno e sua quantificazione. Il problema è che nonostante
+    esista un regolamento regionale, la regione e lo stato gestiscono le procedure emergenziali con modalità
+    ogni volta diverse.
+- codice: RIS-0117
+  descrizione: Predisposizione atti e valutazione in modo distorto al fine di favorire un soggetto
+- codice: RIS-0118
+  descrizione: Discrezionalità nella valutazione
+- codice: RIS-0119
+  descrizione: Stima del prezzo di vendita
+- codice: RIS-0120
+  descrizione: Predisposizione atti
+- codice: RIS-0121
+  descrizione: Discrezionalità nella scelta dell'immobile offerto
+- codice: RIS-0122
+  descrizione: Puntualità della verifica e adeguatezza del controllo rispetto al contratto ed alla prestazioni
+    ivi contenuta.
+- codice: RIS-0123
+  descrizione: Indeterminatezza del tempo per predisporre l'atto, rispetto alla conclusione delle verifiche.
+- codice: RIS-0124
+  descrizione: Mancata richiesta di trasmissione del conto di gestione in caso di inadempienza da parte
+    dell'agente contabile
+- codice: RIS-0125
+  descrizione: Non effettuazione dei dovuti controlli contabili o l'effettuazione di controlli insufficienti
+    o inefficaci
+- codice: RIS-0126
+  descrizione: Parificazione conto di gestione non conforme alle scritture contabili dell'Ente
+- codice: RIS-0127
+  descrizione: Strumentalità dell'impiego dei fondi di finanziamento rispetto alle finalità per cui sono
+    concessi
+- codice: RIS-0128
+  descrizione: Mancata produzione o ritardi nella sottomissione dei documenti richiesti a verifica della
+    rendicontazione
+- codice: RIS-0129
+  descrizione: Scarso monitoraggio degli adempimenti legati all'attuzione dei progetti PNRR per gli aspetti
+    anticorruttivi, di regolarità del finanziamento e relativa tracciabilità
+- codice: RIS-0130
+  descrizione: Verifica documentazione comprovante la sussistenza dei requisiti
+- codice: RIS-0131
+  descrizione: A livello nazionale sono stati segnalati accordi con intermediari, per la trascrizione
+    degli atti e per il rilascio dell'attestato in modo immediato e sistematico contestualmente alla presentazione
+    della dichiarazione di residenza dei cittadini di origine italiana nati e residenti all'estero e che,
+    trovandosi temporaneamente in Italia, registrano la residenza solo per avviare qui il procedimento
+    (questa facoltà è prevista da una circolare del Ministero dell'Interno)
+- codice: RIS-0132
+  descrizione: Abuso nell'adozione di provvedimenti
+- codice: RIS-0133
+  descrizione: Erronea analisi dei presupposti/circostanze di fatto e di diritto
+- codice: RIS-0134
+  descrizione: Mancato invio di segnalazione qualificata sussistente.Disparità di trattamento
+- codice: RIS-0135
+  descrizione: 'Controllo della documentazione presentata (ad esempio: omissione nella segnalazione di
+    irregolarità). Invio alla Forza di Polizia che ha intimato la presentazione del documento'
+- codice: RIS-0136
+  descrizione: abuso nell'adozione/non adozione del provvedimento al fine di agevolare determinati soggetti
+- codice: RIS-0137
+  descrizione: Trattazione in ordine diverso rispetto all'ordine di arrivo all'ufficio
+- codice: RIS-0138
+  descrizione: Motivazione generica e tautologica circa la sussistenza dei presupposti di legge per l'emissione
+    io l'archiviazione allo scopo di agevolare soggetti
+- codice: RIS-0139
+  descrizione: Determinazione scorretta della sanzione per agevolare/favorire il soggetto
+- codice: RIS-0140
+  descrizione: Tardività nell'emissione del provvedimento ingiunzione abuso nell'adozione del provvedimento
+    di archiviazione
+- codice: RIS-0141
+  descrizione: Trasmissione non tempestiva della determina di iscrizione a ruolo all'Esattore incaricato
+- codice: RIS-0142
+  descrizione: Abuso/mancato avvio del procedimento;Mancata attivazione del controllo
+- codice: RIS-0143
+  descrizione: Omissione o mancata valutazione delle relazioni tecniche degli organi accertatori
+- codice: RIS-0144
+  descrizione: Ritardo nella predisposizione dell'attoMancata segnalazione agli organi competenti per
+    l'applicazione delle sanzioni
+- codice: RIS-0145
+  descrizione: Abuso/mancato avvio del procedimentoAssegnazione di obblighi, termini o condizioni diversi
+    da quelli previsti dalla normativaMancata segnalazione agli organi competenti per l'applicazione delle
+    sanzioni
+- codice: RIS-0146
+  descrizione: Mancata o superficiale analisi della documentazione
+- codice: RIS-0147
+  descrizione: Preavviso della visita
+- codice: RIS-0148
+  descrizione: Mancata contestazione al titolare del servizio delle irregolarità riscontrate
+- codice: RIS-0149
+  descrizione: Mancata trasmissione del verbale al SUAP per avvio del procedimento sanzionatorio
+- codice: RIS-0150
+  descrizione: Mancato invio a PM per sopralluoghi
+- codice: RIS-0151
+  descrizione: Eventuale negligenza nel controllo
+- codice: RIS-0152
+  descrizione: Emissione ordinanze di demolizione in ordine non cronologico rispetto al verificarsi del
+    presupposto.
+- codice: RIS-0153
+  descrizione: Eventuale mancata comunicazione o comunicazione di ottemperanza non veritiera per favorire
+    il trasgressore
+- codice: RIS-0154
+  descrizione: Mancata emissione ordinanza di ottemperanza e ordinanza di applicazione sanzioni
+- codice: RIS-0155
+  descrizione: Mancato rispetto ordine cronologico
+- codice: RIS-0156
+  descrizione: Mancata effettuazione del sopralluogo e conseguente verbalizzazione delle irregolarità
+    riscontrate
+- codice: RIS-0157
+  descrizione: Mancato invio delle contestazioni
+- codice: RIS-0158
+  descrizione: Non effettuazione del sopralluogo
+- codice: RIS-0159
+  descrizione: Mancato avvio del procedimento di declassificazione
+- codice: RIS-0160
+  descrizione: Mancata verifica iniziale e sopralluogo
+- codice: RIS-0161
+  descrizione: Mancata verifica periodica
+- codice: RIS-0162
+  descrizione: Mancata verbalizzazione irregolarità riscontrate
+- codice: RIS-0163
+  descrizione: Mancato provvedimento di sospensione o chiusura
+- codice: RIS-0164
+  descrizione: Mancata effettuazione del sopralluogo
+- codice: RIS-0165
+  descrizione: Mancato invio richiesta agli uffici competenti per esecuzione coattiva
+- codice: RIS-0166
+  descrizione: Mancata analisi della documentazione
+- codice: RIS-0167
+  descrizione: Mancato invio del provvedimento
+- codice: RIS-0168
+  descrizione: Mancata verifica della documentazione
+- codice: RIS-0169
+  descrizione: Abuso nell'adozione del provvedimento
+- codice: RIS-0170
+  descrizione: Annullamento in autotutela del verbale
+- codice: RIS-0171
+  descrizione: Manipolazione del campione di atti da controllare, attraverso selezione non casuale o esclusione
+    di atti specifici, al fine di evitare la verifica di provvedimenti irregolari
+- codice: RIS-0172
+  descrizione: Inosservanza delle regole procedurali a garanzia della trasparenza e dell'imparzialità
+    della selezione.
+- codice: RIS-0173
+  descrizione: Motivazione generica e tautologica circa la sussistenza dei presupposti di legge per il
+    conferimento di incarichi professionali allo scopo di agevolare soggetti particolari
+- codice: RIS-0174
+  descrizione: Previsioni di requisiti di accesso "personalizzati" ed insufficienza di meccanismi oggettivi
+    e trasparenti idonei a verificare il possesso dei requisiti attitudinali e professionali richiesti
+    in relazione all'incarico da ricoprire allo scopo di reclutare determinati soggetti
+- codice: RIS-0175
+  descrizione: Indicazioni di un particolare professionista esterno
+- codice: RIS-0176
+  descrizione: Scelta del soggetto e verifica congruità parcella
+- codice: RIS-0177
+  descrizione: Il dirigente potrebbe non procedere alla contestazione di addebito facendo scadere i termini.
+- codice: RIS-0178
+  descrizione: Avvantaggiare il dipendente applicando una sanzione inferiore a quella oggettivamente imputabile
+    o archiviare impropriamente il procedimento disciplinare.
+- codice: RIS-0179
+  descrizione: Trasmissione nei tempi al Gestore del servizio
+- codice: RIS-0180
+  descrizione: Analisi dei riferimenti di fatto e di diritto e predisposizione atti
+- codice: RIS-0181
+  descrizione: Accettazione di conciliazione giudiziale troppo favorevole per il contribuente
+- codice: RIS-0182
+  descrizione: Deposito della documentazione
+- codice: RIS-0183
+  descrizione: Assegnazione delle richieste a tecnico "individuato" in qualche modo dal cittadino/professionista
+- codice: RIS-0184
+  descrizione: Disparità di trattamento nella fase di istruttoria, in relazione alla verifica di atti
+    e documentazione
+- codice: RIS-0185
+  descrizione: Carenza di controlli sulle dichiarazioni
+- codice: RIS-0186
+  descrizione: Possibile condizionamento esterno derivante dall'esercizio di attività esterne da parte
+    di dipendenti comunali in collaborazione con professionisti del territorio
+- codice: RIS-0187
+  descrizione: Eccessiva frequenza nella richiesta di integrazioni documentali
+- codice: RIS-0188
+  descrizione: Mancato rispetto dei tempi massimi del procedimento
+- codice: RIS-0189
+  descrizione: Istruttoria non corretta, non aggiornata, non adeguata e/o non adeguata commisurazione
+    del contributo per favorire soggetti interessati
+- codice: RIS-0190
+  descrizione: Omissione dell'attivazione del procedimento di verifica in presenza di segnalazioni circostanziate
+    e non pretestuose
+- codice: RIS-0191
+  descrizione: Erronea applicazione delle norme che qualificano la fattispecie abusiva al fine di elidere
+    e/o alleggerire il connesso regime sanzionatorio per favorire l'interessato
+- codice: RIS-0192
+  descrizione: Mancata pianificazione e predeterminazione dei criteri di effettuazione delle verifiche
+    d'ufficio, al fine di favorire determinati soggetti
+- codice: RIS-0193
+  descrizione: Divulgazione di informazioni relative a verifiche d'ufficio, allo scopo di favorire uno
+    o più interessati
+- codice: RIS-0194
+  descrizione: omissione dell'attivazione del procedimento di verifica della segnalazione
+- codice: RIS-0195
+  descrizione: Assenza di chiara e specifica indicazione degli obiettivi da conseguire e dei criteri generali
+    da utilizzare;
+- codice: RIS-0196
+  descrizione: Possibile sussistenza cause di incompatibilità e/o conflitti di interesse in capo ai componenti
+    gruppo di lavoro interno/esterno incaricato
+- codice: RIS-0197
+  descrizione: Possibili asimmetrie informative fra gli interessati che possono agevolare alcuni o taluni
+    degli stessi, dovute anche all'elevato tecnicismo degli atti
+- codice: RIS-0198
+  descrizione: Indebito accoglimento di osservazioni in contrasto con l'interesse pubblico generale, le
+    norme vigenti e gli obiettivi generali del piano
+misure:
+- codice: MIS-0001
+  descrizione: Chiedere all'ente gestore E.r.p. Lucca S.r.l. un elenco aggiornato trimestralmente degli
+    alloggi pronti e disponibili per l'assegnazione con il dettaglio, per ciascuno, dell'ubicazione, dei
+    vani utili, della composizione dell'alloggio (stanze presenti) e della metratura di ciascuna stanza
+  tipo_misura: SPECIFICA
+- codice: MIS-0002
+  descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+    dalla normativa di riferimento da consultare durante il controllo del mantenimento dei requisiti del
+    soggetto in posizione utile in graduatoria propedeutico all'assegnazione di un alloggio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0003
+  descrizione: 'In ufficio: l''agente verifica che sul programma gestito dall''anagrafe non vi siano annotazioni
+    della eventuale incapacità del soggetto;Sul posto: l''agente compila apposita dichiarazione nella
+    quale dà atto che il soggetto non appare in condizioni di incapacità'
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0004
+  descrizione: Registro informatizzato di arrivo delle pratiche con annotazione data di avanzamento della
+    fase del procedimento
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0005
+  descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+    illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+    rispetto a comportamenti non conformi.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0006
+  descrizione: Ogni SCIA, entro le 24 ore lavorative successive alla presentazione, viene assegnata ad
+    un diverso istruttore, seguendo progressivamente un elenco di istruttori ordinato alfabeticamente.
+    L'elenco prestabilito è pubblicizzato all'interno dell'ufficio. L'istruttore assegnatario entro il
+    giorno successivo dovrà verificare e, nel caso, rappresentare al dirigente ed al responsabile della
+    U.O. la presenza di eventuale conflitto di interesse -anche potenziale- rispetto alla SCIA assegnata.
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0007
+  descrizione: Procedura regolamentata dal CdS; richiesta parere ufficio traffico;in caso di diniego verifica
+    delle motivazioni.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0008
+  descrizione: Indicazione sul sito internet delle informazioni necessarie per l'utente
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0009
+  descrizione: In caso di urgenza presentazione di documentazione giustificativa con motivazione autorizzata
+    dal dirigente
+  tipo_misura: SPECIFICA
+- codice: MIS-0010
+  descrizione: Rotazione dei dipendenti nell'analisi delle istanze
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0011
+  descrizione: Verifica periodica (mensile) delle richieste presentate ed evase con esito positivo
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0012
+  descrizione: Decisione assunta in maniera collegiale tra il dirigente, funzionario e tecnico istruttore.
+  tipo_misura: SPECIFICA
+- codice: MIS-0013
+  descrizione: Verifica tra istanze presentate e procedimenti conclusi
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0014
+  descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+    illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
+    rispetto a comportamenti non conformi.Verifica a campione sui dinieghi
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0015
+  descrizione: Controllo a campione sulle richieste accolte (corrispondenza tra quanto richiesto e quanto
+    consegnato) e sui dinieghi taciti ed espressi (verifica della motivazione) da parte del Responsabile
+    del servizio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0016
+  descrizione: Monitoraggio dei tempi procedimentali
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0017
+  descrizione: Utilizzo portale VBG a partire dal 01/10/2024 per le pratiche di autorizzazione allo scarico.
+    In fase di avvio l'utilizzo del portale per la gestione delle altre pratiche e del loro stato di avanzamento
+  tipo_misura: SPECIFICA
+- codice: MIS-0018
+  descrizione: Rotazione del personale effettuata nel corso del 2022 con assegnazione pratiche di autorizzazioni
+    in deroga ai limiti di emissione acustica a ulteriore personale della U.O. 7.2
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0019
+  descrizione: check list da utilizzare in fase istruttoria
+  tipo_misura: SPECIFICA
+- codice: MIS-0020
+  descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+    dalla normativa di riferimento da consultare nella prima fase della valutazione delle domande, quando
+    cioè è necessario definire se la domanda in analisi è da escludere o o meno
+  tipo_misura: SPECIFICA
+- codice: MIS-0021
+  descrizione: Predisporre una griglia contenente in maniera schematica tutte le prerogative previste
+    dalla normativa di riferimento da consultare nella fase di attribuzione del punteggio a ogni domanda
+  tipo_misura: SPECIFICA
+- codice: MIS-0022
+  descrizione: Una volta terminata la fase di assegnazione dei punteggi a tutte le domande non escluse,
+    procedere a un controllo a campione incrociato. Se i dipendenti che hanno valutato le domande sono
+    due, fare in modo che ciascuno riveda i punteggi assegnati ad alcune delle domande precedentemente
+    analizzate dall'altro
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0023
+  descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che ha
+    curato l'istruttoria per verificarne la correttezza
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0024
+  descrizione: Effettuare controlli a campione su almeno il 10% dei ammessi definitivamente ad usufruire
+    del beneficio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0025
+  descrizione: Istituzione di un registro informatizzato di arrivo delle pratiche con annotazione data
+    di avanzamento della fase del procedimento, e tempi di conclusione
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0026
+  descrizione: Verifica semestrale del rispetto dei tempi di rilascio del provvedimento al fine di evitare
+    il prolungamento illegittimo dei tempi di conclusione dei procedimenti.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0027
+  descrizione: Inserimento su programma informatizzato delle istanze mantenendo l'ordine di registrazione
+    del Protocollo Generale
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0028
+  descrizione: Esecuzione istruttoria delle istanze seguendo l'ordine di caricamento sul programma
+  tipo_misura: SPECIFICA
+- codice: MIS-0029
+  descrizione: Rispetto dei tempi di rilascio
+  tipo_misura: SPECIFICA
+- codice: MIS-0030
+  descrizione: Doppio Controllo Rup- Dirigente del Settore
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0031
+  descrizione: Duplice controllo
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0032
+  descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio comunale
+    n. 2 del 08/01/2019
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0033
+  descrizione: Protocollazione istanze
+  tipo_misura: SPECIFICA
+- codice: MIS-0034
+  descrizione: Rotazione del personale che evita che una funzione dell'Ente vada, nel tempo, a identificarsi
+    con il dipendente che la svolge e che si creino relazioni particolari tra i destinatari dei provvedimenti
+    e il persona degli uffici interessati.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0035
+  descrizione: Verifica del rispetto dei tempi procedimentali al fine di evitare la protrazione illegittima
+    dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale rispetto a comportamenti
+    non conformi.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0036
+  descrizione: Rilascio di copia del verbale (di ritrovamento e consegna alla PM) al soggetto che consegna
+    le cose
+  tipo_misura: SPECIFICA
+- codice: MIS-0037
+  descrizione: Invio del verbale di riconsegna viene inviata alla segreteria del Comando e visionata dal
+    Responsabile del Servizio
+  tipo_misura: SPECIFICA
+- codice: MIS-0038
+  descrizione: Applicazione del principio della rotazione almeno annuale del personale assegnato all'espletamento
+    di tale fase;Suddivisione tra il personale preposto ai riscontri contabili e quello che provvede alle
+    verifiche delle inadempienze.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0039
+  descrizione: Utilizzo della procedura informatica messa a disposizione del MEF;Verifica finale della
+    correttezza del procedimento effettuata dal responsabile del servizio finanziario al momento di firmare
+    digitalmente il rilascio della certificazione richiesta.
+  tipo_misura: SPECIFICA
+  categoria: Semplificazione
+- codice: MIS-0040
+  descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare benefici
+    economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici e socio-economici
+    dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione mediante predeterminazione
+    di appositi bandi per le varie situazioni di bisogno, in via ordinaria. In via straordinaria possibilità
+    di erogare contributi extra ordinari su motivazione specifica dell'A.S. nelle diverse situazioni.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0041
+  descrizione: Al fine di evitare disparità di trattamento, l'esame della domanda e della proposta assistenziale
+    viene effettuata da parte della Commissione Tecnica.
+  tipo_misura: SPECIFICA
+- codice: MIS-0042
+  descrizione: Successiva verifica a campione effettuata da personale/soggetto diverso rispetto a quello
+    che ha effettuato la verifica originaria.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0043
+  descrizione: Ad ogni variabile gestita dagli operatori sulla scheda anagrafica dovrà risultare agli
+    atti il documento a supporto.Verifica a campione delle movimentazioni.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0044
+  descrizione: Report periodico di verifica (almeno semestrale) tra richieste e accoglimenti/rigetti
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0045
+  descrizione: Rafforzare l'analisi condotta di concerto tra U.O. 2.1. e 2.2 per la stesura di progettualità
+    condivise sui bisogni dei cittadini
+  tipo_misura: SPECIFICA
+- codice: MIS-0046
+  descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che ha
+    curato l'istruttoria
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0047
+  descrizione: Controlli a campione da parte di personale diverso rispetto a quello che ha curato l'istruttoria
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0048
+  descrizione: Report periodico (almeno annuale) sulle istanze presentate in ritardo/istanze accolte
+  tipo_misura: SPECIFICA
+- codice: MIS-0049
+  descrizione: Controllo del ricorso da parte di una commissione interna all'ufficio formata da almeno
+    tre membri.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0050
+  descrizione: Effettuare controlli a campione su almeno il 20% dei ammessi definitivamente ad usufruire
+    del beneficio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0051
+  descrizione: Le pratiche che si concludono con il formarsi del silenzio assenso devono essere corredate
+    da una motivazione scritta dell'operatore cui erano state assegnate.
+  tipo_misura: SPECIFICA
+- codice: MIS-0052
+  descrizione: Rotazione del personale sulle pratiche relative allo stesso operatore commerciale. Le pratiche
+    vengono assegnate da due dipendenti addette allo smistamento dei protocolli, che applicano suddetto
+    principio di rotazione.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0053
+  descrizione: rispetto dei tempi procedimentali indicati negli artt. 14-15 del Regolamento dello Sportello
+    Unico delle Attività produttive approvato con D.G.C. 251 del 1999 e s.m.i.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0054
+  descrizione: Assegnazioni secondo il regolamento comunale e coinvolgimento della commissione interna
+    del Luna Park. Rispetto del codice di comportamento dei dipendenti del Comune di Lucca.
+  tipo_misura: SPECIFICA
+  categoria: Definizione e promozione dell'etica e di standard di comportamento
+- codice: MIS-0055
+  descrizione: Esame della domanda per la verifica dei presupposti effettuata da più settori/servizi.Standardizzazione
+    del procedimento di rilascio delle concessioni, come previsto dal vigente regolamento Canone Unico
+    Patrimoniale
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0056
+  descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
+    illegittima dei tempi di conclusione dei procedimenti, come stabiliti dal vigente Regolamento Canone
+    Unico Patrimoniale
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0057
+  descrizione: Pubblicizzazione su sito istituzionale della possibilità di richiedere contributi in base
+    agli oneri di urbanizzazione secondaria incassati ed accantonabili nella misura del 10%.
+  tipo_misura: SPECIFICA
+- codice: MIS-0058
+  descrizione: Definizione modalità e criteri della ripartizione.
+  tipo_misura: SPECIFICA
+- codice: MIS-0059
+  descrizione: Acquisizione documenti asseverati dai tecnici e dalle imprese che hanno eseguito i lavori.
+  tipo_misura: SPECIFICA
+- codice: MIS-0060
+  descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
+    per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati per
+    singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le tariffe per
+    il servizio offerto (facoltativo)
+  tipo_misura: SPECIFICA
+  categoria: Trasparenza
+- codice: MIS-0061
+  descrizione: a) La misura consiste in via transitoria nel dare attuazione ai principi generali di cui
+    al par. 1.3 lett. e) del presente PTPC; b) per la misura a regime si rinvia invece all'allegato A/3
+    misura n. 8
+  tipo_misura: SPECIFICA
+- codice: MIS-0062
+  descrizione: Controlli periodici da parte del responsabile dell'ufficio dei permessi e delle tariffe
+    riscosse, con particolare attenzione alle esenzioni;Rotazione periodica del personale addetto all'istruttoria
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0063
+  descrizione: 'I criteri sono stabiliti dalla L.R. Toscana n. 28/2005 e del Regolamento Comunale del
+    Commercio su Aree Pubbliche (approvato con Delibera C.C. n. 192 del 22/11/2001).I posteggi vengono
+    assegnati in base ad una graduatoria redatta e aggiornata dall''ufficio commercio su aree pubbliche:
+    i soggetti non assegnatari di posteggio fisso nei mercati firmano la presenza entro le ore 8,00 e
+    vengono chiuse le liste degli "spuntisti". I posteggi rimasti liberi, saranno assegnati seguendo la
+    graduatoria sopra descritta e previo pagamento della tariffa per l''occupazione giornaliera del posteggio.Delle
+    operazioni viene redatta apposita documentazione che è trasmessa all''ufficio commercio su aree pubbliche
+    per l''aggiornamento delle graduatorie degli "spuntisti".'
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0064
+  descrizione: Sulla base del "Regolamento generale per la concessione dei contributi e benefici economici
+    (Deliberazione C.C. n. 2 dell'8/01/2019) l'erogazione di contributi finanziari ai soggetti che operano
+    in ambito sociale a favore di anziani, disabili, minori e famiglie, viene concesso tramite la pubblicazione
+    di un Avviso pubblico approvato con determinazione dirigenziale. Nell'Avviso pubblico sono indicati
+    i criteri di valutazione qualitativi-quantitativi per la concessione.
+  tipo_misura: SPECIFICA
+  categoria: Trasparenza
+- codice: MIS-0065
+  descrizione: 'Incremento qualitativo dei Tavoli della Marginalità, sede in cui A.C.ed ETS si confrontano
+    sui bisogni individuati sul territorio e programmano congiuntamente gli interventi necessari in base
+    alle risorse disponibili. Richiesta di modifica: abbiamo provveduto non tanto all''incremento numerico
+    del n. di sedute del Tavolo Marginalità, ma a una crescita qualitativa di questo organo, ampliamento
+    della platea dei partecipanti: costituzione del "Tavolo del Terzo Settore per l''inclusione", che,
+    oltre a coinvolgere gli ETS del Comune di Lucca, comprende tutti gli ETS dell''intera Piana di Lucca
+    che si occupano dei temi della marginalità e dell''inclusione.'
+  tipo_misura: SPECIFICA
+- codice: MIS-0066
+  descrizione: I contributi vengono rilasciati in ordine di arrivo della richiesta al Protocollo Generale,
+    in base alle disponibilità allocate in bilancio; sulla determinazione della congruità della spesa
+    per l'esecuzione dei lavori e del correlato contributo viene effettuato un doppio controllo interno
+    da parte del personale dell'ufficio competente - tecnico incaricato e RUP
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0067
+  descrizione: Doppio controllo sui lavori effettuati - rotazione del personale
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0068
+  descrizione: Riscontro e adozione dei parametri prezzo - qualità ex Convenzioni quadro di Consip e degli
+    altri Soggetti Aggregatori (Regione Toscana e Città Metropolitana di Firenze), Prezzari regionali,
+    Prezzari ANAC se presenti, ovvero rispetto della disciplina speciale ove ricorra. Rispetto dell'art.
+    95 d. lgs 50/2016 e delle linee guida ANAC n. 2/2016
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0069
+  descrizione: Atto regolatorio dell'Elenco degli operatori economici per forniture servizi e lavori approvato
+    con delibera di Giunta n. 81 del 31.08.2021 e successivi aggiornamenti.
+  tipo_misura: SPECIFICA
+- codice: MIS-0070
+  descrizione: Riferimento puntuale e rigoroso agli artt. 94, 95, 97, 98 e art. 100 del d.lgs 36/2023
+    nonché al Patto di integrità adottato con delibera di Giunta Comunale n. 235 del 31/08/2022.
+  tipo_misura: SPECIFICA
+- codice: MIS-0071
+  descrizione: 'Verifica puntuale da parte del RUP/ del DEC sul rispetto degli adempimenti contrattuali.
+    In caso di affidamenti gestiti dal Provveditorato: eventuali segnalazioni da parte di coloro che sono
+    a diretto contatto con la prestazione contrattuale ovvero utilizzano i beni forniti di anomalie ed
+    irregolarità sono sottoposte immediatamente al RUP/DEC.'
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0072
+  descrizione: Le attività del DEC sono presidiate e dirette dal RUP
+  tipo_misura: SPECIFICA
+- codice: MIS-0073
+  descrizione: Rotazione dei professionisti invitati attingendo anche dall'elenco vigente redatto dal
+    Settore 5 pubblicato sul sito comunale - approvato con DD 1836 del 27/10/2020
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0074
+  descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
+    consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato -
+    elenco professionisti approvato con DD 1836 del 27/10/2020-
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0075
+  descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
+    consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato elenco
+    professionisti approvato con DD 1836 del 27/10/2020-
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0076
+  descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
+    consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato -
+    elenco professionisti approvato con DD 1836 del 27/10/2020
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0077
+  descrizione: Rotazione affidamento degli incarichi tra RUP e verificatore del progetto esecutivo, per
+    importi > a 1.000.000,00 ╒
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0078
+  descrizione: Divisione, ove possibile, delle figure del RUP e del Direttore Lavori, anche per i lavori
+    ove la norma non vieta la coincidenza, oppure qualora ciò non fosse possibile (per mancanza di soggetti
+    all'interno delle U.O. Con requisiti professionali previsti dalla norma) formalizzare gli incarichi
+    di Direttore Operativo e/o Ispettore di cantiere diversi dal RUP e dal Direttore Lavori
+  tipo_misura: SPECIFICA
+- codice: MIS-0079
+  descrizione: Perizia tecnica che indica anche la necessità dei lavori
+  tipo_misura: SPECIFICA
+- codice: MIS-0080
+  descrizione: Individuazione delle ditte immediatamente disponibili attuando ove possibile il criterio
+    di rotazione di cui sopra , fatta salva la necessità di utilizzare eventuali ditte presenti in loco
+    per contratti in corso al fine anche di limitare i costi.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0081
+  descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente Responsabile
+    del servizio a cui le risorse sono destinate.
+  tipo_misura: SPECIFICA
+- codice: MIS-0082
+  descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+    dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli eventualmente
+    esclusi. Ad ogni candidato escluso viene inviata apposita nota. Tutti i candidati la cui domanda sia
+    pervenuta tramite portale nei termini perentori di scadenza, sono ammessi con riserva alla selezione,
+    sulla base delle dichiarazioni sottoscritte. L'accertamento del possesso dei requisiti viene fatto
+    ai sensi dell'art. 15 del Regolamento.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0083
+  descrizione: La composizione e il funzionamento delle Commissioni è disciplinato dal Regolamento delle
+    Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0084
+  descrizione: I criteri stabiliti dalla Commissione, nell'ambito di quanto previsto dal bando di concorso,
+    per la valutazione dei titoli, saranno pubblicati sul portale InPA e nella pagina del sito web.
+  tipo_misura: SPECIFICA
+- codice: MIS-0085
+  descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+    L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).La Commissione propone tre
+    tracce per ciascuna prova scritta. Deve essere garantita analoga complessità e rilevanza nella formulazione
+    dei quesiti. Le tracce sono segrete, elaborate con modalità digitale e ne è vietata la divulgazione.
+    L'estrazione della prova è effettuata da almeno 2 candidati.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0086
+  descrizione: Indicazione specifiche delle singole posizioni di riserva/precedenza nella determinazione
+    di approvazione della graduatoria finale.
+  tipo_misura: SPECIFICA
+- codice: MIS-0087
+  descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente Responsabile
+    del servizio a cui le risorse sono destinate e viene inviato per un preventivo esame al Centro per
+    l'Impiego.
+  tipo_misura: SPECIFICA
+- codice: MIS-0088
+  descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+    L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0089
+  descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente Responsabile
+    del servizio a cui le risorse sono destinate. Alle selezioni per mobilità volontaria - ancorché non
+    qualificabili strettamente quali concorsi pubblici - si applicano le disposizioni di carattere generale
+    di cui al Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli
+    Uffici e dei Servizi dell'Ente). ritenute compatibili con la disciplina normativa specifica di riferimento.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0090
+  descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+    dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli eventualmente
+    esclusi. Ad ogni candidato escluso viene inviata apposita nota.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0091
+  descrizione: Alle selezioni per mobilità volontaria - ancorché non qualificabili strettamente quali
+    concorsi pubblici - si applicano le disposizioni di carattere generale di cui al Regolamento delle
+    Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente)
+    ritenute compatibili con la disciplina normativa specifica di riferimento. In ogni caso per dette
+    selezioni trova applicazione la disciplina sulla composizione delle Commissioni deputate alla valutazione
+    dei candidati.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0092
+  descrizione: Le materie oggetto di colloquio e valutazione sono inserite nell'Avviso.
+  tipo_misura: SPECIFICA
+- codice: MIS-0093
+  descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente Responsabile
+    del servizio a cui le risorse sono destinate. Alle presenti selezioni - ancorché non qualificabili
+    strettamente quali concorsi pubblici - si applicano le disposizioni di carattere generale di cui al
+    Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e
+    dei Servizi dell'Ente) ritenute compatibili con la disciplina normativa specifica di riferimento.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0094
+  descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
+    dirigenziale di ammissione ed esclusione devono essere indicati per ogni candidato escluso i singoli
+    e specifici motivi di esclusione.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0095
+  descrizione: Applicazione delle disposizioni sulla composizione delle Commissioni di cui al Regolamento
+    delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
+    dell'Ente).
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0096
+  descrizione: I criteri stabiliti dalla Commissione per la valutazione dei titoli, nell'ambito di quanto
+    previsto dal bando di selezione, saranno eventualmente pubblicati nella pagina del sito web.
+  tipo_misura: SPECIFICA
+- codice: MIS-0097
+  descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
+    L del Regolamento sull'Ordinamento degli Uffici e dei Servizi) per quanto ritenuto compatibile con
+    la disciplina normativa specifica di riferimento.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0098
+  descrizione: Le domande vengono controllate più dipendenti dell'Ufficio Personale.Nella determinazione
+    dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli eventualmente
+    esclusi. Ad ogni candidato escluso viene inviata apposita nota.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0099
+  descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti che
+    tiene traccia delle operazioni effettuate.
+  tipo_misura: SPECIFICA
+  categoria: Semplificazione
+- codice: MIS-0100
+  descrizione: Verifica a campione incrociata delle azioni per l'individuazione delle anomalie, sotto
+    la direzione del dirigente.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0101
+  descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto la
+    direzione del dirigente.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0102
+  descrizione: Applicazione della rotazione almeno annuale delle competenze tra il personale coinvolto;
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0103
+  descrizione: Distinzione tra il personale che effettua le verifiche Equitalia e chi effettua il pagamento
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0104
+  descrizione: Pubblicazione sul sito istituzionale Sez. Amministrazione Trasparente _ Pagamenti dell'Amministrazione
+    dei tempi medi di pagamento e dei dati sui pagamenti
+  tipo_misura: SPECIFICA
+  categoria: Trasparenza
+- codice: MIS-0105
+  descrizione: Disposizioni interne per orientare la discrezionalità e uniformare i comportamenti, ove
+    possibile, (DD n. 1631/2011).Utilizzo di criteri oggettivi per la valutazione della sussistenza dei
+    presupposti per concedere la rateizzazione.
+  tipo_misura: SPECIFICA
+- codice: MIS-0106
+  descrizione: La richiesta, compilata in ogni sua parte, dovrà essere protocollata e inviata sia al Dirigente
+    del Personale che all'Ufficio Personale entro 10 giorni dalla data di svolgimento del corso di formazione.
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0107
+  descrizione: Nella richiesta dovrà essere motivata da parte del Dirigente al scelta del corso effettuando
+    una valutazione in termini di qualità prezzo
+  tipo_misura: SPECIFICA
+- codice: MIS-0108
+  descrizione: Consegna al dipendente del Servizio/Settore di ricevuta attestante l'entità del versamento
+    il cui importo coincide con la distinta presentata.
+  tipo_misura: SPECIFICA
+- codice: MIS-0109
+  descrizione: La chiusura di cassa avviene tramite procedura informatizzata, che accorpa i dati di tutte
+    le ricevute rilasciate in giornata ai vari Servivi/Settori.
+  tipo_misura: SPECIFICA
+- codice: MIS-0110
+  descrizione: Per ciascun giorno di chiusura viene redatta una specifica distinta di versamento che viene
+    consegnata con il relativo introito alla Tesoreria.
+  tipo_misura: SPECIFICA
+- codice: MIS-0111
+  descrizione: Ogni fine mese viene trasmesso al Servizio Finanziario il riepilogo delle somme incassate
+    che coincide con la somma delle distinte di versamento in Tesoreria e delle reversali dalla stessa
+    rilasciate.
+  tipo_misura: SPECIFICA
+- codice: MIS-0112
+  descrizione: L'Economo rende al Servizio Finanziario il Conto di gestione sul quale il Ragioniere capo
+    appone il visto di regolarità contabile.
+  tipo_misura: SPECIFICA
+- codice: MIS-0113
+  descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti che
+    tiene traccia delle operazioni effettuate e pertanto con iter non riferibili a singolo operatore ma
+    all'intera U.O.
+  tipo_misura: SPECIFICA
+  categoria: Semplificazione
+- codice: MIS-0114
+  descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto la
+    direzione del dirigente ed emissione del relativo ruolo da riscuotere in forma coattiva da parte di
+    Lucca Riscossione e Servizi, come da contratto di servizio con il Comune
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0115
+  descrizione: 'Verifica in ordine all''insussistenza di quanto previsto all''35 bis comma 1 lett. c)
+    del d. lgs 165/2001 (condanne penali in capo ai membri): deve essere acquisita all''atto di nomina
+    una previa dichiarazione resa da ciascun membro ai sensi del d.P.R. 445/2000.'
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0116
+  descrizione: Verifica puntuale degli adempimenti previsti dalla concessione e richiesta documentazione
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0117
+  descrizione: Corretta applicazione dei parametri tecnici di valutazione e comparazione dei danni in
+    relazione all'evento, che consentano di definire i soggetti cui assegnare il rimborso ed il suo ammontare.
+    Si sottolinea che nelle ultime procedure per i danni a privati e imprese il compito del comune si
+    è risolto nel pubblicizzare le informazioni. Altre volte, nella raccolta e trasmissione delle istanze,
+    quest'ultima sostituita, nelle ultime emergenze, da portali gestiti da RT/ARTEA o altre agenzie regionali
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0118
+  descrizione: 'Il bando contiene le specifiche richieste senza indicare caratteristiche che non siano
+    di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di parcheggi, ecc.In caso
+    di caratteristiche analoghe la scelta avverrà in base alla miglior offerta economica.'
+  tipo_misura: SPECIFICA
+- codice: MIS-0119
+  descrizione: La stima dovrà essere redatta con le modalità stabilite dall'apposito regolamento comunale
+    in base ad oggettivi criteri di mercato.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0120
+  descrizione: 'Il bando dovrà contenere le specifiche richieste senza indicare caratteristiche che non
+    siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di parcheggi, ecc.In
+    caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta economica.'
+  tipo_misura: SPECIFICA
+- codice: MIS-0121
+  descrizione: 'Verifica entro 15 giorni dall''arrivo della fattura all''ufficio.Qualora trattasi di forniture
+    trasversali gli uffici devono trasmettere i giustificativi entro 15 giorni dalla richiesta.Per la
+    liquidazione di contributi: check list per verifica dei presupposti necessari da parte del firmatarioLa
+    determinazione di liquidazione deve essere adottata entro 15 giorni dall''esito positivo delle verifiche
+    di regolarità della prestazione.'
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0122
+  descrizione: Richiamo formale in caso di ritardo o mancata trasmissione del conto di gestione. Considerata
+    la specificità dell'imposta di soggiorno, sia per la natura dei soggetti che per il n° degli stessi,
+    l'attività sopra elencata è attribuita all'ufficio competente in tema di tributi comunali.
+  tipo_misura: SPECIFICA
+- codice: MIS-0123
+  descrizione: Elaborazione tramite la procedura informatica della contabilità di stampe/prospetti dimostrativi
+    delle concordanze contabili. Comunicazioni formali all'agente contabile in caso di discordanze e/o
+    richiesta informazioni. Rotazione del personale preposto alla verifica dei conti di gestione. Apposizione
+    firma da parte della competente P.O. Considerata la specificità dell'imposta di soggiorno, sia per
+    la natura dei soggetti che per il n° degli stessi, le attività sopra elencate sono attribuite all'ufficio
+    competente in tema di tributi comunali. Verifiche periodiche da parte dell'organo di revisione contabile.
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0124
+  descrizione: Verifica finale effettuata dal Responsabile del Servizio Finanziario mediante l'apposizione
+    del visto di parificazione. Presa d'atto dell'avvenuta parificazione dei conti di gestione e relativa
+    approvazione da parte della G.C.. Trasmissione dei conti di gestione alla Corte dei Conti - Sezione
+    Giurisdizionale per la Toscana per il successivo giudizio di conto. Considerata la specificità dell'imposta
+    di soggiorno, sia per la natura dei soggetti che per il n° degli stessi, l'attività inerente la trasmissione
+    dei conti di gestione alla Corte dei Conti è attribuita all'ufficio competente in tema di tributi
+    comunali.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0125
+  descrizione: Osservazione di procedura interna all'ufficio, con valore di linea guida generale per la
+    programmazione e gestione del finanziamento
+  tipo_misura: SPECIFICA
+- codice: MIS-0126
+  descrizione: Predisposizione di timeplan e checklist delle scadenze all'avvio di ogni singolo progetto/finanziamento
+    e verifica del responsabile sulla congruità e completezza della documentazione predisposta, prima
+    di ciascuna sottomissione
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0127
+  descrizione: Svolgimento di specifica formazione professionale del personale assegnato alle attività
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0128
+  descrizione: Osservazione del Protocollo di Intesa con la Guardia di Finanza rep. n. 73 del 19.01.2023
+  tipo_misura: SPECIFICA
+- codice: MIS-0129
+  descrizione: Redazione documento di sintesi della strategia antifrode del Comune di Lucca entro Giugno
+    2025 - in attuazione Reg. (Ue) 2021/241 e dal d.l. 77/2021
+  tipo_misura: SPECIFICA
+- codice: MIS-0130
+  descrizione: Osservazione delle procedure inserite nella strategia antifrode approvata
+  tipo_misura: SPECIFICA
+- codice: MIS-0131
+  descrizione: Controllo rigoroso e preventivo della consistenza dei documenti presentati, per ogni singola
+    richiesta di attestazione.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0132
+  descrizione: Trattamento delle richieste in rigoroso ordine di ricevimento (tenuto tramite repertorio
+    ad hoc) e valutazione delle domande dei residenti (temporaneamente in Italia) solo dopo la chiusura
+    del procedimento di registrazione della loro residenza.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0133
+  descrizione: Fuori dai termini del silenzio assenso ed in caso di accertamento negativo, apertura di
+    altro procedimento di regolarizzazione. Controlli a campione tra richieste e rilasci da parte di dipendenti
+    diversi da quelli che hanno istruito la pratica. La residenza è registrata immediatamente e comunque
+    (obbligatoriamente entro due giorni) e produce immediatamente i suoi effetti. Verifica e valutazione
+    degli esiti PM, anche quando pervenuti successivamente al silenzio-assenso, al fine di valutarli per
+    ulteriori procedimenti.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0134
+  descrizione: Verifica a campione incrociata delle pratiche da parte del personale d'ufficio sotto la
+    direzione del Dirigente ed adozione di provvedimento motivato nella forma dell'ordinanza ingiunzione
+    a norma della legge 689/81
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0135
+  descrizione: Verifica del rispetto dei tempi procedimentali al fine di evitare la protrazione illegittima
+    dei tempi di conclusione dei procedimenti
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0136
+  descrizione: Utilizzo di software informatico, che consente la tracciabilità dei soggetti che operano
+    sul sistema, per la individuazione delle posizioni dubbie e per la elaborazione delle segnalazioni
+    qualificate.Verifica a campione delle pratiche da parte del personale d'ufficio, secondo rotazione
+    casuale, sotto la direzione del dirigente.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0137
+  descrizione: Controllo dell'agente al front-office e dell'ufficio violazioni o della Forza di Polizia
+    diversa dalla P.M. Lucca che riceve le copie per competenza;
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0138
+  descrizione: Rilascio di attestazione dell'avvenuta presentazione del documento all'utente;Invio della
+    scansione del documento al Comando accertatore per PEC.
+  tipo_misura: SPECIFICA
+- codice: MIS-0139
+  descrizione: Determinazione dei casi di possibile archiviazione delle sanzioni in autotutela (DD n.
+    1650/2011).Individuazione dei casi in cui il verbalizzante propone l'archiviazione del preavviso di
+    accertamento o la sostituzione dello stesso con altro verbale emendato dell'errore;Verifica da parte
+    del Responsabile dell'Ufficio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0140
+  descrizione: Tenuta di un registro con numerazione cronologica interno all'ufficio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0141
+  descrizione: Attuazione e applicazione dell'obbligo di motivazione dell'accoglimento/rigetto delle memorie
+    difensive già previsto dalla L.241/90
+  tipo_misura: SPECIFICA
+- codice: MIS-0142
+  descrizione: Rispetto delle linee guida interne per la definizione dei criteri per la rideterminazione
+    delle sanzioni
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0143
+  descrizione: Verifica annuale del rispetto dei tempi procedimentali
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0144
+  descrizione: Differenziazione tra la figura dell'istruttore e del responsabile del procedimento in attuazione
+    della L.241/90
+  tipo_misura: SPECIFICA
+- codice: MIS-0145
+  descrizione: Verifica annuale dei tempi procedimentali
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0146
+  descrizione: Differenziazione tra la figura dell'istruttore e del responsabile del procedimento in applicazione
+    L.241/90; effettuato primo corso di formazione del personale in data 19/10/2023; prevista ulteriore
+    formazione nel corso del 2025
+  tipo_misura: SPECIFICA
+  categoria: Formazione
+- codice: MIS-0147
+  descrizione: Controllo a campione della documentazione da parte di un diverso operatore
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0148
+  descrizione: non comunicazione del calendario delle visite da parte del soggetto incaricato
+  tipo_misura: SPECIFICA
+- codice: MIS-0149
+  descrizione: Richiesta al soggetto che ha effettuato la visita di trasmettere per protocollo al coordinatore
+    pedagogico incaricato della vigilanza, al responsabile del servizio e al dirigente, il verbale della
+    visita con evidenziate le irregolarità riscontrate
+  tipo_misura: SPECIFICA
+- codice: MIS-0150
+  descrizione: Richiesta al soggetto che ha effettuato la visita di trasmettere per protocollo al coordinatore
+    pedagogico incaricato della vigilanza, al responsabile del servizio e al dirigente, il verbale della
+    visita che attesta il mancato ripristino delle condizioni di autorizzazione accreditamento
+  tipo_misura: SPECIFICA
+- codice: MIS-0151
+  descrizione: Report semestrale delle segnalazioni inoltrate alla PM e riscontri ricevuti dalla PM sui
+    controlli effettuati
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0152
+  descrizione: Redazione apposita relazione di servizio sul controllo effettuatoControlli/riscontri periodiche
+    su istanze presentate e sopralluoghi effettuatiVerifiche da parte del Responsabile del Servizio
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0153
+  descrizione: Rispetto dell'ordine cronologico.
+  tipo_misura: SPECIFICA
+- codice: MIS-0154
+  descrizione: Sopralluogo, eventualmente congiunto col tecnico comunale, documentazione fotografica dello
+    stato dei luoghi con ulteriore relazione di servizio e, se accertata l'inottemperanza, redazione del
+    verbale.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0155
+  descrizione: Istituzione di un capitolo di entrata e di corrispondente uscita.
+  tipo_misura: SPECIFICA
+- codice: MIS-0156
+  descrizione: Previsto sopralluogo entro 6 mesi dalla ricezione per ogni apertura di nuova struttura
+    ricettiva.Presenza di almeno due persone al sopralluogo.Redazione e consegna al titolare del verbale
+    redatto secondo una procedura e un modello ben definiti.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0157
+  descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro dei
+    sopralluoghi con aggiornamento periodico da parte degli incaricati sullo stato di avanzamento del
+    procedimento.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0158
+  descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Presenza
+    di almeno due persone incaricate di effettuare la visita.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0159
+  descrizione: Aggiornamento periodico da parte degli incaricati del registro dei sopralluoghi.Controllo
+    del registro da parte del responsabile dell'ufficio.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0160
+  descrizione: Previsto sopralluogo entro 6 mesi dall'apertura di una nuova agenzia di viaggi
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0161
+  descrizione: Presenza di almeno due persone al sopralluogo
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0162
+  descrizione: Redazione e consegna al titolare del verbale redatto secondo una procedura e un modello
+    ben definiti
+  tipo_misura: SPECIFICA
+- codice: MIS-0163
+  descrizione: Redazione verbale di sopralluogo e aggiornamento registro.Presenza di almeno due persone
+    al sopralluogo.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0164
+  descrizione: Utilizzo di una check list per l'analisi dei documenti e redazione di un verbale con gli
+    esiti dell'istruttoria.
+  tipo_misura: SPECIFICA
+- codice: MIS-0165
+  descrizione: Controlli sui verbali da parte del responsabile dell'ufficio.Tenuta di un registro delle
+    istruttorie eseguite con aggiornamento periodico da parte degli incaricati sullo stato di avanzamento
+    del procedimento.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0166
+  descrizione: Redazione apposita relazione di servizio sul controllo effettuato
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0167
+  descrizione: Si vedano le misure per il procedimento relativo (cod F4)
+  tipo_misura: SPECIFICA
+- codice: MIS-0168
+  descrizione: Verifica ipotesi di conflitto di interesse; Verifica semestrale atti di annullamento o
+    conferma
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0169
+  descrizione: Utilizzo di generatore casuale di numeri con verbalizzazione dell'operazione di estrazione
+  tipo_misura: SPECIFICA
+- codice: MIS-0170
+  descrizione: Presenza di almeno tre dipendenti durante l'estrazione del campione
+  tipo_misura: SPECIFICA
+- codice: MIS-0171
+  descrizione: Conservazione del verbale di estrazione e degli elenchi degli atti estratti per almeno
+    5 anni
+  tipo_misura: SPECIFICA
+- codice: MIS-0172
+  descrizione: Verifica conflitti di interessi
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0173
+  descrizione: Utilizzo dell'elenco professionisti pubblicato sul sito istituzionale
+  tipo_misura: SPECIFICA
+- codice: MIS-0174
+  descrizione: Utilizzo del metodo indagine di mercato con almeno tre operatori, anche ove la normativa
+    dà la possibilità di affidamento diretto
+  tipo_misura: SPECIFICA
+- codice: MIS-0175
+  descrizione: Rotazione delle chiamate per le gare/indagini di mercato etc.
+  tipo_misura: SPECIFICA
+  categoria: Rotazione
+- codice: MIS-0176
+  descrizione: 'Nella relazione predisposta ai sensi dello Statuto e del Regolamento dell''Avvocatura
+    dovrà essere data analitica motivazione della scelta di un particolare professionista. L''Avvocatura
+    - che, nel caso non assume la gestione della causa - sentito il Sindaco, provvede, in alternativa,
+    o: 1) acquisire il preventivo di notula del legale indicato dal dirigente; 2) procedere alla individuazione
+    di un legale esterno scelto tra gli iscritti nell''elenco degli Avvocati tenuto presso l''Avvocatura
+    previa valutazione del curriculum e l''acquisizione del preventivo di notula. Il preventivo, comunque
+    acquisito, viene valutato tenendo conto del tariffario DM vigente, e comunque nel rispetto del Codice
+    degli appalti, delle linee guida ANAC e del Regolamento comunale'
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+- codice: MIS-0177
+  descrizione: L'Avvocatura - qualora non debba assumere direttamente la rappresentanza processuale dell'Ente
+    - provvede alla individuazione di un legale esterno scelto - di regola e salvo diversa, specifica
+    motivata indicazione da parte del Responsabile del Settore - tra gli iscritti nell'elenco degli Avvocati
+    tenuto presso l'Avvocatura previa valutazione dei curriculum e l'acquisizione del preventivo di notula
+    da valutarsi come congruo e da impegnare sulle risorse disponibili
+  tipo_misura: SPECIFICA
+- codice: MIS-0178
+  descrizione: La segnalazione protocollata ove proveniente da fonte diversa deve essere inviata per conoscenza
+    al Dirigente della struttura presso la quale il dipendente è assegnato.
+  tipo_misura: SPECIFICA
+- codice: MIS-0179
+  descrizione: Il provvedimento di archiviazione o di irrogazione della sanzione viene inviato al dipendente
+    interessato e, per conoscenza, al dirigente che ha inviato la segnalazione.
+  tipo_misura: SPECIFICA
+- codice: MIS-0180
+  descrizione: Verifica conflitto interesse tra verbalizzante e destinatario del provvedimento
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0181
+  descrizione: Verifica periodica (almeno annuale) sui verbali notificati fuori termine
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0182
+  descrizione: Verifica conflitto di interesse
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0183
+  descrizione: La proposta di conciliazione concordata tra le parti del processo tributario è sottoposta
+    alla preventiva valutazione del dirigente.
+  tipo_misura: SPECIFICA
+- codice: MIS-0184
+  descrizione: Predisposizione memorie di argomentazioni standard per casi simili;Intervento degli agenti
+    operatori che hanno redatto il verbale oggetto di ricorso;analisi statistica dei ricorsi favorevoli/sfavorevoli
+    e delle anomalie;- predisposizione reports mensili per verifica andamento ricorsi.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0185
+  descrizione: Ogni domanda, entro le 24 ore lavorative successive alla presentazione, viene assegnata
+    ad un diverso istruttore, seguendo progressivamente un elenco di istruttori ordinato alfabeticamente.
+    L'elenco prestabilito è pubblicizzato all'interno dell'ufficio. L'istruttore assegnatario entro il
+    giorno successivo dovrà verificare e, nel caso, rappresentare al dirigente ed al responsabile della
+    U.O. la presenza di eventuale conflitto di interesse - anche potenziale - rispetto alla pratica.
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0186
+  descrizione: Registrazione di tutta la documentazione presentata.Implementazione scheda di rilevazione
+    della documentazione presentata
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0187
+  descrizione: Astensione in caso di conflitto di interesse
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0188
+  descrizione: Predisposizione schemi di istruttoria (tipo check list) per guidare i tecnici nell'esame
+    delle pratiche
+  tipo_misura: SPECIFICA
+- codice: MIS-0189
+  descrizione: Disposizione dirigenziale che rammenta al personale il divieto di svolgere attività esterne
+    in materia di edilizia , se non al di fuori dell'ambito del territorio comunale, in forza del Regolamento
+    C.le relativo all'ordinamento degli uffici e dei servizi (artt. 35, 128, 129, 130), nonché in base
+    delle disposizioni fondamentali sulla incompatibilità nel Pubblico Impiego (art. 60 D.P.R. n. 3/1957
+    e art. 53 D.Lgs. n. 165/2001)
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0190
+  descrizione: Controlli interni/attività formativa sulla corretta ed uniforme gestione dei procedimenti
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0191
+  descrizione: Monitoraggio tempi di procedimento (referto settoriale da parte del Responsabile servizio
+    competente al RPCT)
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0192
+  descrizione: Richiesta finale di contributo firmata da soggetto diverso rispetto all'istruttore
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0193
+  descrizione: Redazione di apposita relazione di servizio sul controllo effettuato a cui seguono controlli/riscontri
+    periodici sulle istanze presentate e sui sopralluoghi effettuati da parte del Responsabile del servizio.Redazione
+    di un report semestrale delle segnalazioni inoltrate all'Edilizia Privata e riscontri ricevuti dall'Edilizia
+    Privata sui controlli effettuati. Per le istanze presentate viene effettuato sopralluogo con eventuale
+    documentazione fotografica dello stato dei luoghi con ulteriore relazione di servizio e, se accertata
+    l'inottemperanza all'ordinanza, redazione del verbale.
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0194
+  descrizione: Utilizzo di registro informatizzato (file excel) di arrivo delle pratiche con annotazione
+    data di avanzamento della fase del procedimento
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0195
+  descrizione: monitoraggio dei tempi procedimentali e annotazione dell'esito delle stesse
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+- codice: MIS-0196
+  descrizione: Regolazione contenuto atto avvio procedimento pianificatorio. La misura consiste nell'indicare
+    con apposito atto gli indirizzi e gli obiettivi assegnati dall'Amministrazione per la redazione dell'atto
+    di avvio del procedimento, di cui all'art. 17 della L.R. n. 65/2014, all'interno del quale sarà contenuto
+    lo specifico riferimento di attuazione e declinazione degli stessi
+  tipo_misura: SPECIFICA
+- codice: MIS-0197
+  descrizione: Regolazione procedimento atto avvio procedimento pianificatorio. La misura consiste, in
+    sede di avvio del procedimento di pianificazione e individuazione del gruppo di lavoro interno/esterno
+    incaricato della redazione dell'atto di pianificazione, di acquisire e verificare apposita dichiarazione
+    individuale di assenza di cause di incompatibilità e/o conflitti di interesse
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+- codice: MIS-0198
+  descrizione: Regolazione istruttoria osservazioni. La misura consiste nella redazione e divulgazione
+    di documenti informativi ulteriori rispetto a quelli già previsti dalla normativa sul Governo del
+    Territorio, di natura sintetica e atecnica
+  tipo_misura: SPECIFICA
+- codice: MIS-0199
+  descrizione: Regolazione procedimento di esame/decisioni osservazioni. La misura consiste nel disciplinare,
+    con apposito atto generale, l'obbligo ulteriore di individuare e pubblicizzare preventivamente i criteri
+    generali per l'istruttoria e le decisioni delle osservazioni.
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione

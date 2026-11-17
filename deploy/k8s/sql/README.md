@@ -11,6 +11,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0005_assistente_lavori.sql` | azioni dell'assistente sui documenti (Riassumi, Confronta, Estrai) eseguite dal worker |
 | `0006_azioni_da_mappatura.sql` | azioni degli obiettivi della performance copiate dalle attività della mappatura dei rischi; rieseguibile |
 | `0007_strutture_coinvolte.sql` | strutture coinvolte nei processi e nelle attività della mappatura (oltre alla responsabile); rieseguibile |
+| `0008_catalogo_mappatura.sql` | catalogo della mappatura (voci di attività, rischi e misure) e collegamento degli elementi; rieseguibile |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

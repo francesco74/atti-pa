@@ -410,6 +410,52 @@ class AnticorruzioneApi(unittest.TestCase):
             "denominazione": "Rinominato", "struttura_id": self.lavori, "coinvolte": []}))  # fmt: skip
         self.assertNotIn(p["id"], della(self.uo))
 
+    def test_catalogo(self):
+        """Gli elementi nuovi prendono la voce con lo stesso testo (o ne creano una dell'ente);
+        il RPCT gestisce il catalogo: cambiare, disattivare o unire una voce usata chiede la
+        conferma; gli elementi tengono il loro testo."""
+        rpct, ref = self._client("rpct"), self._client("referente")
+        cat = f"{API}/catalogo"
+        p1 = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Gare A"}), 201)
+        p2 = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Gare B"}), 201)
+        a1 = self._ok(rpct.post(f"{API}/processi/{p1['id']}/attivita", base_url=ENTE, json={"descrizione": "Pubblicazione del bando di prova"}), 201)
+        a2 = self._ok(rpct.post(f"{API}/processi/{p2['id']}/attivita", base_url=ENTE, json={"descrizione": "pubblicazione  del bando di prova."}), 201)
+        self.assertTrue(a1["voce_id"])
+        self.assertEqual(a1["voce_id"], a2["voce_id"])  # stesso testo: stessa voce
+        voce = self._ok(ref.get(f"{cat}/{a1['voce_id']}", base_url=ENTE))
+        self.assertTrue(voce["codice"].startswith("ATT-E"))
+        self.assertEqual((voce["usi"], {e["processo"]["id"] for e in voce["elementi"]}), (2, {p1["id"], p2["id"]}))
+        elenco = self._ok(ref.get(f"{cat}?tipo=ATTIVITA&testo=bando di prova", base_url=ENTE))
+        self.assertEqual([(v["id"], v["usi"]) for v in elenco], [(voce["id"], 2)])
+        # solo il RPCT modifica; la voce usata chiede la conferma; gli elementi restano
+        nuovo = {"descrizione": "Pubblicazione del bando di gara di prova"}
+        self.assertEqual(ref.put(f"{cat}/{voce['id']}", base_url=ENTE, json=nuovo).status_code, 403)
+        r = rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json=nuovo)
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("usata in 2 elementi", r.get_data(as_text=True))
+        self._ok(rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json={**nuovo, "conferma": True}))
+        voce = self._ok(rpct.get(f"{cat}/{voce['id']}", base_url=ENTE))
+        self.assertEqual({e["testo"] for e in voce["elementi"]}, {"Pubblicazione del bando di prova", "pubblicazione  del bando di prova."})
+        self.assertTrue(all(e["diverso"] for e in voce["elementi"]))
+        # voce nuova: codice dell'ente, niente doppioni
+        self.assertEqual(rpct.post(cat, base_url=ENTE, json={"tipo": "ATTIVITA", "descrizione": "pubblicazione del bando di gara di prova"}).status_code, 409)
+        collaudo = self._ok(rpct.post(cat, base_url=ENTE, json={"tipo": "MISURA", "descrizione": "Collaudo a campione", "indicatore": "collaudi"}), 201)
+        self.assertEqual((collaudo["tipo_misura"], collaudo["usi"], collaudo["standard"]), ("SPECIFICA", 0, False))
+        # unione: gli elementi passano all'altra voce, la voce unita sparisce
+        a3 = self._ok(rpct.post(f"{API}/processi/{p2['id']}/attivita", base_url=ENTE, json={"descrizione": "Pubblicazione dell'avviso di prova"}), 201)
+        unisci = {"in_voce": voce["id"]}
+        self.assertEqual(rpct.post(f"{cat}/{a3['voce_id']}/unisci", base_url=ENTE, json=unisci).status_code, 409)
+        unita = self._ok(rpct.post(f"{cat}/{a3['voce_id']}/unisci", base_url=ENTE, json={**unisci, "conferma": True}))
+        self.assertEqual(unita["usi"], 3)
+        self.assertEqual(rpct.get(f"{cat}/{a3['voce_id']}", base_url=ENTE).status_code, 404)
+        self.assertEqual(rpct.post(f"{cat}/{collaudo['id']}/unisci", base_url=ENTE, json={**unisci, "conferma": True}).status_code, 422)
+        # si elimina solo se non usata; disattivare una usata chiede la conferma
+        self.assertEqual(rpct.delete(f"{cat}/{voce['id']}", base_url=ENTE).status_code, 409)
+        self._ok(rpct.delete(f"{cat}/{collaudo['id']}", base_url=ENTE), 204)
+        self.assertEqual(rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json={**nuovo, "attiva": False}).status_code, 409)
+        self._ok(rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json={**nuovo, "attiva": False, "conferma": True}))
+        self.assertNotIn(voce["id"], [v["id"] for v in self._ok(ref.get(f"{cat}?attive=true", base_url=ENTE))])
+
     def test_monitoraggio(self):
         rpct, ref, dir_ = self._client("rpct"), self._client("referente"), self._client("dirigente")
         p = self._ok(rpct.post(f"{API}/processi", base_url=ENTE,

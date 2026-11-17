@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import '../relazioni/relazioni.dart';
+import 'catalogo.dart';
 import 'comune.dart';
 import 'elenco.dart';
 import 'mappatura.dart';
@@ -12,7 +13,8 @@ import 'proposte.dart';
 import 'riepilogo.dart';
 
 /// Modulo anticorruzione (ripreso da Si.Ge.Ri.Co.): mappatura dei processi e procedimenti
-/// con la valutazione del rischio, elenco piatto con ricerca e filtri, proposte dei referenti,
+/// con la valutazione del rischio, elenco piatto con ricerca e filtri, catalogo delle voci di
+/// attività, rischi e misure, proposte dei referenti,
 /// monitoraggio delle misure, riepilogo con gli allegati al PTPCT.
 class AnticorruzionePage extends StatefulWidget {
   const AnticorruzionePage({super.key});
@@ -45,11 +47,12 @@ class _AnticorruzionePageState extends State<AnticorruzionePage> {
       builder: (context, dati) => Provider<DatiAnticorruzione>.value(
         value: dati,
         child: DefaultTabController(
-          length: rpct ? 6 : 5,
+          length: rpct ? 7 : 6,
           child: Column(children: [
             TabBar(isScrollable: true, tabs: [
               const Scheda(Icon(Icons.account_tree_outlined), 'Mappatura'),
               const Scheda(Icon(Icons.table_rows_outlined), 'Elenco'),
+              const Scheda(Icon(Icons.inventory_2_outlined), 'Catalogo'),
               const Scheda(Icon(Icons.rate_review_outlined), 'Proposte'),
               const Scheda(Icon(Icons.fact_check_outlined), 'Monitoraggio'),
               const Scheda(Icon(Icons.insights), 'Riepilogo'),
@@ -59,6 +62,7 @@ class _AnticorruzionePageState extends State<AnticorruzionePage> {
               child: TabBarView(key: ValueKey(_versione), children: [
                 MappaturaTab(onDatiCambiati: _carica),
                 const ElencoTab(),
+                const CatalogoTab(),
                 const ProposteTab(),
                 const MonitoraggioTab(),
                 RiepilogoTab(onDatiCambiati: _carica),

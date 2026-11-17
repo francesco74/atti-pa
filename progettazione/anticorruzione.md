@@ -368,3 +368,22 @@ Decisioni del 04/11/2026:
     in `ac_processi` e `ac_attivita` (migrazione `0007_strutture_coinvolte.sql`); lo script
     `deploy/manutenzione/strutture_coinvolte.py` ricava le coinvolte dalle note delle attività
     (codici dell'anagrafica e descrizioni lunghe; `--dry-run` per vedere prima).
+29. **Catalogo della mappatura** (17/11/2026, fase 1 di 3): le **voci** (radici) di attività,
+    rischi (evento) e misure, per ente (`ac_catalogo`, migrazione `0008_catalogo_mappatura.sql`).
+    Ogni attività, rischio e misura dei processi ricorda la sua voce (`voce_id`) e ne copia il
+    testo, che nel processo si può ritoccare: cambiare la voce **non** cambia i processi. Le
+    **voci standard** stanno nel pacchetto (`anticorruzione/catalogo.yaml`, codici `ATT-0001`,
+    `RIS-0001`, `MIS-0001`; create se mancano, mai cancellate, come le aree), ricavate dai
+    processi standard con i testi uguali riuniti: le misure uguali sotto più rischi sono **una
+    voce**. Le voci dell'ente hanno la E (`ATT-E001`), così non si scontrano con gli
+    aggiornamenti del pacchetto. Per ora un elemento nuovo si collega alla voce con lo stesso
+    testo (maiuscole, spazi, apostrofi tipografici e punteggiatura finale non contano) o ne crea
+    una dell'ente; la fase 2 renderà esplicita la scelta dal catalogo (voce mancante: il RPCT
+    la crea, il referente la propone e, approvata, la usa), la fase 3 porterà nella performance
+    le radici di attività e misure del processo. Scheda **Catalogo** (per chi vede la
+    mappatura): voci per tipo con quante volte sono usate e dove; il RPCT crea, modifica,
+    disattiva, unisce (gli elementi della voce passano all'altra) ed elimina se non usate.
+    Modificare, disattivare o unire una voce **usata** mostra prima dove è usata e chiede
+    conferma (l'API vuole `conferma`). `deploy/manutenzione/catalogo_mappatura.py` collega la
+    mappatura già presente (voci standard, poi voci con lo stesso testo o nuove) ed elenca le
+    voci molto somiglianti da valutare se unire.

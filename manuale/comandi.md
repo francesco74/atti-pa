@@ -419,6 +419,23 @@ Aggiornare il database:
 python deploy/manutenzione/riprocessa_norme.py
 ```
 
+### Catalogo della mappatura (`catalogo_mappatura.py`)
+
+Dopo la migrazione `0008_catalogo_mappatura.sql`: per ogni ente con il modulo anticorruzione
+crea le voci standard del pacchetto (`pacchetto/anticorruzione/catalogo.yaml`) e collega ogni
+attività, rischio e misura alla voce con lo stesso testo, creando le voci dell'ente che
+mancano. Elenca poi le voci molto somiglianti, da valutare se unire dalla scheda Catalogo.
+
+Vedere cosa farebbe, senza modificare:
+```bash
+python deploy/manutenzione/catalogo_mappatura.py --dry-run
+```
+
+Aggiornare il database (si può rieseguire: collega solo gli elementi senza voce):
+```bash
+python deploy/manutenzione/catalogo_mappatura.py
+```
+
 ### Strutture coinvolte delle attività (`strutture_coinvolte.py`)
 
 Dopo la migrazione `0007_strutture_coinvolte.sql`: ricava le strutture coinvolte delle

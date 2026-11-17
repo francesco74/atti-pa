@@ -90,7 +90,8 @@ def main() -> int:
             print(
                 f"{p.manifesto.etichetta}: {conteggi['modello']} modelli, "
                 f"{conteggi['modulo']} specificità, {conteggi['checklist']} checklist, "
-                f"{len(p.aree)} aree di rischio, {conteggi['processo']} processi standard"
+                f"{len(p.aree)} aree di rischio, {conteggi['processo']} processi standard, "
+                f"{len(p.catalogo.voci()) if p.catalogo else 0} voci del catalogo"
             )
             if args.comando == "crea":
                 nome = f"atti-pa-modelli-{p.manifesto.versione}.zip"

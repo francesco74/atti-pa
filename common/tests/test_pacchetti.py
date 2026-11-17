@@ -256,6 +256,16 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             self.assertIsNotNone(await db.get(AcMetodologia, ENTE))
             valutati = [x for x in (await db.scalars(select(AcRischio))).all() if x.livello]
             self.assertEqual(len(valutati), 252)  # valutazione proposta nei rischi nuovi
+            # catalogo: le voci standard e ogni elemento collegato a una di loro (testi uguali: una voce)
+            from common.models import AcMisura, AcVoce
+
+            voci_std = (await db.scalars(select(AcVoce))).all()
+            self.assertEqual(len(voci_std), len(pacchetto.catalogo.voci()))
+            self.assertFalse([v for v in voci_std if "-E" in v.codice])  # nessuna voce dell'ente
+            for modello in (AcAttivita, AcRischio, AcMisura):
+                self.assertFalse((await db.scalars(select(modello).where(modello.voce_id.is_(None)))).all(), modello)
+            misure = (await db.scalars(select(AcMisura))).all()
+            self.assertLess(len({x.voce_id for x in misure}), len(misure))
             voci = await analizza(db, ENTE, pacchetto)
             self.assertEqual({v.stato for v in voci if v.tipo == "processo"}, {"INVARIATO"})
 
@@ -292,6 +302,13 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             riletto = leggi_pacchetto(esportato)
             self.assertEqual(len(riletto.di_tipo("processo")), 130)
             self.assertEqual(len(riletto.aree), 14)
+            self.assertEqual(len(riletto.catalogo.voci()), len(pacchetto.catalogo.voci()))
+
+    async def test_catalogo_con_codici_ripetuti(self):
+        file = {**self.file, "anticorruzione/catalogo.yaml": "attivita:\n- {codice: ATT-0001, descrizione: a}\n"
+                "- {codice: ATT-0001, descrizione: b}\n"}  # fmt: skip
+        with self.assertRaises(PacchettoNonValido):
+            leggi_pacchetto(file)
 
     async def test_area_mancante(self):
         file = {**self.file, "anticorruzione/aree.yaml": "aree: []\n"}

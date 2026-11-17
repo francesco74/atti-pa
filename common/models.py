@@ -717,6 +717,31 @@ class AcProcesso(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
+class AcVoce(Base):
+    """Voce del catalogo della mappatura (per ente): la radice di attività, rischi (evento) e
+    misure dei processi. Nel processo l'elemento ricorda la sua voce e ne copia il testo, che
+    poi si può ritoccare: cambiare la voce non cambia i processi che la usano. Le voci standard
+    vengono dal pacchetto (codici ATT-0001, RIS-0001, MIS-0001), quelle dell'ente hanno la E
+    (ATT-E001): non si scontrano con gli aggiornamenti del pacchetto."""
+
+    __tablename__ = "ac_catalogo"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_catalogo"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(10))  # ATTIVITA, RISCHIO, MISURA
+    codice: Mapped[str] = mapped_column(String(20))
+    descrizione: Mapped[str] = mapped_column(Text)  # per il rischio l'evento
+    # solo misure: valori di partenza per le misure dei processi
+    tipo_misura: Mapped[str | None] = mapped_column(String(20))  # GENERALE, SPECIFICA
+    categoria: Mapped[str | None] = mapped_column(String(255))
+    indicatore: Mapped[str | None] = mapped_column(Text)
+    target: Mapped[str | None] = mapped_column(Text)
+    attiva: Mapped[bool] = mapped_column(Boolean, default=True)  # disattivata: non si sceglie più
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
 class AcAttivita(Base):
     __tablename__ = "ac_attivita"
     __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_attivita"),)
@@ -729,6 +754,7 @@ class AcAttivita(Base):
     descrizione: Mapped[str] = mapped_column(Text)
     strutture_coinvolte: Mapped[str | None] = mapped_column(Text)  # note libere sulle strutture coinvolte
     coinvolte: Mapped[list[str] | None] = mapped_column(JSON)  # strutture coinvolte (id dell'anagrafica)
+    voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))  # radice nel catalogo
 
 
 class AcRischio(Base):
@@ -745,6 +771,7 @@ class AcRischio(Base):
     attivita: Mapped["AcAttivita"] = relationship(lazy="raise")
     codice: Mapped[str] = mapped_column(String(60))  # es. A.1.1_R.1
     evento: Mapped[str] = mapped_column(Text)
+    voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))  # radice nel catalogo
     fattore_abilitante: Mapped[str | None] = mapped_column(String(500))
     valori_probabilita: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # {id indicatore: valore}
     valori_impatto: Mapped[dict[str, Any] | None] = mapped_column(JSON)
@@ -770,6 +797,7 @@ class AcMisura(Base):
     rischio: Mapped["AcRischio"] = relationship(lazy="raise")
     codice: Mapped[str] = mapped_column(String(70))  # es. A.1.1_R.1_M.1
     descrizione: Mapped[str] = mapped_column(Text)
+    voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))  # radice nel catalogo
     tipo: Mapped[str] = mapped_column(String(20), default="SPECIFICA")  # GENERALE, SPECIFICA
     categoria: Mapped[str | None] = mapped_column(String(255))
     obbligo_trasparenza: Mapped[str | None] = mapped_column(String(100))  # schema ANAC, es. ART_23

@@ -59,6 +59,7 @@ from common.configurazione import (
     leggi_checklist,
     sorgente_checklist,
 )
+from common.anticorruzione import catalogo as ac_catalogo
 from common.anticorruzione import pacchetto as ac
 from common.models import (
     AcMetodologia,
@@ -138,6 +139,7 @@ class Pacchetto:
     manifesto: Manifesto
     oggetti: list[Oggetto]
     aree: list[ac.AreaStd] = field(default_factory=list)  # aree di rischio (anticorruzione)
+    catalogo: ac_catalogo.CatalogoStd | None = None  # voci standard della mappatura (anticorruzione)
 
     def di_tipo(self, tipo: Tipo) -> list[Oggetto]:
         return [o for o in self.oggetti if o.tipo == tipo]
@@ -170,6 +172,7 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
     oggetti: list[Oggetto] = []
     moduli: list[ModuloRegole] = []
     aree: list[ac.AreaStd] = []
+    catalogo: ac_catalogo.CatalogoStd | None = None
     for percorso in sorted(file):
         p = PurePosixPath(percorso)
         sorgente = file[percorso]
@@ -200,6 +203,8 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                 )  # fmt: skip
             elif percorso == ac.FILE_AREE:
                 aree = ac.leggi_aree(sorgente)
+            elif percorso == ac_catalogo.FILE_CATALOGO:
+                catalogo = ac_catalogo.leggi_catalogo(sorgente)
             elif p.parent == PurePosixPath(ac.CARTELLA_PROCESSI) and p.suffix == ".yaml":
                 f = ac.leggi_processi(sorgente)
                 for proc in f.processi:  # ogni processo è un oggetto
@@ -227,7 +232,7 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                 errori.append(f"{o.percorso}: area {area} non definita in {ac.FILE_AREE}")
     if errori:
         raise PacchettoNonValido(errori)
-    return Pacchetto(manifesto, oggetti, aree)
+    return Pacchetto(manifesto, oggetti, aree, catalogo)
 
 
 def da_cartella(cartella: Path) -> dict[str, str]:
@@ -240,6 +245,7 @@ def da_cartella(cartella: Path) -> dict[str, str]:
         *sorted((cartella / "checklist").glob("*.json")),
         cartella / ac.FILE_METODOLOGIA,
         cartella / ac.FILE_AREE,
+        cartella / ac_catalogo.FILE_CATALOGO,
         *sorted((cartella / ac.CARTELLA_PROCESSI).glob("*.yaml")),
     ]
     for f in candidati:
@@ -273,7 +279,7 @@ def da_zip(dati: bytes) -> dict[str, str]:
         p = PurePosixPath(relativo)
         if ".." in p.parts or p.is_absolute():
             continue
-        if relativo in (MANIFESTO, ac.FILE_METODOLOGIA, ac.FILE_AREE) or (
+        if relativo in (MANIFESTO, ac.FILE_METODOLOGIA, ac.FILE_AREE, ac_catalogo.FILE_CATALOGO) or (
             str(p.parent) in ("modelli", "modelli/regole", "checklist", ac.CARTELLA_PROCESSI)
             and p.suffix in (".yaml", ".json")
         ):
@@ -707,6 +713,9 @@ async def importa(
     await _tipologie(db, pacchetto.manifesto)
     if pacchetto.aree and await _con_anticorruzione(db, ente_id):
         await ac.crea_aree(db, ente_id, pacchetto.aree)
+    # prima dei processi, perché i loro elementi si colleghino alle voci standard
+    if pacchetto.catalogo and await _con_anticorruzione(db, ente_id):
+        await ac_catalogo.crea_voci(db, ente_id, pacchetto.catalogo)
     oggetti = {o.chiave: o for o in pacchetto.oggetti}
     for voce in await analizza(db, ente_id, pacchetto):
         azione = decisioni.get(voce.chiave, voce.azione)
@@ -807,4 +816,5 @@ async def esporta(db: AsyncSession, ente_id: str, nome: str, versione: str) -> d
         file[f"checklist/{r.codice.lower()}.json"] = sorgente_checklist(checklist_in(r))
     if await _con_anticorruzione(db, ente_id):
         file |= await ac.esporta(db, ente_id)
+        file |= await ac_catalogo.esporta(db, ente_id)
     return file
