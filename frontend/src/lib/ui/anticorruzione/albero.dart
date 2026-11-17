@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/api_client.dart';
 import '../comuni.dart';
+import 'catalogo.dart' show scegliVoce;
 import 'comune.dart';
 
 /// Albero di un processo da mostrare: {processo: {...}, attivita: [{..., rischi: [{...,
@@ -270,16 +271,41 @@ Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticor
 
 String etichettaTipo(Object? tipo) => tipo == 'PROCEDIMENTO' ? 'Procedimento' : 'Processo';
 
-Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? a]) =>
-    modificaCampi(context, titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}', valori: a ?? const {}, campi: [
-      const Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
-      Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
-      const Campo('strutture_coinvolte', 'Note sulle strutture coinvolte', righe: 2),
-    ]);
+/// Spiegazione nella finestra dell'elemento: la voce del catalogo da cui viene.
+String? _notaVoce(Map? voce) => voce == null
+    ? null
+    : 'Voce del catalogo ${voce['codice']}: «${voce['descrizione']}». Il testo si può ritoccare per questo processo; '
+        'la voce resta la stessa.';
 
-Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? r]) {
+/// Elemento nuovo: si sceglie prima la voce dal catalogo (se manca, il RPCT la crea e il
+/// referente la propone); null se non si sceglie. Elemento esistente: la sua voce.
+Future<Map<String, dynamic>?> _voce(BuildContext context, DatiAnticorruzione d, String tipo, Map? el) async =>
+    el == null ? await scegliVoce(context, tipo, dati: d) : (el['voce'] as Map?)?.cast<String, dynamic>();
+
+Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? a]) async {
+  final voce = await _voce(context, d, 'ATTIVITA', a);
+  if (a == null && voce == null || !context.mounted) return null;
+  final v = await modificaCampi(context,
+      titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}',
+      valori: a ?? {'descrizione': voce!['descrizione']},
+      nota: _notaVoce(voce),
+      campi: [
+        const Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
+        Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
+        const Campo('strutture_coinvolte', 'Note sulle strutture coinvolte', righe: 2),
+      ]);
+  return v == null ? null : {...v, if (a == null) 'voce_id': voce!['id'], if (a == null) 'voce': voce};
+}
+
+Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? r]) async {
+  final voce = await _voce(context, d, 'RISCHIO', r);
+  if (r == null && voce == null || !context.mounted) return null;
   final attuale = r?['fattore_abilitante'] as String?;
-  return modificaCampi(context, titolo: r?['codice'] == null ? 'Nuovo rischio' : 'Rischio ${r!['codice']}', valori: r ?? const {}, campi: [
+  final v = await modificaCampi(context,
+      titolo: r?['codice'] == null ? 'Nuovo rischio' : 'Rischio ${r!['codice']}',
+      valori: r ?? {'evento': voce!['descrizione']},
+      nota: _notaVoce(voce),
+      campi: [
     const Campo('evento', 'Evento rischioso', righe: 4, obbligatorio: true),
     Campo('fattore_abilitante', 'Fattore abilitante', scelte: [
       (null, 'Nessuno'),
@@ -287,11 +313,27 @@ Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorr
       if (attuale != null && !d.fattori.contains(attuale)) (attuale, attuale),
     ]),
   ]);
+  return v == null ? null : {...v, if (r == null) 'voce_id': voce!['id'], if (r == null) 'voce': voce};
 }
 
-Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? m]) {
-  final categoria = m?['categoria'] as String?;
-  return modificaCampi(context, titolo: m?['codice'] == null ? 'Nuova misura' : 'Misura ${m!['codice']}', valori: {'tipo': 'SPECIFICA', ...?m}, campi: [
+Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? m]) async {
+  final voce = await _voce(context, d, 'MISURA', m);
+  if (m == null && voce == null || !context.mounted) return null;
+  // dalla voce: testo, tipo, categoria, indicatore e target di partenza
+  final valori = m ??
+      {
+        'descrizione': voce!['descrizione'],
+        'tipo': voce['tipo_misura'] ?? 'SPECIFICA',
+        'categoria': voce['categoria'],
+        'indicatore': voce['indicatore'],
+        'target': voce['target'],
+      };
+  final categoria = valori['categoria'] as String?;
+  final v = await modificaCampi(context,
+      titolo: m?['codice'] == null ? 'Nuova misura' : 'Misura ${m!['codice']}',
+      valori: {'tipo': 'SPECIFICA', ...valori},
+      nota: _notaVoce(voce),
+      campi: [
     const Campo('descrizione', 'Descrizione', righe: 5, obbligatorio: true),
     const Campo('tipo', 'Tipo', scelte: [('GENERALE', 'Generale'), ('SPECIFICA', 'Specifica')]),
     Campo('categoria', 'Categoria', scelte: [
@@ -309,6 +351,7 @@ Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorru
     const Campo('indicatore', 'Indicatore', righe: 2),
     const Campo('target', 'Target', righe: 2),
   ]);
+  return v == null ? null : {...v, if (m == null) 'voce_id': voce!['id'], if (m == null) 'voce': voce};
 }
 
 /// Valutazione del rischio: un valore per indicatore, probabilità e impatto calcolati (moda,
@@ -477,6 +520,7 @@ class AlberoProcesso extends StatelessWidget {
             initiallyExpanded: attivita.length <= 3,
             title: Text('${a['codice'] ?? 'Nuova'} - ${a['descrizione']}'),
             subtitle: Text([
+              ?voceRitoccata(a, a['descrizione'] as String?),
               '${_lista(a['rischi']).length} rischi',
               ?dati.coinvolte(a['coinvolte']),
               ?a['strutture_coinvolte'] as String?,
@@ -560,6 +604,8 @@ class SchedaRischio extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${r['codice'] ?? 'Nuovo rischio'}', style: const TextStyle(fontWeight: FontWeight.w600)),
         Text(r['evento'] as String? ?? ''),
+        if (voceRitoccata(r, r['evento'] as String?) case final voce?)
+          Text(voce, style: TextStyle(color: colori.onSurfaceVariant, fontStyle: FontStyle.italic)),
         const SizedBox(height: 4),
         Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           LivelloChip(dati, valutazione?['livello'] as String?),
@@ -624,6 +670,7 @@ class SchedaRischio extends StatelessWidget {
             leading: Icon(m['tipo'] == 'GENERALE' ? Icons.policy_outlined : Icons.task_alt, size: 20),
             title: Text('${m['codice'] ?? 'Nuova misura'} - ${m['descrizione']}'),
             subtitle: Text([
+              ?voceRitoccata(m, m['descrizione'] as String?),
               m['tipo'] == 'GENERALE' ? 'Generale' : 'Specifica',
               ?m['categoria'],
               if (m['obbligo_trasparenza'] != null) 'Pubblicazione ${m['obbligo_trasparenza']}',

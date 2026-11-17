@@ -20,9 +20,12 @@ from sqlalchemy import func, select, update
 from deps import audit, db, ente_id, utente
 from routers.anticorruzione import lettore, rpct
 from web import ErroreApi, corpo, nessun_contenuto, parametri
-from common.anticorruzione.catalogo import CAMPI_MISURA, ELEMENTI, TIPI, normalizza, nuovo_codice, testo_elemento
+from common.anticorruzione.catalogo import (
+    CAMPI_MISURA, ELEMENTI, TIPI, VoceDoppia, normalizza, testo_elemento, voce_con_testo,
+)  # fmt: skip
+from common.anticorruzione.catalogo import crea_voce as nuova_voce_ente  # l'endpoint si chiama crea_voce
 from common.anticorruzione.metodologia import chiave_naturale
-from common.models import AcAttivita, AcProcesso, AcRischio, AcVoce, nuovo_id
+from common.models import AcAttivita, AcProcesso, AcRischio, AcVoce
 
 bp = Blueprint("catalogo", __name__, url_prefix="/api/v1/anticorruzione/catalogo")
 
@@ -135,10 +138,8 @@ class VoceModifica(VoceIn):
 
 async def _testo_libero(tipo: str, descrizione: str, esclusa: str | None = None) -> None:
     """Due voci dello stesso tipo non hanno lo stesso testo."""
-    chiave = normalizza(descrizione)
-    for v in await db().scalars(select(AcVoce).where(AcVoce.ente_id == ente_id(), AcVoce.tipo == tipo)):
-        if v.id != esclusa and normalizza(v.descrizione) == chiave:
-            raise ErroreApi(HTTPStatus.CONFLICT, f"Nel catalogo c'è già la voce {v.codice} con lo stesso testo")
+    if (v := await voce_con_testo(db(), ente_id(), tipo, descrizione, esclusa)) is not None:
+        raise ErroreApi(HTTPStatus.CONFLICT, str(VoceDoppia(v)))
 
 
 def _imposta(v: AcVoce, d: VoceIn) -> None:
@@ -157,11 +158,10 @@ async def crea_voce():
     """Nuova voce dell'ente (codice ATT-E001...)."""
     d = corpo(VoceNuova)
     sessione = db()
-    await _testo_libero(d.tipo, d.descrizione)
-    v = AcVoce(id=nuovo_id(), ente_id=ente_id(), tipo=d.tipo, codice=await nuovo_codice(sessione, ente_id(), d.tipo))
-    _imposta(v, d)
-    sessione.add(v)
-    await sessione.flush()
+    try:
+        v = await nuova_voce_ente(sessione, ente_id(), d.tipo, d.descrizione, **d.model_dump(include=set(CAMPI_MISURA)))
+    except VoceDoppia as e:
+        raise ErroreApi(HTTPStatus.CONFLICT, str(e)) from e
     audit(sessione, utente(), "ac_catalogo", v.id, "CREATA", {"codice": v.codice})
     await sessione.commit()
     return _voce(v, 0), HTTPStatus.CREATED

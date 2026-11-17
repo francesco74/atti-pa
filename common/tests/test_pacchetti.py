@@ -32,6 +32,9 @@ from common.pacchetti import (
 )
 
 PACCHETTO = Path(__file__).resolve().parents[2] / "pacchetto"
+# la versione del pacchetto standard (cambia a ogni rilascio) e una sempre successiva
+VERSIONE = yaml.safe_load((PACCHETTO / "pacchetto.yaml").read_text(encoding="utf-8"))["versione"]
+SUCCESSIVA = "2099.1"
 ENTE = "ente-di-prova"
 
 
@@ -80,7 +83,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
         async with AsyncSession(self.motore) as db:
             self.assertIsNotNone(await db.get(TipologiaAtto, "DETERMINA"))
             modelli = (await db.scalars(select(ModelloAtto))).all()
-            self.assertTrue(all(m.pacchetto == "Modelli standard Atti PA 2026.2" for m in modelli))
+            self.assertTrue(all(m.pacchetto == f"Modelli standard Atti PA {VERSIONE}" for m in modelli))
 
     async def test_stesso_pacchetto_tutto_invariato(self):
         await self._iniziale()
@@ -102,7 +105,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
 
             # nuovo standard: cambiano la scheda CAM (modificata anche dall'ente) e la scheda
             # SIA (non toccata dall'ente)
-            nuovo = _con_versione(self.file, "2026.2")
+            nuovo = _con_versione(self.file, SUCCESSIVA)
             nuovo = _cambia_checklist(nuovo, "scheda_cam.json", "CAM nuova versione standard")
             nuovo = _cambia_checklist(nuovo, "scheda_sia.json", "SIA nuova versione standard")
             p = leggi_pacchetto(nuovo)
@@ -117,7 +120,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
             self.assertIn("checklist:SCHEDA_CAM", r.mantenuti)
             sia = await versione_attiva(db, ENTE, "checklist", "SCHEDA_SIA")
             self.assertEqual(sia.titolo, "SIA nuova versione standard")
-            self.assertEqual(sia.pacchetto, "Modelli standard Atti PA 2026.2")
+            self.assertEqual(sia.pacchetto, f"Modelli standard Atti PA {SUCCESSIVA}")
             cam = await versione_attiva(db, ENTE, "checklist", "SCHEDA_CAM")
             self.assertEqual(cam.titolo, "CAM dell'ente")
             # il nuovo standard è il riferimento: reimportarlo non segnala più il conflitto
@@ -134,7 +137,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
             }))  # fmt: skip
             await salva_checklist(db, ENTE, dati, MANTIENI_BASE)
             await db.commit()
-            nuovo = _cambia_checklist(_con_versione(self.file, "2026.2"), "scheda_cam.json", "X")
+            nuovo = _cambia_checklist(_con_versione(self.file, SUCCESSIVA), "scheda_cam.json", "X")
             del nuovo["checklist/scheda_utenze.json"]
             p = leggi_pacchetto(nuovo)
             stati = {v.chiave: v.stato for v in await analizza(db, ENTE, p)}
@@ -154,7 +157,7 @@ class PacchettiSuDatabase(unittest.IsolatedAsyncioTestCase):
             regola = yaml.safe_load(self.file["modelli/regole/cam.yaml"])
             regola["etichetta"] = "CAM (nuova etichetta)"
             nuovo = {
-                **_con_versione(self.file, "2026.2"),
+                **_con_versione(self.file, SUCCESSIVA),
                 "modelli/regole/cam.yaml": yaml.safe_dump(regola, allow_unicode=True),
             }
             r = await importa(db, ENTE, leggi_pacchetto(nuovo))

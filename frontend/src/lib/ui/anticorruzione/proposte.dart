@@ -7,6 +7,7 @@ import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'albero.dart';
 import 'art35.dart';
+import 'catalogo.dart' show modificaVoce;
 import 'comune.dart';
 
 const _etichetteStato = {
@@ -29,6 +30,7 @@ const _azioni = {
   'ATTIVITA': ('Nuova attività', 'Modifica dell\'attività', 'Eliminazione dell\'attività'),
   'RISCHIO': ('Nuova analisi del rischio', 'Modifica dell\'analisi del rischio', 'Eliminazione del rischio'),
   'MISURA': ('Nuova misura', 'Modifica della misura', 'Eliminazione della misura'),
+  'VOCE': ('Nuova voce del catalogo', 'Modifica della voce', 'Eliminazione della voce'),
 };
 
 /// Titolo della proposta: "Nuova attività", "Modifica della misura C.1.1_R.1_M.2"...
@@ -279,6 +281,7 @@ class _PropostaPageState extends State<PropostaPage> {
       'PROCESSO' => modificaProcesso(context, d, dati),
       'ATTIVITA' => modificaAttivita(context, d, dati),
       'RISCHIO' => modificaRischio(context, d, dati),
+      'VOCE' => modificaVoce(context, d, dati['tipo_voce'] as String, dati),
       _ => modificaMisura(context, d, dati),
     };
     if (v == null) return;
@@ -484,6 +487,9 @@ const _etichetteCampi = {
   'attori_esterni': 'Attori esterni',
   'termine_conclusione': 'Termine di conclusione',
   'norma_riferimento': 'Norma di riferimento',
+  'tipo_voce': 'Voce del catalogo per',
+  'voce': 'Voce del catalogo',
+  'tipo_misura': 'Tipo di misura',
   'struttura_id': 'Struttura',
   'coinvolte': 'Strutture coinvolte',
   'strutture_coinvolte': 'Note sulle strutture coinvolte',
@@ -529,6 +535,9 @@ class TabellaCampi extends StatelessWidget {
       'area_id' => dati.area(v) ?? '—',
       'struttura_id' => dati.struttura(v) ?? '—',
       'coinvolte' => dati.coinvolte(v) ?? '—',
+      'voce' => '${(v as Map)['codice']} - ${v['descrizione']}',
+      'tipo_voce' => const {'ATTIVITA': 'un\'attività', 'RISCHIO': 'un rischio', 'MISURA': 'una misura'}[v] ?? '$v',
+      'tipo_misura' => const {'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
       'tipo' => const {'PROCESSO': 'Processo', 'PROCEDIMENTO': 'Procedimento', 'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
       'valutazione' => '${(v as Map)['livello'] ?? 'Non valutato'} (P ${v['probabilita'] ?? v['probabilita_calcolata']} · '
           'I ${v['impatto'] ?? v['impatto_calcolato']})${v['motivazione_correzione'] != null ? ', corretta: ${v['motivazione_correzione']}' : ''}',

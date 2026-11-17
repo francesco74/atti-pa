@@ -126,6 +126,37 @@ async def nuovo_codice(db: AsyncSession, ente_id: str, tipo: str) -> str:
     return f"{prefisso}{n:03d}"
 
 
+class VoceDoppia(ValueError):
+    """C'è già una voce dello stesso tipo con lo stesso testo."""
+
+    def __init__(self, voce: AcVoce):
+        self.voce = voce
+        super().__init__(f"Nel catalogo c'è già la voce {voce.codice} con lo stesso testo")
+
+
+async def voce_con_testo(db: AsyncSession, ente_id: str, tipo: str, testo: str, esclusa: str | None = None) -> AcVoce | None:
+    chiave = normalizza(testo)
+    for v in await db.scalars(select(AcVoce).where(AcVoce.ente_id == ente_id, AcVoce.tipo == tipo)):
+        if v.id != esclusa and normalizza(v.descrizione) == chiave:
+            return v
+    return None
+
+
+async def crea_voce(db: AsyncSession, ente_id: str, tipo: str, descrizione: str, **campi_misura) -> AcVoce:
+    """Nuova voce dell'ente (codice ATT-E001...). Solleva VoceDoppia se il testo c'è già."""
+    if (doppia := await voce_con_testo(db, ente_id, tipo, descrizione)) is not None:
+        raise VoceDoppia(doppia)
+    v = AcVoce(id=nuovo_id(), ente_id=ente_id, tipo=tipo, codice=await nuovo_codice(db, ente_id, tipo), descrizione=descrizione.strip())
+    if tipo == "MISURA":
+        for campo in CAMPI_MISURA:
+            valore = campi_misura.get(campo)
+            setattr(v, campo, valore.strip() or None if isinstance(valore, str) else valore)
+        v.tipo_misura = v.tipo_misura or "SPECIFICA"
+    db.add(v)
+    await db.flush()
+    return v
+
+
 class Catalogo:
     """Le voci di un ente per tipo e testo normalizzato, per collegare gli elementi: trova la
     voce con lo stesso testo o ne crea una dell'ente. Si carica una volta per operazione."""

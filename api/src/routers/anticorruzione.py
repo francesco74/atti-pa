@@ -29,13 +29,13 @@ from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
 from common.ricerca import Documento
 from common.anticorruzione import art35 as dati_art35
-from common.anticorruzione.catalogo import Catalogo
+from common.anticorruzione.catalogo import Catalogo, VoceDoppia, crea_voce, voce_con_testo
 from common.anticorruzione import excel
 from common.anticorruzione.controlli import Contesto as ContestoControlli
 from common.anticorruzione.controlli import controlli_proposta
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
-    AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio,
+    AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio, AcVoce,
     Ente, Modulo, PfElemento, PfObiettivo, PfPiao, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
 )  # fmt: skip
 from common.performance import media_pesata
@@ -697,11 +697,19 @@ async def albero_processo(sessione, p: AcProcesso) -> dict:
     ids_attivita = [a.id for a in attivita]
     rischi = _per_codice(await sessione.scalars(select(AcRischio).where(AcRischio.attivita_id.in_(ids_attivita))))
     misure = _per_codice(await sessione.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))))
+    ids_voci = {x.voce_id for x in [*attivita, *rischi, *misure] if x.voce_id}
+    voci = {v.id: v for v in await sessione.scalars(select(AcVoce).where(AcVoce.id.in_(ids_voci)))} if ids_voci else {}
+
+    def voce(el) -> dict:
+        """La voce del catalogo dell'elemento, con il testo originale (si mostra se diverso)."""
+        v = voci.get(el.voce_id)
+        return {"voce": {"id": v.id, "codice": v.codice, "descrizione": v.descrizione} if v else None}
+
     return {
         **_processo(p),
         "attivita": [
-            {**_attivita(a), "rischi": [
-                {**_rischio(r), "misure": [_misura(x) for x in misure if x.rischio_id == r.id]}
+            {**_attivita(a), **voce(a), "rischi": [
+                {**_rischio(r), **voce(r), "misure": [{**_misura(x), **voce(x)} for x in misure if x.rischio_id == r.id]}
                 for r in rischi if r.attivita_id == a.id
             ]}
             for a in attivita
@@ -745,12 +753,14 @@ class ProcessoIn(BaseModel):
 
 class AttivitaIn(BaseModel):
     descrizione: str = Field(min_length=1)
+    voce_id: str | None = None  # voce del catalogo (radice); nella modifica, assente: resta
     strutture_coinvolte: str | None = None  # note libere
     coinvolte: list[str] | None = Field(default=None, max_length=200)  # None (assenti): restano come sono
 
 
 class RischioIn(BaseModel):
     evento: str = Field(min_length=1)
+    voce_id: str | None = None  # voce del catalogo (radice); nella modifica, assente: resta
     fattore_abilitante: str | None = Field(default=None, max_length=500)
 
 
@@ -765,6 +775,7 @@ class ValutazioneProposta(BaseModel):
 
 class MisuraIn(BaseModel):
     descrizione: str = Field(min_length=1)
+    voce_id: str | None = None  # voce del catalogo (radice); nella modifica, assente: resta
     tipo: Literal["GENERALE", "SPECIFICA"] = "SPECIFICA"
     categoria: str | None = Field(default=None, max_length=255)
     obbligo_trasparenza: str | None = Field(default=None, max_length=100)
@@ -859,12 +870,31 @@ async def _elimina_processo(sessione, p: AcProcesso) -> None:
     await sessione.delete(p)
 
 
-async def _collega_al_catalogo(sessione, tipo: str, el) -> None:
-    """L'elemento nuovo prende la voce del catalogo con lo stesso testo (o ne crea una
-    dell'ente); il catalogo si carica una volta per richiesta."""
+async def _voce_valida(sessione, tipo: str, voce_id: str) -> AcVoce:
+    """La voce scelta: del catalogo dell'ente, del tipo dell'elemento, attiva."""
+    v = await sessione.get(AcVoce, voce_id)
+    if v is None or v.ente_id != ente_id() or v.tipo != tipo:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Voce del catalogo non trovata")
+    if not v.attiva:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"La voce {v.codice} è disattivata: scegline un'altra")
+    return v
+
+
+async def _collega_al_catalogo(sessione, tipo: str, el, voce_id: str | None = None) -> None:
+    """L'elemento nuovo prende la voce scelta dal catalogo; senza (importazioni, RPCT) quella
+    con lo stesso testo o una nuova dell'ente. Il catalogo si carica una volta per richiesta."""
+    if voce_id:
+        el.voce_id = (await _voce_valida(sessione, tipo, voce_id)).id
+        return
     if getattr(g, "ac_catalogo", None) is None:
         g.ac_catalogo = Catalogo(sessione, ente_id())
     await g.ac_catalogo.collega(tipo, el)
+
+
+async def _cambia_voce(sessione, tipo: str, el, voce_id: str | None) -> None:
+    """Nella modifica la voce cambia solo se indicata."""
+    if voce_id and voce_id != el.voce_id:
+        el.voce_id = (await _voce_valida(sessione, tipo, voce_id)).id
 
 
 async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivita:
@@ -873,7 +903,7 @@ async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivit
                    codice=await _nuovo_codice(sessione, AcAttivita, f"{p.codice}."),
                    descrizione=dati.descrizione, strutture_coinvolte=dati.strutture_coinvolte,
                    coinvolte=_coinvolte(dati.coinvolte or []))  # fmt: skip
-    await _collega_al_catalogo(sessione, "ATTIVITA", a)
+    await _collega_al_catalogo(sessione, "ATTIVITA", a, dati.voce_id)
     sessione.add(a)
     await _tocca(sessione, p.id)
     return a
@@ -882,6 +912,7 @@ async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivit
 async def _modifica_attivita(sessione, a: AcAttivita, dati: AttivitaIn) -> None:
     await _strutture_valide(sessione, dati.coinvolte)
     a.descrizione, a.strutture_coinvolte = dati.descrizione, dati.strutture_coinvolte
+    await _cambia_voce(sessione, "ATTIVITA", a, dati.voce_id)
     if dati.coinvolte is not None:
         a.coinvolte = _coinvolte(dati.coinvolte)
     await _tocca(sessione, a.processo_id)
@@ -930,7 +961,7 @@ async def _crea_rischio(sessione, a: AcAttivita, dati: RischioIn) -> AcRischio:
     r = AcRischio(id=nuovo_id(), ente_id=ente_id(), attivita_id=a.id,
                   codice=await _nuovo_codice(sessione, AcRischio, f"{a.codice}_R."),
                   evento=dati.evento, fattore_abilitante=dati.fattore_abilitante)  # fmt: skip
-    await _collega_al_catalogo(sessione, "RISCHIO", r)
+    await _collega_al_catalogo(sessione, "RISCHIO", r, dati.voce_id)
     sessione.add(r)
     await _tocca(sessione, a.processo_id)
     return r
@@ -938,6 +969,7 @@ async def _crea_rischio(sessione, a: AcAttivita, dati: RischioIn) -> AcRischio:
 
 async def _modifica_rischio(sessione, r: AcRischio, dati: RischioIn) -> None:
     r.evento, r.fattore_abilitante = dati.evento, dati.fattore_abilitante
+    await _cambia_voce(sessione, "RISCHIO", r, dati.voce_id)
     await _tocca(sessione, await _processo_del_rischio(sessione, r))
 
 
@@ -956,8 +988,8 @@ async def _verifica_misura(sessione, dati: MisuraIn) -> None:
 async def _crea_misura(sessione, r: AcRischio, dati: MisuraIn) -> AcMisura:
     await _verifica_misura(sessione, dati)
     x = AcMisura(id=nuovo_id(), ente_id=ente_id(), rischio_id=r.id,
-                 codice=await _nuovo_codice(sessione, AcMisura, f"{r.codice}_M."), **dati.model_dump())  # fmt: skip
-    await _collega_al_catalogo(sessione, "MISURA", x)
+                 codice=await _nuovo_codice(sessione, AcMisura, f"{r.codice}_M."), **dati.model_dump(exclude={"voce_id"}))  # fmt: skip
+    await _collega_al_catalogo(sessione, "MISURA", x, dati.voce_id)
     sessione.add(x)
     await _tocca(sessione, await _processo_del_rischio(sessione, r))
     return x
@@ -965,8 +997,9 @@ async def _crea_misura(sessione, r: AcRischio, dati: MisuraIn) -> AcMisura:
 
 async def _modifica_misura(sessione, x: AcMisura, dati: MisuraIn) -> None:
     await _verifica_misura(sessione, dati)
-    for campo, valore in dati.model_dump().items():
+    for campo, valore in dati.model_dump(exclude={"voce_id"}).items():
         setattr(x, campo, valore)
+    await _cambia_voce(sessione, "MISURA", x, dati.voce_id)
     await _tocca(sessione, await _processo_del_rischio(sessione, await sessione.get(AcRischio, x.rischio_id)))
 
 
@@ -1188,7 +1221,18 @@ async def elimina_misura(misura_id: str):
 # sottostanti). Il RPCT decide ogni proposta; approvandola la applica con le stesse operazioni
 # delle modifiche dirette, quindi i codici li assegna il sistema in quel momento.
 
-Oggetto = Literal["AREA", "PROCESSO", "ATTIVITA", "RISCHIO", "MISURA"]
+Oggetto = Literal["AREA", "PROCESSO", "ATTIVITA", "RISCHIO", "MISURA", "VOCE"]
+
+
+class VoceProposta(BaseModel):
+    """Voce che manca nel catalogo: il referente la propone; approvata, la sceglie."""
+
+    tipo_voce: Literal["ATTIVITA", "RISCHIO", "MISURA"]
+    descrizione: str = Field(min_length=1, max_length=10000)
+    tipo_misura: Literal["GENERALE", "SPECIFICA"] | None = None  # solo misure
+    categoria: str | None = Field(default=None, max_length=255)
+    indicatore: str | None = None
+    target: str | None = None
 
 PADRE: dict[str, str] = {"ATTIVITA": "PROCESSO", "RISCHIO": "ATTIVITA", "MISURA": "RISCHIO"}
 
@@ -1198,10 +1242,13 @@ DATI_PROPOSTA: dict[tuple[str, str], type[BaseModel]] = {
     ("ATTIVITA", "CREA"): AttivitaNuova, ("ATTIVITA", "MODIFICA"): AttivitaIn,
     ("RISCHIO", "CREA"): RischioNuovo, ("RISCHIO", "MODIFICA"): RischioModificato,
     ("MISURA", "CREA"): MisuraIn, ("MISURA", "MODIFICA"): MisuraIn,
+    ("VOCE", "CREA"): VoceProposta,
 }  # fmt: skip
 
 
 def _dati_proposta(oggetto: str, tipo: str, dati: dict | None) -> BaseModel:
+    if (oggetto, tipo) not in DATI_PROPOSTA:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Per il catalogo si propongono solo voci nuove")
     try:
         return DATI_PROPOSTA[(oggetto, tipo)].model_validate(dati or {})
     except ValidationError as e:
@@ -1239,7 +1286,7 @@ async def _processo_di(sessione, oggetto: str, el) -> AcProcesso | None:
 
 def _titolo(oggetto: str, dati: dict) -> str:
     campo = {"AREA": "descrizione_breve", "PROCESSO": "denominazione", "ATTIVITA": "descrizione",
-             "RISCHIO": "evento", "MISURA": "descrizione"}[oggetto]  # fmt: skip
+             "RISCHIO": "evento", "MISURA": "descrizione", "VOCE": "descrizione"}[oggetto]  # fmt: skip
     testo = (dati.get(campo) or dati.get("descrizione") or "").strip()
     return testo if len(testo) <= 80 else testo[:79] + "…"
 
@@ -1263,10 +1310,11 @@ def _valutazione_di(r: AcRischio) -> dict | None:
 
 
 def _senza_coinvolte_vuote(dati: dict) -> dict:
-    """Le strutture coinvolte solo se ci sono: le proposte nate prima che esistessero restano
-    uguali all'elemento com'è."""
+    """Le strutture coinvolte solo se ci sono, e senza la voce del catalogo (nella modifica,
+    assente, resta): le proposte nate prima restano uguali all'elemento com'è."""
     if not dati.get("coinvolte"):
         dati.pop("coinvolte", None)
+    dati.pop("voce_id", None)
     return dati
 
 
@@ -1276,7 +1324,7 @@ async def _istantanea(sessione, oggetto: str, el, *, figli: bool = False) -> dic
     if oggetto == "AREA":
         return {"codice": el.codice, **{k: getattr(el, k) for k in AreaIn.model_fields}}
     if oggetto == "MISURA":
-        return {"codice": el.codice, **{k: getattr(el, k) for k in MisuraIn.model_fields}}
+        return {"codice": el.codice, **{k: getattr(el, k) for k in MisuraIn.model_fields if k != "voce_id"}}
     if oggetto == "RISCHIO":
         dati = {"codice": el.codice, "evento": el.evento, "fattore_abilitante": el.fattore_abilitante,
                 "valutazione": _valutazione_di(el)}  # fmt: skip
@@ -1306,6 +1354,11 @@ async def _verifica_dati(sessione, d: BaseModel, m: Metodologia) -> dict:
     """Dati validi (aree, strutture, obblighi, valutazioni) con l'esito delle valutazioni, da
     mostrare nella proposta; i codici si assegnano all'approvazione."""
     risultato = d.model_dump()
+    tipo_voce = "ATTIVITA" if isinstance(d, AttivitaIn) else "RISCHIO" if isinstance(d, RischioIn) else \
+        "MISURA" if isinstance(d, MisuraIn) else None  # fmt: skip
+    if tipo_voce and d.voce_id:
+        v = await _voce_valida(sessione, tipo_voce, d.voce_id)
+        risultato["voce"] = {"codice": v.codice, "descrizione": v.descrizione}  # per mostrarla nella proposta
     if isinstance(d, ProcessoIn):
         await _verifica_processo(sessione, d)
     if isinstance(d, MisuraIn):
@@ -1461,6 +1514,22 @@ class PropostaNuova(BaseModel):
     nota: str | None = Field(default=None, max_length=5000)
 
 
+def _scelti_dal_catalogo(d: BaseModel) -> None:
+    """Il referente crea attività, rischi e misure scegliendo la voce dal catalogo (anche quelli
+    dentro un processo o un'attività nuovi); se manca, propone prima la voce."""
+    if isinstance(d, AttivitaIn | RischioIn | MisuraIn) and not d.voce_id:
+        cosa = "l'attività" if isinstance(d, AttivitaIn) else "il rischio" if isinstance(d, RischioIn) else "la misura"
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY,
+                        f"Scegli {cosa} dal catalogo: se manca, proponi prima la voce nuova")  # fmt: skip
+    for campo in ("attivita", "rischi", "misure"):
+        for figlio in getattr(d, campo, None) or []:
+            _scelti_dal_catalogo(figlio)
+
+
+async def _voce_esistente(sessione, d: VoceProposta) -> AcVoce | None:
+    return await voce_con_testo(sessione, ente_id(), d.tipo_voce, d.descrizione)
+
+
 async def _prepara(sessione, pr: AcProposta, dati: dict | None) -> None:
     """Controlla permessi e dati della proposta e ne compone dati, stato precedente e contesto."""
     m = await metodologia_ente()
@@ -1469,6 +1538,11 @@ async def _prepara(sessione, pr: AcProposta, dati: dict | None) -> None:
         d = _dati_proposta(pr.oggetto, "CREA", dati)
         processo = await _processo_di(sessione, PADRE[pr.oggetto], padre) if padre else None
         await _controlla_permesso(sessione, processo, [d.struttura_id] if pr.oggetto == "PROCESSO" else [])
+        if not _e_rpct():
+            _scelti_dal_catalogo(d)
+        if pr.oggetto == "VOCE":
+            if (doppia := await _voce_esistente(sessione, d)) is not None:
+                raise ErroreApi(HTTPStatus.CONFLICT, f"{VoceDoppia(doppia)}: sceglila dal catalogo")
         pr.dati = await _verifica_dati(sessione, d, m)
         if padre:
             percorso = await _percorso(sessione, PADRE[pr.oggetto], padre)
@@ -1638,6 +1712,12 @@ async def _applica(sessione, pr: AcProposta, forza: bool):
         d = _dati_proposta(pr.oggetto, "CREA", pr.dati)
         if pr.oggetto == "AREA":
             return await _crea_area(sessione, d)
+        if pr.oggetto == "VOCE":
+            try:
+                return await crea_voce(sessione, ente_id(), d.tipo_voce, d.descrizione,
+                                       **d.model_dump(include={"tipo_misura", "categoria", "indicatore", "target"}))  # fmt: skip
+            except VoceDoppia as e:
+                raise ErroreApi(HTTPStatus.CONFLICT, f"{e}: la proposta non serve più") from e
         if pr.oggetto == "PROCESSO":
             return await _crea_processo_completo(sessione, d, m)
         try:

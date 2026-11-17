@@ -276,6 +276,7 @@ Future<Map<String, dynamic>?> modificaCampi(
   required String titolo,
   required List<Campo> campi,
   Map<String, dynamic> valori = const {},
+  String? nota, // spiegazione sopra i campi (es. la voce del catalogo)
 }) async {
   final testi = {
     for (final c in campi)
@@ -300,7 +301,9 @@ Future<Map<String, dynamic>?> modificaCampi(
         content: SizedBox(
           width: 560,
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (nota != null)
+                Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(nota, style: Theme.of(c).textTheme.bodySmall)),
               for (final campo in campi)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -355,6 +358,27 @@ Future<Map<String, dynamic>?> modificaCampi(
     ...multiple,
   };
   return ok == true ? risultato : null;
+}
+
+/// Il testo per riconoscere le voci uguali (come il server): senza differenze di maiuscole,
+/// spazi, apostrofi tipografici e punteggiatura finale.
+String normalizzaTesto(String? testo) => (testo ?? '')
+    .toLowerCase()
+    .replaceAll('\u2019', "'")
+    .replaceAll('\u2018', "'")
+    .replaceAll('\u201c', '"')
+    .replaceAll('\u201d', '"')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim()
+    .replaceAll(RegExp(r'[ .;:,]+$'), '')
+    .trim();
+
+/// La voce del catalogo da cui viene l'elemento, quando il testo nel processo è stato
+/// ritoccato (null se è lo stesso o se l'elemento non ha voce).
+String? voceRitoccata(Map el, String? testo) {
+  final v = el['voce'] as Map?;
+  if (v == null || normalizzaTesto(v['descrizione'] as String?) == normalizzaTesto(testo)) return null;
+  return 'Dal catalogo (${v['codice']}): ${v['descrizione']}';
 }
 
 /// Libera i campi di testo quando il widget sparisce (fine dell'animazione della finestra).

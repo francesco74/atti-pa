@@ -227,6 +227,14 @@ class AnticorruzioneApi(unittest.TestCase):
     def _proponi(self, c, **proposta):
         return self._ok(c.post(f"{API}/proposte", base_url=ENTE, json=proposta), 201)
 
+    def _v(self, tipo: str, testo: str) -> str:
+        """La voce del catalogo con quel testo (creata dal RPCT se manca): il referente sceglie da lì."""
+        rpct = self._client("rpct")
+        r = rpct.post(f"{API}/catalogo", base_url=ENTE, json={"tipo": tipo, "descrizione": testo})
+        if r.status_code == 201:
+            return r.get_json()["id"]
+        return next(v["id"] for v in self._ok(rpct.get(f"{API}/catalogo?tipo={tipo}", base_url=ENTE)) if v["descrizione"] == testo)
+
     def _approva(self, rpct, pr, **corpo):
         return self._ok(rpct.post(f"{API}/proposte/{pr['id']}/approva", base_url=ENTE, json=corpo))
 
@@ -241,11 +249,16 @@ class AnticorruzioneApi(unittest.TestCase):
 
         # nuovo processo con attività, rischio valutato e misura, per la propria U.O.
         nuovo = {"area_id": area["id"], "denominazione": "Affidamenti diretti", "struttura_id": self.uo, "attivita": [
-            {"descrizione": "Scelta dell'operatore", "rischi": [
-                {"evento": "Frazionamento artificioso", "valutazione": self._valutazione(ref, "Alto"),
-                 "misure": [{"descrizione": "Verifica del frazionamento", "categoria": "Controllo"}]},
+            {"descrizione": "Scelta dell'operatore", "voce_id": self._v("ATTIVITA", "Scelta dell'operatore"), "rischi": [
+                {"evento": "Frazionamento artificioso", "voce_id": self._v("RISCHIO", "Frazionamento artificioso"),
+                 "valutazione": self._valutazione(ref, "Alto"),
+                 "misure": [{"descrizione": "Verifica del frazionamento", "categoria": "Controllo",
+                             "voce_id": self._v("MISURA", "Verifica del frazionamento")}]},
             ]},
         ]}  # fmt: skip
+        # il referente sceglie dal catalogo: senza voce la proposta non si fa
+        senza = {**nuovo, "attivita": [{"descrizione": "Scelta dell'operatore"}]}
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "CREA", "oggetto": "PROCESSO", "dati": senza}).status_code, 422)
         pr = self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "CREA", "oggetto": "PROCESSO", "dati": nuovo}), 201)
         self.assertEqual(pr["dati"]["attivita"][0]["rischi"][0]["valutazione"]["livello"], "Rischio Critico")
         self.assertEqual(pr["percorso"][0].split()[0], area["codice"])
@@ -272,7 +285,9 @@ class AnticorruzioneApi(unittest.TestCase):
 
         # nuova attività con il suo rischio, proposta dal dirigente del settore (la U.O. è sotto)
         pat = self._proponi(dirig, tipo="CREA", oggetto="ATTIVITA", padre_id=albero["id"], dati={
-            "descrizione": "Stipula", "rischi": [{"evento": "Clausole di favore", "misure": [{"descrizione": "Doppia firma"}]}]})  # fmt: skip
+            "descrizione": "Stipula", "voce_id": self._v("ATTIVITA", "Stipula"), "rischi": [
+                {"evento": "Clausole di favore", "voce_id": self._v("RISCHIO", "Clausole di favore"),
+                 "misure": [{"descrizione": "Doppia firma", "voce_id": self._v("MISURA", "Doppia firma")}]}]})  # fmt: skip
         self.assertEqual(pat["percorso"][-1].split()[0], cp)
         self._approva(rpct, pat)
         albero = self._ok(rpct.get(f"{API}/processi/{albero['id']}", base_url=ENTE))
@@ -284,7 +299,8 @@ class AnticorruzioneApi(unittest.TestCase):
                            dati={"evento": r0["evento"], "valutazione": self._valutazione(ref, "Basso")})  # fmt: skip
         self.assertEqual(pv["prima"]["valutazione"]["livello"], "Rischio Critico")
         self.assertEqual(pv["dati"]["valutazione"]["livello"], "Rischio Minimo")
-        pm = self._proponi(ref, tipo="CREA", oggetto="MISURA", padre_id=r0["id"], dati={"descrizione": "Rotazione"})
+        pm = self._proponi(ref, tipo="CREA", oggetto="MISURA", padre_id=r0["id"],
+                           dati={"descrizione": "Rotazione", "voce_id": self._v("MISURA", "Rotazione")})  # fmt: skip
         self._approva(rpct, pv)
         self._approva(rpct, pm)
         r0 = self._ok(rpct.get(f"{API}/processi/{albero['id']}", base_url=ENTE))["attivita"][0]["rischi"][0]
@@ -312,7 +328,8 @@ class AnticorruzioneApi(unittest.TestCase):
         self.assertTrue(nuova["codice"].endswith("_M.3"))
 
         # proposta su un elemento sparito prima dell'approvazione
-        pr_r = self._proponi(ref, tipo="CREA", oggetto="RISCHIO", padre_id=a0["id"], dati={"evento": "Nuovo"})
+        pr_r = self._proponi(ref, tipo="CREA", oggetto="RISCHIO", padre_id=a0["id"],
+                             dati={"evento": "Nuovo", "voce_id": self._v("RISCHIO", "Nuovo")})  # fmt: skip
         self.assertEqual(rpct.delete(f"{API}/attivita/{a0['id']}", base_url=ENTE).status_code, 204)
         self.assertEqual(rpct.post(f"{API}/proposte/{pr_r['id']}/approva", base_url=ENTE, json={}).status_code, 409)
 
@@ -325,7 +342,8 @@ class AnticorruzioneApi(unittest.TestCase):
         self.assertEqual(ref.delete(f"{API}/proposte/{attesa['id']}", base_url=ENTE).status_code, 204)
         self.assertEqual(ref.delete(f"{API}/proposte/{pr['id']}", base_url=ENTE).status_code, 409)
         # valutazione non valida rifiutata già al salvataggio
-        sbagliata = {"evento": "e", "valutazione": {"valori_probabilita": {"1": "Alto"}, "valori_impatto": {}}}
+        sbagliata = {"evento": "e", "voce_id": self._v("RISCHIO", "e"),
+                     "valutazione": {"valori_probabilita": {"1": "Alto"}, "valori_impatto": {}}}  # fmt: skip
         self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
             "tipo": "CREA", "oggetto": "RISCHIO", "padre_id": albero["attivita"][1]["id"], "dati": sbagliata}).status_code, 422)  # fmt: skip
 
@@ -336,13 +354,13 @@ class AnticorruzioneApi(unittest.TestCase):
         trasversale = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Di tutti"}), 201)
         # la U.O. non propone sul settore che sta sopra di lei
         r = ref.post(f"{API}/proposte", base_url=ENTE, json={
-            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": del_settore["id"], "dati": {"descrizione": "x"}})  # fmt: skip
+            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": del_settore["id"], "dati": {"descrizione": "x", "voce_id": self._v("ATTIVITA", "x")}})  # fmt: skip
         self.assertEqual(r.status_code, 403)
         self.assertFalse(self._ok(ref.get(f"{API}/processi/{del_settore['id']}", base_url=ENTE))["proponibile"])
         # sui trasversali sì: riguardano tutte le strutture
         self.assertTrue(self._ok(ref.get(f"{API}/processi/{trasversale['id']}", base_url=ENTE))["proponibile"])
         self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={
-            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": trasversale["id"], "dati": {"descrizione": "x"}}), 201)  # fmt: skip
+            "tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": trasversale["id"], "dati": {"descrizione": "x", "voce_id": self._v("ATTIVITA", "x")}}), 201)  # fmt: skip
         self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={
             "tipo": "MODIFICA", "oggetto": "PROCESSO", "elemento_id": trasversale["id"],
             "dati": {"denominazione": "Di tutti, rivisto", "struttura_id": None}}), 201)  # fmt: skip
@@ -455,6 +473,34 @@ class AnticorruzioneApi(unittest.TestCase):
         self.assertEqual(rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json={**nuovo, "attiva": False}).status_code, 409)
         self._ok(rpct.put(f"{cat}/{voce['id']}", base_url=ENTE, json={**nuovo, "attiva": False, "conferma": True}))
         self.assertNotIn(voce["id"], [v["id"] for v in self._ok(ref.get(f"{cat}?attive=true", base_url=ENTE))])
+
+        # scelta dal catalogo: la voce indicata, il testo si ritocca; la disattivata non si sceglie
+        verifica = self._ok(rpct.post(cat, base_url=ENTE, json={"tipo": "ATTIVITA", "descrizione": "Verifica dei requisiti"}), 201)
+        a4 = self._ok(rpct.post(f"{API}/processi/{p1['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "Verifica dei requisiti dichiarati", "voce_id": verifica["id"]}), 201)  # fmt: skip
+        self.assertEqual(a4["voce_id"], verifica["id"])
+        albero = self._ok(ref.get(f"{API}/processi/{p1['id']}", base_url=ENTE))
+        a4 = next(a for a in albero["attivita"] if a["id"] == a4["id"])
+        self.assertEqual(a4["voce"]["codice"], verifica["codice"])  # con il testo originale, per mostrarlo
+        self.assertEqual(rpct.post(f"{API}/processi/{p1['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "x", "voce_id": voce["id"]}).status_code, 422)  # fmt: skip
+        self.assertEqual(rpct.post(f"{API}/processi/{p1['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "x", "voce_id": "inesistente"}).status_code, 422)  # fmt: skip
+
+        # voce mancante: il referente la propone (non se c'è già); approvata, entra nel catalogo
+        proposta = {"tipo": "CREA", "oggetto": "VOCE", "dati": {"tipo_voce": "MISURA", "descrizione": "Registro dei sopralluoghi",
+                                                               "categoria": "Controllo"}}  # fmt: skip
+        doppia = {"tipo": "CREA", "oggetto": "VOCE", "dati": {"tipo_voce": "ATTIVITA", "descrizione": "verifica dei requisiti."}}
+        r = ref.post(f"{API}/proposte", base_url=ENTE, json=doppia)
+        self.assertEqual(r.status_code, 409)
+        self.assertIn(f"c'è già la voce {verifica['codice']}", r.get_data(as_text=True))
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={**proposta, "tipo": "MODIFICA"}).status_code, 422)
+        pv = self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json=proposta), 201)
+        self.assertEqual((pv["oggetto"], pv["titolo"]), ("VOCE", "Registro dei sopralluoghi"))
+        self._ok(rpct.post(f"{API}/proposte/{pv['id']}/approva", base_url=ENTE, json={}))
+        nuova = next(v for v in self._ok(ref.get(f"{cat}?tipo=MISURA&testo=sopralluoghi", base_url=ENTE)))
+        self.assertTrue(nuova["codice"].startswith("MIS-E"))
+        self.assertEqual((nuova["categoria"], nuova["tipo_misura"]), ("Controllo", "SPECIFICA"))
 
     def test_monitoraggio(self):
         rpct, ref, dir_ = self._client("rpct"), self._client("referente"), self._client("dirigente")

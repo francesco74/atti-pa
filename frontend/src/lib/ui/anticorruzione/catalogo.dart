@@ -162,7 +162,7 @@ class _Etichetta extends StatelessWidget {
 Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzione d, String tipo, [Map<String, dynamic>? v]) {
   final categoria = v?['categoria'] as String?;
   return modificaCampi(context,
-      titolo: v == null ? 'Nuova voce: ${_singolare[tipo]}' : 'Voce ${v['codice']}',
+      titolo: v?['codice'] == null ? 'Nuova voce: ${_singolare[tipo]}' : 'Voce ${v!['codice']}',
       valori: {if (tipo == 'MISURA') 'tipo_misura': 'SPECIFICA', ...?v},
       campi: [
         Campo('descrizione', tipo == 'RISCHIO' ? 'Evento rischioso' : 'Descrizione', righe: 4, obbligatorio: true),
@@ -389,19 +389,24 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
   }
 }
 
-/// Scelta di una voce del catalogo (attive, del tipo dato), con la ricerca.
-Future<Map<String, dynamic>?> scegliVoce(BuildContext context, String tipo, {Set<String> escluse = const {}, String? titolo}) =>
+/// Scelta di una voce del catalogo (attive, del tipo dato), con la ricerca. Con [dati] (per un
+/// elemento nuovo della mappatura) la voce che manca si crea (RPCT) o si propone (referente:
+/// approvata, si sceglie).
+Future<Map<String, dynamic>?> scegliVoce(BuildContext context, String tipo,
+        {Set<String> escluse = const {}, String? titolo, DatiAnticorruzione? dati}) =>
     showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (_) => _SceltaVoce(tipo: tipo, escluse: escluse, titolo: titolo ?? 'Scegli dal catalogo'),
+      builder: (_) => _SceltaVoce(
+          tipo: tipo, escluse: escluse, titolo: titolo ?? 'Scegli dal catalogo: ${_singolare[tipo]}', dati: dati),
     );
 
 class _SceltaVoce extends StatefulWidget {
-  const _SceltaVoce({required this.tipo, required this.escluse, required this.titolo});
+  const _SceltaVoce({required this.tipo, required this.escluse, required this.titolo, this.dati});
 
   final String tipo;
   final Set<String> escluse;
   final String titolo;
+  final DatiAnticorruzione? dati;
 
   @override
   State<_SceltaVoce> createState() => _SceltaVoceState();
@@ -433,13 +438,46 @@ class _SceltaVoceState extends State<_SceltaVoce> {
         }).then((v) => [for (final x in (v as List).cast<Map<String, dynamic>>()) if (!widget.escluse.contains(x['id'])) x]);
       });
 
+  /// La voce che manca: il RPCT la crea e la sceglie; il referente la propone.
+  Future<void> _manca(bool rpct) async {
+    final v = await modificaVoce(context, widget.dati!, widget.tipo,
+        _testo.text.trim().isEmpty ? null : {'descrizione': _testo.text.trim(), if (widget.tipo == 'MISURA') 'tipo_misura': 'SPECIFICA'});
+    if (v == null || !mounted) return;
+    try {
+      final api = apiDi(context);
+      if (rpct) {
+        final nuova = await api.post(apiCatalogo, {...v, 'tipo': widget.tipo}) as Map<String, dynamic>;
+        if (mounted) Navigator.pop(context, nuova);
+        return;
+      }
+      await api.post('$apiAnticorruzione/proposte', {'tipo': 'CREA', 'oggetto': 'VOCE', 'dati': {...v, 'tipo_voce': widget.tipo}});
+      if (!mounted) return;
+      mostraMessaggio(context, 'Proposta della voce inviata al RPCT: quando la approva la trovi nel catalogo e la puoi scegliere.');
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) mostraErrore(context, e);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) {
+    final rpct = context.read<AuthState>().utente?.isAnticorruzioneRpct ?? false;
+    return AlertDialog(
         title: Text(widget.titolo),
         content: SizedBox(
           width: 640,
           height: 460,
           child: Column(children: [
+            if (widget.dati != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                    rpct
+                        ? 'Il testo della voce si potrà ritoccare per questo processo. Se la voce manca, creala.'
+                        : 'Il testo della voce si potrà ritoccare per questo processo. Se la voce manca, proponila: '
+                            'quando il RPCT la approva la potrai scegliere.',
+                    style: Theme.of(context).textTheme.bodySmall),
+              ),
             TextField(
               controller: _testo,
               autofocus: true,
@@ -470,6 +508,15 @@ class _SceltaVoceState extends State<_SceltaVoce> {
             ),
           ]),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla'))],
+        actions: [
+          if (widget.dati != null)
+            TextButton.icon(
+              icon: Icon(rpct ? Icons.add : Icons.outgoing_mail, size: 18),
+              label: Text(rpct ? 'Nuova voce' : 'Proponi una voce nuova'),
+              onPressed: () => _manca(rpct),
+            ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),
+        ],
       );
+  }
 }

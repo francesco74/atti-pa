@@ -368,7 +368,7 @@ Decisioni del 04/11/2026:
     in `ac_processi` e `ac_attivita` (migrazione `0007_strutture_coinvolte.sql`); lo script
     `deploy/manutenzione/strutture_coinvolte.py` ricava le coinvolte dalle note delle attività
     (codici dell'anagrafica e descrizioni lunghe; `--dry-run` per vedere prima).
-29. **Catalogo della mappatura** (17/11/2026, fase 1 di 3): le **voci** (radici) di attività,
+29. **Catalogo della mappatura** (17/11/2026, fasi 1 e 2 di 3): le **voci** (radici) di attività,
     rischi (evento) e misure, per ente (`ac_catalogo`, migrazione `0008_catalogo_mappatura.sql`).
     Ogni attività, rischio e misura dei processi ricorda la sua voce (`voce_id`) e ne copia il
     testo, che nel processo si può ritoccare: cambiare la voce **non** cambia i processi. Le
@@ -388,3 +388,14 @@ Decisioni del 04/11/2026:
     conferma (l'API vuole `conferma`). `deploy/manutenzione/catalogo_mappatura.py` collega la
     mappatura già presente (voci standard, poi voci con lo stesso testo o nuove) ed elenca le
     voci molto somiglianti da valutare se unire.
+    **Fase 2 (17/11/2026)**: attività, rischi e misure nuovi si **scelgono dal catalogo**
+    (voci attive): la voce dà il testo (per la misura anche tipo, categoria, indicatore e
+    target), che si ritocca nella finestra; l'elemento ricorda la voce (`voce_id`) e, se il
+    testo è diverso, sotto l'elemento si legge "Dal catalogo (codice): testo originale". Voce
+    mancante: il **RPCT** la crea dalla stessa finestra e la usa subito; il **referente** la
+    propone (proposta `VOCE`, solo creazione; rifiutata se il testo c'è già) e, approvata, la
+    sceglie. Le proposte del referente che creano attività, rischi o misure (anche dentro un
+    processo o un'attività nuovi) devono indicare la voce; il RPCT può ancora creare senza
+    voce, e allora vale la voce con lo stesso testo (o una nuova dell'ente), come per le
+    importazioni. Nella modifica la voce resta se non indicata; la fotografia delle proposte non
+    la contiene, perché le proposte nate prima restino uguali all'elemento.

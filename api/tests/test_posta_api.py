@@ -145,8 +145,9 @@ class PostaApi(unittest.TestCase):
         area = self._ok(rpct.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Personale"}), 201)
         processo = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
             "area_id": area["id"], "denominazione": "Concorsi", "struttura_id": self.uo}), 201)  # fmt: skip
+        voce = self._ok(rpct.post(f"{API}/catalogo", base_url=ENTE, json={"tipo": "ATTIVITA", "descrizione": "Nomina della commissione"}), 201)
         proposta = {"tipo": "CREA", "oggetto": "ATTIVITA", "padre_id": processo["id"],
-                    "dati": {"descrizione": "Nomina della commissione"}, "nota": "Manca questa fase"}  # fmt: skip
+                    "dati": {"descrizione": "Nomina della commissione", "voce_id": voce["id"]}, "nota": "Manca questa fase"}  # fmt: skip
 
         # senza posta configurata non si accoda nulla
         self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json=proposta), 201)

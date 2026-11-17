@@ -499,6 +499,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
         ],
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${a['descrizione']}'),
+          if (voceRitoccata(a, a['descrizione'] as String?) case final voce?)
+            Text(voce, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
           if (dati.coinvolte(a['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(a['coinvolte'])}'),
           if (a['strutture_coinvolte'] != null) Text('Note sulle strutture coinvolte: ${a['strutture_coinvolte']}'),
         ]),

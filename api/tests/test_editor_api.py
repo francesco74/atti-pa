@@ -18,6 +18,8 @@ import unittest
 import zipfile
 from pathlib import Path
 
+import yaml
+
 RADICE = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RADICE), str(RADICE / "api" / "src")]
 
@@ -91,7 +93,8 @@ class EditorApi(unittest.TestCase):
         self.assertGreaterEqual(len(elenco["moduli"]), 7)
         self.assertGreaterEqual(len(elenco["checklist"]), 12)
         sf = next(m for m in elenco["modelli"] if m["codice"] == "DD_AFFIDAMENTO_DIRETTO_SF")
-        self.assertEqual(sf["pacchetto"], "Modelli standard Atti PA 2026.2")
+        versione = yaml.safe_load((RADICE / "pacchetto" / "pacchetto.yaml").read_text(encoding="utf-8"))["versione"]
+        self.assertEqual(sf["pacchetto"], f"Modelli standard Atti PA {versione}")
         d = self._ok(self.c.get("/api/v1/configurazione/modello/DD_AFFIDAMENTO_DIRETTO_SF"))
         self.assertGreaterEqual(d["pubblicata"]["versione"], 1)  # altri test lo ricompongono
         self.assertIsNotNone(d["standard"])
