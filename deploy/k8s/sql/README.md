@@ -12,6 +12,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0006_azioni_da_mappatura.sql` | azioni degli obiettivi della performance copiate dalle attività della mappatura dei rischi; rieseguibile |
 | `0007_strutture_coinvolte.sql` | strutture coinvolte nei processi e nelle attività della mappatura (oltre alla responsabile); rieseguibile |
 | `0008_catalogo_mappatura.sql` | catalogo della mappatura (voci di attività, rischi e misure) e collegamento degli elementi; rieseguibile |
+| `0009_radici_negli_obiettivi.sql` | azioni e misure degli obiettivi collegate alla loro voce del catalogo (radice); rieseguibile |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

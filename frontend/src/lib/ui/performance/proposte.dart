@@ -122,6 +122,7 @@ const _etichetteCampi = {
   'scadenza': 'Scadenza',
   'misura_codice': 'Misura',
   'mappatura_codice': 'Processo o attività',
+  'voce_codice': 'Voce del catalogo',
   'indicatori': 'Indicatori',
 };
 
@@ -212,7 +213,7 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
     final elementi = _elementi;
     Map<String, dynamic>? misura;
     if (tipo == 'MISURA') {
-      misura = await scegliMisura(context, _p!['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
+      misura = await scegliMisura(context, _p!['struttura_id'] as String, {for (final x in elementi) ?x['voce_id'] as String?});
       if (misura == null || !mounted) return;
     }
     final v = await modificaElemento(context,
@@ -220,20 +221,18 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
     if (v == null || !mounted) return;
     await _salva({
       ..._dati,
-      'elementi': [...elementi, {...v, 'tipo': tipo, if (misura != null) 'misura_id': misura['id']}],
+      'elementi': [...elementi, {...v, 'tipo': tipo, if (misura != null) 'voce_id': misura['id'], if (misura != null) 'voce_codice': misura['codice']}],
     });
   }
 
-  /// Copia nella proposta attività (come azioni) e misure di un processo o di un'attività della
-  /// mappatura, con impegno 0%: ognuna poi si modifica o si toglie da sola.
+  /// Porta nella proposta le radici di un processo o di un'attività della mappatura (voci delle
+  /// attività, come azioni, e delle misure), con impegno 0%: ognuna poi si modifica o si toglie.
   Future<void> _copiaDallaMappatura() async {
     final elementi = _elementi;
     final voce = await scegliDallaMappatura(context, _p!['struttura_id'] as String);
     if (voce == null || !mounted) return;
     final copie = await scegliDaCopiare(context, voce,
-        anno: _p!['anno'] as int,
-        attivitaPresenti: {for (final x in elementi) ?x['attivita_id'] as String?},
-        misurePresenti: {for (final x in elementi) ?x['misura_id'] as String?});
+        anno: _p!['anno'] as int, vociPresenti: {for (final x in elementi) ?x['voce_id'] as String?});
     if (copie == null || !mounted) return;
     await _salva({..._dati, 'elementi': [...elementi, ...copie]});
   }

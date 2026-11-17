@@ -618,8 +618,8 @@ Future<Map<String, dynamic>?> modificaElemento(
   ];
   String? errore;
   final azione = tipo == 'AZIONE';
-  // azione copiata da un'attività della mappatura: la descrizione viene da lì e non si scrive
-  final copiata = azione && x?['mappatura_codice'] != null;
+  // azione dal catalogo della mappatura: la descrizione è quella della voce e non si scrive
+  final copiata = azione && x != null && dallaMappatura(x);
   final risultato = await showDialog<Map<String, dynamic>>(
     context: context,
     builder: (_) => _ConControllori([descrizione, impegno, completamento, nota], (c) => StatefulBuilder(
@@ -630,8 +630,8 @@ Future<Map<String, dynamic>?> modificaElemento(
           child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (copiata) ...[
-                Text(titoloElemento(x!), style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('Copiata da un\'attività della mappatura dei rischi: la descrizione resta quella copiata.',
+                Text(titoloElemento(x), style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('Dal catalogo della mappatura dei rischi: la descrizione resta quella della voce.',
                     style: Theme.of(c).textTheme.bodySmall),
               ] else if (azione)
                 TextField(controller: descrizione, maxLines: 4, minLines: 2, decoration: const InputDecoration(labelText: 'Descrizione *'))
@@ -868,46 +868,51 @@ Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<Stri
   return risultato;
 }
 
-/// Titolo di un'azione o misura, con il codice per le misure e le azioni prese dalla mappatura.
+/// Titolo di un'azione o misura, con il codice della sua voce del catalogo (radice) o, per le
+/// prime copiate, della misura o dell'attività.
 String titoloElemento(Map x) {
-  final codice = x['misura_codice'] ?? x['mappatura_codice'];
+  final codice = x['voce_codice'] ?? x['misura_codice'] ?? x['mappatura_codice'];
   return codice == null ? '${x['descrizione']}' : '$codice - ${x['descrizione']}';
 }
 
-/// Azione copiata da un'attività della mappatura dei rischi.
-bool dallaMappatura(Map x) => x['mappatura_codice'] != null;
+/// Azione dal catalogo della mappatura dei rischi (o copiata da un'attività, prima delle voci).
+bool dallaMappatura(Map x) => x['voce_id'] != null || x['voce_codice'] != null || x['mappatura_codice'] != null;
 
-/// Azione copiata da un'attività poi eliminata dalla mappatura.
-bool fuoriMappatura(Map x) => dallaMappatura(x) && x['attivita_id'] == null;
+/// Azione copiata da un'attività, senza voce, e poi eliminata dalla mappatura.
+bool fuoriMappatura(Map x) => x['voce_codice'] == null && x['mappatura_codice'] != null && x['attivita_id'] == null;
 
 /// Icona di un'azione o misura, con la spiegazione.
 Widget iconaElemento(Map x) {
   final (icona, testo) = x['tipo'] == 'MISURA'
       ? (Icons.shield_outlined, 'Misura della mappatura dei rischi')
       : dallaMappatura(x)
-          ? (Icons.account_tree_outlined, 'Azione copiata da un\'attività della mappatura dei rischi')
+          ? (Icons.account_tree_outlined, 'Azione dal catalogo della mappatura dei rischi')
           : (Icons.directions_run, 'Azione');
   return Tooltip(message: testo, child: Icon(icona));
 }
 
-/// Le attività (che diventano azioni) e le misure di un processo o di una sola attività della
-/// mappatura, da spuntare per copiarle nell'obiettivo; i rischi restano fuori. Restituisce gli
-/// elementi da aggiungere, con impegno 0% e scadenza a fine anno: ognuno poi si modifica o si
-/// toglie da solo. Quelli già nell'obiettivo non si scelgono.
+/// Le radici di un processo o di una sola attività della mappatura, da spuntare per portarle
+/// nell'obiettivo: le voci del catalogo delle attività (diventano azioni) e delle misure, senza
+/// i rischi e senza ripetizioni (la misura usata sotto più rischi è una voce). Restituisce gli
+/// elementi da aggiungere, con impegno 0% e scadenza a fine anno; le voci già nell'obiettivo non
+/// si scelgono.
 Future<List<Map<String, dynamic>>?> scegliDaCopiare(BuildContext context, Map<String, dynamic> voce,
-    {required int anno, required Set<String> attivitaPresenti, required Set<String> misurePresenti}) {
+    {required int anno, required Set<String> vociPresenti}) {
   return showDialog<List<Map<String, dynamic>>>(
     context: context,
-    builder: (c) => _DaCopiare(voce: voce, anno: anno, attivitaPresenti: attivitaPresenti, misurePresenti: misurePresenti),
+    builder: (c) => _DaCopiare(voce: voce, anno: anno, vociPresenti: vociPresenti),
   );
 }
 
+/// Una radice da portare nell'obiettivo: la voce e il primo elemento del processo che la usa.
+typedef _Radice = ({Map<String, dynamic> voce, Map<String, dynamic> elemento});
+
 class _DaCopiare extends StatefulWidget {
-  const _DaCopiare({required this.voce, required this.anno, required this.attivitaPresenti, required this.misurePresenti});
+  const _DaCopiare({required this.voce, required this.anno, required this.vociPresenti});
 
   final Map<String, dynamic> voce;
   final int anno;
-  final Set<String> attivitaPresenti, misurePresenti;
+  final Set<String> vociPresenti;
 
   @override
   State<_DaCopiare> createState() => _DaCopiareState();
@@ -915,7 +920,9 @@ class _DaCopiare extends StatefulWidget {
 
 class _DaCopiareState extends State<_DaCopiare> {
   late Future<Map<String, dynamic>> _albero;
-  final _scelte = <String>{}; // id delle attività e delle misure spuntate
+  final _scelte = <String>{}; // voci spuntate
+  List<_Radice> _azioni = const [], _misure = const [];
+  int _senzaVoce = 0;
 
   @override
   void initState() {
@@ -929,45 +936,48 @@ class _DaCopiareState extends State<_DaCopiare> {
           if (v['tipo'] == 'ATTIVITA') 'attivita_id': v['id'] as String else 'processo_id': v['id'] as String,
         }).then((a) {
           final albero = a as Map<String, dynamic>;
-          // tutto spuntato, tranne ciò che è già nell'obiettivo
-          if (mounted) {
-            setState(() {
-              _scelte.clear();
-              for (final at in (albero['attivita'] as List).cast<Map<String, dynamic>>()) {
-                if (!widget.attivitaPresenti.contains(at['id'])) _scelte.add(at['id'] as String);
-                for (final m in _misure(at)) {
-                  if (!widget.misurePresenti.contains(m['id'])) _scelte.add(m['id'] as String);
-                }
-              }
-            });
-          }
+          if (mounted) setState(() => _radici(albero));
           return albero;
         });
       });
 
-  /// Le misure di un'attività (dai suoi rischi), senza doppioni.
-  static List<Map<String, dynamic>> _misure(Map<String, dynamic> attivita) {
-    final viste = <Object?>{};
-    return [
-      for (final r in (attivita['rischi'] as List).cast<Map<String, dynamic>>())
-        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>())
-          if (viste.add(m['id'])) m,
-    ];
+  /// Le voci delle attività e delle misure, una volta sola, tutte spuntate tranne quelle già
+  /// nell'obiettivo e le disattivate.
+  void _radici(Map<String, dynamic> albero) {
+    final azioni = <String, _Radice>{}, misure = <String, _Radice>{};
+    var senza = 0;
+    for (final a in (albero['attivita'] as List).cast<Map<String, dynamic>>()) {
+      final va = a['voce'] as Map<String, dynamic>?;
+      va == null ? senza++ : azioni.putIfAbsent(va['id'] as String, () => (voce: va, elemento: a));
+      for (final r in (a['rischi'] as List).cast<Map<String, dynamic>>()) {
+        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>()) {
+          final vm = m['voce'] as Map<String, dynamic>?;
+          vm == null ? senza++ : misure.putIfAbsent(vm['id'] as String, () => (voce: vm, elemento: m));
+        }
+      }
+    }
+    _azioni = azioni.values.toList();
+    _misure = misure.values.toList();
+    _senzaVoce = senza;
+    _scelte
+      ..clear()
+      ..addAll([for (final r in [..._azioni, ..._misure]) if (_sceglibile(r)) r.voce['id'] as String]);
   }
+
+  bool _sceglibile(_Radice r) => !widget.vociPresenti.contains(r.voce['id']) && r.voce['attiva'] != false;
 
   List<Map<String, dynamic>> _elementi(Map<String, dynamic> albero) {
     final scadenza = '${widget.anno}-12-31';
-    final processo = (albero['processo'] as Map)['id'];
     return [
-      for (final a in (albero['attivita'] as List).cast<Map<String, dynamic>>()) ...[
-        if (_scelte.contains(a['id']))
-          {'tipo': 'AZIONE', 'attivita_id': a['id'], 'processo_id': processo, 'mappatura_codice': a['codice'],
-           'descrizione': a['descrizione'], 'impegno': 0, 'scadenza': scadenza, 'indicatori': <Map<String, dynamic>>[]},
-        for (final m in _misure(a))
-          if (_scelte.contains(m['id']))
-            {'tipo': 'MISURA', 'misura_id': m['id'], 'misura_codice': m['codice'], 'descrizione': m['descrizione'],
-             'impegno': 0, 'scadenza': scadenza, 'indicatori': [?indicatoreDaMisura(m)]},
-      ],
+      for (final r in _azioni)
+        if (_scelte.contains(r.voce['id']))
+          {'tipo': 'AZIONE', 'voce_id': r.voce['id'], 'voce_codice': r.voce['codice'], 'descrizione': r.voce['descrizione'],
+           'attivita_id': r.elemento['id'], 'processo_id': (albero['processo'] as Map)['id'],
+           'impegno': 0, 'scadenza': scadenza, 'indicatori': <Map<String, dynamic>>[]},
+      for (final r in _misure)
+        if (_scelte.contains(r.voce['id']))
+          {'tipo': 'MISURA', 'voce_id': r.voce['id'], 'voce_codice': r.voce['codice'], 'descrizione': r.voce['descrizione'],
+           'impegno': 0, 'scadenza': scadenza, 'indicatori': [?indicatoreDaMisura(r.voce)]},
     ];
   }
 
@@ -975,8 +985,22 @@ class _DaCopiareState extends State<_DaCopiare> {
   Widget build(BuildContext context) {
     final v = widget.voce;
     final piccolo = Theme.of(context).textTheme.bodySmall;
+    Widget casella(_Radice r, String sotto) {
+      final id = r.voce['id'] as String;
+      final presente = widget.vociPresenti.contains(id);
+      final disattivata = r.voce['attiva'] == false;
+      return CheckboxListTile(
+        dense: true,
+        controlAffinity: ListTileControlAffinity.leading,
+        value: presente || _scelte.contains(id),
+        onChanged: !_sceglibile(r) ? null : (s) => setState(() => s! ? _scelte.add(id) : _scelte.remove(id)),
+        title: Text('${r.voce['codice']} - ${r.voce['descrizione']}'),
+        subtitle: Text(presente ? 'già nell\'obiettivo' : (disattivata ? 'voce disattivata nel catalogo' : sotto), style: piccolo),
+      );
+    }
+
     return AlertDialog(
-      title: Text('Copia da ${v['codice']} - ${v['descrizione']}'),
+      title: Text('Dalla mappatura: ${v['codice']} - ${v['descrizione']}'),
       content: SizedBox(
         width: 640,
         height: 480,
@@ -984,32 +1008,22 @@ class _DaCopiareState extends State<_DaCopiare> {
           future: _albero,
           riprova: _carica,
           builder: (context, albero) {
-            final attivita = (albero['attivita'] as List).cast<Map<String, dynamic>>();
-            if (attivita.isEmpty) return const Center(child: Text('Nessuna attività nella mappatura.'));
-            Widget casella(String id, String testo, String sotto, {required bool presente, double rientro = 0}) => CheckboxListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.only(left: rientro),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: presente || _scelte.contains(id),
-                  onChanged: presente ? null : (s) => setState(() => s! ? _scelte.add(id) : _scelte.remove(id)),
-                  title: Text(testo),
-                  subtitle: Text(presente ? 'già nell\'obiettivo' : sotto, style: piccolo),
-                );
-            return Column(children: [
-              Text('Le attività diventano azioni, le misure restano misure; i rischi non entrano nell\'obiettivo. '
-                  'Si copiano con impegno 0%: impegno, scadenza e indicatori si impostano poi su ciascuna. '
-                  'Se la mappatura cambia, l\'obiettivo resta com\'è.', style: piccolo),
-              const SizedBox(height: 8),
+            if (_azioni.isEmpty && _misure.isEmpty) return const Center(child: Text('Nessuna voce del catalogo da portare.'));
+            Widget titolo(String t) => Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 4), child: Text(t, style: Theme.of(context).textTheme.titleSmall));
+            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('Entrano le radici: le voci del catalogo delle attività (diventano azioni) e delle misure, ognuna una volta '
+                  'sola; i rischi no. Impegno 0%: impegno, scadenza e indicatori si impostano poi su ciascuna. '
+                  'Se il catalogo o la mappatura cambiano, l\'obiettivo resta com\'è.', style: piccolo),
+              if (_senzaVoce > 0)
+                Text('$_senzaVoce elementi senza voce del catalogo non si possono portare.', style: piccolo),
               Expanded(
                 child: ListView(children: [
-                  for (final a in attivita) ...[
-                    casella(a['id'] as String, '${a['codice']} - ${a['descrizione']}', 'Azione',
-                        presente: widget.attivitaPresenti.contains(a['id'])),
-                    for (final m in _misure(a))
-                      casella(m['id'] as String, '${m['codice']} - ${m['descrizione']}',
-                          ['Misura', if (m['indicatore'] != null) 'indicatore: ${m['indicatore']}'].join(' · '),
-                          presente: widget.misurePresenti.contains(m['id']), rientro: 32),
-                  ],
+                  if (_azioni.isNotEmpty) titolo('Azioni (dalle attività)'),
+                  for (final r in _azioni) casella(r, 'Azione'),
+                  if (_misure.isNotEmpty) titolo('Misure'),
+                  for (final r in _misure)
+                    casella(r, ['Misura', if (r.voce['indicatore'] != null) 'indicatore: ${r.voce['indicatore']}'].join(' · ')),
                 ]),
               ),
             ]);
@@ -1022,7 +1036,7 @@ class _DaCopiareState extends State<_DaCopiare> {
           future: _albero,
           builder: (context, snap) => FilledButton(
             onPressed: !snap.hasData || _scelte.isEmpty ? null : () => Navigator.pop(context, _elementi(snap.data!)),
-            child: Text(_scelte.isEmpty ? 'Copia' : 'Copia ${_scelte.length}'),
+            child: Text(_scelte.isEmpty ? 'Aggiungi' : 'Aggiungi ${_scelte.length}'),
           ),
         ),
       ],
@@ -1078,8 +1092,8 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
           width: 640,
           height: 460,
           child: Column(children: [
-            Text('Dal processo si copiano le sue attività (come azioni) e le sue misure; dall\'attività solo lei e le sue misure. '
-                'Al passo successivo si sceglie cosa copiare.',
+            Text('Dal processo entrano le voci del catalogo delle sue attività (come azioni) e delle sue misure; dall\'attività '
+                'solo la sua voce e quelle delle sue misure. Al passo successivo si sceglie cosa portare.',
                 style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 8),
             TextField(
@@ -1117,7 +1131,8 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
       );
 }
 
-/// Scelta di una misura della mappatura dei rischi (quelle della struttura per prime).
+/// Scelta di una misura dal catalogo della mappatura dei rischi (voci attive; [giaPresenti]:
+/// voci già nell'obiettivo).
 Future<Map<String, dynamic>?> scegliMisura(BuildContext context, String strutturaId, Set<String> giaPresenti) {
   return showDialog<Map<String, dynamic>>(
     context: context,
@@ -1152,15 +1167,15 @@ class _SceltaMisuraState extends State<_SceltaMisura> {
   }
 
   void _cerca() => setState(() {
-        _misure = apiDi(context).get('$apiPerformance/misure', query: {
-          'struttura_id': widget.strutturaId,
+        _misure = apiDi(context).get('$apiPerformance/catalogo', query: {
+          'tipo': 'MISURA',
           'testo': _testo.text.trim(),
         }).then((v) => (v as List).cast<Map<String, dynamic>>());
       });
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Scegli una misura della mappatura dei rischi'),
+        title: const Text('Scegli una misura dal catalogo della mappatura'),
         content: SizedBox(
           width: 640,
           height: 460,
@@ -1182,10 +1197,10 @@ class _SceltaMisuraState extends State<_SceltaMisura> {
                           ListTile(
                             dense: true,
                             enabled: !widget.giaPresenti.contains(m['id']),
-                            leading: Icon(m['struttura_id'] == widget.strutturaId ? Icons.star_outline : Icons.task_alt, size: 20),
+                            leading: const Icon(Icons.shield_outlined, size: 20),
                             title: Text('${m['codice']} - ${m['descrizione']}'),
                             subtitle: Text([
-                              m['tipo'] == 'GENERALE' ? 'Generale' : 'Specifica',
+                              m['tipo_misura'] == 'GENERALE' ? 'Generale' : 'Specifica',
                               ?m['categoria'],
                               if (widget.giaPresenti.contains(m['id'])) 'già nell\'obiettivo',
                             ].join(' · ')),

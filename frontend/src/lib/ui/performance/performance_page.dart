@@ -50,7 +50,7 @@ class _PerformancePageState extends State<PerformancePage> {
       builder: (context, dati) => Provider<DatiPerformance>.value(
         value: dati,
         child: DefaultTabController(
-          length: dati.amministratore ? 5 : 3,
+          length: (dati.amministratore ? 5 : 3) + (dati.misureDisponibili ? 1 : 0),
           child: Column(children: [
             TabBar(isScrollable: true, tabs: [
               const Scheda(Icon(Icons.flag_outlined), 'Obiettivi'),
@@ -63,6 +63,7 @@ class _PerformancePageState extends State<PerformancePage> {
                 'Proposte',
               ),
               const Scheda(Icon(Icons.insights), 'Riepilogo'),
+              if (dati.misureDisponibili) const Scheda(Icon(Icons.account_tree_outlined), 'Radici'),
               if (dati.amministratore) const Scheda(Icon(Icons.calendar_month_outlined), 'PIAO'),
               if (dati.amministratore) const Scheda(Icon(Icons.summarize_outlined), 'Relazione'),
             ]),
@@ -71,6 +72,7 @@ class _PerformancePageState extends State<PerformancePage> {
                 const ObiettiviTab(),
                 ProposteTab(onCambiato: dati.approvatore ? () => _aggiornaContatore(dati) : null),
                 const RiepilogoTab(),
+                if (dati.misureDisponibili) const RadiciTab(),
                 if (dati.amministratore) PiaoTab(onCambiato: _carica),
                 if (dati.amministratore) const RelazioniTab(tipi: ['PERFORMANCE']),
               ]),
@@ -187,6 +189,120 @@ class _RiepilogoTabState extends State<RiepilogoTab> {
                     ]),
                 ]),
               ),
+      ),
+    ]);
+  }
+}
+
+/// Visione d'insieme delle radici: le voci del catalogo della mappatura (attività e misure)
+/// usate negli obiettivi del PIAO, ognuna con gli obiettivi che la usano.
+class RadiciTab extends StatefulWidget {
+  const RadiciTab({super.key});
+
+  @override
+  State<RadiciTab> createState() => _RadiciTabState();
+}
+
+class _RadiciTabState extends State<RadiciTab> {
+  String? _piaoId;
+  int? _anno; // null: tutti gli anni
+  Future<List<Map<String, dynamic>>>? _voci;
+
+  @override
+  void initState() {
+    super.initState();
+    final piao = context.read<DatiPerformance>().piaoPredefinito;
+    _piaoId = piao?['id'] as String?;
+    _anno = piao == null ? null : annoPredefinito(piao);
+    _carica();
+  }
+
+  void _carica() {
+    if (_piaoId == null) return;
+    setState(() {
+      _voci = apiDi(context).get('$apiPerformance/voci', query: {
+        'piao_id': _piaoId!,
+        if (_anno != null) 'anno': '$_anno',
+      }).then((v) => (v as List).cast<Map<String, dynamic>>());
+    });
+  }
+
+  Widget _voce(DatiPerformance dati, Map<String, dynamic> v) {
+    final obiettivi = (v['obiettivi'] as List).cast<Map<String, dynamic>>();
+    return Card(
+      child: ExpansionTile(
+        leading: Icon(v['tipo'] == 'MISURA' ? Icons.shield_outlined : Icons.directions_run),
+        title: Text('${v['codice']} - ${v['descrizione']}'),
+        subtitle: Text(obiettivi.length == 1 ? 'in 1 obiettivo' : 'in ${obiettivi.length} obiettivi'),
+        children: [
+          for (final o in obiettivi)
+            ListTile(
+              dense: true,
+              title: Text(o['codice'] == null ? '${o['titolo']}' : '${o['codice']} - ${o['titolo']}'),
+              subtitle: Text('${dati.struttura(o['struttura_id'])} · anno ${o['anno']} · impegno ${o['impegno']}%'),
+              trailing: BarraCompletamento(o['completamento'] as num?, larghezza: 100),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dati = context.watch<DatiPerformance>();
+    if (_piaoId == null) return const Center(child: Text('Nessun PIAO.'));
+    final piao = dati.piaoDi(_piaoId)!;
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Text('Le voci del catalogo della mappatura (attività e misure) usate come azioni e misure degli obiettivi: '
+          'la stessa voce in più obiettivi si vede una volta, con tutti i suoi obiettivi.',
+          style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 12),
+      Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        SizedBox(
+          width: 240,
+          child: DropdownButtonFormField<String>(
+            initialValue: _piaoId,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'PIAO', isDense: true),
+            items: [for (final p in dati.piao) DropdownMenuItem(value: p['id'] as String, child: Text('${p['titolo']}'))],
+            onChanged: (v) {
+              _piaoId = v;
+              _anno = null;
+              _carica();
+            },
+          ),
+        ),
+        SizedBox(
+          width: 160,
+          child: DropdownButtonFormField<int?>(
+            initialValue: _anno,
+            decoration: const InputDecoration(labelText: 'Anno', isDense: true),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('Tutti')),
+              for (final a in (piao['anni'] as List).cast<int>()) DropdownMenuItem(value: a, child: Text('$a')),
+            ],
+            onChanged: (v) {
+              _anno = v;
+              _carica();
+            },
+          ),
+        ),
+      ]),
+      const SizedBox(height: 16),
+      Caricamento<List<Map<String, dynamic>>>(
+        future: _voci!,
+        riprova: _carica,
+        builder: (context, voci) {
+          if (voci.isEmpty) return const Center(child: Text('Nessuna voce del catalogo negli obiettivi.'));
+          final azioni = voci.where((v) => v['tipo'] != 'MISURA').toList(), misure = voci.where((v) => v['tipo'] == 'MISURA').toList();
+          final titolo = Theme.of(context).textTheme.titleSmall;
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (azioni.isNotEmpty) Text('Azioni (${azioni.length})', style: titolo),
+            for (final v in azioni) _voce(dati, v),
+            if (misure.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text('Misure (${misure.length})', style: titolo)),
+            for (final v in misure) _voce(dati, v),
+          ]);
+        },
       ),
     ]);
   }

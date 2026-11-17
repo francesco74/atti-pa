@@ -943,6 +943,10 @@ class PfElemento(Base):
     processo_id: Mapped[str | None] = mapped_column(ForeignKey("ac_processi.id", ondelete="SET NULL"))
     attivita_id: Mapped[str | None] = mapped_column(ForeignKey("ac_attivita.id", ondelete="SET NULL"))
     mappatura_codice: Mapped[str | None] = mapped_column(String(70))
+    # radice nel catalogo della mappatura (voce dell'attività o della misura), con il codice
+    # copiato: una voce entra una volta sola nell'obiettivo
+    voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))
+    voce_codice: Mapped[str | None] = mapped_column(String(20))
     impegno: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
     completamento: Mapped[int] = mapped_column(Integer, default=0)  # percentuale
     scadenza: Mapped[date] = mapped_column(Date)

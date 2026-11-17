@@ -321,7 +321,7 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
         Map<String, dynamic>? misura;
         if (tipo == 'MISURA') {
-          misura = await scegliMisura(context, o['struttura_id'] as String, {for (final x in elementi) ?x['misura_id'] as String?});
+          misura = await scegliMisura(context, o['struttura_id'] as String, {for (final x in elementi) ?x['voce_id'] as String?});
           if (misura == null || !mounted) return;
         }
         final v = await modificaElemento(context,
@@ -330,27 +330,25 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         await apiDi(context).post('$apiPerformance/obiettivi/${o['id']}/elementi', {
           ...v,
           'tipo': tipo,
-          if (misura != null) 'misura_id': misura['id'],
+          if (misura != null) 'voce_id': misura['id'],
         });
       });
 
-  /// Copia nell'obiettivo attività (come azioni) e misure di un processo o di un'attività della
-  /// mappatura, con impegno 0%: ognuna poi si modifica o si toglie da sola.
+  /// Porta nell'obiettivo le radici di un processo o di un'attività della mappatura (voci delle
+  /// attività, come azioni, e delle misure), con impegno 0%: ognuna poi si modifica o si toglie.
   Future<void> _copiaDallaMappatura(Map<String, dynamic> o) => _esegui(() async {
         final elementi = (o['elementi'] as List).cast<Map<String, dynamic>>();
         final voce = await scegliDallaMappatura(context, o['struttura_id'] as String);
         if (voce == null || !mounted) return;
         final copie = await scegliDaCopiare(context, voce,
-            anno: o['anno'] as int,
-            attivitaPresenti: {for (final x in elementi) ?x['attivita_id'] as String?},
-            misurePresenti: {for (final x in elementi) ?x['misura_id'] as String?});
+            anno: o['anno'] as int, vociPresenti: {for (final x in elementi) ?x['voce_id'] as String?});
         if (copie == null || !mounted) return;
         final api = apiDi(context);
         for (final e in copie) {
           await api.post('$apiPerformance/obiettivi/${o['id']}/elementi', {
             'tipo': e['tipo'],
+            'voce_id': e['voce_id'],
             if (e['attivita_id'] != null) 'attivita_id': e['attivita_id'],
-            if (e['misura_id'] != null) 'misura_id': e['misura_id'],
             'impegno': 0,
             'completamento': 0,
             'scadenza': e['scadenza'],

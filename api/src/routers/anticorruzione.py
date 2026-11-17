@@ -653,14 +653,18 @@ async def processo(processo_id: str):
 
 
 async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[dict]:
-    """Obiettivi della performance che hanno azioni copiate dalle attività del processo o
-    misure del processo, uno per obiettivo con i codici di quelle azioni e misure (sola
+    """Obiettivi della performance che hanno come radici le voci delle attività o delle misure
+    del processo (o azioni copiate da lui), uno per obiettivo con i codici delle voci (sola
     lettura, se l'ente ha anche il modulo performance)."""
     if not ente().modulo_attivo(Modulo.PERFORMANCE):
         return []
     attivita = [a["id"] for a in albero["attivita"]]
     misure = [m["id"] for a in albero["attivita"] for r in a["rischi"] for m in r["misure"]]
+    # le voci del processo: gli obiettivi le usano come radici
+    voci = {x["voce_id"] for a in albero["attivita"] for x in [a, *(m for r in a["rischi"] for m in r["misure"])] if x.get("voce_id")}
     condizioni = [PfElemento.processo_id == p.id]  # anche se l'attività è stata poi tolta
+    if voci:
+        condizioni.append(PfElemento.voce_id.in_(voci))
     if attivita:
         condizioni.append(PfElemento.attivita_id.in_(attivita))
     if misure:
@@ -682,10 +686,9 @@ async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[di
             "obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno, "struttura_id": o.struttura_id,
             "piao": piao.titolo, "piao_aperto": piao.stato == "APERTO", "completamento": media_pesata(pesi.get(o.id, [])),
             "azioni": [], "misure": []})  # fmt: skip
-        if x.misura_id:
-            v["misure"].append({"id": x.misura_id, "codice": x.misura_codice})
-        else:
-            v["azioni"].append({"id": x.attivita_id, "codice": x.mappatura_codice})
+        voce = {"id": x.voce_id or x.misura_id or x.attivita_id, "codice": x.voce_codice or x.misura_codice or x.mappatura_codice}
+        if voce not in v["misure"] + v["azioni"]:
+            v["misure" if x.tipo == "MISURA" else "azioni"].append(voce)
     for v in per_obiettivo.values():
         for chiave in ("azioni", "misure"):
             v[chiave].sort(key=lambda e: chiave_naturale(e["codice"] or ""))

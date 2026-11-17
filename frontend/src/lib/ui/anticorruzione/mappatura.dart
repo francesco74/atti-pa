@@ -419,17 +419,18 @@ class _VistaProcessoState extends State<VistaProcesso> {
   }
 
   /// Obiettivi della performance collegati: tutti per il processo; con un'attività aperta quelli
-  /// che l'hanno copiata come azione o che hanno una sua misura.
+  /// che hanno come radice la sua voce o la voce di una sua misura.
   List<Map<String, dynamic>> _obiettiviDi(Map<String, dynamic> albero, Map<String, dynamic>? aperta) {
     final tutti = (albero['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>();
     if (aperta == null) return tutti;
+    final attivita = {aperta['id'], ?aperta['voce_id']};
     final misure = {
       for (final r in (aperta['rischi'] as List).cast<Map<String, dynamic>>())
-        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>()) m['id'],
+        for (final m in (r['misure'] as List).cast<Map<String, dynamic>>()) ...[m['id'], ?m['voce_id']],
     };
     return [
       for (final o in tutti)
-        if ((o['azioni'] as List).any((a) => (a as Map)['id'] == aperta['id']) ||
+        if ((o['azioni'] as List).any((a) => attivita.contains((a as Map)['id'])) ||
             (o['misure'] as List).any((m) => misure.contains((m as Map)['id'])))
           o,
     ];

@@ -368,7 +368,7 @@ Decisioni del 04/11/2026:
     in `ac_processi` e `ac_attivita` (migrazione `0007_strutture_coinvolte.sql`); lo script
     `deploy/manutenzione/strutture_coinvolte.py` ricava le coinvolte dalle note delle attività
     (codici dell'anagrafica e descrizioni lunghe; `--dry-run` per vedere prima).
-29. **Catalogo della mappatura** (17/11/2026, fasi 1 e 2 di 3): le **voci** (radici) di attività,
+29. **Catalogo della mappatura** (17/11/2026, fasi 1, 2 e 3): le **voci** (radici) di attività,
     rischi (evento) e misure, per ente (`ac_catalogo`, migrazione `0008_catalogo_mappatura.sql`).
     Ogni attività, rischio e misura dei processi ricorda la sua voce (`voce_id`) e ne copia il
     testo, che nel processo si può ritoccare: cambiare la voce **non** cambia i processi. Le
@@ -399,3 +399,7 @@ Decisioni del 04/11/2026:
     voce, e allora vale la voce con lo stesso testo (o una nuova dell'ente), come per le
     importazioni. Nella modifica la voce resta se non indicata; la fotografia delle proposte non
     la contiene, perché le proposte nate prima restino uguali all'elemento.
+    **Fase 3 (17/11/2026)**: gli obiettivi della performance usano le voci come **radici** (vedi
+    `progettazione/performance.md`): la scheda della voce elenca anche gli obiettivi; una voce
+    usata negli obiettivi chiede conferma prima di cambiarla, non si elimina, e unendola gli
+    obiettivi passano all'altra voce.

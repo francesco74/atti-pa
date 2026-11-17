@@ -34,14 +34,14 @@ from typing import Literal
 
 from flask import Blueprint, g, request
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, select
 
 from deps import audit, autenticato, db, ente, ente_id, utente
 from web import ErroreApi, corpo, nessun_contenuto, parametri
 from common import posta
 from common.anticorruzione.metodologia import chiave_naturale
 from common.models import (
-    AcAttivita, AcMisura, AcProcesso, AcRischio, Ente, Modulo, PfElemento, PfIndicatore, PfModifica, PfObiettivo, PfPiao, PfProposta, Ruolo, Struttura, User,
+    AcAttivita, AcMisura, AcProcesso, AcRischio, AcVoce, Ente, Modulo, PfElemento, PfIndicatore, PfModifica, PfObiettivo, PfPiao, PfProposta, Ruolo, Struttura, User,
     nuovo_id,
 )  # fmt: skip
 from common.performance import (
@@ -410,13 +410,15 @@ def _controlli(impegno: int, anno: int, struttura_id: str, elementi: list, strut
                                strutture_misure=strutture_misure, strutture_mappatura=strutture_mappatura)  # fmt: skip
 
 
-def _mappatura(x: PfElemento) -> dict:
-    """Riferimento alla mappatura di un'azione copiata da un'attività (vuoto per le altre: così
-    le istantanee delle proposte nate prima restano uguali): l'attività, il processo da cui
-    viene e il codice dell'attività."""
-    if x.mappatura_codice is None:
-        return {}
-    return {"processo_id": x.processo_id, "attivita_id": x.attivita_id, "mappatura_codice": x.mappatura_codice}
+_RIFERIMENTI = ("processo_id", "attivita_id", "mappatura_codice", "voce_id", "voce_codice")
+
+
+def _mappatura(x) -> dict:
+    """Riferimento alla mappatura dell'azione o misura: la radice nel catalogo (voce) e, se
+    copiata da un processo, il processo e l'attività da cui viene. Solo i campi presenti: così
+    le istantanee delle proposte nate prima restano uguali."""
+    valori = {k: (x.get(k) if isinstance(x, dict) else getattr(x, k)) for k in _RIFERIMENTI}
+    return {k: v for k, v in valori.items() if v is not None}
 
 
 async def _strutture_mappatura(elementi: list) -> dict[str, list[str] | None]:
@@ -719,8 +721,10 @@ class ElementoDati(BaseModel):
 
 class ElementoNuovo(ElementoDati):
     tipo: Literal["AZIONE", "MISURA"]
+    # radice dal catalogo: la voce, o l'attività (azione) o la misura di un processo, di cui si
+    # prende la voce; l'azione senza nessuno dei due è scritta a mano (descrizione)
+    voce_id: str | None = None
     misura_id: str | None = None
-    # azione copiata da un'attività della mappatura (in alternativa alla descrizione)
     attivita_id: str | None = None
 
 
@@ -729,7 +733,7 @@ def _campi_elemento(x: PfElemento) -> dict:
 
 
 def _nome_elemento(x: PfElemento) -> str:
-    return _nome(x.misura_codice or x.mappatura_codice, x.descrizione)
+    return _nome(x.voce_codice or x.misura_codice or x.mappatura_codice, x.descrizione)
 
 
 async def _controlla_impegno_elementi(x: PfElemento) -> None:
@@ -750,56 +754,66 @@ async def _elemento_visibile(elemento_id: str) -> tuple[PfElemento, PfObiettivo,
     return x, o, p
 
 
-async def _misura_dell_ente(misura_id: str | None) -> AcMisura:
+async def _radice(tipo: str, *, voce_id: str | None = None, attivita_id: str | None = None,
+                  misura_id: str | None = None) -> dict:
+    """La radice dell'azione o misura nel catalogo della mappatura: la voce indicata, o quella
+    dell'attività (azione) o della misura scelte in un processo, di cui resta il riferimento.
+    Il testo è quello della voce: è una copia, se poi il catalogo cambia l'obiettivo resta com'è."""
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Le misure vengono dalla mappatura dei rischi: modulo non attivo")
-    m = await db().get(AcMisura, misura_id) if misura_id else None
-    if m is None or m.ente_id != ente_id():
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli una misura della mappatura dei rischi")
-    return m
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Le voci vengono dalla mappatura dei rischi: modulo non attivo")
+    sessione = db()
+    tipo_voce = "ATTIVITA" if tipo == "AZIONE" else "MISURA"
+    esito = {"processo_id": None, "attivita_id": None, "misura_id": None, "misura_codice": None, "mappatura_codice": None}
+    if tipo == "AZIONE" and attivita_id:
+        a = await sessione.get(AcAttivita, attivita_id)
+        if a is None or a.ente_id != ente_id():
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Attività della mappatura non trovata")
+        esito.update(processo_id=a.processo_id, attivita_id=a.id)
+        v = await sessione.get(AcVoce, a.voce_id) if a.voce_id else None
+    elif tipo == "MISURA" and misura_id:
+        m = await sessione.get(AcMisura, misura_id)
+        if m is None or m.ente_id != ente_id():
+            raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Misura della mappatura non trovata")
+        esito.update(misura_id=m.id)
+        v = await sessione.get(AcVoce, m.voce_id) if m.voce_id else None
+    elif voce_id:
+        v = await sessione.get(AcVoce, voce_id)
+    else:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli la voce dal catalogo della mappatura")
+    if voce_id and v is not None and v.id != voce_id:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "La voce non è quella dell'elemento della mappatura scelto")
+    if v is None or v.ente_id != ente_id() or v.tipo != tipo_voce:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Voce del catalogo non trovata: l'elemento della mappatura non ne ha una")
+    if not v.attiva:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, f"La voce {v.codice} è disattivata")
+    return {**esito, "voce_id": v.id, "voce_codice": v.codice, "descrizione": v.descrizione}
 
 
-async def _dalla_mappatura(attivita_id: str | None) -> dict:
-    """Azione copiata da un'attività della mappatura: codice e descrizione dell'attività, con il
-    processo da cui viene. È una copia: se poi la mappatura cambia, l'azione resta com'è."""
-    if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Le attività vengono dalla mappatura dei rischi: modulo non attivo")
-    a = await db().get(AcAttivita, attivita_id) if attivita_id else None
-    if a is None or a.ente_id != ente_id():
-        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli un'attività della mappatura dei rischi")
-    return {"processo_id": a.processo_id, "attivita_id": a.id, "mappatura_codice": a.codice, "descrizione": a.descrizione}
-
-
-def _gia_presente(riferimento: dict) -> str:
-    return f"L'attività {riferimento['mappatura_codice']} è già un'azione dell'obiettivo"
+def _gia_presente(radice: dict) -> str:
+    return f"La voce {radice['voce_codice']} è già nell'obiettivo"
 
 
 @bp.post("/obiettivi/<obiettivo_id>/elementi")
 @approvatore
 async def crea_elemento(obiettivo_id: str):
-    """Nuova azione (con la descrizione, o copiata da un'attività della mappatura) o misura
-    (scelta dalla mappatura dei rischi), con gli indicatori."""
+    """Nuova azione (con la descrizione, o dal catalogo della mappatura) o misura (dal
+    catalogo), con gli indicatori. Una voce del catalogo entra una volta sola nell'obiettivo."""
     dati = corpo(ElementoNuovo)
     sessione = db()
     o, p = await _obiettivo_modificabile(obiettivo_id)
     definizioni = [_definizione(i) for i in dati.indicatori or []]
     x = PfElemento(id=nuovo_id(), ente_id=ente_id(), obiettivo_id=o.id, tipo=dati.tipo, impegno=dati.impegno,
                    completamento=dati.completamento, scadenza=dati.scadenza)  # fmt: skip
-    if dati.tipo == "AZIONE" and dati.attivita_id:
-        r = await _dalla_mappatura(dati.attivita_id)
-        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, PfElemento.attivita_id == r["attivita_id"])):
-            raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
-        x.processo_id, x.attivita_id, x.mappatura_codice, x.descrizione = (
-            r["processo_id"], r["attivita_id"], r["mappatura_codice"], r["descrizione"])
-    elif dati.tipo == "AZIONE":
+    if dati.tipo == "AZIONE" and not (dati.voce_id or dati.attivita_id):
         if not (dati.descrizione or "").strip():
             raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi l'azione")
         x.descrizione = dati.descrizione.strip()
     else:
-        m = await _misura_dell_ente(dati.misura_id)
-        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, PfElemento.misura_id == m.id)):
-            raise ErroreApi(HTTPStatus.CONFLICT, f"La misura {m.codice} è già nell'obiettivo")
-        x.misura_id, x.misura_codice, x.descrizione = m.id, m.codice, m.descrizione
+        r = await _radice(dati.tipo, voce_id=dati.voce_id, attivita_id=dati.attivita_id, misura_id=dati.misura_id)
+        if await sessione.scalar(select(PfElemento.id).where(PfElemento.obiettivo_id == o.id, PfElemento.voce_id == r["voce_id"])):
+            raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
+        for campo, valore in r.items():
+            setattr(x, campo, valore)
     await _controlla_impegno_elementi(x)
     x.ordine = (await sessione.scalar(select(func.count()).where(PfElemento.obiettivo_id == o.id))) or 0
     sessione.add(x)
@@ -819,7 +833,7 @@ async def aggiorna_elemento(elemento_id: str):
     sessione = db()
     x, o, p = await _elemento_visibile(elemento_id)
     prima = _campi_elemento(x)
-    if x.tipo == "AZIONE" and x.mappatura_codice is None and dati.descrizione is not None:
+    if x.tipo == "AZIONE" and x.mappatura_codice is None and x.voce_id is None and dati.descrizione is not None:
         if not dati.descrizione.strip():
             raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi l'azione")
         x.descrizione = dati.descrizione.strip()
@@ -917,30 +931,29 @@ async def elimina_elemento(elemento_id: str):
     return nessun_contenuto()
 
 
-class FiltriMisure(BaseModel):
+class FiltriCatalogo(BaseModel):
+    tipo: Literal["ATTIVITA", "MISURA"] = "MISURA"
     testo: str | None = Field(default=None, max_length=200)
-    struttura_id: str | None = None  # le sue misure (e quelle trasversali) per prime
 
 
-@bp.get("/misure")
+def _voce(v: AcVoce) -> dict:
+    return {"id": v.id, "tipo": v.tipo, "codice": v.codice, "descrizione": v.descrizione, "tipo_misura": v.tipo_misura,
+            "categoria": v.categoria, "indicatore": v.indicatore, "target": v.target}  # fmt: skip
+
+
+@bp.get("/catalogo")
 @lettore
-async def misure():
-    """Misure della mappatura dei rischi da collegare agli obiettivi (al massimo 200)."""
+async def catalogo():
+    """Voci attive del catalogo della mappatura (attività o misure) da usare negli obiettivi (al
+    massimo 200): prima le standard, poi quelle dell'ente."""
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
         return []
-    f = parametri(FiltriMisure)
-    q = select(AcMisura).where(AcMisura.ente_id == ente_id())
-    if testo := (f.testo or "").strip():
-        q = q.where(or_(AcMisura.codice.ilike(f"%{testo}%"), AcMisura.descrizione.ilike(f"%{testo}%")))
-    righe = list(await db().scalars(q))
-
-    def priorita(m: AcMisura) -> int:
-        return 0 if f.struttura_id and m.struttura_id == f.struttura_id else 1 if m.struttura_id is None else 2
-
-    righe.sort(key=lambda m: (priorita(m), chiave_naturale(m.codice)))
-    return [{"id": m.id, "codice": m.codice, "descrizione": m.descrizione, "tipo": m.tipo, "categoria": m.categoria,
-             "struttura_id": m.struttura_id, "tempi": m.tempi, "indicatore": m.indicatore, "target": m.target}
-            for m in righe[:200]]  # fmt: skip
+    f = parametri(FiltriCatalogo)
+    voci = list(await db().scalars(select(AcVoce).where(AcVoce.ente_id == ente_id(), AcVoce.tipo == f.tipo, AcVoce.attiva.is_(True))))
+    if testo := (f.testo or "").strip().lower():
+        voci = [v for v in voci if testo in v.descrizione.lower() or testo in v.codice.lower()]
+    voci.sort(key=lambda v: ("-E" in v.codice, chiave_naturale(v.codice)))
+    return [_voce(v) for v in voci[:200]]
 
 
 class FiltriMappatura(BaseModel):
@@ -986,9 +999,9 @@ class FiltriAlbero(BaseModel):
 @bp.get("/mappatura/albero")
 @lettore
 async def albero_mappatura():
-    """Ciò che si può copiare nell'obiettivo da un processo (o da una sola attività): le attività,
-    che diventano azioni, e le misure, con l'indicatore e il target della mappatura. I rischi
-    restano fuori dall'obiettivo: servono solo a raggruppare le misure."""
+    """Ciò che si può portare nell'obiettivo da un processo (o da una sola attività): le radici
+    nel catalogo (voce) delle attività, che diventano azioni, e delle misure. I rischi restano
+    fuori dall'obiettivo."""
     f = parametri(FiltriAlbero)
     if not ente().modulo_attivo(Modulo.ANTICORRUZIONE):
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Mappatura non disponibile")
@@ -1005,17 +1018,23 @@ async def albero_mappatura():
         attivita = list(await sessione.scalars(select(AcAttivita).where(AcAttivita.processo_id == p.id)))
     rischi = list(await sessione.scalars(select(AcRischio).where(AcRischio.attivita_id.in_([a.id for a in attivita]))))
     misure = list(await sessione.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))))
+    ids_voci = {x.voce_id for x in [*attivita, *misure] if x.voce_id}
+    voci = {v.id: v for v in await sessione.scalars(select(AcVoce).where(AcVoce.id.in_(ids_voci)))} if ids_voci else {}
 
     def ordina(righe):
         return sorted(righe, key=lambda x: chiave_naturale(x.codice))
 
+    def voce(el) -> dict | None:
+        """La radice nel catalogo: è lei che entra nell'obiettivo."""
+        return _voce(voci[el.voce_id]) | {"attiva": voci[el.voce_id].attiva} if el.voce_id in voci else None
+
     return {
         "processo": {"id": p.id, "codice": p.codice, "denominazione": p.denominazione, "tipo": p.tipo or "PROCESSO",
                      "struttura_id": p.struttura_id},
-        "attivita": [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "rischi": [
+        "attivita": [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "voce": voce(a), "rischi": [
             {"id": r.id, "codice": r.codice, "evento": r.evento, "livello": r.livello, "misure": [
                 {"id": m.id, "codice": m.codice, "descrizione": m.descrizione, "tipo": m.tipo, "categoria": m.categoria,
-                 "struttura_id": m.struttura_id, "indicatore": m.indicatore, "target": m.target}
+                 "struttura_id": m.struttura_id, "indicatore": m.indicatore, "target": m.target, "voce": voce(m)}
                 for m in ordina(misure) if m.rischio_id == r.id]}
             for r in ordina(rischi) if r.attivita_id == a.id]} for a in ordina(attivita)],
     }  # fmt: skip
@@ -1023,8 +1042,9 @@ async def albero_mappatura():
 
 # --- proposte -------------------------------------------------------------------------------
 # La proposta di creazione o modifica porta l'obiettivo intero: {codice, titolo, descrizione,
-# tipo, impegno, elementi: [{id, tipo, descrizione, misura_id, misura_codice, (solo per le
-# azioni copiate da un'attività: processo_id, attivita_id, mappatura_codice), impegno,
+# tipo, impegno, elementi: [{id, tipo, descrizione, misura_id, misura_codice, (se presenti:
+# voce_id e voce_codice della radice nel catalogo, processo_id e attivita_id di provenienza,
+# mappatura_codice delle prime azioni copiate), impegno,
 # scadenza, indicatori: [{id, descrizione, tipo, unita, partenza, target, target_data, verso,
 # fonte}]}]}. Gli elementi (e gli indicatori) con l'id di uno esistente lo modificano, gli altri
 # sono nuovi (l'id si assegna all'approvazione), quelli che mancano si eliminano. L'avanzamento
@@ -1036,8 +1056,9 @@ class ElementoProposto(BaseModel):
     id: str | None = Field(default=None, max_length=64)
     tipo: Literal["AZIONE", "MISURA"]
     descrizione: str | None = Field(default=None, max_length=10000)
-    misura_id: str | None = None
-    attivita_id: str | None = None  # azione copiata da un'attività della mappatura
+    voce_id: str | None = None  # radice dal catalogo
+    misura_id: str | None = None  # o la misura di un processo (se ne prende la voce)
+    attivita_id: str | None = None  # o l'attività di un processo (azione)
     impegno: int = Field(ge=0, le=TOTALE)
     scadenza: date
     indicatori: list[IndicatoreIn] = Field(default_factory=list, max_length=50)
@@ -1053,7 +1074,7 @@ class ObiettivoProposto(BaseModel):
 
 
 _CAMPI_OBIETTIVO = ("codice", "titolo", "descrizione", "tipo", "impegno")
-_CAMPI_ELEMENTO = ("descrizione", "misura_codice", "mappatura_codice", "impegno", "scadenza", "indicatori")
+_CAMPI_ELEMENTO = ("descrizione", "voce_codice", "misura_codice", "mappatura_codice", "impegno", "scadenza", "indicatori")
 
 
 def _elemento_proposto(x: PfElemento, indicatori: list[PfIndicatore]) -> dict:
@@ -1102,7 +1123,7 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
     [base]: l'obiettivo com'è (modifica), da cui vengono le misure esistenti già copiate."""
     d = _valida(dati)
     esistenti = {x["id"]: x for x in (base or {}).get("elementi", [])}
-    elementi, visti, misure, riferimenti = [], set(), set(), set()
+    elementi, visti, radici = [], set(), set()
     for x in d.elementi:
         e = {"id": x.id, "tipo": x.tipo, "impegno": x.impegno, "scadenza": x.scadenza.isoformat()}
         # id di un'azione o misura esistente, o provvisorio ("nuovo-...") di una nuova
@@ -1112,27 +1133,19 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
         if vecchio is None and (not (x.id or "").startswith("nuovo-") or x.id in visti):
             e["id"] = f"nuovo-{nuovo_id()}"
         visti.add(e["id"])
-        if x.tipo == "AZIONE" and (x.attivita_id or (vecchio or {}).get("mappatura_codice")):
-            if vecchio is not None and vecchio.get("mappatura_codice") is not None and x.attivita_id == vecchio.get("attivita_id"):
-                # già nell'obiettivo: la copia resta com'è (anche se l'attività è cambiata o è stata tolta)
-                r = {k: vecchio.get(k) for k in ("processo_id", "attivita_id", "mappatura_codice", "descrizione")}
-            else:
-                r = await _dalla_mappatura(x.attivita_id)
-            chiave = r["attivita_id"] or r["mappatura_codice"]
-            if chiave in riferimenti:
-                raise ErroreApi(HTTPStatus.CONFLICT, _gia_presente(r))
-            riferimenti.add(chiave)
-            e.update(misura_id=None, misura_codice=None, **r)
-        elif x.tipo == "AZIONE":
+        dal_catalogo = x.voce_id or x.attivita_id or x.misura_id
+        if x.tipo == "AZIONE" and not dal_catalogo and not (vecchio or {}).get("voce_id") and not (vecchio or {}).get("mappatura_codice"):
             if not (x.descrizione or "").strip():
                 raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Descrivi ogni azione")
             e.update(descrizione=x.descrizione.strip(), misura_id=None, misura_codice=None)
-        elif vecchio is not None and x.misura_id == vecchio["misura_id"]:
-            # misura già nell'obiettivo: la copia resta (anche se tolta dalla mappatura)
-            e.update(descrizione=vecchio["descrizione"], misura_id=vecchio["misura_id"], misura_codice=vecchio["misura_codice"])
+        elif vecchio is not None and (not dal_catalogo or x.voce_id == vecchio.get("voce_id") or (
+                not x.voce_id and (x.attivita_id, x.misura_id) == (vecchio.get("attivita_id"), vecchio.get("misura_id")))):
+            # già nell'obiettivo: la copia resta com'è (anche se poi il catalogo o la mappatura cambiano)
+            e.update(descrizione=vecchio["descrizione"], misura_id=vecchio.get("misura_id"),
+                     misura_codice=vecchio.get("misura_codice"), **_mappatura(vecchio))  # fmt: skip
         else:
-            m = await _misura_dell_ente(x.misura_id)
-            e.update(descrizione=m.descrizione, misura_id=m.id, misura_codice=m.codice)
+            r = await _radice(x.tipo, voce_id=x.voce_id, attivita_id=x.attivita_id, misura_id=x.misura_id)
+            e.update(descrizione=r["descrizione"], misura_id=r["misura_id"], misura_codice=r["misura_codice"], **_mappatura(r))
         # indicatori: l'id di uno esistente dell'azione o misura, o provvisorio di uno nuovo
         vecchi = {i["id"] for i in (vecchio or {}).get("indicatori", [])}
         e["indicatori"] = []
@@ -1143,10 +1156,12 @@ async def _normalizza(pr: PfProposta, dati: dict | None, base: dict | None) -> d
                 definizione["id"] = f"nuovo-{nuovo_id()}"
             visti.add(definizione["id"])
             e["indicatori"].append(definizione)
-        if e["misura_id"]:
-            if e["misura_id"] in misure:
-                raise ErroreApi(HTTPStatus.CONFLICT, f"La misura {e['misura_codice']} è già nell'obiettivo")
-            misure.add(e["misura_id"])
+        # una radice una volta sola (le misure di prima della radice: per misura)
+        chiave = e.get("voce_id") or e.get("misura_id") or e.get("attivita_id")
+        if chiave:
+            if chiave in radici:
+                raise ErroreApi(HTTPStatus.CONFLICT, f"{e.get('voce_codice') or e.get('misura_codice') or 'La voce'} è già nell'obiettivo")
+            radici.add(chiave)
         elementi.append(e)
     if (somma := sum(e["impegno"] for e in elementi)) > TOTALE:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -1493,7 +1508,8 @@ async def _applica_elementi(o: PfObiettivo, esistenti: list[PfElemento], indicat
         else:
             prima, azione = _campi_elemento(x), "MODIFICATO"
         x.descrizione, x.misura_id, x.misura_codice = e["descrizione"], e["misura_id"], e["misura_codice"]
-        x.processo_id, x.attivita_id, x.mappatura_codice = e.get("processo_id"), e.get("attivita_id"), e.get("mappatura_codice")
+        for campo in _RIFERIMENTI:
+            setattr(x, campo, e.get(campo))
         x.impegno, x.scadenza = e["impegno"], date.fromisoformat(e["scadenza"])
         await _sincronizza_indicatori(x, indicatori.get(x.id, []), e.get("indicatori", []), piao_id=o.piao_id, nota=nota)
         if campi := _differenze(prima, _campi_elemento(x)):
@@ -1626,6 +1642,37 @@ async def storico_piao(piao_id: str):
 class FiltriRiepilogo(BaseModel):
     piao_id: str
     anno: int | None = None
+
+
+@bp.get("/voci")
+@lettore
+async def voci_usate():
+    """Visione d'insieme delle radici: le voci del catalogo (attività e misure) usate negli
+    obiettivi del PIAO (dell'anno, se indicato) visibili all'utente, ognuna con gli obiettivi
+    che la usano, impegno e completamento dell'azione o misura."""
+    f = parametri(FiltriRiepilogo)
+    p = await _piao_dell_ente(f.piao_id)
+    q = select(PfElemento, PfObiettivo).join(PfObiettivo, PfObiettivo.id == PfElemento.obiettivo_id).where(
+        PfObiettivo.piao_id == p.id, PfElemento.voce_id.is_not(None))  # fmt: skip
+    if f.anno:
+        q = q.where(PfObiettivo.anno == f.anno)
+    visibili = await _visibili()
+    if visibili is not None:
+        q = q.where(PfObiettivo.struttura_id.in_(visibili or {""}))
+    righe = (await db().execute(q)).all()
+    voci = {v.id: v for v in await db().scalars(select(AcVoce).where(AcVoce.id.in_({x.voce_id for x, _ in righe})))} if righe else {}
+    per_voce: dict[str, dict] = {}
+    for x, o in righe:
+        v = voci.get(x.voce_id)
+        voce = per_voce.setdefault(x.voce_id, {
+            "voce_id": x.voce_id, "tipo": x.tipo, "codice": x.voce_codice,
+            "descrizione": v.descrizione if v else x.descrizione, "obiettivi": []})  # fmt: skip
+        voce["obiettivi"].append({
+            "obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno, "struttura_id": o.struttura_id,
+            "impegno": x.impegno, "completamento": x.completamento})  # fmt: skip
+    for voce in per_voce.values():
+        voce["obiettivi"].sort(key=lambda e: (e["anno"], chiave_naturale(e["codice"] or ""), e["titolo"]))
+    return sorted(per_voce.values(), key=lambda v: (v["tipo"] != "AZIONE", chiave_naturale(v["codice"] or "")))
 
 
 @bp.get("/riepilogo")

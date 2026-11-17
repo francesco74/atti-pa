@@ -109,10 +109,11 @@ class PerformanceApi(unittest.TestCase):
         return self._ok(rpct.post(f"{AC}/rischi/{r['id']}/misure", base_url=ENTE, json={
             "descrizione": "Rotazione dei commissari", "struttura_id": self.uo}), 201)  # fmt: skip
 
-    def test_azioni_dalla_mappatura(self):
-        """Da un processo della mappatura si copiano nell'obiettivo le attività (come azioni) e le
-        misure, non i rischi; ognuna è un elemento a sé (impegno, indicatori, avanzamento) e resta
-        com'è se poi la mappatura cambia. Il collegamento si vede dalla scheda del processo."""
+    def test_radici_dalla_mappatura(self):
+        """Dalla mappatura entrano nell'obiettivo le radici, le voci del catalogo delle attività
+        (azioni) e delle misure, non i rischi: una misura usata sotto più rischi è una voce sola e
+        una voce entra una volta sola. Il testo è quello della voce e resta se il catalogo cambia;
+        le voci usate si vedono negli obiettivi e dal catalogo."""
         amm, appr, resp, rpct = self._client("amm"), self._client("approvatore"), self._client("responsabile"), self._client("rpct")
         p = self._piao(amm, 2070)
         scad = "2070-12-31"
@@ -121,77 +122,76 @@ class PerformanceApi(unittest.TestCase):
             "area_id": area["id"], "denominazione": "Affidamento di lavori", "struttura_id": self.altra}), 201)  # fmt: skip
         bando = self._ok(rpct.post(f"{AC}/processi/{gare['id']}/attivita", base_url=ENTE, json={"descrizione": "Predisposizione del bando"}), 201)
         gara = self._ok(rpct.post(f"{AC}/processi/{gare['id']}/attivita", base_url=ENTE, json={"descrizione": "Svolgimento della gara"}), 201)
-        rischio = self._ok(rpct.post(f"{AC}/attivita/{bando['id']}/rischi", base_url=ENTE, json={"evento": "Requisiti su misura"}), 201)
-        misura = self._ok(rpct.post(f"{AC}/rischi/{rischio['id']}/misure", base_url=ENTE, json={
-            "descrizione": "Doppia verifica dei requisiti", "indicatore": "Bandi verificati", "target": "100%"}), 201)  # fmt: skip
+        # la stessa misura sotto due rischi: nel catalogo è una voce
+        doppia = []
+        for evento in ("Requisiti su misura", "Bando poco chiaro"):
+            r = self._ok(rpct.post(f"{AC}/attivita/{bando['id']}/rischi", base_url=ENTE, json={"evento": evento}), 201)
+            doppia.append(self._ok(rpct.post(f"{AC}/rischi/{r['id']}/misure", base_url=ENTE, json={
+                "descrizione": "Doppia verifica dei requisiti", "indicatore": "Bandi verificati", "target": "100%"}), 201))  # fmt: skip
+        self.assertEqual(doppia[0]["voce_id"], doppia[1]["voce_id"])
 
-        # catalogo: processi e attività (anche cercando il nome del processo)
-        voci = {(v["tipo"], v["id"]) for v in self._ok(resp.get(f"{API}/mappatura?testo=affidamento", base_url=ENTE))}
-        self.assertTrue({("PROCESSO", gare["id"]), ("ATTIVITA", bando["id"])} <= voci, voci)
-        # cosa si può copiare: attività e misure con indicatore e target (i rischi solo per raggruppare)
+        # albero: le voci di attività e misure (i rischi solo per raggruppare)
         albero = self._ok(resp.get(f"{API}/mappatura/albero?processo_id={gare['id']}", base_url=ENTE))
-        self.assertEqual([a["codice"] for a in albero["attivita"]], [bando["codice"], gara["codice"]])
-        m = albero["attivita"][0]["rischi"][0]["misure"][0]
-        self.assertEqual((m["codice"], m["indicatore"], m["target"]), (misura["codice"], "Bandi verificati", "100%"))
-        solo = self._ok(resp.get(f"{API}/mappatura/albero?attivita_id={gara['id']}", base_url=ENTE))
-        self.assertEqual((solo["processo"]["id"], [a["id"] for a in solo["attivita"]]), (gare["id"], [gara["id"]]))
+        self.assertEqual(albero["attivita"][0]["voce"]["id"], bando["voce_id"])
+        voci_misure = {m["voce"]["id"] for a in albero["attivita"] for r in a["rischi"] for m in r["misure"]}
+        self.assertEqual(voci_misure, {doppia[0]["voce_id"]})
+        self.assertIn(doppia[0]["voce_id"], [v["id"] for v in self._ok(resp.get(f"{API}/catalogo?tipo=MISURA", base_url=ENTE))])
 
-        # copia diretta (approvatore): due azioni dalle attività e la misura, impegno 0
+        # copia diretta (approvatore): l'azione dall'attività del processo, la misura dalla voce
         o = self._ok(appr.post(f"{API}/obiettivi", base_url=ENTE, json={
             "piao_id": p["id"], "anno": 2070, "struttura_id": self.uo, "titolo": "Costruire il ponte", "impegno": 50}), 201)  # fmt: skip
         elementi = f"{API}/obiettivi/{o['id']}/elementi"
-        az = self._ok(appr.post(elementi, base_url=ENTE, json={
-            "tipo": "AZIONE", "attivita_id": bando["id"], "impegno": 0, "scadenza": scad,
-            "indicatori": [{"descrizione": "Bando pubblicato", "tipo": "SI_NO"}]}), 201)  # fmt: skip
-        self.assertEqual((az["descrizione"], az["mappatura_codice"], az["attivita_id"], az["processo_id"]),
-                         ("Predisposizione del bando", bando["codice"], bando["id"], gare["id"]))  # fmt: skip
-        self.assertEqual(appr.post(elementi, base_url=ENTE, json={
-            "tipo": "AZIONE", "attivita_id": bando["id"], "impegno": 0, "scadenza": scad}).status_code, 409)  # fmt: skip
-        sg = self._ok(appr.post(elementi, base_url=ENTE, json={"tipo": "AZIONE", "attivita_id": gara["id"], "impegno": 0, "scadenza": scad}), 201)
-        self._ok(appr.post(elementi, base_url=ENTE, json={"tipo": "MISURA", "misura_id": misura["id"], "impegno": 0, "scadenza": scad}), 201)
-        # ogni elemento è a sé: impegno, indicatori; la descrizione copiata non si cambia; si toglie da solo
-        self._ok(appr.put(f"{API}/elementi/{az['id']}", base_url=ENTE, json={
-            "descrizione": "Altro", "impegno": 60, "completamento": 0, "scadenza": scad}))  # fmt: skip
-        self._ok(appr.delete(f"{API}/elementi/{sg['id']}", base_url=ENTE), 204)
+        az = self._ok(appr.post(elementi, base_url=ENTE, json={"tipo": "AZIONE", "attivita_id": bando["id"], "impegno": 0, "scadenza": scad}), 201)
+        self.assertEqual((az["voce_id"], az["processo_id"], az["descrizione"]), (bando["voce_id"], gare["id"], "Predisposizione del bando"))
+        self.assertTrue(az["voce_codice"].startswith("ATT-"))
+        mi = self._ok(appr.post(elementi, base_url=ENTE, json={"tipo": "MISURA", "voce_id": doppia[0]["voce_id"], "impegno": 0, "scadenza": scad}), 201)
+        self.assertEqual((mi["misura_id"], mi["voce_id"]), (None, doppia[0]["voce_id"]))
+        # la stessa voce non entra due volte, nemmeno passando dall'altra misura o dall'altra attività con lo stesso testo
+        self.assertEqual(appr.post(elementi, base_url=ENTE, json={"tipo": "MISURA", "misura_id": doppia[1]["id"], "impegno": 0,
+                                                                  "scadenza": scad}).status_code, 409)  # fmt: skip
+        self.assertEqual(appr.post(elementi, base_url=ENTE, json={"tipo": "AZIONE", "voce_id": bando["voce_id"], "impegno": 0,
+                                                                  "scadenza": scad}).status_code, 409)  # fmt: skip
+        # la descrizione copiata non si cambia; i controlli non segnalano la misura senza processo
+        self._ok(appr.put(f"{API}/elementi/{az['id']}", base_url=ENTE, json={"descrizione": "Altro", "impegno": 60, "completamento": 0, "scadenza": scad}))
         d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
-        self.assertEqual(sorted((x["tipo"], x["descrizione"], x["impegno"]) for x in d["elementi"]),
-                         [("AZIONE", "Predisposizione del bando", 60), ("MISURA", "Doppia verifica dei requisiti", 0)])  # fmt: skip
-        self.assertTrue(any("l'attività è di un processo di un'altra struttura" in c["testo"] for c in d["controlli"]), d["controlli"])
+        self.assertIn("Predisposizione del bando", [x["descrizione"] for x in d["elementi"]])
+        self.assertFalse([c for c in d["controlli"] if "non è più nella mappatura" in c["testo"]], d["controlli"])
 
-        # la mappatura cambia: l'obiettivo resta com'era
-        self._ok(rpct.put(f"{AC}/attivita/{bando['id']}", base_url=ENTE, json={"descrizione": "Bando rivisto"}))
+        # il catalogo cambia: l'obiettivo resta com'era
+        self._ok(rpct.put(f"{AC}/catalogo/{bando['voce_id']}", base_url=ENTE, json={"descrizione": "Bando rivisto", "conferma": True}))
         d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
         self.assertIn("Predisposizione del bando", [x["descrizione"] for x in d["elementi"]])
 
-        # dalla scheda del processo: un obiettivo, con le azioni e le misure copiate
+        # visione d'insieme: le voci usate negli obiettivi, con gli obiettivi
+        voci = self._ok(resp.get(f"{API}/voci?piao_id={p['id']}", base_url=ENTE))
+        self.assertEqual([(v["tipo"], v["voce_id"], len(v["obiettivi"])) for v in voci],
+                         [("AZIONE", bando["voce_id"], 1), ("MISURA", doppia[0]["voce_id"], 1)])  # fmt: skip
+        self.assertEqual(voci[0]["descrizione"], "Bando rivisto")  # la voce com'è ora nel catalogo
+        # dal catalogo e dalla scheda del processo si vedono gli obiettivi
+        scheda = self._ok(rpct.get(f"{AC}/catalogo/{doppia[0]['voce_id']}", base_url=ENTE))
+        self.assertEqual([u["titolo"] for u in scheda["obiettivi"]], ["Costruire il ponte"])
         collegati = self._ok(rpct.get(f"{AC}/processi/{gare['id']}", base_url=ENTE))["obiettivi"]
-        self.assertEqual([(x["titolo"], [a["codice"] for a in x["azioni"]], [m["codice"] for m in x["misure"]]) for x in collegati],
-                         [("Costruire il ponte", [bando["codice"]], [misura["codice"]])])  # fmt: skip
+        self.assertEqual([(x["titolo"], len(x["azioni"]), len(x["misure"])) for x in collegati], [("Costruire il ponte", 1, 1)])
+        # una voce usata negli obiettivi non si elimina; unendola, gli obiettivi passano all'altra
+        self.assertEqual(rpct.delete(f"{AC}/catalogo/{gara['voce_id']}", base_url=ENTE).status_code, 409)  # usata nella mappatura
+        altra = self._ok(rpct.post(f"{AC}/catalogo", base_url=ENTE, json={"tipo": "MISURA", "descrizione": "Verifica doppia dei requisiti"}), 201)
+        self._ok(rpct.post(f"{AC}/catalogo/{doppia[0]['voce_id']}/unisci", base_url=ENTE, json={"in_voce": altra["id"], "conferma": True}))
+        d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
+        misura = next(x for x in d["elementi"] if x["tipo"] == "MISURA")
+        self.assertEqual((misura["voce_id"], misura["voce_codice"], misura["descrizione"]),
+                         (altra["id"], altra["codice"], "Doppia verifica dei requisiti"))  # fmt: skip
 
-        # proposta: si aggiunge l'altra attività; la stessa due volte no
+        # proposta: si aggiunge l'altra attività; la stessa voce due volte no
         pr = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "MODIFICA", "obiettivo_id": o["id"]}), 201)
-        copiata = next(e for e in pr["dati"]["elementi"] if e.get("attivita_id"))
-        self.assertEqual((copiata["mappatura_codice"], copiata["processo_id"]), (bando["codice"], gare["id"]))
         nuova = {"tipo": "AZIONE", "attivita_id": gara["id"], "impegno": 0, "scadenza": scad}
         self.assertEqual(resp.put(f"{API}/proposte/{pr['id']}", base_url=ENTE, json={
-            "dati": {**pr["dati"], "elementi": pr["dati"]["elementi"] + [nuova, nuova]}}).status_code, 409)  # fmt: skip
+            "dati": {**pr["dati"], "elementi": pr["dati"]["elementi"] + [nuova, {**nuova, "attivita_id": None, "voce_id": gara["voce_id"]}]}}).status_code, 409)  # fmt: skip
         pr = self._ok(resp.put(f"{API}/proposte/{pr['id']}", base_url=ENTE, json={"dati": {**pr["dati"], "elementi": pr["dati"]["elementi"] + [nuova]}}))
         self.assertEqual(sorted(e["stato"] for e in pr["confronto"]["elementi"]), ["INVARIATO", "INVARIATO", "NUOVO"])
         self._ok(resp.post(f"{API}/proposte/{pr['id']}/invia", base_url=ENTE, json={}))
         self._ok(appr.post(f"{API}/proposte/{pr['id']}/approva", base_url=ENTE, json={}))
         d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
-        self.assertEqual(sorted(x["descrizione"] for x in d["elementi"] if x["tipo"] == "AZIONE"),
-                         ["Predisposizione del bando", "Svolgimento della gara"])  # fmt: skip
-
-        # l'attività tolta dalla mappatura: l'azione resta con il codice, con un avviso; il
-        # processo continua a vederla
-        self._ok(rpct.delete(f"{AC}/attivita/{gara['id']}", base_url=ENTE), 204)
-        d = self._ok(resp.get(f"{API}/obiettivi/{o['id']}", base_url=ENTE))
-        tolta = next(x for x in d["elementi"] if x["descrizione"] == "Svolgimento della gara")
-        self.assertEqual((tolta["attivita_id"], tolta["mappatura_codice"]), (None, gara["codice"]))
-        self.assertTrue(any("non è più nella mappatura" in c["testo"] for c in d["controlli"]), d["controlli"])
-        collegati = self._ok(rpct.get(f"{AC}/processi/{gare['id']}", base_url=ENTE))["obiettivi"]
-        self.assertEqual([a["codice"] for a in collegati[0]["azioni"]], [bando["codice"], gara["codice"]])
+        self.assertEqual(sorted(x["voce_id"] for x in d["elementi"] if x["tipo"] == "AZIONE"), sorted([bando["voce_id"], gara["voce_id"]]))
 
     def test_piao(self):
         amm, resp = self._client("amm"), self._client("responsabile")
@@ -245,12 +245,14 @@ class PerformanceApi(unittest.TestCase):
         self.assertEqual(appr.post(url, base_url=ENTE, json={"tipo": "AZIONE", "descrizione": "x", "impegno": 40,
                                                              "scadenza": str(oggi)}).status_code, 422)  # fmt: skip
         misura = self._misura()
-        disponibili = self._ok(resp.get(f"{API}/misure?struttura_id={self.uo}", base_url=ENTE))
-        self.assertEqual(disponibili[0]["id"], misura["id"])
+        disponibili = self._ok(resp.get(f"{API}/catalogo?tipo=MISURA&testo=rotazione dei commissari", base_url=ENTE))
+        self.assertIn(misura["voce_id"], [v["id"] for v in disponibili])  # le voci del catalogo
         self.assertEqual(appr.post(url, base_url=ENTE, json={"tipo": "MISURA", "impegno": 30, "scadenza": str(oggi)}).status_code, 422)
         mi = self._ok(appr.post(url, base_url=ENTE, json={"tipo": "MISURA", "misura_id": misura["id"], "impegno": 30,
                                                           "completamento": 100, "scadenza": str(oggi + timedelta(days=30))}), 201)  # fmt: skip
-        self.assertEqual((mi["misura_codice"], mi["descrizione"]), (misura["codice"], "Rotazione dei commissari"))
+        # entra la radice: la voce del catalogo della misura, con il suo codice
+        self.assertEqual((mi["misura_id"], mi["voce_id"], mi["descrizione"]), (misura["id"], misura["voce_id"], "Rotazione dei commissari"))
+        self.assertTrue(mi["voce_codice"].startswith("MIS-"))
         self.assertEqual(appr.post(url, base_url=ENTE, json={"tipo": "MISURA", "misura_id": misura["id"], "impegno": 0,
                                                              "scadenza": str(oggi)}).status_code, 409)  # fmt: skip
 
@@ -352,7 +354,9 @@ class PerformanceApi(unittest.TestCase):
         pr = self._ok(resp.post(f"{API}/proposte", base_url=ENTE, json={"tipo": "CREA", **base, "dati": obiettivo}), 201)
         self.assertEqual((pr["stato"], pr["titolo"], pr["modificabile"], pr["inviabile"], pr["decidibile"]),
                          ("BOZZA", "OB1 - Ridurre i tempi", True, True, False))  # fmt: skip
-        self.assertEqual([x["misura_codice"] for x in pr["dati"]["elementi"]], [None, misura["codice"]])
+        # la misura entra con la sua radice nel catalogo (la voce), oltre al riferimento alla misura
+        self.assertEqual([(x.get("misura_id"), x.get("voce_id")) for x in pr["dati"]["elementi"]],
+                         [(None, None), (misura["id"], misura["voce_id"])])  # fmt: skip
         self.assertTrue(all(x["id"].startswith("nuovo-") for x in pr["dati"]["elementi"]))
         elenco = self._ok(resp.get(f"{API}/obiettivi?piao_id={p['id']}&anno={anno}&struttura_id={self.uo}", base_url=ENTE))
         self.assertEqual((elenco["obiettivi"], [x["id"] for x in elenco["proposte"]]), ([], [pr["id"]]))
@@ -568,8 +572,9 @@ class PerformanceApi(unittest.TestCase):
         self.assertEqual(x["completamento"], 50)
         riepilogo = self._ok(appr.get(f"{API}/riepilogo?piao_id={p['id']}&anno={anno}", base_url=ENTE))
         self.assertEqual([(r["obiettivi"], r["senza_indicatori"]) for r in riepilogo], [(2, 1)])
-        misure = self._ok(resp.get(f"{API}/misure", base_url=ENTE))
-        self.assertTrue(all("indicatore" in m and "target" in m for m in misure))
+        self._misura()
+        misure = self._ok(resp.get(f"{API}/catalogo?tipo=MISURA", base_url=ENTE))
+        self.assertTrue(misure and all("indicatore" in m and "target" in m for m in misure))
 
     def test_permessi_e_separazione(self):
         amm = self._client("amm")
@@ -580,7 +585,7 @@ class PerformanceApi(unittest.TestCase):
         self.assertEqual(self._ok(altro.get(f"{API}/piao", base_url=ALTRO)), [])
         self.assertEqual(altro.get(f"{API}/obiettivi?piao_id={p['id']}", base_url=ALTRO).status_code, 404)
         # senza il modulo anticorruzione niente misure
-        self.assertEqual(self._ok(altro.get(f"{API}/misure", base_url=ALTRO)), [])
+        self.assertEqual(self._ok(altro.get(f"{API}/catalogo", base_url=ALTRO)), [])
         self.assertFalse(self._ok(altro.get(f"{API}/contesto", base_url=ALTRO))["misure"])
         contesto = self._ok(self._client("dirigente").get(f"{API}/contesto", base_url=ENTE))
         self.assertEqual((contesto["amministratore"], contesto["approvatore"], sorted(contesto["visibili"])),

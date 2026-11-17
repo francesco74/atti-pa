@@ -40,6 +40,10 @@ void main() {
             {'id': 'm2', 'codice': 'C.4.1_R.2_M.1', 'testo': 'Rotazione dei professionisti', 'diverso': true,
              'attivita_id': 'a1', 'processo': {'id': 'p1', 'codice': 'C.4', 'denominazione': 'Affidamento di servizi di ingegneria'}},
           ],
+          'obiettivi': [
+            {'id': 'e1', 'obiettivo_id': 'o1', 'codice': 'OB1', 'titolo': 'Costruire il ponte', 'anno': 2026, 'struttura_id': null,
+             'piao': 'PIAO 2026', 'completamento': 40},
+          ],
         };
       }
       return http.Response(jsonEncode(corpo), 200, headers: {'content-type': 'application/json; charset=utf-8'});
@@ -81,6 +85,7 @@ void main() {
     expect(find.text('Usata in 2 elementi della mappatura'), findsOneWidget);
     expect(find.textContaining('testo ritoccato nel processo'), findsOneWidget);
     expect(find.text('Elimina'), findsNothing); // usata: solo disattivare
+    expect(find.text('Radice di 1 obiettivo di performance'), findsOneWidget);
 
     await tester.tap(find.text('Modifica'));
     await tester.pumpAndSettle();
@@ -90,6 +95,7 @@ void main() {
     // prima di salvare: dove è usata e conferma
     expect(find.text('Modificare una voce usata?'), findsOneWidget);
     expect(find.textContaining('• C.4.1_R.2_M.1 (C.4 - Affidamento di servizi di ingegneria)'), findsOneWidget);
+    expect(find.textContaining('• OB1 - Costruire il ponte (PIAO 2026, anno 2026)'), findsOneWidget);
     await tester.tap(find.text('Procedi comunque'));
     await tester.pumpAndSettle();
     final corpo = corpi['PUT /api/v1/anticorruzione/catalogo/v1'] as Map;

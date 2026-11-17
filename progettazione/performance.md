@@ -16,17 +16,22 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
   codice nel PIAO (facoltativo, es. `P2_OS3_OO1_OG1_26_2`), titolo, descrizione, tipo
   (Operativo, Funzionamento, Miglioramento, come in Si.Ge.Ri.Co.) e la **percentuale di
   impegno** rispetto agli altri obiettivi della struttura nello stesso anno.
-- **Azioni e misure** dell'obiettivo: l'azione è descrittiva o **copiata da un'attività della
-  mappatura dei rischi**; la misura si sceglie tra quelle della mappatura (modulo
-  anticorruzione). Con **"Dalla mappatura"** si sceglie un processo o procedimento (o una sola
-  attività) e si spuntano le sue **attività, che diventano azioni, e le sue misure**; i
-  **rischi non entrano** nell'obiettivo. Si copiano con impegno 0% e scadenza a fine anno:
-  ognuna poi è un elemento a sé (impegno, scadenza, indicatori, avanzamento) e si toglie da
-  sola. Sono **copie**: se il processo cambia nella mappatura l'obiettivo resta com'era (codice
-  e descrizione copiati; l'azione ricorda l'attività e il processo da cui viene, la misura la
-  misura). Il collegamento si vede anche dall'anticorruzione: la scheda del processo elenca gli
-  obiettivi con le azioni e le misure copiate da lì (16/11/2026, migrazione
-  `0006_azioni_da_mappatura.sql`). Ciascuna ha la percentuale di **impegno**
+- **Azioni e misure** dell'obiettivo: l'azione è scritta a mano o viene dal **catalogo della
+  mappatura dei rischi** (modulo anticorruzione), come la misura. Ogni azione e misura dal
+  catalogo ha la sua **radice**: la voce del catalogo (`voce_id`, con il codice copiato), e
+  **una voce entra una volta sola** nell'obiettivo. Con **"Dalla mappatura"** si sceglie un
+  processo o procedimento (o una sola attività) e si spuntano le radici: le voci delle sue
+  **attività, che diventano azioni, e delle sue misure**, ognuna una volta sola (la misura
+  usata sotto più rischi è una voce); i **rischi non entrano**. "Misura" sceglie una voce di
+  misura dal catalogo. Si portano con impegno 0% e scadenza a fine anno: ognuna poi è un
+  elemento a sé (impegno, scadenza, indicatori, avanzamento) e si toglie da sola. Il testo è
+  quello della voce, copiato: se il catalogo o la mappatura cambiano l'obiettivo resta
+  com'era. **Visione d'insieme** nella scheda **Radici**: le voci usate negli obiettivi del
+  PIAO, ognuna con i suoi obiettivi (`GET /performance/voci`); nel catalogo dell'anticorruzione
+  la scheda della voce elenca gli obiettivi, che contano per la conferma prima di cambiarla e
+  impediscono di eliminarla; unendo due voci anche gli obiettivi passano all'altra. La scheda
+  del processo elenca gli obiettivi che usano le voci delle sue attività e misure (migrazioni
+  `0006_azioni_da_mappatura.sql` e `0009_radici_negli_obiettivi.sql`, 16-17/11/2026). Ciascuna ha la percentuale di **impegno**
   rispetto alle altre dello stesso obiettivo, quella di **completamento** e la **data massima
   di completamento**.
 - **Indicatori** di un'azione o misura (anche più d'uno): cosa si misura e il **valore da
@@ -58,8 +63,8 @@ dirigenti e responsabili e si compongono di azioni e misure con pesi e avanzamen
 ## 2-bis. Controlli (07/11/2026)
 
 Sull'obiettivo, senza modello (`controlli_obiettivo` in `common/performance`): impegno 0% (di
-obiettivi, azioni o misure), scadenze fuori dall'anno dell'obiettivo, misure e attività non
-più nella mappatura o attribuite nella mappatura a un'altra struttura, obiettivo senza azioni o senza
+obiettivi, azioni o misure), scadenze fuori dall'anno dell'obiettivo, misure non più nella
+mappatura (se non hanno nemmeno la voce) o attribuite nella mappatura a un'altra struttura, obiettivo senza azioni o senza
 misure della mappatura, azioni e misure **senza indicatori** (informazione: l'indicatore è
 facoltativo, ma nel PIAO gli obiettivi devono essere misurabili). Nell'elenco il numero degli
 avvisi, nel dettaglio l'elenco; nel riepilogo il numero delle azioni e misure senza indicatori

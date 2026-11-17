@@ -187,7 +187,7 @@ def controlli_obiettivo(
         c(AVVISO, "L'obiettivo ha impegno 0%: non conta nel completamento della struttura")
     if not elementi:
         c(AVVISO, "Nessuna azione o misura: il completamento non si può calcolare")
-    elif misure_attive and not any(x["tipo"] == "MISURA" or x.get("mappatura_codice") for x in elementi):
+    elif misure_attive and not any(x["tipo"] == "MISURA" or x.get("mappatura_codice") or x.get("voce_id") for x in elementi):
         c(INFO, "Nessuna misura o attività della mappatura dei rischi collegata all'obiettivo")
     for x in elementi:
         nome = f"{'Azione' if x['tipo'] == 'AZIONE' else 'Misura'} «{(x['descrizione'] or '')[:60]}»"
@@ -201,13 +201,13 @@ def controlli_obiettivo(
         if "indicatori" in x and not x["indicatori"]:
             c(INFO, f"{nome}: nessun indicatore, il raggiungimento non si misura")
         if x["tipo"] == "MISURA":
-            if not x.get("misura_id"):
+            if not x.get("misura_id") and not x.get("voce_id"):
                 c(AVVISO, f"{nome}: la misura non è più nella mappatura dei rischi")
             elif strutture_misure is not None:
                 responsabile = strutture_misure.get(x["misura_id"])
                 if responsabile and responsabile != struttura_id:
                     c(INFO, f"{nome}: la misura è attribuita a un'altra struttura nella mappatura")
-        elif x.get("mappatura_codice"):  # azione copiata da un'attività della mappatura
+        elif x.get("mappatura_codice") and not x.get("voce_id"):  # azione copiata da un'attività (prima delle radici)
             attivita = x.get("attivita_id")
             if not attivita:
                 c(AVVISO, f"{nome}: l'attività {x['mappatura_codice']} non è più nella mappatura dei rischi")

@@ -32,6 +32,7 @@ configMapGenerator:
       - sql/0006_azioni_da_mappatura.sql
       - sql/0007_strutture_coinvolte.sql
       - sql/0008_catalogo_mappatura.sql
+      - sql/0009_radici_negli_obiettivi.sql
     options:
       disableNameSuffixHash: true   # cambiare lo schema non riavvia MySQL
 

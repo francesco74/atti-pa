@@ -179,11 +179,12 @@ Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzi
       ]);
 }
 
-/// Chiede conferma per un'operazione su una voce usata, elencando dove è usata. True: si
-/// procede (subito, se la voce non è usata).
+/// Chiede conferma per un'operazione su una voce usata, elencando dove è usata (mappatura e
+/// obiettivi della performance). True: si procede (subito, se la voce non è usata).
 Future<bool> confermaVoceUsata(BuildContext context, Map<String, dynamic> voce, String titolo, String conseguenza) async {
   final elementi = (voce['elementi'] as List? ?? const []).cast<Map<String, dynamic>>();
-  if (elementi.isEmpty) return true;
+  final obiettivi = (voce['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>();
+  if (elementi.isEmpty && obiettivi.isEmpty) return true;
   final esito = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -191,16 +192,22 @@ Future<bool> confermaVoceUsata(BuildContext context, Map<String, dynamic> voce, 
       content: SizedBox(
         width: 560,
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('La voce ${voce['codice']} è usata in ${elementi.length == 1 ? '1 elemento' : '${elementi.length} elementi'} della mappatura:',
-              style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text('La voce ${voce['codice']} è usata in:', style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Flexible(
             child: SingleChildScrollView(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                if (elementi.isNotEmpty) Text(elementi.length == 1 ? '1 elemento della mappatura' : '${elementi.length} elementi della mappatura'),
                 for (final e in elementi)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: 4, left: 8),
                     child: Text('• ${e['codice']} (${(e['processo'] as Map)['codice']} - ${(e['processo'] as Map)['denominazione']})'),
+                  ),
+                if (obiettivi.isNotEmpty) Text(obiettivi.length == 1 ? '1 obiettivo di performance' : '${obiettivi.length} obiettivi di performance'),
+                for (final o in obiettivi)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4, left: 8),
+                    child: Text('• ${o['codice'] == null ? '' : '${o['codice']} - '}${o['titolo']} (${o['piao']}, anno ${o['anno']})'),
                   ),
               ]),
             ),
@@ -250,7 +257,7 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
     if (mounted) _carica();
   }
 
-  static const _restano = 'Gli elementi dei processi non cambiano: tengono il loro testo.';
+  static const _restano = 'Gli elementi dei processi e gli obiettivi non cambiano: tengono il loro testo.';
 
   Future<void> _modifica(Map<String, dynamic> v) => _esegui(() async {
         final dati = context.read<DatiAnticorruzione>();
@@ -274,7 +281,7 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
             titolo: 'Unisci ${v['codice']} a un\'altra voce');
         if (altra == null || !mounted) return;
         final testo = 'I suoi elementi passano a ${altra['codice']} e la voce ${v['codice']} si elimina. $_restano';
-        if ((v['elementi'] as List).isEmpty) {
+        if ((v['elementi'] as List).isEmpty && (v['obiettivi'] as List? ?? const []).isEmpty) {
           if (!await conferma(context, 'Unire le voci?', testo)) return;
         } else if (!await confermaVoceUsata(context, v, 'Unire una voce usata?', testo)) {
           return;
@@ -323,6 +330,7 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
         riprova: _carica,
         builder: (context, v) {
           final elementi = (v['elementi'] as List).cast<Map<String, dynamic>>();
+          final obiettivi = (v['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>();
           final righe = [
             ('Tipo', _singolare[v['tipo']]),
             ('Provenienza', v['standard'] == true ? 'voce standard (pacchetto)' : 'voce dell\'ente'),
@@ -346,7 +354,7 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
                     onPressed: () => _attiva(v, v['attiva'] != true),
                   ),
                   TextButton.icon(icon: const Icon(Icons.merge_type, size: 18), label: const Text('Unisci'), onPressed: () => _unisci(v)),
-                  if (elementi.isEmpty)
+                  if (elementi.isEmpty && obiettivi.isEmpty)
                     TextButton.icon(
                       style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                       icon: const Icon(Icons.delete_outline, size: 18),
@@ -382,6 +390,24 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
                   ),
               ]),
             ),
+            if (obiettivi.isNotEmpty)
+              Sezione(
+                titolo: 'Radice di ${obiettivi.length == 1 ? '1 obiettivo' : '${obiettivi.length} obiettivi'} di performance',
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  for (final o in obiettivi)
+                    ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.flag_outlined),
+                      title: Text(o['codice'] == null ? '${o['titolo']}' : '${o['codice']} - ${o['titolo']}'),
+                      subtitle: Text([
+                        '${o['piao']} · anno ${o['anno']}',
+                        ?context.read<DatiAnticorruzione>().struttura(o['struttura_id']),
+                        'completato al ${o['completamento']}%',
+                      ].join(' · ')),
+                    ),
+                ]),
+              ),
           ]);
         },
       ),

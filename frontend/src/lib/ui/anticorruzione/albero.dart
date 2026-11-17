@@ -785,8 +785,8 @@ class ValoriIndicatori extends StatelessWidget {
   }
 }
 
-/// Obiettivi della performance collegati al processo: hanno azioni copiate dalle sue attività o
-/// sue misure. Sola lettura; niente se non ce ne sono.
+/// Obiettivi della performance collegati al processo: hanno come radici le voci delle sue
+/// attività o delle sue misure. Sola lettura; niente se non ce ne sono.
 class ObiettiviPerformance extends StatelessWidget {
   const ObiettiviPerformance({super.key, required this.dati, required this.obiettivi});
 
@@ -815,7 +815,7 @@ class ObiettiviPerformance extends StatelessWidget {
               if (o['completamento'] != null) 'completato al ${(o['completamento'] as num).round()}%',
             ].where((t) => t.isNotEmpty).join(' · ')),
           ),
-        Text('Azioni e misure sono copie: si gestiscono nel modulo Performance.', style: piccolo),
+        Text('Azioni e misure degli obiettivi vengono dalle voci del catalogo: si gestiscono nel modulo Performance.', style: piccolo),
       ]),
     );
   }

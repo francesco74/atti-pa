@@ -3,7 +3,7 @@ cui nascono gli elementi dei processi (common/anticorruzione/catalogo.py).
 
 Lo vede chi vede la mappatura; il RPCT crea le voci, le modifica, le disattiva, le elimina se
 non usate e unisce due voci che sono la stessa (gli elementi della seconda passano alla
-prima). Modificare, disattivare o unire una voce già usata richiede la conferma (`conferma`):
+prima, anche negli obiettivi della performance, che hanno le voci come radici). Modificare, disattivare o unire una voce già usata richiede la conferma (`conferma`):
 l'interfaccia mostra prima dove è usata. Gli elementi dei processi non cambiano: hanno il loro
 testo, copiato dalla voce quando sono nati.
 """
@@ -17,7 +17,7 @@ from flask import Blueprint
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, update
 
-from deps import audit, db, ente_id, utente
+from deps import audit, db, ente, ente_id, utente
 from routers.anticorruzione import lettore, rpct
 from web import ErroreApi, corpo, nessun_contenuto, parametri
 from common.anticorruzione.catalogo import (
@@ -25,7 +25,7 @@ from common.anticorruzione.catalogo import (
 )  # fmt: skip
 from common.anticorruzione.catalogo import crea_voce as nuova_voce_ente  # l'endpoint si chiama crea_voce
 from common.anticorruzione.metodologia import chiave_naturale
-from common.models import AcAttivita, AcProcesso, AcRischio, AcVoce
+from common.models import AcAttivita, AcProcesso, AcRischio, AcVoce, Modulo, PfElemento, PfObiettivo, PfPiao
 
 bp = Blueprint("catalogo", __name__, url_prefix="/api/v1/anticorruzione/catalogo")
 
@@ -86,6 +86,18 @@ async def usi_della_voce(v: AcVoce) -> list[dict]:
     return sorted(usi, key=lambda u: chiave_naturale(u["codice"]))
 
 
+async def obiettivi_della_voce(v: AcVoce) -> list[dict]:
+    """Le azioni e misure degli obiettivi della performance che hanno la voce come radice."""
+    if not ente().modulo_attivo(Modulo.PERFORMANCE):
+        return []
+    righe = await db().execute(
+        select(PfElemento, PfObiettivo, PfPiao).join(PfObiettivo, PfObiettivo.id == PfElemento.obiettivo_id)
+        .join(PfPiao, PfPiao.id == PfObiettivo.piao_id).where(PfElemento.voce_id == v.id))  # fmt: skip
+    usi = [{"id": x.id, "obiettivo_id": o.id, "codice": o.codice, "titolo": o.titolo, "anno": o.anno,
+            "struttura_id": o.struttura_id, "piao": p.titolo, "completamento": x.completamento} for x, o, p in righe]  # fmt: skip
+    return sorted(usi, key=lambda u: (-u["anno"], chiave_naturale(u["codice"] or ""), u["titolo"]))
+
+
 class FiltriCatalogo(BaseModel):
     tipo: TipoVoce | None = None
     testo: str | None = Field(default=None, max_length=200)
@@ -113,10 +125,10 @@ async def catalogo():
 @bp.get("/<voce_id>")
 @lettore
 async def voce(voce_id: str):
-    """La voce con gli elementi della mappatura che la usano."""
+    """La voce con gli elementi della mappatura e gli obiettivi della performance che la usano."""
     v = await _voce_dell_ente(voce_id)
     usi = await usi_della_voce(v)
-    return {**_voce(v, len(usi)), "elementi": usi}
+    return {**_voce(v, len(usi)), "elementi": usi, "obiettivi": await obiettivi_della_voce(v)}
 
 
 class VoceIn(BaseModel):
@@ -167,9 +179,12 @@ async def crea_voce():
     return _voce(v, 0), HTTPStatus.CREATED
 
 
-def _serve_conferma(n: int, d) -> None:
-    if n and not d.conferma:
-        raise ErroreApi(HTTPStatus.CONFLICT, f"La voce è usata in {n} elementi della mappatura: conferma per procedere")
+async def _serve_conferma(v: AcVoce, d) -> None:
+    """Una voce usata (mappatura o obiettivi) si cambia solo confermando."""
+    n, o = len(await usi_della_voce(v)), len(await obiettivi_della_voce(v))
+    if (n or o) and not d.conferma:
+        dove = " e ".join(x for x in (f"{n} elementi della mappatura" if n else "", f"{o} obiettivi" if o else "") if x)
+        raise ErroreApi(HTTPStatus.CONFLICT, f"La voce è usata in {dove}: conferma per procedere")
 
 
 @bp.put("/<voce_id>")
@@ -181,7 +196,7 @@ async def modifica_voce(voce_id: str):
     sessione = db()
     v = await _voce_dell_ente(voce_id)
     prima = _voce(v)
-    _serve_conferma(len(await usi_della_voce(v)), d)
+    await _serve_conferma(v, d)
     await _testo_libero(v.tipo, d.descrizione, esclusa=v.id)
     _imposta(v, d)
     v.attiva = d.attiva
@@ -198,8 +213,8 @@ async def elimina_voce(voce_id: str):
     """Solo se nessun elemento la usa (altrimenti si disattiva)."""
     sessione = db()
     v = await _voce_dell_ente(voce_id)
-    if await usi_della_voce(v):
-        raise ErroreApi(HTTPStatus.CONFLICT, "La voce è usata nella mappatura: si può solo disattivare")
+    if await usi_della_voce(v) or await obiettivi_della_voce(v):
+        raise ErroreApi(HTTPStatus.CONFLICT, "La voce è usata nella mappatura o negli obiettivi: si può solo disattivare")
     audit(sessione, utente(), "ac_catalogo", v.id, "ELIMINATA", {"codice": v.codice})
     await sessione.delete(v)
     await sessione.commit()
@@ -223,9 +238,11 @@ async def unisci_voce(voce_id: str):
     if resta.id == v.id or resta.tipo != v.tipo:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Si unisce a un'altra voce dello stesso tipo")
     usi = await usi_della_voce(v)
-    _serve_conferma(len(usi), d)
+    await _serve_conferma(v, d)
     modello = ELEMENTI[v.tipo]
     await sessione.execute(update(modello).where(modello.voce_id == v.id).values(voce_id=resta.id))
+    # anche gli obiettivi passano all'altra voce (il loro testo resta)
+    await sessione.execute(update(PfElemento).where(PfElemento.voce_id == v.id).values(voce_id=resta.id, voce_codice=resta.codice))
     audit(sessione, utente(), "ac_catalogo", resta.id, "UNITA", {"codice": resta.codice, "unita": v.codice, "elementi": len(usi)})
     await sessione.delete(v)
     await sessione.commit()

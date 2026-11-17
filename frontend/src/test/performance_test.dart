@@ -125,17 +125,37 @@ void main() {
            'processo': 'C.3 - Affidamento di lavori', 'struttura_id': null},
         ];
       } else if (p.endsWith('/mappatura/albero')) {
+        // la stessa misura (stessa voce) sotto due rischi
+        const doppia = {'id': 'mv1', 'tipo': 'MISURA', 'codice': 'MIS-0007', 'descrizione': 'Doppia verifica dei requisiti',
+                        'tipo_misura': 'SPECIFICA', 'categoria': null, 'indicatore': 'Bandi verificati', 'target': '100%', 'attiva': true};
         corpo = {
           'processo': {'id': 'pc1', 'codice': 'C.3', 'denominazione': 'Affidamento di lavori', 'tipo': 'PROCESSO', 'struttura_id': null},
           'attivita': [
-            {'id': 'at1', 'codice': 'C.3.1', 'descrizione': 'Predisposizione del bando', 'rischi': [
+            {'id': 'at1', 'codice': 'C.3.1', 'descrizione': 'Predisposizione del bando (testo del processo)',
+             'voce': {'id': 'av1', 'tipo': 'ATTIVITA', 'codice': 'ATT-0012', 'descrizione': 'Predisposizione del bando', 'attiva': true},
+             'rischi': [
               {'id': 'r1', 'codice': 'C.3.1_R.1', 'evento': 'Requisiti su misura', 'livello': 'Alto', 'misure': [
-                {'id': 'm9', 'codice': 'C.3.1_R.1_M.1', 'descrizione': 'Doppia verifica dei requisiti', 'tipo': 'SPECIFICA',
-                 'categoria': null, 'struttura_id': null, 'indicatore': 'Bandi verificati', 'target': '100%'},
+                {'id': 'm9', 'codice': 'C.3.1_R.1_M.1', 'descrizione': 'Doppia verifica dei requisiti', 'voce': doppia},
+              ]},
+              {'id': 'r2', 'codice': 'C.3.1_R.2', 'evento': 'Bando poco chiaro', 'livello': 'Basso', 'misure': [
+                {'id': 'm10', 'codice': 'C.3.1_R.2_M.1', 'descrizione': 'Doppia verifica dei requisiti', 'voce': doppia},
               ]},
             ]},
           ],
         };
+      } else if (p.endsWith('/performance/voci')) {
+        corpo = [
+          {'voce_id': 'av1', 'tipo': 'AZIONE', 'codice': 'ATT-0012', 'descrizione': 'Predisposizione del bando', 'obiettivi': [
+            {'obiettivo_id': 'o1', 'codice': 'P2_OS3', 'titolo': 'Digitalizzare i concorsi', 'anno': anno, 'struttura_id': 'uo',
+             'impegno': 40, 'completamento': 25},
+          ]},
+          {'voce_id': 'mv1', 'tipo': 'MISURA', 'codice': 'MIS-0007', 'descrizione': 'Doppia verifica dei requisiti', 'obiettivi': [
+            {'obiettivo_id': 'o1', 'codice': 'P2_OS3', 'titolo': 'Digitalizzare i concorsi', 'anno': anno, 'struttura_id': 'uo',
+             'impegno': 60, 'completamento': 0},
+            {'obiettivo_id': 'o2', 'codice': 'P2_OS4', 'titolo': 'Gare trasparenti', 'anno': anno, 'struttura_id': 'uo',
+             'impegno': 100, 'completamento': 50},
+          ]},
+        ];
       } else if (p.endsWith('/storico')) {
         corpo = [
           {'id': 1, 'oggetto': 'AZIONE', 'azione': 'MODIFICATO', 'descrizione': 'Piattaforma online',
@@ -201,40 +221,53 @@ void main() {
     expect(find.text('Il PIAO è chiuso: non si aggiungono obiettivi.'), findsOneWidget);
   });
 
-  testWidgets('dalla mappatura: si copiano attività (come azioni) e misure scelte, con impegno 0', (tester) async {
+  testWidgets('dalla mappatura entrano le radici: voci di attività e misure, una volta sola', (tester) async {
     final anno = DateTime.now().year;
     await apri(tester, approvatore: true, obiettivo: {
       'elementi': [
         {'id': 'e3', 'tipo': 'AZIONE', 'descrizione': 'Sopralluogo', 'misura_id': null, 'misura_codice': null,
-         'processo_id': 'pc1', 'attivita_id': null, 'mappatura_codice': 'C.3.0', 'impegno': 100, 'completamento': 0,
+         'voce_id': 'av9', 'voce_codice': 'ATT-0099', 'impegno': 100, 'completamento': 0,
          'scadenza': '$anno-12-31', 'in_ritardo': false, 'calcolato': false, 'indicatori': []},
       ],
     });
     await tester.tap(find.text('P2_OS3 - Digitalizzare i concorsi'));
     await tester.pumpAndSettle();
-    // l'azione copiata: codice dell'attività; l'attività tolta dalla mappatura si segnala
-    expect(find.text('C.3.0 - Sopralluogo'), findsOneWidget);
-    expect(find.byTooltip('Azione copiata da un\'attività della mappatura dei rischi'), findsOneWidget);
-    expect(find.text('Non più nella mappatura'), findsOneWidget);
+    // l'azione dal catalogo: codice della voce
+    expect(find.text('ATT-0099 - Sopralluogo'), findsOneWidget);
+    expect(find.byTooltip('Azione dal catalogo della mappatura dei rischi'), findsOneWidget);
 
-    // anche con le azioni e misure al 100%: si copiano a 0%
+    // anche con le azioni e misure al 100%: entrano a 0%
     expect(find.text('Azione'), findsNothing);
     await tester.tap(find.text('Dalla mappatura'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('C.3 - Affidamento di lavori'));
     await tester.pumpAndSettle();
-    // attività e misure spuntate, i rischi no
-    expect(find.text('C.3.1 - Predisposizione del bando'), findsOneWidget);
-    expect(find.text('C.3.1_R.1_M.1 - Doppia verifica dei requisiti'), findsOneWidget);
+    // le voci: l'attività con il testo della voce, la misura una volta sola, i rischi no
+    expect(find.text('ATT-0012 - Predisposizione del bando'), findsOneWidget);
+    expect(find.text('MIS-0007 - Doppia verifica dei requisiti'), findsOneWidget);
     expect(find.textContaining('Requisiti su misura'), findsNothing);
-    expect(find.text('Copia 2'), findsOneWidget);
-    await tester.tap(find.text('C.3.1_R.1_M.1 - Doppia verifica dei requisiti')); // la misura non serve
+    expect(find.text('Aggiungi 2'), findsOneWidget);
+    await tester.tap(find.text('MIS-0007 - Doppia verifica dei requisiti')); // la misura non serve
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Copia 1'));
+    await tester.tap(find.text('Aggiungi 1'));
     await tester.pumpAndSettle();
     final corpo = corpi['POST /api/v1/performance/obiettivi/o1/elementi'] as Map;
-    expect((corpo['tipo'], corpo['attivita_id'], corpo['impegno'], corpo['scadenza']), ('AZIONE', 'at1', 0, '$anno-12-31'));
+    expect((corpo['tipo'], corpo['voce_id'], corpo['attivita_id'], corpo['impegno'], corpo['scadenza']),
+        ('AZIONE', 'av1', 'at1', 0, '$anno-12-31'));
     expect(find.textContaining('Copiate 1 azione e 0 misure'), findsOneWidget);
+  });
+
+  testWidgets('radici: le voci usate negli obiettivi, ognuna con i suoi obiettivi', (tester) async {
+    await apri(tester);
+    await tester.tap(find.text('Radici'));
+    await tester.pumpAndSettle();
+    expect(find.text('Azioni (1)'), findsOneWidget);
+    expect(find.text('Misure (1)'), findsOneWidget);
+    expect(find.text('MIS-0007 - Doppia verifica dei requisiti'), findsOneWidget);
+    expect(find.text('in 2 obiettivi'), findsOneWidget);
+    await tester.tap(find.text('MIS-0007 - Doppia verifica dei requisiti'));
+    await tester.pumpAndSettle();
+    expect(find.text('P2_OS4 - Gare trasparenti'), findsOneWidget);
   });
 
   testWidgets('indicatori: target, valore rilevato e avanzamento', (tester) async {
