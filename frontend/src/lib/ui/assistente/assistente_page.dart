@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../api/api_client.dart';
+import '../../util/appunti.dart';
+import '../../util/markdown_testo.dart';
 import '../../util/scelta_file.dart';
 import '../comuni.dart';
 
@@ -485,8 +487,10 @@ class _AssistentePageState extends State<AssistentePage> {
     return _riquadro(
       colore: tema.surfaceContainerHighest,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // le immagini non si caricano: l'indirizzo lo sceglie il modello
-        MarkdownBody(data: testo, selectable: true, imageBuilder: (_, _, _) => const SizedBox.shrink()),
+        // un'unica area di selezione: con selectable ogni paragrafo si seleziona per conto suo e
+        // non se ne copia una parte che ne attraversa più d'uno. Le immagini non si caricano:
+        // l'indirizzo lo sceglie il modello
+        SelectionArea(child: MarkdownBody(data: testo, imageBuilder: (_, _, _) => const SizedBox.shrink())),
         if (m['fonti'] != null) _fonti(m['fonti']!, tema),
         Align(
           alignment: Alignment.centerRight,
@@ -494,7 +498,9 @@ class _AssistentePageState extends State<AssistentePage> {
             tooltip: 'Copia la risposta',
             icon: const Icon(Icons.copy, size: 18),
             onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: testo));
+              // formattata (grassetto, elenchi, tabelle) dove si incolla HTML, senza i simboli
+              // del markdown dove si incolla solo testo
+              await copiaFormattato(html: markdownInHtml(testo), testo: markdownInTesto(testo));
               if (mounted) mostraMessaggio(context, 'Risposta copiata');
             },
           ),
