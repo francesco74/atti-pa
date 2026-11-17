@@ -8,6 +8,31 @@ import '../config.dart';
 
 ApiClient apiDi(BuildContext context) => context.read<ApiClient>();
 
+/// Libera i campi di testo quando il widget sparisce: si mette intorno al contenuto di una
+/// finestra, perché l'animazione di chiusura li usa ancora dopo che la finestra ha risposto.
+class LiberaAllaFine extends StatefulWidget {
+  const LiberaAllaFine(this.controllori, {super.key, required this.child});
+
+  final List<TextEditingController> controllori;
+  final Widget child;
+
+  @override
+  State<LiberaAllaFine> createState() => _LiberaAllaFineState();
+}
+
+class _LiberaAllaFineState extends State<LiberaAllaFine> {
+  @override
+  void dispose() {
+    for (final c in widget.controllori) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 void mostraErrore(BuildContext context, Object errore) {
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

@@ -295,7 +295,7 @@ Future<Map<String, dynamic>?> modificaCampi(
     context: context,
     // i campi si liberano quando la finestra è sparita, non appena si chiude: l'animazione di
     // chiusura li usa ancora
-    builder: (c) => _LiberaAllaFine(testi.values.toList(), child: StatefulBuilder(
+    builder: (c) => LiberaAllaFine(testi.values.toList(), child: StatefulBuilder(
       builder: (c, aggiorna) => AlertDialog(
         title: Text(titolo),
         content: SizedBox(
@@ -381,29 +381,6 @@ String? voceRitoccata(Map el, String? testo) {
   return 'Dal catalogo (${v['codice']}): ${v['descrizione']}';
 }
 
-/// Libera i campi di testo quando il widget sparisce (fine dell'animazione della finestra).
-class _LiberaAllaFine extends StatefulWidget {
-  const _LiberaAllaFine(this.controllori, {required this.child});
-
-  final List<TextEditingController> controllori;
-  final Widget child;
-
-  @override
-  State<_LiberaAllaFine> createState() => _LiberaAllaFineState();
-}
-
-class _LiberaAllaFineState extends State<_LiberaAllaFine> {
-  @override
-  void dispose() {
-    for (final c in widget.controllori) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
-}
 
 /// Messaggio dopo l'invio di una proposta del referente.
 void propostaInviata(BuildContext context) => mostraMessaggio(

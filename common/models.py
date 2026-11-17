@@ -115,6 +115,8 @@ class Ente(Base):
     # testo per l'assistenza agli utenti (login, menu dell'app, pagine di aiuto), es. a chi
     # scrivere o chi chiamare
     assistenza: Mapped[str | None] = mapped_column(Text)
+    # messaggio dell'amministratore nella pagina iniziale (Home) di tutti gli utenti dell'ente
+    benvenuto: Mapped[str | None] = mapped_column(Text)
     # indirizzo della dichiarazione di accessibilità dell'ente (AgID, form.agid.gov.it),
     # linkata in fondo alle pagine pubbliche
     dichiarazione_accessibilita: Mapped[str | None] = mapped_column(String(500))

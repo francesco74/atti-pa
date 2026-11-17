@@ -1896,6 +1896,12 @@ async def misure_da_dichiarare(anno: int):
     ammesse = await _strutture_dell_utente(sessione)
     if ammesse is not None and struttura_id not in ammesse:
         raise ErroreApi(HTTPStatus.FORBIDDEN, "La struttura non è tra le tue")
+    return await misure_della_struttura(sessione, strutture, struttura_id, anno)
+
+
+async def misure_della_struttura(sessione, strutture: dict, struttura_id: str, anno: int) -> list[dict]:
+    """Le misure che la struttura dichiara nell'anno, con la dichiarazione se c'è (anche per la
+    pagina iniziale: quelle ancora da dichiarare)."""
     sotto = _sottostanti(strutture, struttura_id)
     dichiarazioni = {
         (d.misura_id, d.struttura_id): d

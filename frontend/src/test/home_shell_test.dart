@@ -10,6 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
+/// Una voce del menu laterale (la Home ripete i nomi dei moduli).
+Finder _nelMenu(String voce) => find.descendant(of: find.byType(NavigationRail), matching: find.text(voce));
+
 void main() {
   testWidgets('ogni selezione di una voce del menu ricarica la pagina', (tester) async {
     tester.view.physicalSize = const Size(1400, 900); // menu laterale
@@ -44,19 +47,20 @@ void main() {
     ));
     await tester.pumpAndSettle();
     int elenchi() => richieste.where((p) => p == '/api/v1/controllo/controlli').length;
-    expect(elenchi(), 0); // all'avvio è aperta la Libreria normativa
+    expect(elenchi(), 0); // all'avvio è aperta la Home
+    expect(richieste, contains('/api/v1/home'));
 
-    await tester.tap(find.text('Controllo atti'));
+    await tester.tap(_nelMenu('Controllo atti'));
     await tester.pumpAndSettle();
     expect(elenchi(), 1);
 
-    await tester.tap(find.text('Libreria normativa'));
+    await tester.tap(_nelMenu('Libreria normativa'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Controllo atti'));
+    await tester.tap(_nelMenu('Controllo atti'));
     await tester.pumpAndSettle();
     expect(elenchi(), 2); // tornando sulla voce i dati vengono richiesti di nuovo
 
-    await tester.tap(find.text('Controllo atti'));
+    await tester.tap(_nelMenu('Controllo atti'));
     await tester.pumpAndSettle();
     expect(elenchi(), 3); // anche riselezionando la voce già aperta
   });
@@ -88,6 +92,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await tester.tap(_nelMenu('Libreria normativa'));
+    await tester.pumpAndSettle();
     var richieste = 0;
     Navigator.of(tester.element(find.byType(LibreriaPage))).push(MaterialPageRoute(
       builder: (_) => PopScope(
@@ -98,9 +104,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('Dettaglio'), findsOneWidget);
-    expect(find.text('Controllo atti'), findsOneWidget); // il menu resta
+    expect(_nelMenu('Controllo atti'), findsOneWidget); // il menu resta
 
-    await tester.tap(find.text('Controllo atti'));
+    await tester.tap(_nelMenu('Controllo atti'));
     await tester.pumpAndSettle();
     expect(find.text('Dettaglio'), findsOneWidget); // non si perde nulla senza conferma
     expect(richieste, 1);
@@ -165,6 +171,43 @@ void main() {
     expect(find.text('SETTORE 2 - Risorse umane'), findsOneWidget);
     expect(find.text('Per cambiarla rivolgiti all\'amministratore.'), findsOneWidget);
     expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
+  });
+
+  testWidgets('la Home: saluto, messaggio dell\'ente, cose da fare che portano al modulo', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final richieste = <String>[];
+    final api = ApiClient('http://api.test', client: MockClient((r) async {
+      richieste.add(r.url.path);
+      final corpo = r.url.path.endsWith('/home')
+          ? {
+              'benvenuto': 'Entro il 31/01 il monitoraggio delle misure',
+              'da_fare': [
+                {'voce': 'Controllo atti', 'dove': null, 'numero': 2, 'testo': '2 sessioni di controllo aperte'},
+              ],
+            }
+          : <dynamic>[];
+      return http.Response(jsonEncode(corpo), 200, headers: {'content-type': 'application/json; charset=utf-8'});
+    }));
+    final utente = Utente.daJson({
+      'id': 'u1', 'username': 'prova', 'nome_completo': 'Maria Rossi', 'ruoli': ['CONTROLLORE'],
+      'ente': {'codice': 'prova', 'nome': 'Comune di Prova', 'moduli': ['redazione']},
+    });
+    final auth = AuthState(api)
+      ..utente = utente
+      ..stato = StatoAuth.autenticato;
+    await tester.pumpWidget(MultiProvider(
+      providers: [Provider<ApiClient>.value(value: api), ChangeNotifierProvider<AuthState>.value(value: auth)],
+      child: MaterialApp(home: HomeShell(utente: utente)),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.textContaining(', Maria Rossi'), findsOneWidget);
+    expect(find.text('Entro il 31/01 il monitoraggio delle misure', findRichText: true), findsOneWidget);
+    expect(find.text('I tuoi moduli'), findsOneWidget);
+    await tester.tap(find.text('2 sessioni di controllo aperte'));
+    await tester.pumpAndSettle();
+    expect(richieste, contains('/api/v1/controllo/controlli')); // aperto il modulo
   });
 
   testWidgets('la voce Assistenza del menu mostra il testo dell\'ente', (tester) async {

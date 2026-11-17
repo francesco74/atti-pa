@@ -129,9 +129,44 @@ class _StrutturePageState extends State<StrutturePage> {
     ];
     Widget campo(String k, String etichetta, {String? aiuto}) =>
         TextField(controller: recapiti[k], decoration: InputDecoration(labelText: etichetta, hintText: aiuto));
+    String? errore;
+    var salvataggio = false;
+    final api = apiDi(context);
+
+    /// Controlla i campi obbligatori e salva restando nella finestra: si chiude solo se il
+    /// salvataggio riesce, altrimenti l'errore si legge qui e i dati restano.
+    Future<void> salva(BuildContext c, void Function(VoidCallback) aggiorna) async {
+      final mancanti = [if (codice.text.trim().isEmpty) 'codice', if (descrizione.text.trim().isEmpty) 'descrizione'];
+      if (mancanti.isNotEmpty) return aggiorna(() => errore = 'Compila: ${mancanti.join(' e ')}');
+      final corpo = {
+        'codice': codice.text.trim(),
+        'descrizione': descrizione.text.trim(),
+        'padre_id': padreId,
+        'ordine': int.tryParse(ordine.text.trim()) ?? 0,
+        'attiva': attiva,
+        for (final e in recapiti.entries) e.key: e.value.text.trim().isEmpty ? null : e.value.text.trim(),
+        'orari': [
+          for (final o in orari)
+            if (o.any((c) => c.text.trim().isNotEmpty))
+              {'giorni': o[0].text.trim(), 'ora_inizio': o[1].text.trim(), 'ora_fine': o[2].text.trim()},
+        ],
+      };
+      aggiorna(() => (errore, salvataggio) = (null, true));
+      try {
+        if (nuova) {
+          await api.post('/api/v1/ente/strutture', corpo);
+        } else {
+          await api.put('/api/v1/ente/strutture/${s['id']}', corpo);
+        }
+        if (c.mounted) Navigator.pop(c, true);
+      } catch (e) {
+        if (c.mounted) aggiorna(() => (errore, salvataggio) = ('$e', false));
+      }
+    }
+
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => StatefulBuilder(
+      builder: (c) => LiberaAllaFine([codice, descrizione, ordine, ...recapiti.values, for (final o in orari) ...o], child: StatefulBuilder(
         builder: (c, aggiorna) => AlertDialog(
           title: Text(nuova ? 'Nuova struttura' : 'Struttura ${s['codice']}'),
           content: SizedBox(
@@ -140,9 +175,9 @@ class _StrutturePageState extends State<StrutturePage> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(
                   controller: codice,
-                  decoration: const InputDecoration(labelText: 'Codice', hintText: 'es. SETTORE 2, U.O. 2.1'),
+                  decoration: const InputDecoration(labelText: 'Codice *', hintText: 'es. SETTORE 2, U.O. 2.1'),
                 ),
-                TextField(controller: descrizione, decoration: const InputDecoration(labelText: 'Descrizione')),
+                TextField(controller: descrizione, decoration: const InputDecoration(labelText: 'Descrizione *')),
                 const SizedBox(height: 8),
                 SceltaStruttura(
                   strutture: tutte,
@@ -205,40 +240,18 @@ class _StrutturePageState extends State<StrutturePage> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
+            if (errore != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+              ),
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(onPressed: salvataggio ? null : () => salva(c, aggiorna), child: const Text('Salva')),
           ],
         ),
-      ),
+      )),
     );
-    final corpo = {
-      'codice': codice.text.trim(),
-      'descrizione': descrizione.text.trim(),
-      'padre_id': padreId,
-      'ordine': int.tryParse(ordine.text.trim()) ?? 0,
-      'attiva': attiva,
-      for (final e in recapiti.entries) e.key: e.value.text.trim().isEmpty ? null : e.value.text.trim(),
-      'orari': [
-        for (final o in orari)
-          if (o.any((c) => c.text.trim().isNotEmpty))
-            {'giorni': o[0].text.trim(), 'ora_inizio': o[1].text.trim(), 'ora_fine': o[2].text.trim()},
-      ],
-    };
-    for (final c in [codice, descrizione, ordine, ...recapiti.values, for (final o in orari) ...o]) {
-      c.dispose();
-    }
-    if (ok != true || !mounted) return;
-    try {
-      final api = apiDi(context);
-      if (nuova) {
-        await api.post('/api/v1/ente/strutture', corpo);
-      } else {
-        await api.put('/api/v1/ente/strutture/${s['id']}', corpo);
-      }
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok == true && mounted) _carica();
   }
 
   Future<void> _elimina(Map<String, dynamic> s) async {

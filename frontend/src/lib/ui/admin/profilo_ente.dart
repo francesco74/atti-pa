@@ -22,6 +22,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   Future<Uint8List>? _logo;
   final _caratteristiche = TextEditingController();
   final _assistenza = TextEditingController();
+  final _benvenuto = TextEditingController();
   final _dichiarazione = TextEditingController();
   bool _salvataggio = false;
 
@@ -35,6 +36,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
   void dispose() {
     _caratteristiche.dispose();
     _assistenza.dispose();
+    _benvenuto.dispose();
     _dichiarazione.dispose();
     super.dispose();
   }
@@ -46,6 +48,7 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
         final p = v as Map<String, dynamic>;
         _caratteristiche.text = p['caratteristiche'] as String? ?? '';
         _assistenza.text = p['assistenza'] as String? ?? '';
+        _benvenuto.text = p['benvenuto'] as String? ?? '';
         _dichiarazione.text = p['dichiarazione_accessibilita'] as String? ?? '';
         _logo = p['logo'] == true ? api.getBytes('/api/v1/ente/logo') : null;
         return p;
@@ -175,6 +178,32 @@ class _ProfiloEntePageState extends State<ProfiloEntePage> {
               alignment: Alignment.centerLeft,
               child: FilledButton.icon(
                 onPressed: _salvataggio ? null : () => _salva({'assistenza': _assistenza.text}),
+                icon: const Icon(Icons.save),
+                label: const Text('Salva'),
+              ),
+            ),
+          ]),
+        ),
+        Sezione(
+          titolo: 'Messaggio nella pagina iniziale',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('Compare in evidenza nella Home di tutti gli utenti dell\'ente, subito dopo l\'accesso: '
+                'per esempio una scadenza o un avviso. Indirizzi email e link diventano cliccabili. Vuoto: non compare.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _benvenuto,
+              minLines: 2,
+              maxLines: 6,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                labelText: 'Messaggio',
+                hintText: 'es. Entro il 31 gennaio va completato il monitoraggio delle misure anticorruzione',
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: _salvataggio ? null : () => _salva({'benvenuto': _benvenuto.text}),
                 icon: const Icon(Icons.save),
                 label: const Text('Salva'),
               ),

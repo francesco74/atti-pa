@@ -12,6 +12,7 @@ import 'ricerche/ricerche_page.dart';
 import 'assistente/assistente_page.dart';
 import 'comuni.dart';
 import 'configurazione/configurazione_page.dart';
+import 'home_page.dart';
 import 'bozze/bozze_page.dart';
 import 'controllo/controlli_page.dart';
 import 'libreria/libreria_page.dart';
@@ -92,7 +93,7 @@ class _HomeShellState extends State<HomeShell> {
     // ricerche registrate e feedback: oggi ci sono solo quelle della mappatura e dei procedimenti
     // (questi anche con la sola trasparenza)
     final ricerche = (anticorruzione || trasparenza) && u.isAnalisiRicerche;
-    return [
+    final moduli = [
       if (redazione && u.isRedattore) const _Voce('Le mie bozze', Icons.edit_document, BozzePage()),
       if (redazione && (u.isRedattore || u.isControllore || u.isGestoreModelli))
         const _Voce('Libreria normativa', Icons.menu_book, LibreriaPage()),
@@ -107,8 +108,15 @@ class _HomeShellState extends State<HomeShell> {
         _Voce('Assistente', Icons.chat_outlined, AssistentePage(conversazione: _conversazione)),
       if (ricerche) const _Voce('Ricerche e feedback', Icons.manage_search, RicerchePage()),
       if (u.isAdmin) const _Voce('Amministrazione', Icons.admin_panel_settings, AdminPage()),
-      if (!redazione && !trasparenza && !anticorruzione && !performance && !assistente && !ricerche && !u.isAdmin)
-        const _Voce('Benvenuto', Icons.home, _NessunModulo()),
+    ];
+    // la pagina iniziale, aperta dopo l'accesso: da lì si va ai moduli
+    return [
+      _Voce('Home', Icons.home_outlined, HomePage(
+        utente: u,
+        moduli: [for (final m in moduli) (m.etichetta, m.icona)],
+        onApri: (etichetta) => _seleziona(moduli.indexWhere((m) => m.etichetta == etichetta) + 1),
+      )),
+      ...moduli,
     ];
   }
 
@@ -392,19 +400,4 @@ class _PagineAperte extends NavigatorObserver {
     rotte.remove(oldRoute);
     if (newRoute != null) rotte.add(newRoute);
   }
-}
-
-class _NessunModulo extends StatelessWidget {
-  const _NessunModulo();
-
-  @override
-  Widget build(BuildContext context) => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Nessun modulo abilitato per il tuo ente o per i tuoi ruoli: rivolgiti all\'amministratore.',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
 }
