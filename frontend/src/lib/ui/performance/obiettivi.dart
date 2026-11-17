@@ -55,22 +55,19 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
   /// Nuovo obiettivo: diretto (approvatore) o proposta in bozza, da completare con le azioni
   /// e misure e inviare.
   Future<void> _nuovo(int disponibile, {required bool diretto}) async {
-    final v = await modificaObiettivo(context, disponibile: disponibile, nota: diretto);
-    if (v == null || !mounted) return;
+    final api = apiDi(context);
     final posizione = {'piao_id': _piaoId, 'anno': _anno, 'struttura_id': _strutturaId};
-    try {
-      if (diretto) {
-        final o = await apiDi(context).post('$apiPerformance/obiettivi', {...v, ...posizione}) as Map<String, dynamic>;
-        if (mounted) setState(() => _obiettivoId = o['id'] as String);
-        return;
-      }
-      final p = await apiDi(context).post('$apiPerformance/proposte', {'tipo': 'CREA', ...posizione, 'dati': v}) as Map<String, dynamic>;
-      if (!mounted) return;
-      await apriPropostaPf(context, p['id'] as String);
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    String? creato; // obiettivo (diretto) o proposta
+    await modificaObiettivo(context, disponibile: disponibile, nota: diretto, salva: (v) async {
+      final r = diretto
+          ? await api.post('$apiPerformance/obiettivi', {...v, ...posizione})
+          : await api.post('$apiPerformance/proposte', {'tipo': 'CREA', ...posizione, 'dati': v});
+      creato = (r as Map<String, dynamic>)['id'] as String;
+    });
+    if (creato == null || !mounted) return;
+    if (diretto) return setState(() => _obiettivoId = creato);
+    await apriPropostaPf(context, creato!);
+    _carica();
   }
 
   Widget _rigaProposta(Map<String, dynamic> p) => Card(
@@ -301,8 +298,8 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
   Future<void> _modifica(Map<String, dynamic> o) => _esegui(() async {
         final disponibile = await _disponibileObiettivi(o);
         if (!mounted) return;
-        final v = await modificaObiettivo(context, o: o, disponibile: disponibile);
-        if (v != null && mounted) await apiDi(context).put('$apiPerformance/obiettivi/${o['id']}', v);
+        final api = apiDi(context);
+        await modificaObiettivo(context, o: o, disponibile: disponibile, salva: (v) => api.put('$apiPerformance/obiettivi/${o['id']}', v));
       });
 
   Future<void> _elimina(Map<String, dynamic> o) async {
@@ -324,14 +321,17 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
           misura = await scegliMisura(context, o['struttura_id'] as String, {for (final x in elementi) ?x['voce_id'] as String?});
           if (misura == null || !mounted) return;
         }
-        final v = await modificaElemento(context,
-            tipo: tipo, misura: misura, disponibile: 100 - (o['impegno_elementi'] as int), anno: o['anno'] as int);
-        if (v == null || !mounted) return;
-        await apiDi(context).post('$apiPerformance/obiettivi/${o['id']}/elementi', {
-          ...v,
-          'tipo': tipo,
-          if (misura != null) 'voce_id': misura['id'],
-        });
+        final api = apiDi(context);
+        await modificaElemento(context,
+            tipo: tipo,
+            misura: misura,
+            disponibile: 100 - (o['impegno_elementi'] as int),
+            anno: o['anno'] as int,
+            salva: (v) => api.post('$apiPerformance/obiettivi/${o['id']}/elementi', {
+                  ...v,
+                  'tipo': tipo,
+                  if (misura != null) 'voce_id': misura['id'],
+                }));
       });
 
   /// Porta nell'obiettivo le radici di un processo o di un'attività della mappatura (voci delle
@@ -359,17 +359,18 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
       });
 
   Future<void> _modificaElemento(Map<String, dynamic> o, Map<String, dynamic> x) => _esegui(() async {
-        final v = await modificaElemento(context,
+        final api = apiDi(context);
+        await modificaElemento(context,
             tipo: x['tipo'] as String,
             x: x,
             disponibile: 100 - (o['impegno_elementi'] as int) + (x['impegno'] as int),
-            anno: o['anno'] as int);
-        if (v != null && mounted) await apiDi(context).put('$apiPerformance/elementi/${x['id']}', v);
+            anno: o['anno'] as int,
+            salva: (v) => api.put('$apiPerformance/elementi/${x['id']}', v));
       });
 
   Future<void> _avanzamento(Map<String, dynamic> x) => _esegui(() async {
-        final v = await aggiornaAvanzamento(context, x);
-        if (v != null && mounted) await apiDi(context).put('$apiPerformance/elementi/${x['id']}/avanzamento', v);
+        final api = apiDi(context);
+        await aggiornaAvanzamento(context, x, salva: (v) => api.put('$apiPerformance/elementi/${x['id']}/avanzamento', v));
       });
 
   Future<void> _apriProposta(String id) async {
@@ -378,23 +379,27 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
   }
 
   Future<void> _proponi(Map<String, dynamic> o, String tipo) async {
-    String? nota;
+    final api = apiDi(context);
+    Future<String> crea(String? nota) async => ((await api.post('$apiPerformance/proposte', {
+          'tipo': tipo,
+          'obiettivo_id': o['id'],
+          if (nota != null && nota.isNotEmpty) 'nota': nota,
+        })) as Map<String, dynamic>)['id'] as String;
+    String? creata;
     if (tipo == 'ELIMINA') {
-      nota = await chiediTesto(context, 'Proporre l\'eliminazione?',
+      // la proposta la crea la finestra del motivo, che si chiude solo se riesce
+      await chiediTesto(context, 'Proporre l\'eliminazione?',
           etichetta: 'Motivo',
-          testo: 'Si invia all\'approvatore la proposta di eliminare l\'obiettivo con le sue azioni e misure.');
-      if (nota == null || !mounted) return;
+          testo: 'Si invia all\'approvatore la proposta di eliminare l\'obiettivo con le sue azioni e misure.',
+          salva: (nota) async => creata = await crea(nota));
+    } else {
+      try {
+        creata = await crea(null);
+      } catch (e) {
+        if (mounted) mostraErrore(context, e);
+      }
     }
-    try {
-      final p = await apiDi(context).post('$apiPerformance/proposte', {
-        'tipo': tipo,
-        'obiettivo_id': o['id'],
-        if (nota != null && nota.isNotEmpty) 'nota': nota,
-      }) as Map<String, dynamic>;
-      if (mounted) await _apriProposta(p['id'] as String);
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (creata != null && mounted) await _apriProposta(creata!);
   }
 
   Future<void> _eliminaElemento(Map<String, dynamic> x) async {

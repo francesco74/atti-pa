@@ -61,16 +61,21 @@ Future<Map<String, dynamic>?> modificaArt35(
   List<Map<String, dynamic>> strutture,
   Map<String, dynamic>? art35, {
   Map<String, dynamic>? procedimento,
+  // salvataggio fatto dalla finestra: si chiude solo se riesce
+  Future<void> Function(Map<String, dynamic> art35)? salva,
 }) =>
     showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (_) => _FinestraArt35(strutture: strutture, art35: art35 ?? const {}, procedimento: procedimento ?? const {}),
+      builder: (_) =>
+          _FinestraArt35(strutture: strutture, art35: art35 ?? const {}, procedimento: procedimento ?? const {}, salva: salva),
     );
 
 final _reUrl = RegExp(r'^https?://\S+$', caseSensitive: false);
 
 class _FinestraArt35 extends StatefulWidget {
-  const _FinestraArt35({required this.strutture, required this.art35, required this.procedimento});
+  const _FinestraArt35({required this.strutture, required this.art35, required this.procedimento, this.salva});
+
+  final Future<void> Function(Map<String, dynamic> art35)? salva;
 
   final List<Map<String, dynamic>> strutture;
   final Map<String, dynamic> art35;
@@ -267,7 +272,9 @@ class _FinestraArt35State extends State<_FinestraArt35> {
     ]);
   }
 
-  void _salva() {
+  bool _salvataggio = false;
+
+  Future<void> _salva() async {
     final istanza = _v['istanza_di_parte'] == 'SI';
     String? t(String k) => _c[k]!.text.trim().isEmpty ? null : _c[k]!.text.trim();
     for (final (k, etichetta) in [
@@ -295,7 +302,24 @@ class _FinestraArt35State extends State<_FinestraArt35> {
         if (tenuto(k) && _v[k] != null) k: _v[k],
       if (orari.isNotEmpty) 'orari': orari,
     };
-    Navigator.pop(context, risultato);
+    if (widget.salva != null) {
+      setState(() {
+        _errore = null;
+        _salvataggio = true;
+      });
+      try {
+        await widget.salva!(risultato);
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _errore = '$e';
+            _salvataggio = false;
+          });
+        }
+        return;
+      }
+    }
+    if (mounted) Navigator.pop(context, risultato);
   }
 
   @override
@@ -378,8 +402,8 @@ class _FinestraArt35State extends State<_FinestraArt35> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),
-        FilledButton(onPressed: _salva, child: const Text('Salva')),
+        TextButton(onPressed: _salvataggio ? null : () => Navigator.pop(context), child: const Text('Annulla')),
+        FilledButton(onPressed: _salvataggio ? null : _salva, child: const Text('Salva')),
       ],
     );
   }

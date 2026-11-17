@@ -60,14 +60,9 @@ class _CatalogoTabState extends State<CatalogoTab> with AutomaticKeepAliveClient
 
   Future<void> _nuova() async {
     final dati = context.read<DatiAnticorruzione>();
-    final v = await modificaVoce(context, dati, _tipo);
-    if (v == null || !mounted) return;
-    try {
-      await apiDi(context).post(apiCatalogo, {...v, 'tipo': _tipo});
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    final api = apiDi(context);
+    final v = await modificaVoce(context, dati, _tipo, salva: (v) => api.post(apiCatalogo, {...v, 'tipo': _tipo}));
+    if (v != null && mounted) _carica();
   }
 
   Future<void> _apri(Map<String, dynamic> v) async {
@@ -159,9 +154,11 @@ class _Etichetta extends StatelessWidget {
 
 /// Testo e dati della voce: per le misure anche tipo, categoria, indicatore e target di
 /// partenza.
-Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzione d, String tipo, [Map<String, dynamic>? v]) {
+Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzione d, String tipo,
+    {Map<String, dynamic>? v, Future<void> Function(Map<String, dynamic>)? salva}) {
   final categoria = v?['categoria'] as String?;
   return modificaCampi(context,
+      salva: salva,
       titolo: v?['codice'] == null ? 'Nuova voce: ${_singolare[tipo]}' : 'Voce ${v!['codice']}',
       valori: {if (tipo == 'MISURA') 'tipo_misura': 'SPECIFICA', ...?v},
       campi: [
@@ -261,10 +258,12 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
 
   Future<void> _modifica(Map<String, dynamic> v) => _esegui(() async {
         final dati = context.read<DatiAnticorruzione>();
-        final nuovi = await modificaVoce(context, dati, v['tipo'] as String, v);
-        if (nuovi == null || !mounted) return;
-        if (!await confermaVoceUsata(context, v, 'Modificare una voce usata?', _restano) || !mounted) return;
-        await apiDi(context).put('$apiCatalogo/${v['id']}', {...nuovi, 'attiva': v['attiva'], 'conferma': true});
+        final api = apiDi(context);
+        // la conferma per la voce usata si chiede prima di salvare, con la finestra ancora aperta
+        await modificaVoce(context, dati, v['tipo'] as String, v: v, salva: (nuovi) async {
+          if (!await confermaVoceUsata(context, v, 'Modificare una voce usata?', _restano)) throw const Annullato();
+          await api.put('$apiCatalogo/${v['id']}', {...nuovi, 'attiva': v['attiva'], 'conferma': true});
+        });
       });
 
   Future<void> _attiva(Map<String, dynamic> v, bool attiva) => _esegui(() async {
@@ -466,24 +465,25 @@ class _SceltaVoceState extends State<_SceltaVoce> {
 
   /// La voce che manca: il RPCT la crea e la sceglie; il referente la propone.
   Future<void> _manca(bool rpct) async {
+    final api = apiDi(context);
+    Map<String, dynamic>? nuova;
+    // il salvataggio lo fa la finestra della voce: con un errore resta aperta
     final v = await modificaVoce(context, widget.dati!, widget.tipo,
-        _testo.text.trim().isEmpty ? null : {'descrizione': _testo.text.trim(), if (widget.tipo == 'MISURA') 'tipo_misura': 'SPECIFICA'});
+        v: _testo.text.trim().isEmpty ? null : {'descrizione': _testo.text.trim(), if (widget.tipo == 'MISURA') 'tipo_misura': 'SPECIFICA'},
+        salva: (v) async {
+          if (rpct) {
+            nuova = await api.post(apiCatalogo, {...v, 'tipo': widget.tipo}) as Map<String, dynamic>;
+          } else {
+            await api.post('$apiAnticorruzione/proposte', {'tipo': 'CREA', 'oggetto': 'VOCE', 'dati': {...v, 'tipo_voce': widget.tipo}});
+          }
+        });
     if (v == null || !mounted) return;
-    try {
-      final api = apiDi(context);
-      if (rpct) {
-        final nuova = await api.post(apiCatalogo, {...v, 'tipo': widget.tipo}) as Map<String, dynamic>;
-        if (mounted) Navigator.pop(context, nuova);
-        return;
-      }
-      await api.post('$apiAnticorruzione/proposte', {'tipo': 'CREA', 'oggetto': 'VOCE', 'dati': {...v, 'tipo_voce': widget.tipo}});
-      if (!mounted) return;
+    if (!rpct) {
       mostraMessaggio(context, 'Proposta della voce inviata al RPCT: quando la approva la trovi nel catalogo e la puoi scegliere.');
-      Navigator.pop(context);
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
     }
+    Navigator.pop(context, nuova);
   }
+
 
   @override
   Widget build(BuildContext context) {

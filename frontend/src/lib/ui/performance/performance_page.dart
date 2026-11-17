@@ -329,13 +329,16 @@ class _PiaoTabState extends State<PiaoTab> {
     }
   }
 
-  Future<Map<String, dynamic>?> _modulo({Map<String, dynamic>? p}) async {
+  /// Finestra del PIAO: il salvataggio lo fa [salva], la finestra si chiude solo se riesce.
+  Future<Map<String, dynamic>?> _modulo({Map<String, dynamic>? p, required Future<void> Function(Map<String, dynamic>) salva}) async {
     final anno = TextEditingController(text: '${p?['anno_inizio'] ?? DateTime.now().year}');
     final titolo = TextEditingController(text: p?['titolo'] as String? ?? '');
     final atto = TextEditingController(text: p?['atto'] as String? ?? '');
-    final risultato = await showDialog<Map<String, dynamic>>(
+    String? errore;
+    var salvataggio = false;
+    return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => LiberaAllaFine([anno, titolo, atto], child: StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
         title: Text(p == null ? 'Nuovo PIAO' : 'Modifica il PIAO'),
         content: SizedBox(
           width: 480,
@@ -348,40 +351,50 @@ class _PiaoTabState extends State<PiaoTab> {
               ),
             TextField(controller: titolo, decoration: const InputDecoration(labelText: 'Titolo', hintText: 'PIAO 2026-2028')),
             TextField(controller: atto, decoration: const InputDecoration(labelText: 'Atto di approvazione', hintText: 'DGC n. ... del ...')),
+            if (errore != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+              ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
-              final a = int.tryParse(anno.text.trim());
-              if (a == null || titolo.text.trim().isEmpty && p != null) return;
-              Navigator.pop(c, {
-                if (p == null) 'anno_inizio': a,
-                'titolo': titolo.text.trim().isEmpty ? 'PIAO $a-${a + 2}' : titolo.text.trim(),
-                'atto': atto.text.trim().isEmpty ? null : atto.text.trim(),
-              });
-            },
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    final a = int.tryParse(anno.text.trim());
+                    if (a == null) return aggiorna(() => errore = 'Il primo anno del triennio è un numero');
+                    if (titolo.text.trim().isEmpty && p != null) return aggiorna(() => errore = 'Il titolo è obbligatorio');
+                    final v = {
+                      if (p == null) 'anno_inizio': a,
+                      'titolo': titolo.text.trim().isEmpty ? 'PIAO $a-${a + 2}' : titolo.text.trim(),
+                      'atto': atto.text.trim().isEmpty ? null : atto.text.trim(),
+                    };
+                    if (await salvaDallaFinestra(c, () => salva(v), (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                        c.mounted) {
+                      Navigator.pop(c, v);
+                    }
+                  },
             child: const Text('Salva'),
           ),
         ],
-      ),
+      ))),
     );
-    for (final t in [anno, titolo, atto]) {
-      t.dispose();
-    }
-    return risultato;
   }
 
-  Future<void> _nuovo() => _esegui(() async {
-        final v = await _modulo();
-        if (v != null && mounted) await apiDi(context).post('$apiPerformance/piao', v);
-      });
+  Future<void> _nuovo() async {
+    final api = apiDi(context);
+    if (await _modulo(salva: (v) => api.post('$apiPerformance/piao', v)) != null) widget.onCambiato();
+  }
 
-  Future<void> _modifica(Map<String, dynamic> p) => _esegui(() async {
-        final v = await _modulo(p: p);
-        if (v != null && mounted) await apiDi(context).put('$apiPerformance/piao/${p['id']}', {...v, 'stato': p['stato']});
-      });
+  Future<void> _modifica(Map<String, dynamic> p) async {
+    final api = apiDi(context);
+    if (await _modulo(p: p, salva: (v) => api.put('$apiPerformance/piao/${p['id']}', {...v, 'stato': p['stato']})) != null) {
+      widget.onCambiato();
+    }
+  }
 
   Future<void> _cambiaStato(Map<String, dynamic> p) async {
     final chiudi = p['stato'] == 'APERTO';

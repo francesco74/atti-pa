@@ -64,15 +64,11 @@ class _ProcedimentiTabState extends State<ProcedimentiTab> with AutomaticKeepAli
   });
 
   Future<void> _nuovo(_Dati d) async {
-    final v = await modificaProcedimento(context, d.strutture);
-    if (v == null || !mounted) return;
-    try {
-      final p = await apiDi(context).post(apiProcedimenti, v) as Map<String, dynamic>;
-      if (!mounted) return;
-      await _apri(p['id'] as String);
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    final api = apiDi(context);
+    String? creato;
+    await modificaProcedimento(context, d.strutture,
+        salva: (v) async => creato = ((await api.post(apiProcedimenti, v)) as Map<String, dynamic>)['id'] as String);
+    if (creato != null && mounted) await _apri(creato!);
   }
 
   Future<void> _importa(_Dati d) async {
@@ -171,9 +167,11 @@ class _ProcedimentiTabState extends State<ProcedimentiTab> with AutomaticKeepAli
 
 /// Denominazione, descrizione, termine, norma e struttura responsabile del procedimento (i
 /// dati dell'art. 35 hanno la loro finestra).
-Future<Map<String, dynamic>?> modificaProcedimento(BuildContext context, List<Map<String, dynamic>> strutture, [Map<String, dynamic>? p]) =>
+Future<Map<String, dynamic>?> modificaProcedimento(BuildContext context, List<Map<String, dynamic>> strutture,
+        {Map<String, dynamic>? p, Future<void> Function(Map<String, dynamic>)? salva}) =>
     modificaCampi(
       context,
+      salva: salva,
       titolo: p == null ? 'Nuovo procedimento' : 'Procedimento ${p['codice']}',
       valori: p ?? const {},
       campi: [
@@ -222,18 +220,12 @@ class _ProcedimentoPageState extends State<ProcedimentoPage> {
     );
   });
 
-  /// Salva i dati generali e quelli dell'art. 35 (quelli non indicati restano).
-  Future<void> _salva(Map<String, dynamic> p, Map<String, dynamic> modifiche) async {
-    try {
-      await apiDi(context).put(_url, {
+  /// Salva i dati generali o quelli dell'art. 35 (quelli non indicati restano); l'errore passa a
+  /// chi chiama (la finestra lo mostra).
+  Future<void> _scrivi(Map<String, dynamic> p, Map<String, dynamic> modifiche) => apiDi(context).put(_url, {
         for (final k in const ['denominazione', 'descrizione', 'termine_conclusione', 'norma_riferimento', 'struttura_id']) k: p[k],
         ...modifiche,
       });
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
-  }
 
   Future<void> _elimina(Map<String, dynamic> p) async {
     if (!await conferma(context, 'Eliminare il procedimento?', '${p['codice']} - ${p['denominazione']}') || !mounted) return;
@@ -259,8 +251,8 @@ class _ProcedimentoPageState extends State<ProcedimentoPage> {
             actions: [
               if (modificabile) ...[
                 IconaAzione(Icons.edit_outlined, 'Modifica', () async {
-                  final v = await modificaProcedimento(context, d.strutture, p);
-                  if (v != null && context.mounted) await _salva(p, v);
+                  final v = await modificaProcedimento(context, d.strutture, p: p, salva: (v) => _scrivi(p, v));
+                  if (v != null && mounted) _carica();
                 }),
                 IconaAzione(Icons.delete_outline, 'Elimina', () => _elimina(p)),
               ],
@@ -292,8 +284,10 @@ class _ProcedimentoPageState extends State<ProcedimentoPage> {
                 mancanti: List<String>.from(p['art35_mancanti'] as List? ?? const []),
                 onModifica: modificabile
                     ? () async {
-                        final v = await modificaArt35(context, d.strutture, (p['art35'] as Map?)?.cast<String, dynamic>(), procedimento: p);
-                        if (v != null && context.mounted) await _salva(p, {'art35': v});
+                        // il salvataggio lo fa la finestra: con un errore resta aperta
+                        final v = await modificaArt35(context, d.strutture, (p['art35'] as Map?)?.cast<String, dynamic>(),
+                            procedimento: p, salva: (v) => _scrivi(p, {'art35': v}));
+                        if (v != null && mounted) _carica();
                       }
                     : null,
               ),

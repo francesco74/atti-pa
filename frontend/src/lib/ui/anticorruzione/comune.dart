@@ -277,6 +277,9 @@ Future<Map<String, dynamic>?> modificaCampi(
   required List<Campo> campi,
   Map<String, dynamic> valori = const {},
   String? nota, // spiegazione sopra i campi (es. la voce del catalogo)
+  // salvataggio fatto dalla finestra: si chiude solo se riesce, altrimenti l'errore si legge
+  // nella finestra e i dati restano
+  Future<void> Function(Map<String, dynamic> valori)? salva,
 }) async {
   final testi = {
     for (final c in campi)
@@ -291,6 +294,12 @@ Future<Map<String, dynamic>?> modificaCampi(
       if (c.multipla) c.chiave: [...((valori[c.chiave] as List?) ?? const []).cast<String>()],
   };
   String? errore;
+  var salvataggio = false;
+  Map<String, dynamic> risultato() => {
+        for (final e in testi.entries) e.key: testoOppureNull(e.value),
+        ...scelte,
+        ...multiple,
+      };
   final ok = await showDialog<bool>(
     context: context,
     // i campi si liberano quando la finestra è sparita, non appena si chiude: l'animazione di
@@ -336,28 +345,37 @@ Future<Map<String, dynamic>?> modificaCampi(
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
-              final mancanti = campi.where((x) => x.obbligatorio && x.scelte == null && testi[x.chiave]!.text.trim().isEmpty);
-              if (mancanti.isNotEmpty) {
-                aggiorna(() => errore = 'Compila: ${mancanti.map((x) => x.etichetta).join(', ')}');
-                return;
-              }
-              Navigator.pop(c, true);
-            },
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    final mancanti = campi.where((x) => x.obbligatorio && x.scelte == null && testi[x.chiave]!.text.trim().isEmpty);
+                    if (mancanti.isNotEmpty) {
+                      aggiorna(() => errore = 'Compila: ${mancanti.map((x) => x.etichetta).join(', ')}');
+                      return;
+                    }
+                    if (salva != null) {
+                      aggiorna(() => (errore, salvataggio) = (null, true));
+                      try {
+                        await salva(risultato());
+                      } on Annullato {
+                        if (c.mounted) aggiorna(() => salvataggio = false);
+                        return;
+                      } catch (e) {
+                        if (c.mounted) aggiorna(() => (errore, salvataggio) = ('$e', false));
+                        return;
+                      }
+                    }
+                    if (c.mounted) Navigator.pop(c, true);
+                  },
             child: const Text('Salva'),
           ),
         ],
       ),
     )),
   );
-  final risultato = <String, dynamic>{
-    for (final e in testi.entries) e.key: testoOppureNull(e.value),
-    ...scelte,
-    ...multiple,
-  };
-  return ok == true ? risultato : null;
+  return ok == true ? risultato() : null;
 }
 
 /// Il testo per riconoscere le voci uguali (come il server): senza differenze di maiuscole,

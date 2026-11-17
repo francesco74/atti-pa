@@ -138,9 +138,13 @@ class _NormeState extends State<_Norme> {
     String tipo = 'decreto legislativo';
     DateTime? data;
     final numero = TextEditingController();
+    final api = apiDi(context);
+    String? errore;
+    var salvataggio = false;
+    // la norma la aggiunge la finestra (dopo la verifica su Normattiva), che si chiude solo se riesce
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => StatefulBuilder(
+      builder: (c) => LiberaAllaFine([numero], child: StatefulBuilder(
         builder: (c, aggiorna) => AlertDialog(
           title: const Text('Aggiungi norma'),
           content: SizedBox(
@@ -165,28 +169,34 @@ class _NormeState extends State<_Norme> {
                 },
               ),
               TextField(controller: numero, decoration: const InputDecoration(labelText: 'Numero')),
+              if (errore != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                ),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Verifica e aggiungi')),
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(
+              onPressed: salvataggio
+                  ? null
+                  : () async {
+                      if (data == null) return aggiorna(() => errore = 'Indica la data del provvedimento');
+                      final v = {'tipo': tipo, 'data': isoData(data!), 'numero': numero.text.trim()};
+                      if (await salvaDallaFinestra(c, () => api.post('/api/v1/norme', v),
+                              (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                          c.mounted) {
+                        Navigator.pop(c, true);
+                      }
+                    },
+              child: Text(salvataggio ? 'Verifica in corso…' : 'Verifica e aggiungi'),
+            ),
           ],
         ),
-      ),
+      )),
     );
-    if (ok != true || data == null || !mounted) return;
-    try {
-      await apiDi(context).post('/api/v1/norme', {
-        'tipo': tipo,
-        'data': isoData(data!),
-        'numero': numero.text.trim(),
-      });
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    } finally {
-      numero.dispose();
-    }
+    if (ok == true && mounted) _carica();
   }
 
   @override
@@ -291,9 +301,12 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
     final utente = context.read<AuthState>().utente!;
     final note = TextEditingController();
     var condiviso = false;
+    final api = apiDi(context);
+    String? errore;
+    var salvataggio = false;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => StatefulBuilder(
+      builder: (c) => LiberaAllaFine([note], child: StatefulBuilder(
         builder: (c, aggiorna) => AlertDialog(
           title: const Text('Salva come riferimento'),
           content: SizedBox(
@@ -310,31 +323,40 @@ class _ConsultaArticoloState extends State<ConsultaArticolo> {
                   title: const Text('Condividi con tutti gli utenti'),
                   onChanged: (v) => aggiorna(() => condiviso = v ?? false),
                 ),
+              if (errore != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                ),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(
+              onPressed: salvataggio
+                  ? null
+                  : () async {
+                      final v = {
+                        'urn_atto': art['urn_atto'],
+                        'articolo': art['articolo'],
+                        'comma': comma,
+                        'lettera': lettera,
+                        'note': note.text.trim().isEmpty ? null : note.text.trim(),
+                        'condiviso': condiviso,
+                      };
+                      if (await salvaDallaFinestra(c, () => api.post('/api/v1/riferimenti', v),
+                              (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                          c.mounted) {
+                        Navigator.pop(c, true);
+                      }
+                    },
+              child: const Text('Salva'),
+            ),
           ],
         ),
-      ),
+      )),
     );
-    if (ok != true || !mounted) return;
-    try {
-      await apiDi(context).post('/api/v1/riferimenti', {
-        'urn_atto': art['urn_atto'],
-        'articolo': art['articolo'],
-        'comma': comma,
-        'lettera': lettera,
-        'note': note.text.trim().isEmpty ? null : note.text.trim(),
-        'condiviso': condiviso,
-      });
-      if (mounted) mostraMessaggio(context, 'Riferimento salvato in libreria');
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    } finally {
-      note.dispose();
-    }
+    if (ok == true && mounted) mostraMessaggio(context, 'Riferimento salvato in libreria');
   }
 
   @override

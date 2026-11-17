@@ -137,11 +137,16 @@ class _HomeShellState extends State<HomeShell> {
     final attuale = TextEditingController();
     final nuova = TextEditingController();
     final ripeti = TextEditingController();
+    final auth = context.read<AuthState>();
+    String? errore;
+    var salvataggio = false;
+    // il cambio lo fa la finestra, che si chiude solo se riesce (una password sbagliata si corregge lì)
     final ok = await showDialog<bool>(
       context: context,
       // PointerInterceptor: la finestra può aprirsi sopra l'editor della trasparenza (un
       // iframe), che altrimenti riceverebbe i clic
-      builder: (c) => PointerInterceptor(child: AlertDialog(
+      builder: (c) => LiberaAllaFine([attuale, nuova, ripeti], child: PointerInterceptor(child: StatefulBuilder(
+          builder: (c, aggiorna) => AlertDialog(
         title: const Text('Cambia la password'),
         content: SizedBox(
           width: 380,
@@ -157,29 +162,32 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ),
             TextField(controller: ripeti, obscureText: true, decoration: const InputDecoration(labelText: 'Ripeti la nuova password')),
+            if (errore != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+              ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Cambia')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+          FilledButton(
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    if (nuova.text != ripeti.text) return aggiorna(() => errore = 'Le due password nuove non coincidono');
+                    if (await salvaDallaFinestra(c, () => auth.cambiaPassword(attuale.text, nuova.text),
+                            (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                        c.mounted) {
+                      Navigator.pop(c, true);
+                    }
+                  },
+            child: const Text('Cambia'),
+          ),
         ],
-      )),
+      )))),
     );
-    final valori = (attuale.text, nuova.text, ripeti.text);
-    attuale.dispose();
-    nuova.dispose();
-    ripeti.dispose();
-    if (ok != true || !mounted) return;
-    if (valori.$2 != valori.$3) {
-      mostraErrore(context, 'Le due password nuove non coincidono');
-      return;
-    }
-    try {
-      await context.read<AuthState>().cambiaPassword(valori.$1, valori.$2);
-      if (mounted) mostraMessaggio(context, 'Password cambiata: le altre sessioni sono state chiuse');
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok == true && mounted) mostraMessaggio(context, 'Password cambiata: le altre sessioni sono state chiuse');
   }
 
   String _iniziale(String nome) => nome.isEmpty ? '?' : nome.substring(0, 1).toUpperCase();
@@ -200,10 +208,13 @@ class _HomeShellState extends State<HomeShell> {
     String nome(Map<String, dynamic> s) => '${s['codice']} - ${s['descrizione']}';
     final assegnata = strutture.where((s) => s['id'] == utente.strutturaId).firstOrNull;
     String? scelta;
+    final auth = context.read<AuthState>();
+    String? errore;
+    var salvataggio = false;
     final ok = await showDialog<bool>(
       context: context,
       // PointerInterceptor: come sopra, la finestra può aprirsi sopra l'editor della trasparenza
-      builder: (c) => PointerInterceptor(child: StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
+      builder: (c) => LiberaAllaFine([ufficio, decreto], child: PointerInterceptor(child: StatefulBuilder(builder: (c, aggiorna) => AlertDialog(
         title: const Text('Il mio profilo'),
         content: SizedBox(
           width: 420,
@@ -257,26 +268,34 @@ class _HomeShellState extends State<HomeShell> {
                 helperMaxLines: 2,
               ),
             ),
+            if (errore != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+              ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+          FilledButton(
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    if (await salvaDallaFinestra(
+                            c,
+                            () => auth.aggiornaProfilo(
+                                ufficio: ufficio.text.trim(), decretoIncarico: decreto.text.trim(), strutturaId: scelta),
+                            (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                        c.mounted) {
+                      Navigator.pop(c, true);
+                    }
+                  },
+            child: const Text('Salva'),
+          ),
         ],
-      ))),
+      )))),
     );
-    if (ok == true && mounted) {
-      try {
-        await context
-            .read<AuthState>()
-            .aggiornaProfilo(ufficio: ufficio.text.trim(), decretoIncarico: decreto.text.trim(), strutturaId: scelta);
-        if (mounted) mostraMessaggio(context, 'Profilo aggiornato');
-      } catch (e) {
-        if (mounted) mostraErrore(context, e);
-      }
-    }
-    ufficio.dispose();
-    decreto.dispose();
+    if (ok == true && mounted) mostraMessaggio(context, 'Profilo aggiornato');
   }
 
   @override

@@ -729,27 +729,50 @@ class _EditorModelloPageState extends State<EditorModelloPage> with EditorConfig
   }
 
   Future<void> _gestisciProposta(Map<String, dynamic> p, String stato) async {
-    String? nota;
+    final api = apiDi(context);
+    Future<void> salva(String? nota) => api.put('/api/v1/proposte/${p['id']}', {'stato': stato, 'nota': nota});
     if (stato == 'RESPINTA') {
+      // il rifiuto lo salva la finestra del motivo, che si chiude solo se riesce
       final controller = TextEditingController();
+      String? errore;
+      var salvataggio = false;
       final ok = await showDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Respingere la proposta?'),
-          content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Motivo (facoltativo)')),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Respingi')),
-          ],
-        ),
+        builder: (c) => LiberaAllaFine([controller], child: StatefulBuilder(
+          builder: (c, aggiorna) => AlertDialog(
+            title: const Text('Respingere la proposta?'),
+            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              TextField(controller: controller, decoration: const InputDecoration(labelText: 'Motivo (facoltativo)')),
+              if (errore != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                ),
+            ]),
+            actions: [
+              TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+              FilledButton(
+                onPressed: salvataggio
+                    ? null
+                    : () async {
+                        final nota = controller.text.trim();
+                        if (await salvaDallaFinestra(c, () => salva(nota.isEmpty ? null : nota),
+                                (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                            c.mounted) {
+                          Navigator.pop(c, true);
+                        }
+                      },
+                child: const Text('Respingi'),
+              ),
+            ],
+          ),
+        )),
       );
-      nota = controller.text.trim().isEmpty ? null : controller.text.trim();
-      controller.dispose();
-      if (ok != true) return;
+      if (ok == true && mounted) await _caricaProposte();
+      return;
     }
-    if (!mounted) return;
     try {
-      await apiDi(context).put('/api/v1/proposte/${p['id']}', {'stato': stato, 'nota': nota});
+      await salva(null);
       await _caricaProposte();
     } catch (e) {
       if (mounted) mostraErrore(context, e);

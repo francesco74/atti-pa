@@ -8,6 +8,32 @@ import '../config.dart';
 
 ApiClient apiDi(BuildContext context) => context.read<ApiClient>();
 
+/// Il salvataggio fatto da una finestra si ferma senza errore (es. l'utente non conferma): la
+/// finestra resta aperta così com'è.
+class Annullato implements Exception {
+  const Annullato();
+}
+
+/// Il salvataggio fatto da una finestra ([salva] null: niente da salvare): [stato] riceve
+/// l'errore da mostrare nella finestra e se il salvataggio è in corso (pulsanti disattivati).
+/// true se è riuscito e la finestra è ancora aperta, cioè si può chiudere; altrimenti resta
+/// aperta con i dati inseriti.
+Future<bool> salvaDallaFinestra(
+    BuildContext c, Future<void> Function()? salva, void Function(String? errore, bool inCorso) stato) async {
+  if (salva == null) return true;
+  stato(null, true);
+  try {
+    await salva();
+  } on Annullato {
+    if (c.mounted) stato(null, false);
+    return false;
+  } catch (e) {
+    if (c.mounted) stato('$e', false);
+    return false;
+  }
+  return c.mounted;
+}
+
 /// Libera i campi di testo quando il widget sparisce: si mette intorno al contenuto di una
 /// finestra, perché l'animazione di chiusura li usa ancora dopo che la finestra ha risposto.
 class LiberaAllaFine extends StatefulWidget {

@@ -200,13 +200,23 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
   List<Map<String, dynamic>> get _elementi =>
       [for (final x in (_p!['dati'] as Map)['elementi'] as List) Map<String, dynamic>.from(x as Map)];
 
-  Future<void> _salva(Map<String, dynamic> dati) =>
-      _esegui(() => apiDi(context).put(_base, {'dati': dati, 'nota': _p!['nota']}));
+  Future<void> _salva(Map<String, dynamic> dati) => _esegui(() => _scrivi(dati));
+
+  Future<Object?> _scrivi(Map<String, dynamic> dati) => apiDi(context).put(_base, {'dati': dati, 'nota': _p!['nota']});
+
+  /// Operazione fatta da una finestra, che la esegue con la funzione che riceve (l'errore lo
+  /// mostra la finestra, che resta aperta); riuscita, il risultato si mostra come in [_esegui].
+  Future<void> _daFinestra(Future<void> Function(Future<void> Function(Future<Object?> Function()) esegui) finestra,
+      {String? messaggio}) async {
+    (Object?,)? esito;
+    await finestra((azione) async => esito = (await azione(),));
+    if (esito != null && mounted) await _esegui(() async => esito!.$1, messaggio: messaggio);
+  }
 
   Future<void> _modificaObiettivo() async {
     final d = _dati;
-    final v = await modificaObiettivo(context, o: d, disponibile: _p!['disponibile'] as int, nota: false);
-    if (v != null && mounted) await _salva({...d, ...v});
+    await _daFinestra((esegui) => modificaObiettivo(context,
+        o: d, disponibile: _p!['disponibile'] as int, nota: false, salva: (v) => esegui(() => _scrivi({...d, ...v}))));
   }
 
   Future<void> _nuovoElemento(String tipo) async {
@@ -216,13 +226,20 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
       misura = await scegliMisura(context, _p!['struttura_id'] as String, {for (final x in elementi) ?x['voce_id'] as String?});
       if (misura == null || !mounted) return;
     }
-    final v = await modificaElemento(context,
-        tipo: tipo, misura: misura, disponibile: 100 - (_p!['impegno_elementi'] as int), anno: _p!['anno'] as int, proposta: true);
-    if (v == null || !mounted) return;
-    await _salva({
-      ..._dati,
-      'elementi': [...elementi, {...v, 'tipo': tipo, if (misura != null) 'voce_id': misura['id'], if (misura != null) 'voce_codice': misura['codice']}],
-    });
+    final dati = _dati;
+    await _daFinestra((esegui) => modificaElemento(context,
+        tipo: tipo,
+        misura: misura,
+        disponibile: 100 - (_p!['impegno_elementi'] as int),
+        anno: _p!['anno'] as int,
+        proposta: true,
+        salva: (v) => esegui(() => _scrivi({
+              ...dati,
+              'elementi': [
+                ...elementi,
+                {...v, 'tipo': tipo, if (misura != null) 'voce_id': misura['id'], if (misura != null) 'voce_codice': misura['codice']},
+              ],
+            }))));
   }
 
   /// Porta nella proposta le radici di un processo o di un'attività della mappatura (voci delle
@@ -238,17 +255,17 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
   }
 
   Future<void> _modificaElemento(Map<String, dynamic> x) async {
-    final v = await modificaElemento(context,
+    final dati = _dati, elementi = _elementi;
+    await _daFinestra((esegui) => modificaElemento(context,
         tipo: x['tipo'] as String,
         x: x,
         disponibile: 100 - (_p!['impegno_elementi'] as int) + (x['impegno'] as int),
         anno: _p!['anno'] as int,
-        proposta: true);
-    if (v == null || !mounted) return;
-    await _salva({
-      ..._dati,
-      'elementi': [for (final e in _elementi) e['id'] == x['id'] ? {...e, ...v} : e],
-    });
+        proposta: true,
+        salva: (v) => esegui(() => _scrivi({
+              ...dati,
+              'elementi': [for (final e in elementi) e['id'] == x['id'] ? {...e, ...v} : e],
+            }))));
   }
 
   Future<void> _togliElemento(Map<String, dynamic> x) async {
@@ -262,12 +279,14 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
 
   Future<void> _invia() async {
     final p = _p!;
-    final nota = await chiediTesto(context, p['stato'] == 'RESTITUITA' ? 'Reinvia la proposta corretta' : 'Invia la proposta',
-        etichetta: 'Nota per l\'approvatore',
-        testo: 'Finché non è decisa la proposta si può ritirare.',
-        iniziale: p['nota'] as String?);
-    if (nota == null || !mounted) return;
-    await _esegui(() => apiDi(context).post('$_base/invia', {'nota': nota}), messaggio: 'Proposta inviata all\'approvatore');
+    final api = apiDi(context);
+    await _daFinestra(
+        (esegui) => chiediTesto(context, p['stato'] == 'RESTITUITA' ? 'Reinvia la proposta corretta' : 'Invia la proposta',
+            etichetta: 'Nota per l\'approvatore',
+            testo: 'Finché non è decisa la proposta si può ritirare.',
+            iniziale: p['nota'] as String?,
+            salva: (nota) => esegui(() => api.post('$_base/invia', {'nota': nota}))),
+        messaggio: 'Proposta inviata all\'approvatore');
   }
 
   Future<void> _ritira() async {
@@ -294,17 +313,22 @@ class _PropostaPfPageState extends State<PropostaPfPage> {
           '(l\'avanzamento resta). Approvare comunque?');
       if (!forza || !mounted) return;
     }
-    final motivazione = await chiediTesto(context, 'Approva la proposta', etichetta: 'Motivazione');
-    if (motivazione == null || !mounted) return;
-    await _esegui(
-        () => apiDi(context).post('$_base/approva', {'motivazione': motivazione.isEmpty ? null : motivazione, 'forza': forza}),
+    final api = apiDi(context);
+    await _daFinestra(
+        (esegui) => chiediTesto(context, 'Approva la proposta',
+            etichetta: 'Motivazione',
+            salva: (motivazione) => esegui(() =>
+                api.post('$_base/approva', {'motivazione': motivazione.isEmpty ? null : motivazione, 'forza': forza}))),
         messaggio: 'Proposta approvata: l\'obiettivo è aggiornato');
   }
 
   Future<void> _decidi(String azione, String titolo, String testo) async {
-    final motivazione = await chiediTesto(context, titolo, etichetta: 'Motivazione', testo: testo, obbligatoria: true);
-    if (motivazione == null || !mounted) return;
-    await _esegui(() => apiDi(context).post('$_base/$azione', {'motivazione': motivazione}));
+    final api = apiDi(context);
+    await _daFinestra((esegui) => chiediTesto(context, titolo,
+        etichetta: 'Motivazione',
+        testo: testo,
+        obbligatoria: true,
+        salva: (motivazione) => esegui(() => api.post('$_base/$azione', {'motivazione': motivazione}))));
   }
 
   Widget _cambiamenti(Map<String, dynamic> campi, TextStyle? stile) => Column(

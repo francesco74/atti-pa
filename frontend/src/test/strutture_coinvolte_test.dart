@@ -26,7 +26,7 @@ void main() {
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () async => risultato = await modificaProcesso(context, dati, {
+            onPressed: () async => risultato = await modificaProcesso(context, dati, p: {
               'codice': 'C.1', 'tipo': 'PROCESSO', 'denominazione': 'Gare', 'struttura_id': 's1', 'coinvolte': ['s3'],
             }),
             child: const Text('apri'),

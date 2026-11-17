@@ -243,16 +243,18 @@ List<(String?, String)> _scelteCoinvolte(DatiAnticorruzione d, Object? gia) {
 }
 
 /// Area di rischio (il codice lo assegna il sistema; l'elenco segue la descrizione breve).
-Future<Map<String, dynamic>?> modificaArea(BuildContext context, [Map<String, dynamic>? a]) =>
-    modificaCampi(context, titolo: a?['codice'] == null ? 'Nuova area di rischio' : 'Area ${a!['codice']}', valori: a ?? const {}, campi: const [
+/// Le finestre degli elementi: con [salva] il salvataggio lo fa la finestra, che si chiude solo
+/// se riesce (altrimenti l'errore si legge nella finestra e i dati restano).
+Future<Map<String, dynamic>?> modificaArea(BuildContext context, {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva}) =>
+    modificaCampi(context, salva: salva, titolo: a?['codice'] == null ? 'Nuova area di rischio' : 'Area ${a!['codice']}', valori: a ?? const {}, campi: const [
       Campo('descrizione', 'Descrizione', righe: 3, obbligatorio: true),
       Campo('descrizione_breve', 'Descrizione breve', aiuto: 'Le aree si elencano in ordine alfabetico di questa'),
     ]);
 
 /// Processo o procedimento (il codice lo assegna il sistema dall'area, es. C.11). Termine di
 /// conclusione e norma di riferimento valgono per i procedimenti.
-Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? p]) =>
-    modificaCampi(context, titolo: p?['codice'] == null ? 'Nuovo processo o procedimento' : '${etichettaTipo(p!['tipo'])} ${p['codice']}', valori: {'tipo': 'PROCESSO', ...?p}, campi: [
+Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? p, Future<void> Function(Map<String, dynamic>)? salva}) =>
+    modificaCampi(context, salva: salva, titolo: p?['codice'] == null ? 'Nuovo processo o procedimento' : '${etichettaTipo(p!['tipo'])} ${p['codice']}', valori: {'tipo': 'PROCESSO', ...?p}, campi: [
       const Campo('tipo', 'Tipo', scelte: [('PROCESSO', 'Processo'), ('PROCEDIMENTO', 'Procedimento')]),
       Campo('area_id', 'Area di rischio', scelte: [
         (null, 'Nessuna'),
@@ -282,10 +284,12 @@ String? _notaVoce(Map? voce) => voce == null
 Future<Map<String, dynamic>?> _voce(BuildContext context, DatiAnticorruzione d, String tipo, Map? el) async =>
     el == null ? await scegliVoce(context, tipo, dati: d) : (el['voce'] as Map?)?.cast<String, dynamic>();
 
-Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? a]) async {
+Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva}) async {
   final voce = await _voce(context, d, 'ATTIVITA', a);
   if (a == null && voce == null || !context.mounted) return null;
+  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {...v, if (a == null) 'voce_id': voce!['id'], if (a == null) 'voce': voce};
   final v = await modificaCampi(context,
+      salva: salva == null ? null : (v) => salva(conVoce(v)),
       titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}',
       valori: a ?? {'descrizione': voce!['descrizione']},
       nota: _notaVoce(voce),
@@ -294,14 +298,16 @@ Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticor
         Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
         const Campo('strutture_coinvolte', 'Note sulle strutture coinvolte', righe: 2),
       ]);
-  return v == null ? null : {...v, if (a == null) 'voce_id': voce!['id'], if (a == null) 'voce': voce};
+  return v == null ? null : conVoce(v);
 }
 
-Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? r]) async {
+Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? r, Future<void> Function(Map<String, dynamic>)? salva}) async {
   final voce = await _voce(context, d, 'RISCHIO', r);
   if (r == null && voce == null || !context.mounted) return null;
+  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {...v, if (r == null) 'voce_id': voce!['id'], if (r == null) 'voce': voce};
   final attuale = r?['fattore_abilitante'] as String?;
   final v = await modificaCampi(context,
+      salva: salva == null ? null : (v) => salva(conVoce(v)),
       titolo: r?['codice'] == null ? 'Nuovo rischio' : 'Rischio ${r!['codice']}',
       valori: r ?? {'evento': voce!['descrizione']},
       nota: _notaVoce(voce),
@@ -313,12 +319,13 @@ Future<Map<String, dynamic>?> modificaRischio(BuildContext context, DatiAnticorr
       if (attuale != null && !d.fattori.contains(attuale)) (attuale, attuale),
     ]),
   ]);
-  return v == null ? null : {...v, if (r == null) 'voce_id': voce!['id'], if (r == null) 'voce': voce};
+  return v == null ? null : conVoce(v);
 }
 
-Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorruzione d, [Map<String, dynamic>? m]) async {
+Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? m, Future<void> Function(Map<String, dynamic>)? salva}) async {
   final voce = await _voce(context, d, 'MISURA', m);
   if (m == null && voce == null || !context.mounted) return null;
+  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {...v, if (m == null) 'voce_id': voce!['id'], if (m == null) 'voce': voce};
   // dalla voce: testo, tipo, categoria, indicatore e target di partenza
   final valori = m ??
       {
@@ -330,6 +337,7 @@ Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorru
       };
   final categoria = valori['categoria'] as String?;
   final v = await modificaCampi(context,
+      salva: salva == null ? null : (v) => salva(conVoce(v)),
       titolo: m?['codice'] == null ? 'Nuova misura' : 'Misura ${m!['codice']}',
       valori: {'tipo': 'SPECIFICA', ...valori},
       nota: _notaVoce(voce),
@@ -351,12 +359,13 @@ Future<Map<String, dynamic>?> modificaMisura(BuildContext context, DatiAnticorru
     const Campo('indicatore', 'Indicatore', righe: 2),
     const Campo('target', 'Target', righe: 2),
   ]);
-  return v == null ? null : {...v, if (m == null) 'voce_id': voce!['id'], if (m == null) 'voce': voce};
+  return v == null ? null : conVoce(v);
 }
 
 /// Valutazione del rischio: un valore per indicatore, probabilità e impatto calcolati (moda,
 /// a parità il più alto) con la correzione facoltativa motivata, livello dalla matrice.
-Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruzione d, Map<String, dynamic> r) async {
+Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruzione d, Map<String, dynamic> r,
+    {Future<void> Function(Map<String, dynamic>)? salva}) async {
   final v = (r['valutazione'] as Map?)?.cast<String, dynamic>() ?? const {};
   final prob = <String, String>{
     for (final i in d.indicatoriProbabilita)
@@ -396,9 +405,28 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
           ),
       ]);
 
+  var salvataggio = false;
+  Map<String, dynamic> risultato() {
+    final pCalc = d.moda(prob.values), iCalc = d.moda(imp.values);
+    final corretta = (pCorr != null && pCorr != pCalc) || (iCorr != null && iCorr != iCalc);
+    return {
+      'valori_probabilita': prob,
+      'valori_impatto': imp,
+      'probabilita': corretta ? (pCorr ?? pCalc) : null,
+      'impatto': corretta ? (iCorr ?? iCalc) : null,
+      'motivazione_correzione': corretta ? motivazione.text.trim() : null,
+      'fattore_abilitante': fattore ?? '',
+      // per mostrare subito l'esito nelle proposte (il server lo ricalcola)
+      'probabilita_calcolata': pCalc,
+      'impatto_calcolato': iCalc,
+      'livello': d.livelloDa(corretta ? (pCorr ?? pCalc) : pCalc, corretta ? (iCorr ?? iCalc) : iCalc),
+    };
+  }
+
   final ok = await showDialog<bool>(
     context: context,
-    builder: (c) => StatefulBuilder(builder: (c, aggiorna) {
+    // il campo si libera quando la finestra è sparita (l'animazione di chiusura lo usa ancora)
+    builder: (c) => LiberaAllaFine([motivazione], child: StatefulBuilder(builder: (c, aggiorna) {
       final pCalc = d.moda(prob.values), iCalc = d.moda(imp.values);
       final p = pCorr ?? pCalc, i = iCorr ?? iCalc;
       return AlertDialog(
@@ -457,37 +485,33 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
-              if ((pCorr != null && pCorr != pCalc || iCorr != null && iCorr != iCalc) && motivazione.text.trim().isEmpty) {
-                aggiorna(() => errore = 'Per correggere probabilità o impatto serve la motivazione');
-                return;
-              }
-              Navigator.pop(c, true);
-            },
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    if ((pCorr != null && pCorr != pCalc || iCorr != null && iCorr != iCalc) && motivazione.text.trim().isEmpty) {
+                      aggiorna(() => errore = 'Per correggere probabilità o impatto serve la motivazione');
+                      return;
+                    }
+                    if (salva != null) {
+                      aggiorna(() => (errore, salvataggio) = (null, true));
+                      try {
+                        await salva(risultato());
+                      } catch (e) {
+                        if (c.mounted) aggiorna(() => (errore, salvataggio) = ('$e', false));
+                        return;
+                      }
+                    }
+                    if (c.mounted) Navigator.pop(c, true);
+                  },
             child: const Text('Salva'),
           ),
         ],
       );
-    }),
+    })),
   );
-  final pCalc = d.moda(prob.values), iCalc = d.moda(imp.values);
-  final corretta = (pCorr != null && pCorr != pCalc) || (iCorr != null && iCorr != iCalc);
-  final risultato = {
-    'valori_probabilita': prob,
-    'valori_impatto': imp,
-    'probabilita': corretta ? (pCorr ?? pCalc) : null,
-    'impatto': corretta ? (iCorr ?? iCalc) : null,
-    'motivazione_correzione': corretta ? motivazione.text.trim() : null,
-    'fattore_abilitante': fattore ?? '',
-    // per mostrare subito l'esito nelle proposte (il server lo ricalcola)
-    'probabilita_calcolata': pCalc,
-    'impatto_calcolato': iCalc,
-    'livello': d.livelloDa(corretta ? (pCorr ?? pCalc) : pCalc, corretta ? (iCorr ?? iCalc) : iCalc),
-  };
-  motivazione.dispose();
-  return ok == true ? risultato : null;
+  return ok == true ? risultato() : null;
 }
 
 // --- vista dell'albero -------------------------------------------------------------------
@@ -529,12 +553,10 @@ class AlberoProcesso extends StatelessWidget {
                 ? null
                 : Wrap(children: [
                     IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica l\'attività'), () => eseguiOperazione(context, onCambiato, () async {
-                          final v = await modificaAttivita(context, dati, a);
-                          if (v != null) await ops.modificaAttivita(a, v);
+                          await modificaAttivita(context, dati, a: a, salva: (v) => ops.modificaAttivita(a, v));
                         })),
                     IconaAzione(Icons.add_alert_outlined, etichettaAzione(ops, 'Aggiungi un rischio'), () => eseguiOperazione(context, onCambiato, () async {
-                          final v = await modificaRischio(context, dati);
-                          if (v != null) await ops.aggiungiRischio(a, v);
+                          await modificaRischio(context, dati, salva: (v) => ops.aggiungiRischio(a, v));
                         })),
                     IconaAzione(Icons.delete_outline, etichettaAzione(ops, 'Elimina l\'attività'), () => eseguiOperazione(context, onCambiato, () async {
                           if (await confermaEliminazione(context, 'l\'attività', proposta: ops.proposta)) await ops.eliminaAttivita(a);
@@ -555,8 +577,7 @@ class AlberoProcesso extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('Aggiungi un\'attività'),
             onPressed: () => eseguiOperazione(context, onCambiato, () async {
-              final v = await modificaAttivita(context, dati);
-              if (v != null) await ops.aggiungiAttivita(v);
+              await modificaAttivita(context, dati, salva: (v) => ops.aggiungiAttivita(v));
             }),
           ),
         ),
@@ -634,16 +655,14 @@ class SchedaRischio extends StatelessWidget {
               icon: const Icon(Icons.speed, size: 18),
               label: Text(etichettaAzione(ops, 'Valuta')),
               onPressed: () => esegui(() async {
-                final v = await valutaRischio(context, dati, r);
-                if (v != null) await ops.valuta(r, v);
+                await valutaRischio(context, dati, r, salva: (v) => ops.valuta(r, v));
               }),
             ),
             TextButton.icon(
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => esegui(() async {
-                final v = await modificaRischio(context, dati, r);
-                if (v != null) await ops.modificaRischio(r, v);
+                await modificaRischio(context, dati, r: r, salva: (v) => ops.modificaRischio(r, v));
               }),
             ),
             TextButton.icon(
@@ -658,8 +677,7 @@ class SchedaRischio extends StatelessWidget {
               icon: const Icon(Icons.add_task, size: 18),
               label: Text(etichettaAzione(ops, 'Aggiungi una misura')),
               onPressed: () => esegui(() async {
-                final v = await modificaMisura(context, dati);
-                if (v != null) await ops.aggiungiMisura(r, v);
+                await modificaMisura(context, dati, salva: (v) => ops.aggiungiMisura(r, v));
               }),
             ),
           ]),
@@ -681,8 +699,7 @@ class SchedaRischio extends StatelessWidget {
                 ? null
                 : Wrap(children: [
                     IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica la misura'), () => esegui(() async {
-                          final v = await modificaMisura(context, dati, m);
-                          if (v != null) await ops.modificaMisura(m, v);
+                          await modificaMisura(context, dati, m: m, salva: (v) => ops.modificaMisura(m, v));
                         })),
                     IconaAzione(Icons.delete_outline, etichettaAzione(ops, 'Elimina la misura'), () => esegui(() async {
                           if (await confermaEliminazione(context, 'la misura', proposta: ops.proposta)) await ops.eliminaMisura(r, m);

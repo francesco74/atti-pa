@@ -101,19 +101,27 @@ class StatoPropostaPf extends StatelessWidget {
 
 /// Motivazione o nota per una decisione o un invio (null: annullato). Con [obbligatoria]
 /// non si conferma vuota.
+/// Con [salva] l'invio lo fa la finestra, che si chiude solo se riesce.
 Future<String?> chiediTesto(BuildContext context, String titolo,
-        {required String etichetta, String? testo, bool obbligatoria = false, String? iniziale}) =>
+        {required String etichetta,
+        String? testo,
+        bool obbligatoria = false,
+        String? iniziale,
+        Future<void> Function(String testo)? salva}) =>
     showDialog<String>(
       context: context,
-      builder: (_) => _DialogoTesto(titolo: titolo, etichetta: etichetta, testo: testo, obbligatoria: obbligatoria, iniziale: iniziale),
+      builder: (_) => _DialogoTesto(
+          titolo: titolo, etichetta: etichetta, testo: testo, obbligatoria: obbligatoria, iniziale: iniziale, salva: salva),
     );
 
 class _DialogoTesto extends StatefulWidget {
-  const _DialogoTesto({required this.titolo, required this.etichetta, this.testo, required this.obbligatoria, this.iniziale});
+  const _DialogoTesto(
+      {required this.titolo, required this.etichetta, this.testo, required this.obbligatoria, this.iniziale, this.salva});
 
   final String titolo, etichetta;
   final String? testo, iniziale;
   final bool obbligatoria;
+  final Future<void> Function(String testo)? salva;
 
   @override
   State<_DialogoTesto> createState() => _DialogoTestoState();
@@ -121,7 +129,8 @@ class _DialogoTesto extends StatefulWidget {
 
 class _DialogoTestoState extends State<_DialogoTesto> {
   late final _c = TextEditingController(text: widget.iniziale ?? '');
-  String? _errore;
+  String? _errore, _erroreSalvataggio;
+  var _salvataggio = false;
 
   @override
   void dispose() {
@@ -145,15 +154,33 @@ class _DialogoTestoState extends State<_DialogoTesto> {
                 errorText: _errore,
               ),
             ),
+            if (_erroreSalvataggio != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(_erroreSalvataggio!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),
+          TextButton(onPressed: _salvataggio ? null : () => Navigator.pop(context), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
-              if (widget.obbligatoria && _c.text.trim().isEmpty) return setState(() => _errore = 'Obbligatoria');
-              Navigator.pop(context, _c.text.trim());
-            },
+            onPressed: _salvataggio
+                ? null
+                : () async {
+                    final t = _c.text.trim();
+                    if (widget.obbligatoria && t.isEmpty) return setState(() => _errore = 'Obbligatoria');
+                    setState(() => _errore = null);
+                    final salva = widget.salva;
+                    final ok = await salvaDallaFinestra(context, salva == null ? null : () => salva(t), (e, s) {
+                      if (mounted) {
+                        setState(() {
+                          _erroreSalvataggio = e;
+                          _salvataggio = s;
+                        });
+                      }
+                    });
+                    if (ok && context.mounted) Navigator.pop(context, t);
+                  },
             child: const Text('Conferma'),
           ),
         ],
@@ -504,12 +531,18 @@ Widget _campoPercentuale(TextEditingController c, String etichetta, {String? aiu
       decoration: InputDecoration(labelText: etichetta, suffixText: '%', helperText: aiuto),
     );
 
+/// Chiude la finestra con [v] dopo il salvataggio fatto da [salva] (se c'è), solo se riesce.
+Future<void> _chiudi(BuildContext c, Future<void> Function(Map<String, dynamic>)? salva,
+    void Function(String? errore, bool inCorso) stato, Map<String, dynamic> v) async {
+  if (await salvaDallaFinestra(c, salva == null ? null : () => salva(v), stato) && c.mounted) Navigator.pop(c, v);
+}
+
 const _campoNota = 'Nota sulla modifica (facoltativa, resta nello storico)';
 
 /// Finestra di un obiettivo: codice nel PIAO, titolo, descrizione, tipo, impegno.
 /// Con [nota] (modifiche dirette) anche la nota per lo storico; nelle proposte la nota è della proposta.
 Future<Map<String, dynamic>?> modificaObiettivo(BuildContext context,
-    {Map<String, dynamic>? o, required int disponibile, bool nota = true}) async {
+    {Map<String, dynamic>? o, required int disponibile, bool nota = true, Future<void> Function(Map<String, dynamic>)? salva}) async {
   final conNota = nota;
   final codice = TextEditingController(text: o?['codice'] as String? ?? '');
   final titolo = TextEditingController(text: o?['titolo'] as String? ?? '');
@@ -518,6 +551,7 @@ Future<Map<String, dynamic>?> modificaObiettivo(BuildContext context,
   final testoNota = TextEditingController();
   var tipo = o?['tipo'] as String? ?? 'OPERATIVO';
   String? errore;
+  var salvataggio = false;
   final risultato = await showDialog<Map<String, dynamic>>(
     context: context,
     builder: (_) => _ConControllori([codice, titolo, descrizione, impegno, testoNota], (c) => StatefulBuilder(
@@ -565,15 +599,15 @@ Future<Map<String, dynamic>?> modificaObiettivo(BuildContext context,
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
+            onPressed: salvataggio ? null : () async {
               final i = _intero(impegno);
               if (titolo.text.trim().isEmpty) return aggiorna(() => errore = 'Il titolo è obbligatorio');
               if (i == null || i < 0 || i > disponibile) {
                 return aggiorna(() => errore = 'L\'impegno è un numero tra 0 e $disponibile');
               }
-              Navigator.pop(c, {
+              await _chiudi(c, salva, (e, s) => aggiorna(() => (errore, salvataggio) = (e, s)), {
                 'codice': codice.text.trim().isEmpty ? null : codice.text.trim(),
                 'titolo': titolo.text.trim(),
                 'descrizione': descrizione.text.trim().isEmpty ? null : descrizione.text.trim(),
@@ -603,6 +637,7 @@ Future<Map<String, dynamic>?> modificaElemento(
   required int disponibile,
   required int anno,
   bool proposta = false,
+  Future<void> Function(Map<String, dynamic>)? salva, // salvataggio fatto dalla finestra
 }) async {
   final descrizione = TextEditingController(text: x?['descrizione'] as String? ?? '');
   final impegno = TextEditingController(text: '${x?['impegno'] ?? disponibile}');
@@ -617,6 +652,7 @@ Future<Map<String, dynamic>?> modificaElemento(
       ?daMisura,
   ];
   String? errore;
+  var salvataggio = false;
   final azione = tipo == 'AZIONE';
   // azione dal catalogo della mappatura: la descrizione è quella della voce e non si scrive
   final copiata = azione && x != null && dallaMappatura(x);
@@ -713,9 +749,9 @@ Future<Map<String, dynamic>?> modificaElemento(
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
+            onPressed: salvataggio ? null : () async {
               final i = _intero(impegno), comp = _intero(completamento);
               if (azione && !copiata && descrizione.text.trim().isEmpty) return aggiorna(() => errore = 'Descrivi l\'azione');
               if (i == null || i < 0 || i > disponibile) {
@@ -725,7 +761,7 @@ Future<Map<String, dynamic>?> modificaElemento(
               if (manuale && (comp == null || comp < 0 || comp > 100)) {
                 return aggiorna(() => errore = 'Il completamento è un numero tra 0 e 100');
               }
-              Navigator.pop(c, {
+              await _chiudi(c, salva, (e, s) => aggiorna(() => (errore, salvataggio) = (e, s)), {
                 if (azione && !copiata) 'descrizione': descrizione.text.trim(),
                 'impegno': i,
                 if (!proposta) 'completamento': manuale ? comp : (x?['completamento'] ?? 0),
@@ -745,7 +781,8 @@ Future<Map<String, dynamic>?> modificaElemento(
 
 /// Avanzamento di un'azione o misura: i valori rilevati degli indicatori (il completamento si
 /// calcola) o, senza indicatori, il completamento; nota per lo storico.
-Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<String, dynamic> x) async {
+Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<String, dynamic> x,
+    {Future<void> Function(Map<String, dynamic>)? salva}) async {
   final indicatori = (x['indicatori'] as List? ?? const []).cast<Map<String, dynamic>>();
   final completamento = TextEditingController(text: '${x['completamento'] ?? 0}');
   final nota = TextEditingController();
@@ -757,6 +794,7 @@ Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<Stri
   final siNo = {for (final i in indicatori) if (i['tipo'] == 'SI_NO') i['id']: (i['rilevato'] as num?)?.toInt() ?? -1};
   final date = {for (final i in indicatori) if (i['tipo'] == 'DATA') i['id']: daIso(i['rilevato_data'] as String?)};
   String? errore;
+  var salvataggio = false;
   final risultato = await showDialog<Map<String, dynamic>>(
     context: context,
     builder: (_) => _ConControllori([completamento, nota, ...numeri.values], (c) => StatefulBuilder(
@@ -831,14 +869,14 @@ Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<Stri
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Annulla')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c), child: const Text('Annulla')),
           FilledButton(
-            onPressed: () {
+            onPressed: salvataggio ? null : () async {
               final testoNota = {if (nota.text.trim().isNotEmpty) 'nota': nota.text.trim()};
               if (indicatori.isEmpty) {
                 final v = _intero(completamento);
                 if (v == null || v < 0 || v > 100) return aggiorna(() => errore = 'Il completamento è un numero tra 0 e 100');
-                return Navigator.pop(c, {'completamento': v, ...testoNota});
+                return _chiudi(c, salva, (e, s) => aggiorna(() => (errore, salvataggio) = (e, s)), {'completamento': v, ...testoNota});
               }
               final rilevazioni = <Map<String, dynamic>>[];
               for (final i in indicatori) {
@@ -857,7 +895,7 @@ Future<Map<String, dynamic>?> aggiornaAvanzamento(BuildContext context, Map<Stri
                   rilevazioni.add({'id': id, 'rilevato_data': date[id] == null ? null : isoData(date[id]!)});
                 }
               }
-              Navigator.pop(c, {'indicatori': rilevazioni, ...testoNota});
+              await _chiudi(c, salva, (e, s) => aggiorna(() => (errore, salvataggio) = (e, s)), {'indicatori': rilevazioni, ...testoNota});
             },
             child: const Text('Salva'),
           ),

@@ -65,9 +65,18 @@ class _MonitoraggioTabState extends State<MonitoraggioTab> {
       for (final k in const ['motivazione', 'indicatore_rilevato', 'target', 'evidenze'])
         k: TextEditingController(text: (d[k] ?? (k == 'target' ? misura['target'] : null)) as String? ?? ''),
     };
+    final api = apiDi(context);
+    Map<String, dynamic> corpo() => {
+          'stato_attuazione': stato,
+          'struttura_id': voce['struttura_id'],
+          for (final e in campi.entries) e.key: testoOppureNull(e.value),
+        };
+    String? errore;
+    var salvataggio = false;
+    // la dichiarazione la salva la finestra, che si chiude solo se riesce
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => StatefulBuilder(
+      builder: (c) => LiberaAllaFine(campi.values.toList(), child: StatefulBuilder(
         builder: (c, aggiorna) => AlertDialog(
           title: Text('Misura ${misura['codice']} - $_anno'),
           content: SizedBox(
@@ -95,59 +104,83 @@ class _MonitoraggioTabState extends State<MonitoraggioTab> {
                 TextField(controller: campi['indicatore_rilevato'], decoration: const InputDecoration(labelText: 'Indicatore rilevato')),
                 TextField(controller: campi['target'], decoration: const InputDecoration(labelText: 'Target')),
                 TextField(controller: campi['evidenze'], maxLines: 3, decoration: const InputDecoration(labelText: 'Evidenze')),
+                if (errore != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                  ),
               ]),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salva')),
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(
+              onPressed: salvataggio
+                  ? null
+                  : () async {
+                      final v = corpo();
+                      if (await salvaDallaFinestra(c, () => api.put('$_base/misure/${voce['misura_id']}', v),
+                              (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                          c.mounted) {
+                        Navigator.pop(c, true);
+                      }
+                    },
+              child: const Text('Salva'),
+            ),
           ],
         ),
-      ),
+      )),
     );
-    final corpo = {
-      'stato_attuazione': stato,
-      'struttura_id': voce['struttura_id'],
-      for (final e in campi.entries) e.key: testoOppureNull(e.value),
-    };
-    for (final c in campi.values) {
-      c.dispose();
-    }
-    if (ok != true || !mounted) return;
-    try {
-      await apiDi(context).put('$_base/misure/${voce['misura_id']}', corpo);
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok == true && mounted) _carica();
   }
 
   Future<void> _verifica(Map<String, dynamic> d, bool verifica) async {
     final note = TextEditingController(text: d['note_rpct'] as String? ?? '');
+    final api = apiDi(context);
+    String? errore;
+    var salvataggio = false;
+    // la verifica la salva la finestra, che si chiude solo se riesce
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: Text(verifica ? 'Verifica la dichiarazione' : 'Contesta la dichiarazione'),
-        content: SizedBox(
-          width: 480,
-          child: TextField(controller: note, maxLines: 4, decoration: InputDecoration(labelText: verifica ? 'Note' : 'Nota per la struttura *')),
+      builder: (c) => LiberaAllaFine([note], child: StatefulBuilder(
+        builder: (c, aggiorna) => AlertDialog(
+          title: Text(verifica ? 'Verifica la dichiarazione' : 'Contesta la dichiarazione'),
+          content: SizedBox(
+            width: 480,
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              TextField(controller: note, maxLines: 4, decoration: InputDecoration(labelText: verifica ? 'Note' : 'Nota per la struttura *')),
+              if (errore != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c, false), child: const Text('Annulla')),
+            FilledButton(
+              onPressed: salvataggio
+                  ? null
+                  : () async {
+                      final testo = note.text.trim();
+                      if (!verifica && testo.isEmpty) return aggiorna(() => errore = 'Scrivi la nota per la struttura');
+                      if (await salvaDallaFinestra(
+                              c,
+                              () => api.post(
+                                  '$apiAnticorruzione/monitoraggio/dichiarazioni/${d['id']}/${verifica ? 'verifica' : 'contesta'}',
+                                  {'note': testo.isEmpty ? null : testo}),
+                              (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                          c.mounted) {
+                        Navigator.pop(c, true);
+                      }
+                    },
+              child: Text(verifica ? 'Verifica' : 'Contesta'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(verifica ? 'Verifica' : 'Contesta')),
-        ],
-      ),
+      )),
     );
-    final testo = note.text.trim();
-    note.dispose();
-    if (ok != true || !mounted) return;
-    try {
-      await apiDi(context).post('$apiAnticorruzione/monitoraggio/dichiarazioni/${d['id']}/${verifica ? 'verifica' : 'contesta'}',
-          {'note': testo.isEmpty ? null : testo});
-      _carica();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok == true && mounted) _carica();
   }
 
   Widget _riga(Map<String, dynamic> contesto) => Text(

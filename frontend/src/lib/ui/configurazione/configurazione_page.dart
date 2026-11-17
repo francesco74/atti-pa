@@ -40,9 +40,13 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
   Future<void> _nuovo(String tipo, List<Map<String, dynamic>> esistenti) async {
     final codice = TextEditingController();
     String? copiaDa;
-    final ok = await showDialog<bool>(
+    final api = apiDi(context);
+    String? errore;
+    var salvataggio = false;
+    // la bozza la crea la finestra, che si chiude solo se riesce (es. codice già usato)
+    final ok = await showDialog<String>(
       context: context,
-      builder: (c) => StatefulBuilder(
+      builder: (c) => LiberaAllaFine([codice], child: StatefulBuilder(
         builder: (c, aggiorna) => AlertDialog(
           title: Text(switch (tipo) {
             'modello' => 'Nuovo modello di atto',
@@ -74,28 +78,38 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
                 ],
                 onChanged: (v) => aggiorna(() => copiaDa = v),
               ),
+              if (errore != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(errore!, style: TextStyle(color: Theme.of(c).colorScheme.error)),
+                ),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Crea la bozza')),
+            TextButton(onPressed: salvataggio ? null : () => Navigator.pop(c), child: const Text('Annulla')),
+            FilledButton(
+              onPressed: salvataggio
+                  ? null
+                  : () async {
+                      final valore = codice.text.trim().toUpperCase();
+                      if (!RegExp(r'^[A-Z0-9_-]{2,}$').hasMatch(valore)) {
+                        return aggiorna(() => errore = 'Codice non valido: lettere maiuscole, cifre, _ e -');
+                      }
+                      if (await salvaDallaFinestra(
+                              c,
+                              () => api.post('/api/v1/configurazione/$tipo/nuovo', {'codice': valore, 'copia_da': copiaDa}),
+                              (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                          c.mounted) {
+                        Navigator.pop(c, valore);
+                      }
+                    },
+              child: const Text('Crea la bozza'),
+            ),
           ],
         ),
-      ),
+      )),
     );
-    final valore = codice.text.trim().toUpperCase();
-    codice.dispose();
-    if (ok != true || !mounted) return;
-    if (!RegExp(r'^[A-Z0-9_-]{2,}$').hasMatch(valore)) {
-      mostraErrore(context, 'Codice non valido: lettere maiuscole, cifre, _ e -');
-      return;
-    }
-    try {
-      await apiDi(context).post('/api/v1/configurazione/$tipo/nuovo', {'codice': valore, 'copia_da': copiaDa});
-      if (mounted) await _apri(tipo, valore);
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok != null && mounted) await _apri(tipo, ok);
   }
 
   Widget _stato(Map<String, dynamic> o) {

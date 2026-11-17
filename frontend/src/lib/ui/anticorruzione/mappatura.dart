@@ -94,21 +94,20 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   }
 
   Future<void> _modificaArea(bool rpct, [Map<String, dynamic>? a]) async {
-    final v = await modificaArea(context, a);
-    if (v == null || !mounted) return;
-    try {
-      final api = apiDi(context);
+    final api = apiDi(context);
+    // il salvataggio lo fa la finestra: con un errore resta aperta
+    final v = await modificaArea(context, a: a, salva: (v) async {
       if (!rpct) {
-        await _proponi({'tipo': a == null ? 'CREA' : 'MODIFICA', 'oggetto': 'AREA', 'elemento_id': ?a?['id'], 'dati': v});
+        await api.post('$apiAnticorruzione/proposte',
+            {'tipo': a == null ? 'CREA' : 'MODIFICA', 'oggetto': 'AREA', 'elemento_id': ?a?['id'], 'dati': v});
       } else if (a == null) {
         await api.post('$apiAnticorruzione/aree', v);
       } else {
         await api.put('$apiAnticorruzione/aree/${a['id']}', v);
       }
-      if (rpct) widget.onDatiCambiati();
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    });
+    if (v == null || !mounted) return;
+    rpct ? widget.onDatiCambiati() : propostaInviata(context);
   }
 
   Future<void> _eliminaArea(bool rpct, Map<String, dynamic> a) async {
@@ -130,22 +129,23 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   }
 
   Future<void> _nuovoProcesso(DatiAnticorruzione dati, bool rpct) async {
-    final v = await modificaProcesso(context, dati, {
-      'area_id': _area == _senzaArea ? null : _area,
-      // il referente propone per la sua struttura
-      if (!rpct) 'struttura_id': context.read<AuthState>().utente?.strutturaId,
-    });
+    final api = apiDi(context);
+    String? creato;
+    final v = await modificaProcesso(context, dati,
+        p: {
+          'area_id': _area == _senzaArea ? null : _area,
+          // il referente propone per la sua struttura
+          if (!rpct) 'struttura_id': context.read<AuthState>().utente?.strutturaId,
+        },
+        salva: (v) async {
+          if (rpct) {
+            creato = (await api.post('$apiAnticorruzione/processi', v) as Map<String, dynamic>)['id'] as String;
+          } else {
+            await api.post('$apiAnticorruzione/proposte', {'tipo': 'CREA', 'oggetto': 'PROCESSO', 'dati': {...v, 'attivita': <Object>[]}});
+          }
+        });
     if (v == null || !mounted) return;
-    try {
-      if (rpct) {
-        final p = await apiDi(context).post('$apiAnticorruzione/processi', v) as Map<String, dynamic>;
-        if (mounted) setState(() => _processoId = p['id'] as String);
-      } else {
-        await _proponi({'tipo': 'CREA', 'oggetto': 'PROCESSO', 'dati': {...v, 'attivita': <Object>[]}});
-      }
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    rpct ? setState(() => _processoId = creato) : propostaInviata(context);
   }
 
   Widget _elencoProcessi(DatiAnticorruzione dati, List<Map<String, dynamic>> processi, [RicercaTesto? ricerca]) =>
@@ -458,8 +458,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
         LivelloChip(dati, _livelloMassimo(dati, rischi)),
         if (ops != null) ...[
           IconaAzione(Icons.edit_outlined, etichettaAzione(ops, 'Modifica l\'attività'), () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaAttivita(context, dati, a);
-                if (v != null) await ops.modificaAttivita(a, v);
+                await modificaAttivita(context, dati, a: a, salva: (v) => ops.modificaAttivita(a, v));
               })),
           IconaAzione(Icons.delete_outline, etichettaAzione(ops, 'Elimina l\'attività'), () => eseguiOperazione(context, _carica, () async {
                 if (await confermaEliminazione(context, 'l\'attività', proposta: ops.proposta)) await ops.eliminaAttivita(a);
@@ -481,8 +480,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaAttivita(context, dati, a);
-                if (v != null) await ops.modificaAttivita(a, v);
+                await modificaAttivita(context, dati, a: a, salva: (v) => ops.modificaAttivita(a, v));
               }),
             ),
             TextButton.icon(
@@ -514,8 +512,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
               icon: const Icon(Icons.add_alert_outlined, size: 18),
               label: Text(etichettaAzione(ops, 'Aggiungi un rischio')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaRischio(context, dati);
-                if (v != null) await ops.aggiungiRischio(a, v);
+                await modificaRischio(context, dati, salva: (v) => ops.aggiungiRischio(a, v));
               }),
             ),
         ],
@@ -541,8 +538,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(etichettaAzione(ops, 'Modifica')),
               onPressed: () => eseguiOperazione(context, _carica, () async {
-                final v = await modificaProcesso(context, dati, processo);
-                if (v != null) await ops.processo(v);
+                await modificaProcesso(context, dati, p: processo, salva: (v) => ops.processo(v));
               }),
             ),
             TextButton.icon(
@@ -562,9 +558,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
           onModifica: ops == null
               ? null
               : () => eseguiOperazione(context, _carica, () async {
-                    final v = await modificaArt35(context, dati.strutture, (processo['art35'] as Map?)?.cast<String, dynamic>(),
-                        procedimento: processo);
-                    if (v != null) await ops.processo({...processo, 'art35': v});
+                    await modificaArt35(context, dati.strutture, (processo['art35'] as Map?)?.cast<String, dynamic>(),
+                        procedimento: processo, salva: (v) => ops.processo({...processo, 'art35': v}));
                   }),
         ),
       Row(children: [
@@ -574,8 +569,7 @@ class _VistaProcessoState extends State<VistaProcesso> {
             icon: const Icon(Icons.add, size: 18),
             label: Text(etichettaAzione(ops, 'Nuova attività')),
             onPressed: () => eseguiOperazione(context, _carica, () async {
-              final v = await modificaAttivita(context, dati);
-              if (v != null) await ops.aggiungiAttivita(v);
+              await modificaAttivita(context, dati, salva: (v) => ops.aggiungiAttivita(v));
             }),
           ),
       ]),

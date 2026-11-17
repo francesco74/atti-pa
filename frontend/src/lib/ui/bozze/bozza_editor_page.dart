@@ -625,9 +625,13 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
         : segmenti.map((s) => s['segnaposto'] ?? s['testo']).join();
     final testo = TextEditingController(text: attuale);
     final motivo = TextEditingController();
+    final api = apiDi(context);
+    String? errore;
+    var salvataggio = false;
+    // la proposta la invia la finestra, che si chiude solo se riesce
     final ok = await showDialog<bool>(
       context: context,
-      builder: (d) => AlertDialog(
+      builder: (d) => LiberaAllaFine([testo, motivo], child: StatefulBuilder(builder: (d, aggiorna) => AlertDialog(
         title: const Text('Proponi una modifica al modello'),
         content: SizedBox(
           width: 640,
@@ -651,32 +655,42 @@ class _BozzaEditorPageState extends State<BozzaEditorPage> {
               maxLines: 3,
               decoration: const InputDecoration(labelText: 'Perché (facoltativo)', border: OutlineInputBorder()),
             ),
+            if (errore != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(errore!, style: TextStyle(color: Theme.of(d).colorScheme.error)),
+              ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Annulla')),
-          FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Invia la proposta')),
+          TextButton(onPressed: salvataggio ? null : () => Navigator.pop(d, false), child: const Text('Annulla')),
+          FilledButton(
+            onPressed: salvataggio
+                ? null
+                : () async {
+                    final proposto = testo.text.trim(), motivazione = motivo.text.trim();
+                    if (proposto.isEmpty) return aggiorna(() => errore = 'Scrivi il testo proposto');
+                    if (await salvaDallaFinestra(
+                            d,
+                            () => api.post('/api/v1/proposte', {
+                                  'modello': modello['codice'],
+                                  'versione': modello['versione'],
+                                  'capoverso': c['id'],
+                                  'testo_attuale': attuale,
+                                  'testo_proposto': proposto,
+                                  'motivazione': motivazione.isEmpty ? null : motivazione,
+                                }),
+                            (e, s) => aggiorna(() => (errore, salvataggio) = (e, s))) &&
+                        d.mounted) {
+                      Navigator.pop(d, true);
+                    }
+                  },
+            child: const Text('Invia la proposta'),
+          ),
         ],
-      ),
+      ))),
     );
-    final proposto = testo.text.trim();
-    final motivazione = motivo.text.trim();
-    testo.dispose();
-    motivo.dispose();
-    if (ok != true || proposto.isEmpty || !mounted) return;
-    try {
-      await apiDi(context).post('/api/v1/proposte', {
-        'modello': modello['codice'],
-        'versione': modello['versione'],
-        'capoverso': c['id'],
-        'testo_attuale': attuale,
-        'testo_proposto': proposto,
-        'motivazione': motivazione.isEmpty ? null : motivazione,
-      });
-      if (mounted) mostraMessaggio(context, 'Proposta inviata a chi gestisce i modelli');
-    } catch (e) {
-      if (mounted) mostraErrore(context, e);
-    }
+    if (ok == true && mounted) mostraMessaggio(context, 'Proposta inviata a chi gestisce i modelli');
   }
 
   void _mostraAiuto(String titolo, Map<String, dynamic> dati) {
