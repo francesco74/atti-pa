@@ -636,7 +636,7 @@ Future<Map<String, dynamic>?> modificaElemento(
               ] else if (azione)
                 TextField(controller: descrizione, maxLines: 4, minLines: 2, decoration: const InputDecoration(labelText: 'Descrizione *'))
               else
-                Text('${x?['misura_codice'] ?? misura?['codice']} - ${x?['descrizione'] ?? misura?['descrizione']}',
+                Text(x != null ? titoloElemento(x) : '${misura?['codice']} - ${misura?['descrizione']}',
                     style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
               Row(children: [

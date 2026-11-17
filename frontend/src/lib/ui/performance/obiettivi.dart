@@ -415,7 +415,8 @@ class _VistaObiettivoState extends State<VistaObiettivo> {
         Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text('Impegno ${x['impegno']}% · entro il ${formatData(x['scadenza'])}'),
           if (ritardo) const Etichetta('In ritardo', Colors.orange),
-          if (misura && x['misura_id'] == null) const Etichetta('Misura non più nella mappatura', Colors.blueGrey),
+          // senza la voce del catalogo né la misura del processo (eliminate): resta solo la copia
+          if (misura && x['misura_id'] == null && x['voce_id'] == null) const Etichetta('Misura non più nella mappatura', Colors.blueGrey),
           if (fuoriMappatura(x)) const Etichetta('Non più nella mappatura', Colors.blueGrey),
           if ((x['indicatori'] as List? ?? const []).isEmpty) const Etichetta('Senza indicatori', Colors.blueGrey),
         ]),

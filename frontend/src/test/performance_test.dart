@@ -257,6 +257,27 @@ void main() {
     expect(find.textContaining('Copiate 1 azione e 0 misure'), findsOneWidget);
   });
 
+  testWidgets('misura dal catalogo: niente avviso e il codice della voce nella finestra', (tester) async {
+    final anno = DateTime.now().year;
+    await apri(tester, approvatore: true, obiettivo: {
+      'impegno_elementi': 10,
+      'elementi': [
+        {'id': 'e5', 'tipo': 'MISURA', 'descrizione': 'Chiedere all\'ente gestore l\'elenco degli alloggi', 'misura_id': null,
+         'misura_codice': null, 'voce_id': 'mv5', 'voce_codice': 'MIS-0001', 'impegno': 10, 'completamento': 0,
+         'scadenza': '$anno-12-31', 'in_ritardo': false, 'calcolato': false, 'indicatori': []},
+      ],
+    });
+    await tester.tap(find.text('P2_OS3 - Digitalizzare i concorsi'));
+    await tester.pumpAndSettle();
+    expect(find.text('MIS-0001 - Chiedere all\'ente gestore l\'elenco degli alloggi'), findsOneWidget);
+    expect(find.text('Misura non più nella mappatura'), findsNothing);
+    await tester.tap(find.byTooltip('Modifica').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Modifica misura'), findsOneWidget);
+    expect(find.textContaining('null -'), findsNothing);
+    expect(find.text('MIS-0001 - Chiedere all\'ente gestore l\'elenco degli alloggi'), findsNWidgets(2)); // riga e finestra
+  });
+
   testWidgets('radici: le voci usate negli obiettivi, ognuna con i suoi obiettivi', (tester) async {
     await apri(tester);
     await tester.tap(find.text('Radici'));
