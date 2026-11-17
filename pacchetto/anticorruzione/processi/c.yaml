@@ -213,6 +213,7 @@ processi:
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: C.5.1_R.1_M.1
+        voce: MIS-0074
         descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
           eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
           di mercato - elenco professionisti approvato con DD 1836 del 27/10/2020-
@@ -227,6 +228,7 @@ processi:
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: C.5.1_R.2_M.1
+        voce: MIS-0074
         descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
           eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
           di mercato elenco professionisti approvato con DD 1836 del 27/10/2020-
@@ -253,6 +255,7 @@ processi:
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: C.5.1_R.4_M.1
+        voce: MIS-0074
         descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con
           eventuale consultazione di altri enti oppure attingendo informazione da internet o con indagine
           di mercato elenco professionisti approvato con DD 1836 del 27/10/2020-

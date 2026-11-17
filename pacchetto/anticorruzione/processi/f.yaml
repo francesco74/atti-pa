@@ -286,6 +286,7 @@ processi:
         descrizione: Monitoraggio dei tempi procedimentali
         categoria: Controllo
   - codice: F.8.2
+    voce: ATT-0284
     descrizione: istruttoria verifiche
     rischi:
     - codice: F.8.2_R.1
@@ -558,6 +559,7 @@ processi:
     descrizione: Sopralluogo al termine del periodo concesso per ripristino della regolarità
     rischi:
     - codice: F.13.4_R.1
+      voce: RIS-0158
       evento: Non effettuazione del sopralluogo
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
@@ -811,6 +813,7 @@ processi:
     descrizione: 'Accertamento (attività di controllo ad es: ambientali, annonari, antievasione)'
     rischi:
     - codice: F.17.1_R.1
+      voce: RIS-0132
       evento: Abuso nell'adozione del provvedimento
       fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:

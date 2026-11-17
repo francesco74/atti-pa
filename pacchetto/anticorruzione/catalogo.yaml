@@ -589,7 +589,7 @@ attivita:
 - codice: ATT-0232
   descrizione: Rogito notarile
 - codice: ATT-0233
-  descrizione: Delibera CC approvazione vendita
+  descrizione: Delibera CC di approvazione vendita
 - codice: ATT-0234
   descrizione: stima del valore immobile
 - codice: ATT-0235
@@ -600,8 +600,6 @@ attivita:
   descrizione: Richiesta/offerta di acquisto da parte terzi
 - codice: ATT-0238
   descrizione: Stima del valore di mercato dell'immobile
-- codice: ATT-0239
-  descrizione: Delibera CC di approvazione vendita
 - codice: ATT-0240
   descrizione: Delibera di Giunta comunale di ricorrere al mercato per la locazione, previa verifica della
     indisponibilità di immobili comunali di caratteristiche idonee
@@ -719,8 +717,6 @@ attivita:
   descrizione: Istruttoria/verifiche
 - codice: ATT-0285
   descrizione: Avvio del Procedimento
-- codice: ATT-0286
-  descrizione: istruttoria verifiche
 - codice: ATT-0287
   descrizione: Analisi della documentazione inviata dai titolari dei servizi all'inizio dell'anno educativo,
     al fine di verificare la permanenza dei requisiti di autorizzazione/accreditamento e richiesta di
@@ -1220,8 +1216,8 @@ rischi:
 - codice: RIS-0086
   descrizione: Ripetizione nell'individuazione dell'operatore economico per l'esecuzione dei lavori
 - codice: RIS-0087
-  descrizione: Predisposizione di un bando contenente requisiti che possano avvantaggiare particolari
-    categorie di soggetti.
+  descrizione: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
+    particolari categorie di soggetti.
 - codice: RIS-0088
   descrizione: Ammissione di soggetto che non ha i requisiti o esclusione di soggetto che ha i requisiti
 - codice: RIS-0089
@@ -1233,14 +1229,9 @@ rischi:
 - codice: RIS-0092
   descrizione: Avvantaggiare/svantaggiare i singoli concorrenti nella fase di applicazione delle riserve
     /preferenze.
-- codice: RIS-0093
-  descrizione: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
-    particolari categorie di soggetti.
 - codice: RIS-0094
   descrizione: Dichiarare /non dichiarare un soggetto idoneo facendo una valutazione non oggettiva della
     prova.
-- codice: RIS-0095
-  descrizione: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
 - codice: RIS-0096
   descrizione: Far conoscere preventivamente i contenuti della selezione ai candidati
 - codice: RIS-0097
@@ -1394,7 +1385,7 @@ rischi:
 - codice: RIS-0157
   descrizione: Mancato invio delle contestazioni
 - codice: RIS-0158
-  descrizione: Non effettuazione del sopralluogo
+  descrizione: Mancata effettuazione del sopralluogo
 - codice: RIS-0159
   descrizione: Mancato avvio del procedimento di declassificazione
 - codice: RIS-0160
@@ -1405,8 +1396,6 @@ rischi:
   descrizione: Mancata verbalizzazione irregolarità riscontrate
 - codice: RIS-0163
   descrizione: Mancato provvedimento di sospensione o chiusura
-- codice: RIS-0164
-  descrizione: Mancata effettuazione del sopralluogo
 - codice: RIS-0165
   descrizione: Mancato invio richiesta agli uffici competenti per esecuzione coattiva
 - codice: RIS-0166
@@ -1415,8 +1404,6 @@ rischi:
   descrizione: Mancato invio del provvedimento
 - codice: RIS-0168
   descrizione: Mancata verifica della documentazione
-- codice: RIS-0169
-  descrizione: Abuso nell'adozione del provvedimento
 - codice: RIS-0170
   descrizione: Annullamento in autotutela del verbale
 - codice: RIS-0171
@@ -1715,10 +1702,6 @@ misure:
     curato l'istruttoria
   tipo_misura: SPECIFICA
   categoria: Controllo
-- codice: MIS-0047
-  descrizione: Controlli a campione da parte di personale diverso rispetto a quello che ha curato l'istruttoria
-  tipo_misura: SPECIFICA
-  categoria: Controllo
 - codice: MIS-0048
   descrizione: Report periodico (almeno annuale) sulle istanze presentate in ritardo/istanze accolte
   tipo_misura: SPECIFICA
@@ -1863,18 +1846,6 @@ misure:
 - codice: MIS-0074
   descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
     consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato -
-    elenco professionisti approvato con DD 1836 del 27/10/2020-
-  tipo_misura: SPECIFICA
-  categoria: Formazione
-- codice: MIS-0075
-  descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
-    consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato elenco
-    professionisti approvato con DD 1836 del 27/10/2020-
-  tipo_misura: SPECIFICA
-  categoria: Formazione
-- codice: MIS-0076
-  descrizione: Rotazione dei professionisti da invitare valutando anche le richieste pervenute con eventuale
-    consultazione di altri enti oppure attingendo informazione da internet o con indagine di mercato -
     elenco professionisti approvato con DD 1836 del 27/10/2020
   tipo_misura: SPECIFICA
   categoria: Formazione
@@ -1998,12 +1969,6 @@ misure:
     la disciplina normativa specifica di riferimento.
   tipo_misura: SPECIFICA
   categoria: Regolamentazione
-- codice: MIS-0098
-  descrizione: Le domande vengono controllate più dipendenti dell'Ufficio Personale.Nella determinazione
-    dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli eventualmente
-    esclusi. Ad ogni candidato escluso viene inviata apposita nota.
-  tipo_misura: SPECIFICA
-  categoria: Controllo
 - codice: MIS-0099
   descrizione: Utilizzo di software informatico per la elaborazione ed emissione dei provvedimenti che
     tiene traccia delle operazioni effettuate.
@@ -2107,11 +2072,6 @@ misure:
     in base ad oggettivi criteri di mercato.
   tipo_misura: SPECIFICA
   categoria: Regolamentazione
-- codice: MIS-0120
-  descrizione: 'Il bando dovrà contenere le specifiche richieste senza indicare caratteristiche che non
-    siano di natura oggettiva quali: superficie, destinazione, ubicazione, dotazione di parcheggi, ecc.In
-    caso di caratteristiche analoghe la scelta avverrà in base alla miglior offerta economica.'
-  tipo_misura: SPECIFICA
 - codice: MIS-0121
   descrizione: 'Verifica entro 15 giorni dall''arrivo della fattura all''ufficio.Qualora trattasi di forniture
     trasversali gli uffici devono trasmettere i giustificativi entro 15 giorni dalla richiesta.Per la
@@ -2412,10 +2372,6 @@ misure:
   descrizione: Verifica periodica (almeno annuale) sui verbali notificati fuori termine
   tipo_misura: SPECIFICA
   categoria: Controllo
-- codice: MIS-0182
-  descrizione: Verifica conflitto di interesse
-  tipo_misura: SPECIFICA
-  categoria: Disciplina del conflitto di interessi
 - codice: MIS-0183
   descrizione: La proposta di conciliazione concordata tra le parti del processo tributario è sottoposta
     alla preventiva valutazione del dirigente.

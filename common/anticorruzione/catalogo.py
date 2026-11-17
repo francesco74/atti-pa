@@ -157,11 +157,17 @@ class Catalogo:
         indice[chiave] = v
         return v, True
 
-    async def collega(self, tipo: str, el) -> bool:
-        """Collega l'elemento senza voce a quella con lo stesso testo (o a una nuova); True se
-        la voce è nuova."""
+    async def collega(self, tipo: str, el, codice: str | None = None) -> bool:
+        """Collega l'elemento senza voce alla voce indicata per codice (variante con un testo
+        diverso, dal pacchetto) o a quella con lo stesso testo (o a una nuova); True se la voce
+        è nuova."""
         if el.voce_id:
             return False
+        if codice:
+            v = await self.db.scalar(select(AcVoce).where(AcVoce.ente_id == self.ente_id, AcVoce.codice == codice))
+            if v is not None and v.tipo == tipo:
+                el.voce_id = v.id
+                return False
         campi = {"tipo_misura": el.tipo, "categoria": el.categoria, "indicatore": el.indicatore,
                  "target": el.target} if tipo == "MISURA" else {}  # fmt: skip
         v, nuova = await self.voce(tipo, testo_elemento(tipo, el), **campi)

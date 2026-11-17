@@ -17,6 +17,7 @@ processi:
       di personale.
     rischi:
     - codice: D.1.1_R.1
+      voce: RIS-0087
       evento: Predisposizione di un bando contenente requisiti che possano avvantaggiare particolari categorie
         di soggetti.
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
@@ -250,6 +251,7 @@ processi:
       portale InPA e sito istituzionale dell'Ente dei concorrenti ammessi con riserva ed eventuali esclusi.
     rischi:
     - codice: D.3.4_R.1
+      voce: RIS-0088
       evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
@@ -347,6 +349,7 @@ processi:
       ammessi con riserva e degli esclusi;comunicazione ai concorrenti della esclusione.
     rischi:
     - codice: D.4.4_R.1
+      voce: RIS-0088
       evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
@@ -434,6 +437,7 @@ processi:
       gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
     rischi:
     - codice: D.5.3_R.1
+      voce: RIS-0088
       evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
@@ -442,6 +446,7 @@ processi:
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: D.5.3_R.1_M.1
+        voce: MIS-0090
         descrizione: Le domande vengono controllate più dipendenti dell'Ufficio Personale.Nella determinazione
           dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
           eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota.

@@ -375,7 +375,8 @@ Decisioni del 04/11/2026:
     **voci standard** stanno nel pacchetto (`anticorruzione/catalogo.yaml`, codici `ATT-0001`,
     `RIS-0001`, `MIS-0001`; create se mancano, mai cancellate, come le aree), ricavate dai
     processi standard con i testi uguali riuniti: le misure uguali sotto più rischi sono **una
-    voce**. Le voci dell'ente hanno la E (`ATT-E001`), così non si scontrano con gli
+    voce**; i quasi-doppioni (refusi, forma) sono riuniti a mano e l'elemento che usa la
+    variante indica la voce (`voce: MIS-0074` nel file del processo), con il suo testo. Le voci dell'ente hanno la E (`ATT-E001`), così non si scontrano con gli
     aggiornamenti del pacchetto. Per ora un elemento nuovo si collega alla voce con lo stesso
     testo (maiuscole, spazi, apostrofi tipografici e punteggiatura finale non contano) o ne crea
     una dell'ente; la fase 2 renderà esplicita la scelta dal catalogo (voce mancante: il RPCT

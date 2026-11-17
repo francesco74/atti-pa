@@ -400,6 +400,16 @@ oggetto. Da riga di comando, in sviluppo (usa il `DATABASE_URL` del `.env`):
 Al posto di `FILE.zip` si può indicare una cartella con la struttura del pacchetto (es.
 `pacchetto/`).
 
+Per una nuova versione: si modificano i file in `pacchetto/`, si aumenta `versione` in
+`pacchetto/pacchetto.yaml`, si controlla con `prova` e si crea lo zip con `crea`; lo zip si
+importa poi dall'app in ogni ente (Amministrazione → Pacchetti).
+
+Catalogo della mappatura (`pacchetto/anticorruzione/catalogo.yaml`): una voce nuova prende il
+codice successivo del suo tipo (`ATT-`, `RIS-`, `MIS-`); i codici non si cambiano né si
+riusano. Due voci che sono la stessa si uniscono togliendo quella in più e scrivendo
+`voce: <codice che resta>` negli elementi dei processi che usano il testo della voce tolta
+(il testo dell'elemento resta com'è). `prova` controlla che ogni `voce:` sia nel catalogo.
+
 ---
 
 ## 8. Manutenzione (`deploy/manutenzione/`)

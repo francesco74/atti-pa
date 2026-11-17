@@ -266,6 +266,11 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse((await db.scalars(select(modello).where(modello.voce_id.is_(None)))).all(), modello)
             misure = (await db.scalars(select(AcMisura))).all()
             self.assertLess(len({x.voce_id for x in misure}), len(misure))
+            # variante riunita nel catalogo: l'elemento indica la voce, il suo testo resta
+            variante = await db.scalar(select(AcMisura).where(AcMisura.codice == "C.5.1_R.1_M.1"))
+            voce = await db.get(AcVoce, variante.voce_id)
+            self.assertEqual(voce.codice, "MIS-0074")
+            self.assertTrue(variante.descrizione.endswith("27/10/2020-"))
             voci = await analizza(db, ENTE, pacchetto)
             self.assertEqual({v.stato for v in voci if v.tipo == "processo"}, {"INVARIATO"})
 
@@ -309,6 +314,13 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
                 "- {codice: ATT-0001, descrizione: b}\n"}  # fmt: skip
         with self.assertRaises(PacchettoNonValido):
             leggi_pacchetto(file)
+
+    async def test_voce_indicata_fuori_dal_catalogo(self):
+        nome = "anticorruzione/processi/c.yaml"
+        file = {**self.file, nome: self.file[nome].replace("voce: MIS-0074", "voce: MIS-9999", 1)}
+        with self.assertRaises(PacchettoNonValido) as e:
+            leggi_pacchetto(file)
+        self.assertIn("MIS-9999", str(e.exception.errori))
 
     async def test_area_mancante(self):
         file = {**self.file, "anticorruzione/aree.yaml": "aree: []\n"}

@@ -225,11 +225,18 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
             except ModelloNonValido as e:
                 errori.append(f"{o.percorso} con le specificità: {e}")
     codici_aree = {a.codice for a in aree}
+    voci = {v.codice: tipo for tipo, v in catalogo.voci()} if catalogo else {}
     for o in oggetti:
         if o.tipo == "processo":
-            area = ac.leggi_processi(o.sorgente).area
-            if area and area not in codici_aree:
-                errori.append(f"{o.percorso}: area {area} non definita in {ac.FILE_AREE}")
+            f = ac.leggi_processi(o.sorgente)
+            if f.area and f.area not in codici_aree:
+                errori.append(f"{o.percorso}: area {f.area} non definita in {ac.FILE_AREE}")
+            # le voci indicate dagli elementi stanno nel catalogo, del tipo giusto
+            for p in f.processi:
+                for tipo, el in [*(("ATTIVITA", a) for a in p.attivita), *(("RISCHIO", r) for a in p.attivita for r in a.rischi),
+                                 *(("MISURA", m) for a in p.attivita for r in a.rischi for m in r.misure)]:  # fmt: skip
+                    if el.voce and voci.get(el.voce) != tipo:
+                        errori.append(f"{o.percorso}: {el.codice} indica la voce {el.voce}, che non è nel catalogo come {tipo.lower()}")
     if errori:
         raise PacchettoNonValido(errori)
     return Pacchetto(manifesto, oggetti, aree, catalogo)

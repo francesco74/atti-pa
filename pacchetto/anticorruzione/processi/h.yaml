@@ -115,6 +115,7 @@ processi:
     descrizione: Accertamento
     rischi:
     - codice: H.3.1_R.1
+      voce: RIS-0132
       evento: Abuso nell'adozione del provvedimento
       fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
@@ -162,6 +163,7 @@ processi:
         impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
       misure:
       - codice: H.4.2_R.1_M.1
+        voce: MIS-0172
         descrizione: Verifica conflitto di interesse
         categoria: Disciplina del conflitto di interessi
   - codice: H.4.3

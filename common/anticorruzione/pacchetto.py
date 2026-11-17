@@ -25,11 +25,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.anticorruzione.catalogo import Catalogo
+from common.anticorruzione.catalogo import Catalogo, normalizza
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.configurazione import impronta
 from common.models import (
-    AcArea, AcAttivita, AcMetodologia, AcMisura, AcProcesso, AcRischio, nuovo_id,
+    AcArea, AcAttivita, AcMetodologia, AcMisura, AcProcesso, AcRischio, AcVoce, nuovo_id,
 )  # fmt: skip
 
 CARTELLA = "anticorruzione"
@@ -51,9 +51,14 @@ class ValutazioneStd(BaseModel):
     impatto: dict[str, str]
 
 
+# `voce`: codice della voce del catalogo, solo quando il testo dell'elemento è diverso da quello
+# della voce (variante riunita nella stessa radice); senza, la voce è quella con lo stesso testo.
+
+
 class MisuraStd(BaseModel):
     codice: str = Field(min_length=1, max_length=70)
     descrizione: str = Field(min_length=1)
+    voce: str | None = Field(default=None, max_length=20)
     tipo: Literal["GENERALE", "SPECIFICA"] = "SPECIFICA"
     categoria: str | None = None
     obbligo_trasparenza: str | None = None
@@ -66,6 +71,7 @@ class MisuraStd(BaseModel):
 class RischioStd(BaseModel):
     codice: str = Field(min_length=1, max_length=60)
     evento: str = Field(min_length=1)
+    voce: str | None = Field(default=None, max_length=20)
     fattore_abilitante: str | None = None
     valutazione: ValutazioneStd | None = None
     misure: list[MisuraStd] = []
@@ -74,6 +80,7 @@ class RischioStd(BaseModel):
 class AttivitaStd(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
     descrizione: str = Field(min_length=1)
+    voce: str | None = Field(default=None, max_length=20)
     rischi: list[RischioStd] = []
 
 
@@ -102,6 +109,11 @@ def impronta_processo(p: ProcessoStd, area: str | None) -> str:
     for campo, predefinito in (("tipo", "PROCESSO"), ("termine_conclusione", None), ("norma_riferimento", None)):
         if dati.get(campo) == predefinito:
             del dati[campo]
+    # la voce del catalogo entra solo se indicata: i processi senza mantengono l'impronta di prima
+    for a in dati.get("attivita", []):
+        for el in [a, *a.get("rischi", []), *(m for r in a.get("rischi", []) for m in r.get("misure", []))]:
+            if el.get("voce") is None:
+                el.pop("voce", None)
     return impronta({"area": area, **dati})
 
 
@@ -151,13 +163,21 @@ async def processo_ente(db: AsyncSession, ente_id: str, codice: str) -> tuple[Ac
                     key=lambda x: chiave_naturale(x.codice))  # fmt: skip
     misure = sorted(await db.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))),
                     key=lambda x: chiave_naturale(x.codice))  # fmt: skip
+    ids_voci = {x.voce_id for x in [*attivita, *rischi, *misure] if x.voce_id}
+    voci = {v.id: v for v in await db.scalars(select(AcVoce).where(AcVoce.id.in_(ids_voci)))} if ids_voci else {}
+
+    def voce(el, testo: str) -> str | None:
+        """Il codice della voce, se il testo dell'elemento è diverso dal suo."""
+        v = voci.get(el.voce_id)
+        return v.codice if v is not None and normalizza(v.descrizione) != normalizza(testo) else None
+
     std = ProcessoStd(
         codice=p.codice, tipo=p.tipo or "PROCESSO", denominazione=p.denominazione, descrizione=p.descrizione,
         tempi=p.tempi, attori_esterni=p.attori_esterni, termine_conclusione=p.termine_conclusione,
         norma_riferimento=p.norma_riferimento,
-        attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, rischi=[
-            RischioStd(codice=r.codice, evento=r.evento, fattore_abilitante=r.fattore_abilitante, misure=[
-                MisuraStd(codice=m.codice, descrizione=m.descrizione, tipo=m.tipo, categoria=m.categoria,
+        attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, voce=voce(a, a.descrizione), rischi=[
+            RischioStd(codice=r.codice, evento=r.evento, voce=voce(r, r.evento), fattore_abilitante=r.fattore_abilitante, misure=[
+                MisuraStd(codice=m.codice, descrizione=m.descrizione, voce=voce(m, m.descrizione), tipo=m.tipo, categoria=m.categoria,
                           obbligo_trasparenza=m.obbligo_trasparenza, fasi=m.fasi, tempi=m.tempi,
                           indicatore=m.indicatore, target=m.target)
                 for m in misure if m.rischio_id == r.id])
@@ -232,7 +252,7 @@ async def applica_processo(
     for a_std in std.attivita:
         a = attivita.get(a_std.codice) or AcAttivita(id=nuovo_id(), ente_id=ente_id, codice=a_std.codice)
         a.processo_id, a.descrizione = p.id, a_std.descrizione
-        await catalogo.collega("ATTIVITA", a)
+        await catalogo.collega("ATTIVITA", a, a_std.voce)
         db.add(a)
         for r_std in a_std.rischi:
             r = rischi.get(r_std.codice)
@@ -248,14 +268,14 @@ async def applica_processo(
                         r.probabilita_calcolata, r.impatto_calcolato = v.probabilita_calcolata, v.impatto_calcolato
                         r.probabilita, r.impatto, r.livello = v.probabilita, v.impatto, v.livello
             r.attivita_id, r.evento, r.fattore_abilitante = a.id, r_std.evento, r_std.fattore_abilitante
-            await catalogo.collega("RISCHIO", r)
+            await catalogo.collega("RISCHIO", r, r_std.voce)
             db.add(r)
             for x_std in r_std.misure:
                 x = misure.get(x_std.codice) or AcMisura(id=nuovo_id(), ente_id=ente_id, codice=x_std.codice)
                 x.rischio_id = r.id
-                for campo, valore in x_std.model_dump(exclude={"codice"}).items():
+                for campo, valore in x_std.model_dump(exclude={"codice", "voce"}).items():
                     setattr(x, campo, valore)
-                await catalogo.collega("MISURA", x)
+                await catalogo.collega("MISURA", x, x_std.voce)
                 db.add(x)
     await db.flush()
     return p
