@@ -19,7 +19,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.1.2_R.1_M.1
@@ -45,7 +45,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.1.3_R.1_M.1
@@ -70,7 +70,8 @@ processi:
         per verificarne il possesso, allo scopo di reclutare candidati particolari
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.2.1_R.1_M.1
@@ -103,7 +104,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.2.2_R.1_M.1
@@ -138,7 +140,8 @@ processi:
         scritta e la predeterminazione dei criteri di valutazione
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.2.3_R.1_M.1
@@ -161,7 +164,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.2.3_R.2_M.1
@@ -183,7 +186,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.2.5_R.1_M.1
@@ -206,7 +209,8 @@ processi:
       evento: Scelta discrezionale della graduatoria di altro ente per favorire un candidato determinato
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.3.1_R.1_M.1
@@ -232,7 +236,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.3.2_R.1_M.1
@@ -258,7 +262,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.4.2_R.1_M.1
@@ -291,7 +295,8 @@ processi:
       evento: Progressioni accordate illegittimamente allo scopo di agevolare dipendenti particolari
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.5.2_R.1_M.1
@@ -333,7 +338,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.6.2_R.1_M.1
@@ -355,7 +360,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.6.2_R.2_M.1
@@ -379,7 +384,8 @@ processi:
       evento: Motivazione generica sulla sussistenza dei presupposti e scelta fiduciaria del candidato
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.7.1_R.1_M.1
@@ -404,7 +410,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.7.2_R.1_M.1
@@ -434,7 +440,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.8.1_R.1_M.1
@@ -465,7 +471,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.9.1_R.1_M.1
@@ -492,7 +498,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.10.2_R.1_M.1
@@ -530,7 +536,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.11.1_R.1_M.1
@@ -556,7 +562,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.11.2_R.1_M.1
@@ -581,7 +587,7 @@ processi:
       fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: A.12.1_R.1_M.1
@@ -600,7 +606,8 @@ processi:
         indifferenziato o di favore
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.12.2_R.1_M.1
@@ -632,7 +639,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.13.1_R.1_M.1
@@ -652,7 +659,7 @@ processi:
         o di un unico soggetto
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: A.13.2_R.1_M.1
@@ -685,7 +692,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: A.14.2_R.1_M.1
@@ -695,3 +702,75 @@ processi:
         tempi: Annuale
         indicatore: Ore di formazione per dipendente
         target: Almeno 40 ore annue
+- codice: A.15
+  denominazione: Contrattazione decentrata integrativa e relazioni sindacali
+  descrizione: Costituzione del fondo per le risorse decentrate, contratto integrativo e relazioni sindacali (informazione
+    e confronto)
+  tempi: Annuale
+  attori_esterni: Organizzazioni sindacali, RSU, revisore dei conti
+  attivita:
+  - codice: A.15.1
+    descrizione: Costituzione del fondo per le risorse decentrate
+    rischi:
+    - codice: A.15.1_R.1
+      evento: Costituzione del fondo con risorse variabili non consentite o oltre i limiti di legge (art. 23, c.
+        2, d.lgs. 75/2017)
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: A.15.1_R.1_M.1
+        descrizione: Certificazione del fondo e della compatibilità dei costi del contratto integrativo da parte
+          del revisore dei conti (art. 40-bis d.lgs. 165/2001)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Annuale
+        indicatore: Fondi e contratti certificati prima della sottoscrizione
+        target: 100%
+  - codice: A.15.2
+    descrizione: Negoziazione e sottoscrizione del contratto integrativo
+    rischi:
+    - codice: A.15.2_R.1
+      evento: Clausole che distribuiscono le risorse in modo indifferenziato o in violazione del CCNL, per favorire
+        gruppi di dipendenti
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: A.15.2_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: A.15.2_R.1_M.2
+        descrizione: Pubblicazione del contratto integrativo con le relazioni tecnico-finanziaria e illustrativa
+          (art. 21 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        tempi: Entro 30 giorni dalla sottoscrizione
+        indicatore: Contratti pubblicati con le relazioni
+        target: 100%
+  - codice: A.15.3
+    descrizione: Informazione e confronto con le organizzazioni sindacali
+    rischi:
+    - codice: A.15.3_R.1
+      evento: Mancata informazione o confronto sulle materie previste dal CCNL, con accordi informali non documentati
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: A.15.3_R.1_M.1
+        descrizione: Verbalizzazione degli incontri e trasmissione dell'informazione nei tempi del CCNL
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni incontro
+        indicatore: Incontri verbalizzati
+        target: 100%

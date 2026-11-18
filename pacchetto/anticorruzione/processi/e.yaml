@@ -16,7 +16,8 @@ processi:
       evento: Selezione delle posizioni da controllare non casuale né basata su criteri, per escludere alcuni contribuenti
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.1.1_R.1_M.1
@@ -42,7 +43,8 @@ processi:
       evento: Omissione o ritardo nell'emissione degli avvisi fino a far maturare la decadenza
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.1.2_R.1_M.1
@@ -64,7 +66,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.1.2_R.2_M.1
@@ -95,7 +98,8 @@ processi:
       evento: Mancata attivazione della riscossione coattiva per alcuni debitori
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.2.1_R.1_M.1
@@ -114,7 +118,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.2.2_R.1_M.1
@@ -154,7 +158,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.3.4_R.1_M.1
@@ -199,7 +204,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.4.1_R.1_M.1
@@ -222,7 +227,7 @@ processi:
       fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.5.1_R.1_M.1
@@ -241,7 +246,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.5.2_R.1_M.1
@@ -272,7 +277,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.6.1_R.1_M.1
@@ -297,7 +302,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.6.2_R.1_M.1
@@ -319,7 +324,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.7.1_R.1_M.1
@@ -337,7 +342,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.7.2_R.1_M.1
@@ -369,7 +374,8 @@ processi:
       evento: Sottostima del valore per favorire l'acquirente
       fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.8.2_R.1_M.1
@@ -394,7 +400,8 @@ processi:
       evento: Ricorso alla trattativa diretta fuori dei casi previsti o condizioni dell'asta che limitano la partecipazione
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.8.3_R.1_M.1
@@ -423,7 +430,8 @@ processi:
       evento: Assegnazione diretta senza procedura a evidenza pubblica o a canoni non congrui
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.9.1_R.1_M.1
@@ -449,7 +457,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.9.2_R.1_M.1
@@ -471,7 +479,8 @@ processi:
       evento: Acquisto o locazione a valori superiori a quelli di mercato per favorire il proprietario
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.10.1_R.1_M.1
@@ -498,7 +507,7 @@ processi:
       fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.10.2_R.1_M.1
@@ -528,7 +537,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.11.1_R.1_M.1
@@ -554,7 +563,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.11.2_R.1_M.1
@@ -577,7 +586,8 @@ processi:
       evento: Assegnazione senza procedura pubblica o a soggetti legati al precedente proprietario
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.12.1_R.1_M.1
@@ -602,7 +612,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.12.2_R.1_M.1
@@ -624,7 +634,8 @@ processi:
       evento: Rendicontazione di spese non ammissibili o doppio finanziamento della stessa spesa
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.13.1_R.1_M.1
@@ -651,7 +662,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: E.13.2_R.1_M.1
@@ -674,7 +685,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: E.14.1_R.1_M.1
@@ -683,4 +694,54 @@ processi:
         categoria: Controllo
         tempi: A ogni fattura
         indicatore: Fatture controllate
+        target: 100%
+- codice: E.15
+  denominazione: Gestione economica del personale e adempimenti fiscali e previdenziali
+  descrizione: Elaborazione degli stipendi, trattenute, versamenti contributivi e fiscali, certificazioni e dichiarazioni
+  attori_esterni: Dipendenti, INPS, Agenzia delle entrate
+  attivita:
+  - codice: E.15.1
+    descrizione: Elaborazione e pagamento degli stipendi
+    rischi:
+    - codice: E.15.1_R.1
+      evento: Corresponsione di emolumenti, indennità o arretrati non dovuti o non autorizzati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: E.15.1_R.1_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: E.15.1_R.1_M.2
+        descrizione: Quadratura mensile tra cedolini, atti di attribuzione e fondo, con controllo a campione delle
+          variazioni stipendiali
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Variazioni stipendiali controllate
+        target: Almeno 10%
+  - codice: E.15.2
+    descrizione: Versamenti contributivi e fiscali e dichiarazioni
+    rischi:
+    - codice: E.15.2_R.1
+      evento: Omessi o ritardati versamenti e dichiarazioni, con sanzioni a carico dell'ente
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: E.15.2_R.1_M.1
+        descrizione: Scadenzario degli adempimenti e verifica dei versamenti e delle dichiarazioni (UniEmens, 770,
+          IRAP)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Adempimenti nei termini
         target: 100%

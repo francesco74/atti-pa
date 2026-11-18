@@ -15,7 +15,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: H.1.1_R.1_M.1
@@ -40,7 +40,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: H.1.2_R.1_M.1
@@ -80,7 +81,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: H.2.1_R.1_M.1
@@ -98,7 +99,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: H.2.2_R.1_M.1
@@ -121,7 +122,8 @@ processi:
       evento: Transazioni sfavorevoli per l'ente o non giustificate dal rischio di soccombenza
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: H.3.1_R.1_M.1
@@ -161,7 +163,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: H.4.1_R.1_M.1
@@ -185,7 +187,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: H.5.1_R.1_M.1

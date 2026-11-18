@@ -1,6 +1,7 @@
 # Metodologia standard di valutazione del rischio corruttivo: Allegato 1 al PNA 2019, a cui
 # rinvia anche il PNA 2025 (delibera ANAC n. 19 del 28/01/2026); indicatori come adottati in
-# un PIAO comunale (2026-2028). Ogni ente può adattarla alla propria (Anticorruzione →
+# un PIAO comunale (2026-2028), con in più la collaborazione del responsabile (Box 9 del
+# PNA 2019). Ogni ente può adattarla alla propria (Anticorruzione →
 # Metodologia).
 #
 # Per ogni rischio si valutano gli indicatori con la scala; probabilità e impatto finali sono
@@ -58,6 +59,12 @@ indicatori_probabilita:
   - id: "9"
     nome: Capacità dell'Ente di far fronte alle carenze organizzative
     descrizione: Attraverso l'acquisizione delle corrispondenti figure apicali anziché l'affidamento di interim
+
+  - id: "10"
+    nome: Livello di collaborazione del responsabile del processo
+    descrizione: >-
+      Collaborazione del responsabile del processo con il RPCT nella costruzione,
+      nell'aggiornamento e nel monitoraggio del piano (PNA 2019, All. 1, Box 9)
 
 indicatori_impatto:
   - id: "1"

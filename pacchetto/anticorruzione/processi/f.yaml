@@ -15,7 +15,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.1.1_R.1_M.1
@@ -42,7 +43,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.1.2_R.1_M.1
@@ -75,7 +77,8 @@ processi:
       evento: Mancata adozione o esecuzione delle ordinanze di demolizione, con il consolidarsi degli abusi
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.1.3_R.1_M.1
@@ -106,7 +109,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.2.1_R.1_M.1
@@ -133,7 +137,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.2.2_R.1_M.1
@@ -167,7 +172,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.2.3_R.1_M.1
@@ -197,7 +202,7 @@ processi:
       fattore_abilitante: Inadeguata diffusione della cultura della legalità
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.3.1_R.1_M.1
@@ -231,7 +236,8 @@ processi:
       evento: Annullamento o archiviazione dei verbali senza motivazione o notifiche tardive che li rendono inefficaci
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.3.2_R.1_M.1
@@ -257,7 +263,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.3.3_R.1_M.1
@@ -282,7 +288,7 @@ processi:
         o di un unico soggetto
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.4.1_R.1_M.1
@@ -309,7 +315,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.4.2_R.1_M.1
@@ -332,7 +338,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.5.1_R.1_M.1
@@ -356,7 +363,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.5.1_R.2_M.1
@@ -390,7 +398,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.5.2_R.1_M.1
@@ -414,7 +422,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.6.1_R.1_M.1
@@ -442,7 +450,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.6.2_R.1_M.1
@@ -474,7 +482,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.7.1_R.1_M.1
@@ -509,7 +517,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.7.2_R.1_M.1
@@ -533,7 +541,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.8.1_R.1_M.1
@@ -566,7 +575,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.8.2_R.1_M.1
@@ -588,7 +597,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.9.1_R.1_M.1
@@ -612,7 +622,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.9.1_R.2_M.1
@@ -654,7 +665,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.10.2_R.1_M.1
@@ -678,7 +690,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.10.2_R.2_M.1
@@ -712,7 +725,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.10.3_R.1_M.1
@@ -734,7 +747,8 @@ processi:
       evento: Scelta discrezionale dei soggetti da controllare per favorirne o danneggiarne alcuni
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.11.1_R.1_M.1
@@ -758,7 +772,8 @@ processi:
       fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
         o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: F.11.1_R.2_M.1
@@ -792,7 +807,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: F.11.2_R.1_M.1

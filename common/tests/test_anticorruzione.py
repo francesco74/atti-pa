@@ -18,7 +18,7 @@ def _tutti(m, indicatori, valore):
 class Valutazione(unittest.TestCase):
     def test_standard(self):
         m = standard()
-        self.assertEqual(len(m.indicatori_probabilita), 9)
+        self.assertEqual(len(m.indicatori_probabilita), 10)
         self.assertEqual(len(m.indicatori_impatto), 4)
         self.assertLess(m.ordine_livello("Rischio Alto"), m.ordine_livello("Rischio Critico"))
 

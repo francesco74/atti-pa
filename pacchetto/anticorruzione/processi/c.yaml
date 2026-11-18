@@ -16,7 +16,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.1.1_R.1_M.1
@@ -45,7 +45,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.1.3_R.1_M.1
@@ -78,7 +78,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.1.4_R.1_M.1
@@ -109,7 +109,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.2.1_R.1_M.1
@@ -138,7 +138,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.2.3_R.1_M.1
@@ -177,7 +177,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.3.1_R.1_M.1
@@ -206,7 +206,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.3.3_R.1_M.1
@@ -239,7 +239,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.3.4_R.1_M.1
@@ -263,7 +263,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.4.1_R.1_M.1
@@ -292,7 +292,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.4.3_R.1_M.1
@@ -325,7 +325,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.4.4_R.1_M.1
@@ -359,7 +359,8 @@ processi:
       evento: Omissione dei controlli sulle SCIA o controlli selettivi, oltre i termini per l'inibizione
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.5.2_R.1_M.1
@@ -386,7 +387,7 @@ processi:
       fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.5.3_R.1_M.1
@@ -418,7 +419,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.6.1_R.1_M.1
@@ -446,7 +447,8 @@ processi:
         determinati soggetti
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.6.3_R.1_M.1
@@ -485,7 +487,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.7.1_R.1_M.1
@@ -514,7 +516,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.7.3_R.1_M.1
@@ -547,7 +549,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.7.4_R.1_M.1
@@ -579,7 +581,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.8.1_R.1_M.1
@@ -615,7 +617,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.8.3_R.1_M.1
@@ -645,7 +647,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.9.3_R.1_M.1
@@ -680,7 +682,8 @@ processi:
       evento: Assegnazione al di fuori dell'ordine delle richieste o in deroga al regolamento, anche dietro compenso
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.10.2_R.1_M.1
@@ -709,7 +712,7 @@ processi:
       fattore_abilitante: Inadeguata diffusione della cultura della legalità
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.10.4_R.1_M.1
@@ -744,7 +747,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.11.2_R.1_M.1
@@ -778,7 +781,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.12.2_R.1_M.1
@@ -813,7 +816,8 @@ processi:
       evento: Riconoscimento o trascrizione con documentazione falsa o incompleta, anche per effetto di intermediari
       fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.13.2_R.1_M.1
@@ -848,7 +852,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.14.2_R.1_M.1
@@ -872,7 +876,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.15.1_R.1_M.1
@@ -893,7 +897,7 @@ processi:
       fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.15.3_R.1_M.1
@@ -925,7 +929,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.16.3_R.1_M.1
@@ -959,7 +963,8 @@ processi:
         particolari soggetti
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.17.2_R.1_M.1
@@ -1000,7 +1005,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.18.1_R.1_M.1
@@ -1040,7 +1045,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.19.1_R.1_M.1
@@ -1069,7 +1074,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.19.3_R.1_M.1
@@ -1102,7 +1107,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.19.4_R.1_M.1
@@ -1125,7 +1130,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.20.1_R.1_M.1
@@ -1154,7 +1159,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.20.3_R.1_M.1
@@ -1193,7 +1198,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.21.1_R.1_M.1
@@ -1222,7 +1227,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.21.3_R.1_M.1
@@ -1255,7 +1260,7 @@ processi:
       fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: C.21.4_R.1_M.1
@@ -1287,7 +1292,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.22.1_R.1_M.1
@@ -1316,7 +1321,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.22.3_R.1_M.1
@@ -1349,7 +1354,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.22.4_R.1_M.1
@@ -1373,7 +1378,7 @@ processi:
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
         probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio}
+          '9': Medio, '10': Medio}
         impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: C.23.1_R.1_M.1
@@ -1402,7 +1407,7 @@ processi:
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
         probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
-          '9': Basso}
+          '9': Basso, '10': Basso}
         impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
       misure:
       - codice: C.23.3_R.1_M.1
@@ -1427,3 +1432,162 @@ processi:
         tempi: A ogni procedimento
         indicatore: Dichiarazioni acquisite sul totale dei procedimenti
         target: 100%
+- codice: C.24
+  ambito: PROVINCIA
+  denominazione: Autorizzazioni e controlli in materia di trasporto privato
+  descrizione: Autoscuole, studi di consulenza per la circolazione, imprese di revisione dei veicoli, autotrasporto
+    in conto proprio ed esami di idoneità (funzioni ex motorizzazione)
+  attori_esterni: Autoscuole, studi di consulenza, officine di revisione, imprese di trasporto, candidati
+  attivita:
+  - codice: C.24.1
+    descrizione: Ricezione dell'istanza e verifica della completezza della documentazione
+    rischi:
+    - codice: C.24.1_R.1
+      evento: Alterazione dell'ordine di trattazione delle istanze o tempi diversi a seconda del richiedente
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: C.24.1_R.1_M.1
+        descrizione: Trattazione delle istanze nell'ordine cronologico di arrivo, con registro informatico tracciato
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Istanze trattate fuori ordine senza motivazione
+        target: '0'
+      - codice: C.24.1_R.1_M.2
+        descrizione: Monitoraggio dei tempi di conclusione dei procedimenti, con verifica degli scostamenti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Procedimenti conclusi nei termini
+        target: Almeno 95%
+  - codice: C.24.2
+    descrizione: Segnalazione certificata per l'esercizio dell'attività di autoscuola
+    procedimento: PRC-0054
+  - codice: C.24.3
+    descrizione: Autorizzazione all'attività di consulenza per la circolazione dei mezzi di trasporto
+    procedimento: PRC-0055
+  - codice: C.24.4
+    descrizione: Autorizzazione alle imprese di autoriparazione per la revisione periodica dei veicoli
+    procedimento: PRC-0056
+  - codice: C.24.5
+    descrizione: Licenza per l'autotrasporto di cose in conto proprio
+    procedimento: PRC-0057
+  - codice: C.24.6
+    descrizione: Istruttoria e verifica dei requisiti
+    rischi:
+    - codice: C.24.6_R.1
+      evento: Rilascio dei titoli in assenza dei requisiti professionali, morali e dei locali, o ritardo strumentale
+        per ottenere utilità
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: C.24.6_R.1_M.1
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
+      - codice: C.24.6_R.1_M.2
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: C.24.6_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: C.24.6_R.1_M.4
+        descrizione: Monitoraggio dei tempi di conclusione dei procedimenti, con verifica degli scostamenti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Procedimenti conclusi nei termini
+        target: Almeno 95%
+  - codice: C.24.7
+    descrizione: Esami di idoneità per insegnanti e istruttori di autoscuola e per consulenti della circolazione
+    procedimento: PRC-0058
+  - codice: C.24.8
+    descrizione: Svolgimento degli esami di idoneità
+    rischi:
+    - codice: C.24.8_R.1
+      evento: Commissione d'esame compiacente o in conflitto di interessi con candidati o imprese del settore
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: C.24.8_R.1_M.1
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: C.24.8_R.1_M.2
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: C.24.8_R.1_M.3
+        descrizione: Prove scritte con quesiti estratti da una banca dati e correzione anonima
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni sessione
+        indicatore: Sessioni con estrazione dei quesiti
+        target: 100%
+  - codice: C.24.9
+    descrizione: Vigilanza amministrativa e tecnica sulle imprese autorizzate
+    rischi:
+    - codice: C.24.9_R.1
+      evento: Vigilanza omessa o preannunciata sulle imprese autorizzate, mancata sospensione o revoca in presenza
+        di irregolarità
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: C.24.9_R.1_M.1
+        descrizione: Sopralluoghi svolti da almeno due addetti, con verbale e documentazione fotografica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni sopralluogo
+        indicatore: Sopralluoghi con verbale congiunto
+        target: 100%
+      - codice: C.24.9_R.1_M.2
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: C.24.9_R.1_M.3
+        descrizione: Programma annuale di ispezioni con imprese estratte a sorte
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Annuale
+        indicatore: Imprese ispezionate
+        target: Almeno 20% all'anno

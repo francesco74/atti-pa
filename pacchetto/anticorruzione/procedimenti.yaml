@@ -669,3 +669,82 @@ procedimenti:
     strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
       120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
       l. 241/1990)
+- codice: PRC-0054
+  ambito: PROVINCIA
+  denominazione: Segnalazione certificata per l'esercizio dell'attività di autoscuola
+  norma_riferimento: D.lgs. 285/1992, art. 123; d.m. 317/1995; d.l. 7/2007, art. 10
+  termine_conclusione: 60 giorni per i controlli (art. 19 l. 241/1990)
+  art35:
+    tipologia: Trasporto privato
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0055
+  ambito: PROVINCIA
+  denominazione: Autorizzazione all'attività di consulenza per la circolazione dei mezzi di trasporto
+  norma_riferimento: L. 264/1991; regolamento provinciale
+  termine_conclusione: Termine fissato dal regolamento provinciale
+  art35:
+    tipologia: Trasporto privato
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0056
+  ambito: PROVINCIA
+  denominazione: Autorizzazione alle imprese di autoriparazione per la revisione periodica dei veicoli
+  norma_riferimento: D.lgs. 285/1992, art. 80, c. 8; d.P.R. 495/1992, artt. 239-241
+  termine_conclusione: Termine fissato dal regolamento provinciale
+  art35:
+    tipologia: Trasporto privato
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0057
+  ambito: PROVINCIA
+  denominazione: Licenza per l'autotrasporto di cose in conto proprio
+  norma_riferimento: L. 298/1974, artt. 31-32; regolamento provinciale
+  termine_conclusione: Termine fissato dal regolamento provinciale
+  art35:
+    tipologia: Trasporto privato
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0058
+  ambito: PROVINCIA
+  denominazione: Esami di idoneità per insegnanti e istruttori di autoscuola e per consulenti della circolazione
+  norma_riferimento: D.lgs. 285/1992, art. 123; l. 264/1991, art. 5
+  termine_conclusione: Sessioni fissate dal bando
+  art35:
+    tipologia: Trasporto privato
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0059
+  ambito: PROVINCIA
+  denominazione: Trasporto e assistenza per l'autonomia e la comunicazione degli studenti con disabilità delle scuole
+    superiori
+  norma_riferimento: L. 104/1992, art. 13; d.lgs. 66/2017; legge regionale
+  termine_conclusione: Termine fissato dall'avviso annuale
+  art35:
+    tipologia: Diritto allo studio
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)

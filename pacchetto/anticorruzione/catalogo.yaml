@@ -463,6 +463,54 @@ attivita:
   descrizione: Affidamento degli interventi di rimozione e bonifica
 - codice: ATT-0230
   descrizione: Istruttoria e prescrizioni
+- codice: ATT-0231
+  descrizione: Costituzione del fondo per le risorse decentrate
+- codice: ATT-0232
+  descrizione: Negoziazione e sottoscrizione del contratto integrativo
+- codice: ATT-0233
+  descrizione: Informazione e confronto con le organizzazioni sindacali
+- codice: ATT-0234
+  descrizione: Istruttoria e verifica dei requisiti
+- codice: ATT-0235
+  descrizione: Svolgimento degli esami di idoneità
+- codice: ATT-0236
+  descrizione: Vigilanza amministrativa e tecnica sulle imprese autorizzate
+- codice: ATT-0237
+  descrizione: Programmazione dei servizi e riparto delle risorse tra le scuole
+- codice: ATT-0238
+  descrizione: Affidamento e controllo dei servizi di trasporto e di assistenza
+- codice: ATT-0239
+  descrizione: Elaborazione e pagamento degli stipendi
+- codice: ATT-0240
+  descrizione: Versamenti contributivi e fiscali e dichiarazioni
+- codice: ATT-0241
+  descrizione: Registrazione di protocollo della corrispondenza
+- codice: ATT-0242
+  descrizione: Fascicolazione, conservazione e scarto dei documenti
+- codice: ATT-0243
+  descrizione: Istruttoria e redazione dei provvedimenti
+- codice: ATT-0244
+  descrizione: Pareri di regolarità tecnica e contabile
+- codice: ATT-0245
+  descrizione: Pubblicazione all'albo online e in Amministrazione trasparente
+- codice: ATT-0246
+  descrizione: Convocazione e verbalizzazione delle sedute degli organi collegiali
+- codice: ATT-0247
+  descrizione: Ricezione e trattazione di segnalazioni e reclami
+- codice: ATT-0248
+  descrizione: Indagini di soddisfazione degli utenti
+- codice: ATT-0249
+  descrizione: Programmazione degli eventi e scelta degli organizzatori e degli artisti
+- codice: ATT-0250
+  descrizione: Contratti di sponsorizzazione
+- codice: ATT-0251
+  descrizione: Gestione degli ingressi, degli incassi e dei beni culturali
+- codice: ATT-0252
+  descrizione: Acquisizione di hardware, software e servizi cloud
+- codice: ATT-0253
+  descrizione: Gestione degli accessi e della sicurezza dei dati
+- codice: ATT-0254
+  descrizione: Gestione del sito istituzionale
 rischi:
 - codice: RIS-0001
   descrizione: Programmazione dei profili e dei requisiti orientata a favorire candidati determinati
@@ -928,6 +976,65 @@ rischi:
   descrizione: Istruttoria compiacente sui requisiti tecnici degli impianti e sulle garanzie finanziarie
 - codice: RIS-0214
   descrizione: Ispezioni preannunciate o compiacenti, mancata contestazione delle violazioni
+- codice: RIS-0215
+  descrizione: Costituzione del fondo con risorse variabili non consentite o oltre i limiti di legge (art. 23, c.
+    2, d.lgs. 75/2017)
+- codice: RIS-0216
+  descrizione: Clausole che distribuiscono le risorse in modo indifferenziato o in violazione del CCNL, per favorire
+    gruppi di dipendenti
+- codice: RIS-0217
+  descrizione: Mancata informazione o confronto sulle materie previste dal CCNL, con accordi informali non documentati
+- codice: RIS-0218
+  descrizione: Rilascio dei titoli in assenza dei requisiti professionali, morali e dei locali, o ritardo strumentale
+    per ottenere utilità
+- codice: RIS-0219
+  descrizione: Commissione d'esame compiacente o in conflitto di interessi con candidati o imprese del settore
+- codice: RIS-0220
+  descrizione: Vigilanza omessa o preannunciata sulle imprese autorizzate, mancata sospensione o revoca in presenza
+    di irregolarità
+- codice: RIS-0221
+  descrizione: Riparto delle risorse alle scuole o ai gestori con criteri non predeterminati
+- codice: RIS-0222
+  descrizione: Mancato controllo sulle ore e sulle corse rese dai gestori, con pagamento di prestazioni non svolte
+- codice: RIS-0223
+  descrizione: Corresponsione di emolumenti, indennità o arretrati non dovuti o non autorizzati
+- codice: RIS-0224
+  descrizione: Omessi o ritardati versamenti e dichiarazioni, con sanzioni a carico dell'ente
+- codice: RIS-0225
+  descrizione: Registrazione ritardata, retrodatata o omessa di istanze e offerte per favorire o danneggiare il
+    mittente
+- codice: RIS-0226
+  descrizione: Sottrazione o distruzione di documenti, scarto senza autorizzazione della soprintendenza archivistica
+- codice: RIS-0227
+  descrizione: Provvedimenti con istruttoria carente o motivazione insufficiente, adottati in violazione delle norme
+    sul procedimento per favorire interessi particolari
+- codice: RIS-0228
+  descrizione: Pareri resi senza istruttoria o sotto la pressione degli organi di indirizzo
+- codice: RIS-0229
+  descrizione: Pubblicazione omessa, tardiva o incompleta per limitare la conoscenza dell'atto e i termini di impugnazione
+- codice: RIS-0230
+  descrizione: Mancata astensione di componenti in conflitto di interessi o verbalizzazione non fedele delle sedute
+- codice: RIS-0231
+  descrizione: Archiviazione o mancata risposta ai reclami per coprire disservizi o comportamenti scorretti dell'ufficio
+    interessato
+- codice: RIS-0232
+  descrizione: Indagini costruite o elaborate in modo da pilotare gli esiti e nascondere le criticità dei servizi
+- codice: RIS-0233
+  descrizione: Affidamenti diretti ricorrenti a organizzatori o artisti, giustificati dall'unicità della prestazione
+    senza motivazione
+- codice: RIS-0234
+  descrizione: Sponsorizzazioni accettate senza avviso o da soggetti con interessi in procedimenti dell'ente, con
+    controprestazioni non congrue
+- codice: RIS-0235
+  descrizione: Ingressi gratuiti non autorizzati, mancato versamento degli incassi o uso improprio dei beni delle
+    collezioni
+- codice: RIS-0236
+  descrizione: Scelta di fornitori e soluzioni che vincolano a un unico operatore o requisiti costruiti su un prodotto
+- codice: RIS-0237
+  descrizione: Accessi abusivi alle banche dati per finalità private o di terzi, con utenze non personali o non
+    revocate
+- codice: RIS-0238
+  descrizione: Pubblicazione o rimozione di contenuti senza autorizzazione, alterazione delle informazioni pubblicate
 misure:
 - codice: MIS-0001
   descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
@@ -2029,4 +2136,126 @@ misure:
   tipo_misura: SPECIFICA
   categoria: Controllo
   indicatore: Garanzie verificate
+  target: 100%
+- codice: MIS-0174
+  descrizione: Certificazione del fondo e della compatibilità dei costi del contratto integrativo da parte del revisore
+    dei conti (art. 40-bis d.lgs. 165/2001)
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Fondi e contratti certificati prima della sottoscrizione
+  target: 100%
+- codice: MIS-0175
+  descrizione: Pubblicazione del contratto integrativo con le relazioni tecnico-finanziaria e illustrativa (art.
+    21 d.lgs. 33/2013)
+  tipo_misura: GENERALE
+  categoria: Trasparenza
+  indicatore: Contratti pubblicati con le relazioni
+  target: 100%
+- codice: MIS-0176
+  descrizione: Verbalizzazione degli incontri e trasmissione dell'informazione nei tempi del CCNL
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Incontri verbalizzati
+  target: 100%
+- codice: MIS-0177
+  descrizione: Prove scritte con quesiti estratti da una banca dati e correzione anonima
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Sessioni con estrazione dei quesiti
+  target: 100%
+- codice: MIS-0178
+  descrizione: Programma annuale di ispezioni con imprese estratte a sorte
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Imprese ispezionate
+  target: Almeno 20% all'anno
+- codice: MIS-0179
+  descrizione: Riscontro delle ore e delle corse con i registri delle scuole prima della liquidazione
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Fatture riscontrate
+  target: 100%
+- codice: MIS-0180
+  descrizione: Quadratura mensile tra cedolini, atti di attribuzione e fondo, con controllo a campione delle variazioni
+    stipendiali
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Variazioni stipendiali controllate
+  target: Almeno 10%
+- codice: MIS-0181
+  descrizione: Scadenzario degli adempimenti e verifica dei versamenti e delle dichiarazioni (UniEmens, 770, IRAP)
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Adempimenti nei termini
+  target: 100%
+- codice: MIS-0182
+  descrizione: Protocollo informatico con segnatura automatica, registro giornaliero in conservazione e annullamenti
+    autorizzati e motivati (d.P.R. 445/2000)
+  tipo_misura: SPECIFICA
+  categoria: Semplificazione
+  indicatore: Annullamenti motivati sul totale
+  target: 100%
+- codice: MIS-0183
+  descrizione: Manuale di gestione documentale e piano di conservazione, con scarto autorizzato dalla soprintendenza
+    archivistica
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+  indicatore: Scarti autorizzati
+  target: 100%
+- codice: MIS-0184
+  descrizione: Pubblicazione automatica degli atti dal gestionale, con data certa
+  tipo_misura: SPECIFICA
+  categoria: Semplificazione
+  indicatore: Atti pubblicati automaticamente
+  target: 100%
+- codice: MIS-0185
+  descrizione: Dichiarazione a verbale delle astensioni e registrazione audio-video delle sedute pubbliche
+  tipo_misura: SPECIFICA
+  categoria: Disciplina del conflitto di interessi
+  indicatore: Sedute registrate e verbalizzate
+  target: 100%
+- codice: MIS-0186
+  descrizione: Registro informatico dei reclami con termini di risposta, trasmesso periodicamente al RPCT e al titolare
+    del potere sostitutivo
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Reclami con risposta nei termini
+  target: Almeno 95%
+- codice: MIS-0187
+  descrizione: Metodologia dell'indagine predefinita e pubblicazione dei risultati
+  tipo_misura: SPECIFICA
+  categoria: Trasparenza
+  indicatore: Indagini con risultati pubblicati
+  target: 100%
+- codice: MIS-0188
+  descrizione: Avviso pubblico per la ricerca degli sponsor e verifica dei conflitti con i procedimenti in corso
+  tipo_misura: SPECIFICA
+  categoria: Trasparenza
+  indicatore: Sponsorizzazioni con avviso pubblicato
+  target: 100%
+- codice: MIS-0189
+  descrizione: Biglietteria informatizzata con riconciliazione periodica degli incassi e inventario dei beni delle
+    collezioni
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Riconciliazioni effettuate
+  target: Mensile
+- codice: MIS-0190
+  descrizione: Verifica della qualificazione dei servizi cloud (ACN) e della portabilità dei dati nei capitolati
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Acquisti con verifica
+  target: 100%
+- codice: MIS-0191
+  descrizione: Profili di accesso personali e minimi, revoca alla cessazione e verifica a campione dei log di accesso
+    alle banche dati
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Verifiche sui log
+  target: Semestrale
+- codice: MIS-0192
+  descrizione: Procedura di pubblicazione con ruoli autorizzati e tracciamento delle modifiche
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Contenuti pubblicati da utenti autorizzati
   target: 100%

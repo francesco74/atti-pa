@@ -1,0 +1,372 @@
+# Processi standard dell'area N per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
+area: N
+processi:
+- codice: N.1
+  denominazione: Gestione del protocollo e degli archivi
+  descrizione: Registrazione della corrispondenza, fascicolazione, conservazione e scarto dei documenti
+  attori_esterni: Cittadini, imprese, soprintendenza archivistica
+  attivita:
+  - codice: N.1.1
+    descrizione: Registrazione di protocollo della corrispondenza
+    rischi:
+    - codice: N.1.1_R.1
+      evento: Registrazione ritardata, retrodatata o omessa di istanze e offerte per favorire o danneggiare il mittente
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: N.1.1_R.1_M.1
+        descrizione: Protocollo informatico con segnatura automatica, registro giornaliero in conservazione e annullamenti
+          autorizzati e motivati (d.P.R. 445/2000)
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: Continuativa
+        indicatore: Annullamenti motivati sul totale
+        target: 100%
+  - codice: N.1.2
+    descrizione: Fascicolazione, conservazione e scarto dei documenti
+    rischi:
+    - codice: N.1.2_R.1
+      evento: Sottrazione o distruzione di documenti, scarto senza autorizzazione della soprintendenza archivistica
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.1.2_R.1_M.1
+        descrizione: Manuale di gestione documentale e piano di conservazione, con scarto autorizzato dalla soprintendenza
+          archivistica
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni scarto
+        indicatore: Scarti autorizzati
+        target: 100%
+- codice: N.2
+  denominazione: Formazione e pubblicazione degli atti e funzionamento degli organi
+  descrizione: Istruttoria di deliberazioni, decreti, determinazioni e ordinanze, pareri, pubblicazione all'albo
+    online e sedute degli organi collegiali
+  attori_esterni: Organi di indirizzo, segretario
+  attivita:
+  - codice: N.2.1
+    descrizione: Istruttoria e redazione dei provvedimenti
+    rischi:
+    - codice: N.2.1_R.1
+      evento: Provvedimenti con istruttoria carente o motivazione insufficiente, adottati in violazione delle norme
+        sul procedimento per favorire interessi particolari
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.2.1_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: N.2.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: N.2.1_R.1_M.3
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
+  - codice: N.2.2
+    descrizione: Pareri di regolarità tecnica e contabile
+    rischi:
+    - codice: N.2.2_R.1
+      evento: Pareri resi senza istruttoria o sotto la pressione degli organi di indirizzo
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.2.2_R.1_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: N.2.2_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+  - codice: N.2.3
+    descrizione: Pubblicazione all'albo online e in Amministrazione trasparente
+    rischi:
+    - codice: N.2.3_R.1
+      evento: Pubblicazione omessa, tardiva o incompleta per limitare la conoscenza dell'atto e i termini di impugnazione
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.2.3_R.1_M.1
+        descrizione: Pubblicazione tempestiva dei dati e degli atti in Amministrazione trasparente (d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        tempi: Nei termini di legge
+        indicatore: Atti pubblicati nei termini sul totale
+        target: 100%
+      - codice: N.2.3_R.1_M.2
+        descrizione: Pubblicazione automatica degli atti dal gestionale, con data certa
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: Continuativa
+        indicatore: Atti pubblicati automaticamente
+        target: 100%
+  - codice: N.2.4
+    descrizione: Convocazione e verbalizzazione delle sedute degli organi collegiali
+    rischi:
+    - codice: N.2.4_R.1
+      evento: Mancata astensione di componenti in conflitto di interessi o verbalizzazione non fedele delle sedute
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.2.4_R.1_M.1
+        descrizione: Dichiarazione a verbale delle astensioni e registrazione audio-video delle sedute pubbliche
+        tipo: SPECIFICA
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni seduta
+        indicatore: Sedute registrate e verbalizzate
+        target: 100%
+- codice: N.3
+  denominazione: Segnalazioni, reclami e indagini di soddisfazione
+  descrizione: Gestione delle segnalazioni e dei reclami dei cittadini e rilevazione della qualità percepita dei
+    servizi
+  attori_esterni: Cittadini, utenti dei servizi
+  attivita:
+  - codice: N.3.1
+    descrizione: Ricezione e trattazione di segnalazioni e reclami
+    rischi:
+    - codice: N.3.1_R.1
+      evento: Archiviazione o mancata risposta ai reclami per coprire disservizi o comportamenti scorretti dell'ufficio
+        interessato
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.3.1_R.1_M.1
+        descrizione: Registro informatico dei reclami con termini di risposta, trasmesso periodicamente al RPCT
+          e al titolare del potere sostitutivo
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Reclami con risposta nei termini
+        target: Almeno 95%
+      - codice: N.3.1_R.1_M.2
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+  - codice: N.3.2
+    descrizione: Indagini di soddisfazione degli utenti
+    rischi:
+    - codice: N.3.2_R.1
+      evento: Indagini costruite o elaborate in modo da pilotare gli esiti e nascondere le criticità dei servizi
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+      misure:
+      - codice: N.3.2_R.1_M.1
+        descrizione: Metodologia dell'indagine predefinita e pubblicazione dei risultati
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: Annuale
+        indicatore: Indagini con risultati pubblicati
+        target: 100%
+- codice: N.4
+  denominazione: Eventi, musei e servizi culturali e sponsorizzazioni
+  descrizione: Organizzazione di eventi e manifestazioni, gestione di musei, biblioteche e teatri, contratti di
+    sponsorizzazione
+  attori_esterni: Organizzatori, artisti, sponsor, gestori, pubblico
+  attivita:
+  - codice: N.4.1
+    descrizione: Programmazione degli eventi e scelta degli organizzatori e degli artisti
+    rischi:
+    - codice: N.4.1_R.1
+      evento: Affidamenti diretti ricorrenti a organizzatori o artisti, giustificati dall'unicità della prestazione
+        senza motivazione
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: N.4.1_R.1_M.1
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: N.4.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: N.4.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: N.4.2
+    descrizione: Contratti di sponsorizzazione
+    rischi:
+    - codice: N.4.2_R.1
+      evento: Sponsorizzazioni accettate senza avviso o da soggetti con interessi in procedimenti dell'ente, con
+        controprestazioni non congrue
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: N.4.2_R.1_M.1
+        descrizione: Avviso pubblico per la ricerca degli sponsor e verifica dei conflitti con i procedimenti in
+          corso
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni sponsorizzazione
+        indicatore: Sponsorizzazioni con avviso pubblicato
+        target: 100%
+  - codice: N.4.3
+    descrizione: Gestione degli ingressi, degli incassi e dei beni culturali
+    rischi:
+    - codice: N.4.3_R.1
+      evento: Ingressi gratuiti non autorizzati, mancato versamento degli incassi o uso improprio dei beni delle
+        collezioni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.4.3_R.1_M.1
+        descrizione: Biglietteria informatizzata con riconciliazione periodica degli incassi e inventario dei beni
+          delle collezioni
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Riconciliazioni effettuate
+        target: Mensile
+- codice: N.5
+  denominazione: Sistemi informativi e sito istituzionale
+  descrizione: Infrastruttura informatica, applicazioni, sicurezza, backup e sito istituzionale
+  attori_esterni: Fornitori ICT, cittadini
+  attivita:
+  - codice: N.5.1
+    descrizione: Acquisizione di hardware, software e servizi cloud
+    rischi:
+    - codice: N.5.1_R.1
+      evento: Scelta di fornitori e soluzioni che vincolano a un unico operatore o requisiti costruiti su un prodotto
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: N.5.1_R.1_M.1
+        descrizione: Programmazione triennale e aggiornamento annuale degli acquisti e dei lavori, con verifica
+          degli acquisti fuori programma
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Acquisti non programmati sul totale
+        target: ≤ 10%
+      - codice: N.5.1_R.1_M.2
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: N.5.1_R.1_M.3
+        descrizione: Verifica della qualificazione dei servizi cloud (ACN) e della portabilità dei dati nei capitolati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni acquisto
+        indicatore: Acquisti con verifica
+        target: 100%
+  - codice: N.5.2
+    descrizione: Gestione degli accessi e della sicurezza dei dati
+    rischi:
+    - codice: N.5.2_R.1
+      evento: Accessi abusivi alle banche dati per finalità private o di terzi, con utenze non personali o non revocate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: N.5.2_R.1_M.1
+        descrizione: Profili di accesso personali e minimi, revoca alla cessazione e verifica a campione dei log
+          di accesso alle banche dati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Verifiche sui log
+        target: Semestrale
+      - codice: N.5.2_R.1_M.2
+        descrizione: Rispetto del codice di comportamento dell'ente, con le regole specifiche per chi opera nel
+          processo
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: Annuale
+        indicatore: Violazioni accertate e procedimenti disciplinari avviati
+        target: Monitoraggio annuale
+  - codice: N.5.3
+    descrizione: Gestione del sito istituzionale
+    rischi:
+    - codice: N.5.3_R.1
+      evento: Pubblicazione o rimozione di contenuti senza autorizzazione, alterazione delle informazioni pubblicate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: N.5.3_R.1_M.1
+        descrizione: Procedura di pubblicazione con ruoli autorizzati e tracciamento delle modifiche
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Contenuti pubblicati da utenti autorizzati
+        target: 100%

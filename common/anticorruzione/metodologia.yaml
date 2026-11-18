@@ -58,6 +58,12 @@ indicatori_probabilita:
     nome: Capacità dell'Ente di far fronte alle carenze organizzative
     descrizione: Attraverso l'acquisizione delle corrispondenti figure apicali anziché l'affidamento di interim
 
+  - id: "10"
+    nome: Livello di collaborazione del responsabile del processo
+    descrizione: >-
+      Collaborazione del responsabile del processo con il RPCT nella costruzione,
+      nell'aggiornamento e nel monitoraggio del piano (PNA 2019, All. 1, Box 9)
+
 indicatori_impatto:
   - id: "1"
     nome: Impatto sull'immagine dell'Ente

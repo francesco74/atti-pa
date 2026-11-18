@@ -1,6 +1,6 @@
-# Aree di rischio degli enti locali: generali (PNA 2019, All. 1, Tab. 3) e specifiche di
-# comuni e province (governo del territorio, pianificazione urbanistica, rifiuti). Create negli
-# enti che non le hanno, mai cancellate.
+# Aree di rischio degli enti locali: generali (PNA 2019, All. 1, Tab. 3), specifiche di
+# comuni e province (governo del territorio, pianificazione urbanistica, rifiuti) e dei servizi
+# generali (N). Create negli enti che non le hanno, mai cancellate.
 aree:
 - codice: A
   descrizione: Acquisizione e gestione del personale
@@ -37,3 +37,6 @@ aree:
 - codice: M
   descrizione: Gestione dei rifiuti
   descrizione_breve: Igiene urbana e rifiuti
+- codice: N
+  descrizione: Affari istituzionali e servizi generali
+  descrizione_breve: Organi, atti, protocollo, cultura, informatica

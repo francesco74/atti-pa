@@ -445,3 +445,10 @@ Decisioni del 04/11/2026:
     `ambito` (COMUNE, PROVINCIA). All'importazione si indica il tipo di ente: processi nuovi e
     procedimenti dell'altro tipo non si importano (salvo scelta esplicita del processo). Per
     passare dal pacchetto di prima: `deploy/manutenzione/azzera_mappatura.py`.
+33. **Pacchetto 2026.5 e collaborazione del responsabile** (18/11/2026): dal confronto con il
+    piano 2021-23 di una provincia (schema dell'Allegato 1 al PNA 2019) si aggiungono l'area N
+    (affari istituzionali e servizi generali) e 9 processi, tra cui trasporto privato e diritto
+    allo studio delle superiori per le province, con 6 procedimenti. La metodologia standard
+    prende il decimo indicatore di probabilità del Box 9 (collaborazione del responsabile del
+    processo); si resta su probabilità × impatto. I codici del pacchetto restano stabili tra le
+    versioni, quindi l'aggiornamento non richiede di azzerare la mappatura.
