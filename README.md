@@ -295,6 +295,13 @@ Senza, la ricerca funziona solo per parole. I vettori si calcolano alla prima ri
 un processo cambia, e restano nella tabella `ricerca_vettori` (si può svuotare: si
 ricostruisce). Cambiando modello i vettori si ricalcolano da soli.
 
+Lo stesso modello serve al catalogo della mappatura: la ricerca delle voci trova anche per
+significato ("avvicendamento" trova "rotazione") e, prima di creare o proporre una voce nuova,
+l'app mostra quelle già presenti con significato simile, per non creare doppioni; il RPCT le
+vede anche nella proposta da decidere. Sono simili le voci con similarità almeno
+`CATALOGO_SOGLIA_SIMILI` (0,8: con Qwen3-Embedding i doppioni veri del pacchetto stanno sopra
+0,9, le voci solo affini sotto 0,75). Senza modello si confrontano le parole in comune.
+
 I testi dei prompt inviati al modello sono file in `common/prompt/` (descritti nel
 README della cartella): si modificano senza toccare il codice e valgono al riavvio. Con
 `LLM_PROMPT_DIR` si indica una cartella di prompt personalizzati che sostituiscono quelli

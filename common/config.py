@@ -99,6 +99,9 @@ class Settings(BaseSettings):
     embedding_prefisso_documento: str = ""
     # Similarità minima (coseno) di un risultato trovato per significato
     ricerca_soglia_semantica: float = 0.5
+    # Similarità minima (coseno) perché una voce del catalogo della mappatura sia segnalata
+    # come simile a quella che si sta creando o proponendo (i doppioni veri stanno sopra 0,9)
+    catalogo_soglia_simili: float = 0.8
     # Ricerche per significato al minuto per indirizzo IP nelle pagine pubbliche; oltre si
     # cerca solo per parole (il limite è di ogni processo dell'API)
     ricerca_limite_pubblico: int = 20

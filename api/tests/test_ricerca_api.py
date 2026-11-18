@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E4
 from auth import password as pw  # noqa: E402
 from common.config import Settings  # noqa: E402
 from common.embedding import EmbeddingError  # noqa: E402
-from common.models import Base, Ente, EnteDominio, Modulo, RicercaVettore, Ruolo, Struttura, User  # noqa: E402
+from common.models import AcVoce, Base, Ente, EnteDominio, Modulo, RicercaVettore, Ruolo, Struttura, User  # noqa: E402
 
 PASSWORD = "Password-di-prova-1"
 ENTE = "http://lucca.example.it"
@@ -31,7 +31,8 @@ PUBBLICO = "/api/v1/pubblico"
 
 # concetti del modello finto: un testo che contiene una di queste parole ha 1 su quella
 # dimensione (così "immondizia" e "igiene urbana" sono vicini senza parole in comune)
-_CONCETTI = [("igiene urbana", "immondizia", "pattume"), ("locazion", "affitt"), ("concors", "assunzion")]
+_CONCETTI = [("igiene urbana", "immondizia", "pattume"), ("locazion", "affitt"), ("concors", "assunzion"),
+             ("rotazion", "avvicendament")]
 
 
 class EmbeddingFinto:
@@ -123,11 +124,12 @@ class RicercaApi(unittest.TestCase):
         return r.get_json()
 
     def _vettori(self, solo_processi: bool = True) -> int:
-        """Vettori salvati: dei soli processi (gli altri test cercano anche negli altri livelli)."""
+        """Vettori salvati della mappatura (senza le voci del catalogo): dei soli processi (gli
+        altri test cercano anche negli altri livelli)."""
         async def conta():
             motore = create_async_engine(self.url)
             async with AsyncSession(motore) as db:
-                q = select(func.count()).select_from(RicercaVettore)
+                q = select(func.count()).select_from(RicercaVettore).where(RicercaVettore.oggetto_id.not_in(select(AcVoce.id)))
                 if solo_processi:
                     q = q.where(RicercaVettore.oggetto_id.in_(list(self.processi.values())))
                 n = await db.scalar(q)
@@ -135,6 +137,62 @@ class RicercaApi(unittest.TestCase):
             return n
 
         return asyncio.run(conta())
+
+    def _vettori_voci(self) -> int:
+        async def conta():
+            motore = create_async_engine(self.url)
+            async with AsyncSession(motore) as db:
+                n = await db.scalar(select(func.count()).select_from(RicercaVettore).where(
+                    RicercaVettore.oggetto_id.in_(select(AcVoce.id))))  # fmt: skip
+            await motore.dispose()
+            return n
+
+        return asyncio.run(conta())
+
+    def test_catalogo_simili(self):
+        """Voci del catalogo simili a una nuova: per significato col modello, per parole in
+        comune senza; la ricerca nel catalogo trova anche per significato; la ricerca nella
+        mappatura non cancella i vettori delle voci."""
+        rpct, referente = self._client("rpct"), self._client("referente")
+        cat = f"{API}/catalogo"
+        voci = {}
+        for chiave, testo in [("rotazione", "Rotazione del personale"), ("sito", "Pubblicazione degli esiti sul sito"),
+                              ("incarichi", "Rotazione degli incarichi dei funzionari")]:  # fmt: skip
+            voci[chiave] = self._ok(rpct.post(cat, base_url=ENTE, json={"tipo": "MISURA", "descrizione": testo}), 201)
+
+        def simili(testo, **altro):
+            return self._ok(referente.get(f"{cat}/simili", base_url=ENTE, query_string={"tipo": "MISURA", "testo": testo, **altro}))
+
+        # per significato: nessuna parola in comune che conti
+        r = simili("Avvicendamento del personale")
+        self.assertEqual({v["id"] for v in r}, {voci["rotazione"]["id"], voci["incarichi"]["id"]})
+        self.assertTrue(all(v["somiglianza"] >= 0.8 for v in r))
+        self.assertEqual(simili("Avvicendamento del personale", esclusa=voci["rotazione"]["id"])[0]["id"], voci["incarichi"]["id"])
+        self.assertEqual(simili("Contributo per l'affitto"), [])
+        # gli altri tipi non c'entrano
+        self.assertEqual(self._ok(referente.get(f"{cat}/simili", base_url=ENTE,
+                                                query_string={"tipo": "RISCHIO", "testo": "Rotazione del personale"})), [])  # fmt: skip
+
+        # ricerca nel catalogo: per significato, il codice prima di tutto
+        r = self._ok(referente.get(cat, base_url=ENTE, query_string={"tipo": "MISURA", "testo": "avvicendamento"}))
+        self.assertEqual({v["id"] for v in r}, {voci["rotazione"]["id"], voci["incarichi"]["id"]})
+        self.assertTrue(all(v["per_significato"] for v in r))
+        r = self._ok(referente.get(cat, base_url=ENTE, query_string={"tipo": "MISURA", "testo": voci["sito"]["codice"]}))
+        self.assertEqual(r[0]["id"], voci["sito"]["id"])
+        # una parola scritta a metà si trova ancora
+        r = self._ok(referente.get(cat, base_url=ENTE, query_string={"tipo": "MISURA", "testo": "pubblicaz"}))
+        self.assertEqual([v["id"] for v in r], [voci["sito"]["id"]])
+
+        # la ricerca nella mappatura non toglie i vettori delle voci
+        self.assertEqual(self._vettori_voci(), 3)
+        self._ok(referente.get(f"{API}/elenco/ricerca", base_url=ENTE, query_string={"testo": "affitto", "livello": "MISURA"}))
+        self.assertEqual(self._vettori_voci(), 3)
+
+        # senza modello: per parole in comune (almeno due e metà del totale)
+        self.embedding.guasto = True
+        r = simili("Rotazione del personale dell'ufficio")
+        self.assertEqual([v["id"] for v in r], [voci["rotazione"]["id"]])
+        self.assertEqual(simili("Avvicendamento del personale"), [])
 
     def test_ricerca_interna(self):
         referente = self._client("referente")

@@ -7,7 +7,7 @@ import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'albero.dart';
 import 'art35.dart';
-import 'catalogo.dart' show modificaVoce;
+import 'catalogo.dart' show VociSimiliProposta, modificaVoce;
 import 'comune.dart';
 
 const _etichetteStato = {
@@ -471,6 +471,9 @@ class _PropostaPageState extends State<PropostaPage> {
                 prima: p['tipo'] == 'MODIFICA' ? (p['prima'] as Map?)?.cast<String, dynamic>() : null,
               ),
             ),
+          // la voce nuova proposta: il RPCT vede se nel catalogo ce n'è già una simile
+          if (rpct && p['oggetto'] == 'VOCE' && p['tipo'] == 'CREA' && p['stato'] == 'INVIATA' && _dati?['descrizione'] is String)
+            VociSimiliProposta(tipo: _dati!['tipo_voce'] as String, testo: _dati!['descrizione'] as String),
         ]),
       ),
     );

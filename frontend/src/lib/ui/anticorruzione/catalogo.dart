@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'comune.dart';
@@ -61,7 +62,11 @@ class _CatalogoTabState extends State<CatalogoTab> with AutomaticKeepAliveClient
   Future<void> _nuova() async {
     final dati = context.read<DatiAnticorruzione>();
     final api = apiDi(context);
-    final v = await modificaVoce(context, dati, _tipo, salva: (v) => api.post(apiCatalogo, {...v, 'tipo': _tipo}));
+    final v = await modificaVoce(context, dati, _tipo, salva: (v) async {
+      // prima di crearla: le voci simili già nel catalogo (si torna alla modifica o si crea)
+      await controllaSimili(context, _tipo, v['descrizione'] as String, azione: 'Crea');
+      await api.post(apiCatalogo, {...v, 'tipo': _tipo});
+    });
     if (v != null && mounted) _carica();
   }
 
@@ -132,6 +137,7 @@ class _CatalogoTabState extends State<CatalogoTab> with AutomaticKeepAliveClient
         usi == 0 ? 'non usata' : (usi == 1 ? 'usata in 1 elemento' : 'usata in $usi elementi'),
         v['standard'] == true ? 'standard' : 'dell\'ente',
         if (v['tipo'] == 'MISURA' && v['categoria'] != null) '${v['categoria']}',
+        if (v['per_significato'] == true) 'trovata per significato',
       ],
       finale: [if (v['attiva'] != true) const _Etichetta('Disattivata')],
       onTap: () => _apri(v),
@@ -174,6 +180,118 @@ Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzi
           const Campo('target', 'Target', righe: 2),
         ],
       ]);
+}
+
+/// Le voci del catalogo dello stesso tipo simili a [testo] (per significato, o per parole in
+/// comune senza il modello), la più simile prima, con la somiglianza da 0 a 1.
+Future<List<Map<String, dynamic>>> vociSimili(ApiClient api, String tipo, String testo, {String? esclusa}) async =>
+    ((await api.get('$apiCatalogo/simili', query: {'tipo': tipo, 'testo': testo, 'esclusa': ?esclusa})) as List)
+        .cast<Map<String, dynamic>>();
+
+String _usi(Map<String, dynamic> v) {
+  final usi = v['usi'] as int? ?? 0;
+  return usi == 0 ? 'non usata' : (usi == 1 ? 'usata in 1 elemento' : 'usata in $usi elementi');
+}
+
+/// Prima di creare o proporre una voce nuova ([azione]: "Crea" o "Proponi"): se nel catalogo
+/// ce ne sono di simili le mostra. Restituisce null per procedere o, con [scegli], la voce
+/// esistente scelta al posto della nuova; lancia [Annullato] per tornare alla modifica. Se le
+/// voci simili non si possono cercare si procede (il controllo aiuta, non blocca).
+Future<Map<String, dynamic>?> controllaSimili(BuildContext context, String tipo, String testo,
+    {required String azione, bool scegli = false}) async {
+  List<Map<String, dynamic>> simili;
+  try {
+    simili = await vociSimili(apiDi(context), tipo, testo);
+  } catch (_) {
+    return null;
+  }
+  if (simili.isEmpty || !context.mounted) return null;
+  final esito = await showDialog<Object>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text('Nel catalogo ci sono voci simili'),
+      content: SizedBox(
+        width: 600,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(scegli
+              ? 'Prima di ${azione == 'Crea' ? 'creare' : 'proporre'} una voce nuova, controlla se una di queste fa già al caso '
+                  'tuo: nel processo il testo si potrà comunque ritoccare.'
+              : 'Prima di creare una voce nuova, controlla che non sia già nel catalogo.'),
+          const SizedBox(height: 8),
+          Flexible(
+            child: ListView(shrinkWrap: true, children: [
+              for (final v in simili)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(iconaVoce(tipo), size: 20),
+                  title: Text('${v['codice']} - ${v['descrizione']}'),
+                  subtitle: Text([
+                    'somiglianza ${((v['somiglianza'] as num) * 100).round()}%',
+                    _usi(v),
+                    if (v['attiva'] != true) 'disattivata',
+                  ].join(' · ')),
+                  trailing: scegli && v['attiva'] == true
+                      ? TextButton(onPressed: () => Navigator.pop(c, v), child: const Text('Scegli questa'))
+                      : null,
+                ),
+            ]),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c), child: const Text('Torna alla modifica')),
+        FilledButton(onPressed: () => Navigator.pop(c, 'procedi'), child: Text('$azione comunque')),
+      ],
+    ),
+  );
+  if (esito is Map<String, dynamic>) return esito;
+  if (esito == 'procedi') return null;
+  throw const Annullato();
+}
+
+/// Le voci del catalogo simili a quella proposta, per il RPCT che decide la proposta (niente
+/// se non ce ne sono o se non si possono cercare).
+class VociSimiliProposta extends StatefulWidget {
+  const VociSimiliProposta({super.key, required this.tipo, required this.testo});
+
+  final String tipo, testo;
+
+  @override
+  State<VociSimiliProposta> createState() => _VociSimiliPropostaState();
+}
+
+class _VociSimiliPropostaState extends State<VociSimiliProposta> {
+  late final Future<List<Map<String, dynamic>>> _simili =
+      vociSimili(apiDi(context), widget.tipo, widget.testo).catchError((_) => <Map<String, dynamic>>[]);
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<List<Map<String, dynamic>>>(
+        future: _simili,
+        builder: (context, s) {
+          final simili = s.data ?? const [];
+          if (simili.isEmpty) return const SizedBox.shrink();
+          return Sezione(
+            titolo: 'Voci simili già nel catalogo',
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('Se la voce proposta c\'è già, conviene restituire la proposta indicando quale usare.',
+                  style: Theme.of(context).textTheme.bodySmall),
+              for (final v in simili)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(iconaVoce(widget.tipo), size: 20),
+                  title: Text('${v['codice']} - ${v['descrizione']}'),
+                  subtitle: Text([
+                    'somiglianza ${((v['somiglianza'] as num) * 100).round()}%',
+                    _usi(v),
+                    if (v['attiva'] != true) 'disattivata',
+                  ].join(' · ')),
+                ),
+            ]),
+          );
+        },
+      );
 }
 
 /// Chiede conferma per un'operazione su una voce usata, elencando dove è usata (mappatura e
@@ -467,10 +585,18 @@ class _SceltaVoceState extends State<_SceltaVoce> {
   Future<void> _manca(bool rpct) async {
     final api = apiDi(context);
     Map<String, dynamic>? nuova;
+    var esistente = false;
     // il salvataggio lo fa la finestra della voce: con un errore resta aperta
     final v = await modificaVoce(context, widget.dati!, widget.tipo,
         v: _testo.text.trim().isEmpty ? null : {'descrizione': _testo.text.trim(), if (widget.tipo == 'MISURA') 'tipo_misura': 'SPECIFICA'},
         salva: (v) async {
+          // prima le voci simili già nel catalogo: se ne sceglie una, niente voce nuova
+          final scelta = await controllaSimili(context, widget.tipo, v['descrizione'] as String,
+              azione: rpct ? 'Crea' : 'Proponi', scegli: true);
+          if (scelta != null) {
+            (nuova, esistente) = (scelta, true);
+            return;
+          }
           if (rpct) {
             nuova = await api.post(apiCatalogo, {...v, 'tipo': widget.tipo}) as Map<String, dynamic>;
           } else {
@@ -478,7 +604,7 @@ class _SceltaVoceState extends State<_SceltaVoce> {
           }
         });
     if (v == null || !mounted) return;
-    if (!rpct) {
+    if (!rpct && !esistente) {
       mostraMessaggio(context, 'Proposta della voce inviata al RPCT: quando la approva la trovi nel catalogo e la puoi scegliere.');
     }
     Navigator.pop(context, nuova);
@@ -526,7 +652,7 @@ class _SceltaVoceState extends State<_SceltaVoce> {
                             dense: true,
                             leading: Icon(iconaVoce(v['tipo'] as String?), size: 20),
                             title: Text('${v['codice']} - ${v['descrizione']}'),
-                            subtitle: Text((v['usi'] as int? ?? 0) == 0 ? 'non usata' : 'usata in ${v['usi']} elementi'),
+                            subtitle: Text([_usi(v), if (v['per_significato'] == true) 'trovata per significato'].join(' · ')),
                             onTap: () => Navigator.pop(context, v),
                           ),
                       ]),

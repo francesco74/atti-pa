@@ -21,7 +21,8 @@ void main() {
     obblighi: const [],
   );
 
-  Future<Future<Map<String, dynamic>?> Function()> apri(WidgetTester tester, {required bool rpct, required String tipo}) async {
+  Future<Future<Map<String, dynamic>?> Function()> apri(WidgetTester tester,
+      {required bool rpct, required String tipo, bool simili = false}) async {
     tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -36,6 +37,11 @@ void main() {
           if (r.url.queryParameters['tipo'] == 'MISURA')
             {'id': 'v2', 'tipo': 'MISURA', 'codice': 'MIS-0007', 'descrizione': 'Doppia firma', 'tipo_misura': 'GENERALE',
              'categoria': 'Controllo', 'indicatore': 'Atti firmati', 'target': '100%', 'attiva': true, 'usi': 1},
+        ];
+      } else if (r.url.path.endsWith('/catalogo/simili') && simili) {
+        corpo = [
+          {'id': 'v5', 'tipo': 'ATTIVITA', 'codice': 'ATT-0031', 'descrizione': 'Collaudo delle opere pubbliche',
+           'attiva': true, 'usi': 2, 'somiglianza': 0.91},
         ];
       } else if (r.url.path.endsWith('/catalogo') && r.method == 'POST') {
         corpo = {'id': 'v9', 'tipo': 'ATTIVITA', 'codice': 'ATT-E001', 'descrizione': (jsonDecode(r.body) as Map)['descrizione'],
@@ -127,6 +133,38 @@ void main() {
     await tester.pumpAndSettle();
     final v = await esito;
     expect((v?['descrizione'], v?['voce_id']), ('Collaudo delle opere', 'v9'));
+  });
+
+  testWidgets('prima di proporre una voce si vedono le simili e se ne sceglie una', (tester) async {
+    final avvia = await apri(tester, rpct: false, tipo: 'ATTIVITA', simili: true);
+    final esito = avvia();
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Cerca (codice o testo)'), 'Collaudo dei lavori');
+    await tester.tap(find.text('Proponi una voce nuova'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nel catalogo ci sono voci simili'), findsOneWidget);
+    expect(find.text('somiglianza 91% · usata in 2 elementi'), findsOneWidget);
+
+    // si torna alla modifica: la voce scritta resta
+    await tester.tap(find.text('Torna alla modifica'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nuova voce: attività'), findsOneWidget);
+    expect(corpi['POST /api/v1/anticorruzione/proposte'], isNull);
+
+    // si sceglie la simile: niente proposta, l'attività nasce da quella voce
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    expect(find.text('Proponi comunque'), findsOneWidget);
+    await tester.tap(find.text('Scegli questa'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Voce del catalogo ATT-0031'), findsOneWidget);
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    final v = await esito;
+    expect((v?['descrizione'], v?['voce_id']), ('Collaudo delle opere pubbliche', 'v5'));
+    expect(corpi['POST /api/v1/anticorruzione/proposte'], isNull);
   });
 
   test('voce originale solo se il testo è stato ritoccato', () {

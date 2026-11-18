@@ -155,6 +155,14 @@ def lessicale(domanda: str, documenti: list[Documento]) -> list[Risultato]:
     return risultati[:MAX_RISULTATI]
 
 
+def somiglianza_parole(a: str, b: str) -> float:
+    """Quota di parole significative (radici) in comune tra due testi (Jaccard); 0 se in
+    comune ce n'è meno di due, perché una parola sola non fa due testi simili."""
+    ra, rb = set(radici(a)), set(radici(b))
+    comuni = ra & rb
+    return len(comuni) / len(ra | rb) if len(comuni) >= 2 else 0.0
+
+
 def coseno(a: list[float], b: list[float]) -> float:
     """Coseno tra vettori già normalizzati (prodotto scalare)."""
     return sum(x * y for x, y in zip(a, b))

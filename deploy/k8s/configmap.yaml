@@ -43,6 +43,7 @@ data:
   EMBEDDING_MODEL: ""            # es. BAAI/bge-m3
   EMBEDDING_TIMEOUT: "20"
   RICERCA_SOGLIA_SEMANTICA: "0.5"
+  CATALOGO_SOGLIA_SIMILI: "0.8"
   RICERCA_LIMITE_PUBBLICO: "20"  # ricerche per significato al minuto per IP, pagine pubbliche
   RICERCHE_LIMITE_REGISTRO: "30" # ricerche concluse e feedback registrati al minuto per IP
   RICERCHE_CONSERVAZIONE_MESI: "12"  # poi il worker cancella ricerche registrate e feedback

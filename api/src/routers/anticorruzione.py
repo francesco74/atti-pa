@@ -573,7 +573,8 @@ async def ricerca_elenco():
     f = parametri(RicercaElencoIn)
     sessione = db()
     m = await _mappatura_completa(sessione)
-    validi = {x.id for v in m.values() for x in v}
+    # i record dell'ente che possono avere un vettore: la mappatura e le voci del catalogo
+    validi = {x.id for v in m.values() for x in v} | set(await sessione.scalars(select(AcVoce.id).where(AcVoce.ente_id == ente_id())))
     if f.livello == "PROCESSO":  # gli stessi documenti della ricerca nella mappatura (vettori in comune)
         documenti = await documenti_ricerca(sessione)
         return await servizio_ricerca.cerca(f.testo, documenti, ente_id=ente_id(), validi=validi)

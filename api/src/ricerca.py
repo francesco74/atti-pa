@@ -131,6 +131,32 @@ async def cerca(domanda: str, documenti: list[ricerca.Documento], *, ente_id: st
     }
 
 
+async def simili(testo: str, documenti: list[ricerca.Documento], *, ente_id: str, soglia: float,
+                 soglia_parole: float = 0.5, massimo: int = 5) -> list[tuple[str, float]]:
+    """I documenti simili al testo, il più simile prima: (id, somiglianza da 0 a 1). Per
+    significato (coseno tra i vettori, almeno [soglia]) se c'è il modello di embedding, e
+    comunque per parole in comune (almeno [soglia_parole]); non fallisce mai per il modello."""
+    punteggi: dict[str, float] = {}
+    for d in documenti:
+        p = ricerca.somiglianza_parole(testo, d.titolo)
+        if p >= soglia_parole:
+            punteggi[d.id] = p
+    client = risorse().embedding
+    if client is not None and documenti and len(testo.strip()) >= 3:
+        try:
+            vettori = await _vettori(client, ente_id, documenti, None)
+            # il testo è confrontato come un documento (non come una domanda): stessi prefissi
+            [v] = await client.vettori([testo])
+            v = ricerca.unitario(v)
+            for i, w in vettori.items():
+                c = ricerca.coseno(v, w)
+                if c >= soglia:
+                    punteggi[i] = max(punteggi.get(i, 0.0), c)
+        except EmbeddingError as e:
+            log.warning("Voci simili solo per parole: %s", e)
+    return sorted(punteggi.items(), key=lambda x: -x[1])[:massimo]
+
+
 class LimiteRichieste:
     """Al più [massimo] richieste al minuto per chiave (indirizzo IP), in memoria."""
 

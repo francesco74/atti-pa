@@ -17,7 +17,8 @@ from flask import Blueprint
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, update
 
-from deps import audit, db, ente, ente_id, utente
+import ricerca as servizio_ricerca
+from deps import audit, db, ente, ente_id, impostazioni, utente
 from routers.anticorruzione import lettore, rpct
 from web import ErroreApi, corpo, nessun_contenuto, parametri
 from common.anticorruzione.catalogo import (
@@ -25,6 +26,7 @@ from common.anticorruzione.catalogo import (
 )  # fmt: skip
 from common.anticorruzione.catalogo import crea_voce as nuova_voce_ente  # l'endpoint si chiama crea_voce
 from common.anticorruzione.metodologia import chiave_naturale
+from common.ricerca import Documento
 from common.models import AcAttivita, AcProcesso, AcRischio, AcVoce, Modulo, PfElemento, PfObiettivo, PfPiao
 
 bp = Blueprint("catalogo", __name__, url_prefix="/api/v1/anticorruzione/catalogo")
@@ -115,11 +117,51 @@ async def catalogo():
     if f.attive:
         q = q.where(AcVoce.attiva.is_(True))
     voci = list(await db().scalars(q))
-    if testo := normalizza(f.testo):
-        voci = [v for v in voci if testo in normalizza(v.descrizione) or testo in v.codice.lower()]
     usi = await _conteggi(f.tipo)
     voci.sort(key=lambda v: (TIPI.index(v.tipo), "-E" in v.codice, chiave_naturale(v.codice)))
-    return [_voce(v, usi.get(v.id, 0)) for v in voci]
+    if not (testo := normalizza(f.testo)):
+        return [_voce(v, usi.get(v.id, 0)) for v in voci]
+    # con un testo: prima le voci con quel codice, poi per pertinenza (parole, sinonimi e,
+    # se c'è il modello di embedding, significato: "rotazione" trova anche "avvicendamento"),
+    # infine quelle che contengono il testo tale e quale (una parola scritta a metà)
+    per_codice = [v for v in voci if testo in v.codice.lower()]
+    trovate = await servizio_ricerca.cerca(f.testo or "", _documenti(voci), ente_id=ente_id())
+    per_id = {v.id: v for v in voci}
+    esito = [_voce(v, usi.get(v.id, 0)) for v in per_codice]
+    gia = {v.id for v in per_codice}
+    for r in trovate["risultati"]:
+        if r["id"] not in gia and (v := per_id.get(r["id"])) is not None:
+            esito.append({**_voce(v, usi.get(v.id, 0)), "per_significato": r["semantica"]})
+            gia.add(v.id)
+    esito += [_voce(v, usi.get(v.id, 0)) for v in voci if v.id not in gia and testo in normalizza(v.descrizione)]
+    return esito
+
+
+def _documenti(voci: list[AcVoce]) -> list[Documento]:
+    """Le voci per la ricerca: il solo testo (il codice nel vettore sarebbe rumore)."""
+    return [Documento(v.id, v.descrizione) for v in voci]
+
+
+class FiltriSimili(BaseModel):
+    tipo: TipoVoce
+    testo: str = Field(min_length=1, max_length=2000)
+    esclusa: str | None = None  # la voce che si sta modificando
+
+
+@bp.get("/simili")
+@lettore
+async def simili():
+    """Le voci dello stesso tipo simili al testo di una voce nuova (o modificata), la più
+    simile prima, con la somiglianza da 0 a 1: prima di crearne o proporne una si vede se
+    c'è già. Per significato se c'è il modello di embedding, comunque per parole in comune."""
+    f = parametri(FiltriSimili)
+    voci = [v for v in await db().scalars(select(AcVoce).where(AcVoce.ente_id == ente_id(), AcVoce.tipo == f.tipo))
+            if v.id != f.esclusa]  # fmt: skip
+    trovate = await servizio_ricerca.simili(f.testo, _documenti(voci), ente_id=ente_id(),
+                                            soglia=impostazioni().catalogo_soglia_simili)  # fmt: skip
+    per_id = {v.id: v for v in voci}
+    usi = await _conteggi(f.tipo)
+    return [{**_voce(per_id[i], usi.get(i, 0)), "somiglianza": round(s, 2)} for i, s in trovate]
 
 
 @bp.get("/<voce_id>")
