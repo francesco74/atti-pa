@@ -303,29 +303,100 @@ Map<String, dynamic>? procedimentoDi(Map a) {
 
 /// Attività: nuova, nasce da una voce del catalogo delle attività oppure è un procedimento del
 /// catalogo dei procedimenti (in alternativa); il testo si copia e si ritocca.
+/// Dati del procedimento che l'attività può adattare per il suo processo (gli altri restano
+/// quelli del catalogo), con l'etichetta; come common/anticorruzione/art35.ADATTABILI.
+const campiAdattabili = {
+  'struttura_id': 'Unità responsabile dell\'istruttoria',
+  'uff_resp_struttura_id': 'Ufficio responsabile del procedimento',
+  'uff_finale_struttura_id': 'Ufficio del provvedimento finale',
+  'ist_struttura_id': 'Ufficio per informazioni e istanze',
+  'sost_struttura_id': 'Ufficio del potere sostitutivo',
+  'termine_conclusione': 'Termine di conclusione',
+};
+
+/// I dati adattabili come sono nel catalogo: dal procedimento dell'attività ({catalogo}) o da
+/// quello appena scelto (elenco del catalogo, con struttura, termine e art35).
+Map<String, dynamic> datiCatalogo(Map p) {
+  if (p['catalogo'] is Map) return (p['catalogo'] as Map).cast<String, dynamic>();
+  final art35 = (p['art35'] as Map?) ?? const {};
+  return {
+    for (final k in campiAdattabili.keys) k: k == 'struttura_id' || k == 'termine_conclusione' ? p[k] : art35[k],
+  };
+}
+
+/// L'adattamento di un'attività-procedimento, campo per campo: "Ufficio ...: X (nel catalogo:
+/// Y)"; vuoto se non è adattato.
+List<String> righeAdattamento(DatiAnticorruzione d, Map a) {
+  final adattato = (a['procedimento_adattato'] as Map?) ?? const {};
+  final p = a['procedimento'] as Map?;
+  final catalogo = p == null ? const <String, dynamic>{} : datiCatalogo(p);
+  String testo(String k, Object? v) => v == null ? 'non indicato' : (k.endsWith('struttura_id') ? d.struttura(v) ?? '—' : '$v');
+  return [
+    for (final MapEntry(key: k, value: etichetta) in campiAdattabili.entries)
+      if (adattato[k] != null) '$etichetta: ${testo(k, adattato[k])}${p == null ? '' : ' (nel catalogo: ${testo(k, catalogo[k])})'}',
+  ];
+}
+
+/// Attività: nuova, nasce da una voce del catalogo delle attività oppure è un procedimento del
+/// catalogo dei procedimenti (in alternativa); il testo si copia e si ritocca. Il procedimento si
+/// può adattare a questo processo (unità responsabile, uffici, termine): i campi lasciati vuoti
+/// valgono come nel catalogo, e l'attività resta tra quelle che usano il procedimento.
 Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva}) async {
   final origine = a == null
       ? await scegliVoce(context, 'ATTIVITA', dati: d, procedimenti: true)
       : procedimentoDi(a) ?? (a['voce'] as Map?)?.cast<String, dynamic>();
   if (a == null && origine == null || !context.mounted) return null;
   final procedimento = origine?['procedimento'] == true;
-  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {
-        ...v,
-        if (a == null && procedimento) ...{
-          'procedimento_id': origine!['id'],
-          'procedimento': {for (final k in const ['id', 'codice', 'denominazione']) k: origine[k]},
-        },
-        if (a == null && !procedimento) ...{'voce_id': origine!['id'], 'voce': origine},
-      };
+  final catalogo = procedimento ? datiCatalogo(origine!) : const <String, dynamic>{};
+  final adattato = (a?['procedimento_adattato'] as Map?) ?? const {};
+  String nelCatalogo(String k) {
+    final v = catalogo[k];
+    if (v == null) return 'non indicato';
+    return k.endsWith('struttura_id') ? d.struttura(v) ?? '—' : '$v';
+  }
+
+  Map<String, dynamic> conVoce(Map<String, dynamic> v) {
+    final adattamento = {
+      for (final k in campiAdattabili.keys)
+        if (v['adatta_$k'] != null) k: v['adatta_$k'],
+    };
+    return {
+      for (final e in v.entries)
+        if (!e.key.startsWith('adatta_')) e.key: e.value,
+      if (procedimento) 'procedimento_adattato': adattamento.isEmpty ? null : adattamento,
+      if (a == null && procedimento) ...{
+        'procedimento_id': origine!['id'],
+        'procedimento': {for (final k in const ['id', 'codice', 'denominazione']) k: origine[k], 'catalogo': catalogo},
+      },
+      if (a == null && !procedimento) ...{'voce_id': origine!['id'], 'voce': origine},
+    };
+  }
+
   final v = await modificaCampi(context,
       salva: salva == null ? null : (v) => salva(conVoce(v)),
       titolo: a?['codice'] == null ? (procedimento ? 'Nuova attività: procedimento ${origine!['codice']}' : 'Nuova attività') : 'Attività ${a!['codice']}',
-      valori: a ?? {'descrizione': procedimento ? origine!['denominazione'] : origine!['descrizione']},
-      nota: _notaVoce(origine),
+      valori: {
+        ...?a,
+        if (a == null) 'descrizione': procedimento ? origine!['denominazione'] : origine!['descrizione'],
+        for (final e in adattato.entries) 'adatta_${e.key}': e.value,
+      },
+      nota: procedimento
+          ? '${_notaVoce(origine)}\nPer questo processo puoi adattare unità responsabile, uffici e termine: i campi lasciati '
+              'come nel catalogo restano quelli del procedimento.'
+          : _notaVoce(origine),
       campi: [
         const Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
         Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
         const Campo('strutture_coinvolte', 'Note sulle strutture coinvolte', righe: 2),
+        if (procedimento)
+          for (final MapEntry(key: k, value: etichetta) in campiAdattabili.entries)
+            k.endsWith('struttura_id')
+                ? Campo('adatta_$k', '$etichetta (per questo processo)', scelte: [
+                    (null, 'Come nel catalogo: ${nelCatalogo(k)}'),
+                    for (final s in d.strutture.where((s) => s['attiva'] == true || s['id'] == adattato[k]))
+                      (s['id'] as String, '${s['codice']} - ${s['descrizione']}'),
+                  ])
+                : Campo('adatta_$k', '$etichetta (per questo processo)', aiuto: 'Nel catalogo: ${nelCatalogo(k)}. Vuoto: quello del catalogo'),
       ]);
   return v == null ? null : conVoce(v);
 }
@@ -678,7 +749,9 @@ class AlberoProcesso extends StatelessWidget {
             initiallyExpanded: attivita.length <= 3,
             title: Text('${a['codice'] ?? 'Nuova'} - ${a['descrizione']}'),
             subtitle: Text([
-              if (a['procedimento'] != null) 'Procedimento ${(a['procedimento'] as Map)['codice']} - ${(a['procedimento'] as Map)['denominazione']}',
+              if (a['procedimento'] != null)
+                'Procedimento ${(a['procedimento'] as Map)['codice']} - ${(a['procedimento'] as Map)['denominazione']}'
+                    '${a['procedimento_adattato'] != null ? ' (adattato)' : ''}',
               ?voceRitoccata(a, a['descrizione'] as String?),
               '${_lista(a['rischi']).length} rischi',
               ?dati.coinvolte(a['coinvolte']),

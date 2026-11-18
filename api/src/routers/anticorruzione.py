@@ -399,13 +399,20 @@ def _processo(p: AcProcesso) -> dict:
 def _attivita(a: AcAttivita) -> dict:
     return {"id": a.id, "processo_id": a.processo_id, "codice": a.codice, "descrizione": a.descrizione,
             "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or [], "voce_id": a.voce_id,
-            "procedimento_id": a.procedimento_id}  # fmt: skip
+            "procedimento_id": a.procedimento_id, "procedimento_adattato": a.procedimento_adattato}  # fmt: skip
+
+
+def strutture_adattate(a: AcAttivita) -> list[str]:
+    """Le strutture indicate nell'adattamento del procedimento dell'attività."""
+    d = a.procedimento_adattato or {}
+    return [d[k] for k in dati_art35.ADATTABILI if k.endswith("struttura_id") and d.get(k)]
 
 
 def strutture_del_processo(p: AcProcesso, attivita: list[AcAttivita] = ()) -> set[str]:
     """Strutture a cui il processo appartiene per i filtri: la responsabile e le coinvolte (del
     processo e delle sue attività). Vuoto per un trasversale senza coinvolte."""
-    return {s for s in [p.struttura_id, *(p.coinvolte or []), *(x for a in attivita for x in (a.coinvolte or []))] if s}
+    return {s for s in [p.struttura_id, *(p.coinvolte or []),
+                        *(x for a in attivita for x in [*(a.coinvolte or []), *strutture_adattate(a)])] if s}  # fmt: skip
 
 
 def _rischio(r: AcRischio) -> dict:
@@ -711,12 +718,20 @@ async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[di
 
 
 async def procedimenti_delle_attivita(sessione, attivita) -> dict[str, dict]:
-    """Il procedimento del catalogo delle attività che lo sono: {id: {id, codice, denominazione}}."""
+    """Il procedimento del catalogo delle attività che lo sono: {id: {id, codice, denominazione}},
+    con i dati adattabili com'erano nel catalogo (per confrontarli con l'adattamento)."""
     ids = {a.procedimento_id for a in attivita if a.procedimento_id}
     if not ids:
         return {}
     righe = await sessione.scalars(select(AcProcedimento).where(AcProcedimento.id.in_(ids)))
-    return {p.id: {"id": p.id, "codice": p.codice, "denominazione": p.denominazione} for p in righe}
+    return {p.id: {"id": p.id, "codice": p.codice, "denominazione": p.denominazione, "catalogo": catalogo_adattabile(p)}
+            for p in righe}  # fmt: skip
+
+
+def catalogo_adattabile(p: AcProcedimento) -> dict:
+    """I dati adattabili del procedimento come sono nel catalogo."""
+    d = p.art35 or {}
+    return {k: getattr(p, k) if k in ("struttura_id", "termine_conclusione") else d.get(k) for k in dati_art35.ADATTABILI}
 
 
 async def albero_processo(sessione, p: AcProcesso) -> dict:
@@ -782,6 +797,9 @@ class AttivitaIn(BaseModel):
     descrizione: str = Field(min_length=1)
     voce_id: str | None = None  # voce del catalogo (radice)
     procedimento_id: str | None = None  # procedimento del catalogo
+    # adattamento del procedimento per questa attività (solo con il procedimento); indicato,
+    # sostituisce quello di prima (null: nessuno); assente, resta (se il procedimento è lo stesso)
+    procedimento_adattato: dati_art35.Adattamento | None = None
     strutture_coinvolte: str | None = None  # note libere
     coinvolte: list[str] | None = Field(default=None, max_length=200)  # None (assenti): restano come sono
 
@@ -923,6 +941,16 @@ async def _cambia_voce(sessione, tipo: str, el, voce_id: str | None) -> None:
         el.voce_id = (await _voce_valida(sessione, tipo, voce_id)).id
 
 
+async def _adattamento(sessione, d: dati_art35.Adattamento | None) -> dict | None:
+    """I campi adattati, con le strutture dell'ente; None se nessuno."""
+    if d is None:
+        return None
+    for campo in dati_art35.ADATTABILI:
+        if campo.endswith("struttura_id"):
+            await _struttura_valida(sessione, getattr(d, campo))
+    return d.dati()
+
+
 def _voce_o_procedimento(dati: AttivitaIn) -> None:
     if dati.voce_id and dati.procedimento_id:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -938,6 +966,7 @@ async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivit
                    coinvolte=_coinvolte(dati.coinvolte or []))  # fmt: skip
     if dati.procedimento_id:
         a.procedimento_id = (await procedimento_dell_ente(sessione, dati.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)).id
+        a.procedimento_adattato = await _adattamento(sessione, dati.procedimento_adattato)
     else:
         await _collega_al_catalogo(sessione, "ATTIVITA", a, dati.voce_id)
     sessione.add(a)
@@ -952,10 +981,12 @@ async def _modifica_attivita(sessione, a: AcAttivita, dati: AttivitaIn) -> None:
     a.descrizione, a.strutture_coinvolte = dati.descrizione, dati.strutture_coinvolte
     if dati.procedimento_id and dati.procedimento_id != a.procedimento_id:
         a.procedimento_id = (await procedimento_dell_ente(sessione, dati.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)).id
-        a.voce_id = None
+        a.voce_id = a.procedimento_adattato = None  # l'adattamento era dell'altro procedimento
     elif dati.voce_id and dati.voce_id != a.voce_id:
         await _cambia_voce(sessione, "ATTIVITA", a, dati.voce_id)
-        a.procedimento_id = None
+        a.procedimento_id = a.procedimento_adattato = None
+    if a.procedimento_id and "procedimento_adattato" in dati.model_fields_set:
+        a.procedimento_adattato = await _adattamento(sessione, dati.procedimento_adattato)
     if dati.coinvolte is not None:
         a.coinvolte = _coinvolte(dati.coinvolte)
     await _tocca(sessione, a.processo_id)
@@ -1158,12 +1189,13 @@ async def modifica_procedimento_ente(sessione, p: AcProcedimento, dati: Procedim
 
 
 async def attivita_del_procedimento(sessione, p: AcProcedimento) -> list[dict]:
-    """Le attività della mappatura che sono il procedimento, con il loro processo."""
+    """Le attività della mappatura che sono il procedimento, con il loro processo e l'eventuale
+    adattamento: si vede dove il procedimento è usato anche se personalizzato."""
     attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.procedimento_id == p.id)))
     if not attivita:
         return []
     processi = {x.id: x for x in await sessione.scalars(select(AcProcesso).where(AcProcesso.id.in_({a.processo_id for a in attivita})))}
-    return [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione,
+    return [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "adattamento": a.procedimento_adattato,
              "processo": {"id": a.processo_id, "codice": processi[a.processo_id].codice,
                           "denominazione": processi[a.processo_id].denominazione}} for a in attivita]  # fmt: skip
 
@@ -1631,6 +1663,8 @@ def _senza_coinvolte_vuote(dati: dict) -> dict:
         dati.pop("coinvolte", None)
     dati.pop("voce_id", None)
     dati.pop("procedimento_id", None)
+    if not dati.get("procedimento_adattato"):
+        dati.pop("procedimento_adattato", None)
     return dati
 
 
@@ -1680,7 +1714,10 @@ async def _verifica_dati(sessione, d: BaseModel, m: Metodologia) -> dict:
         _voce_o_procedimento(d)
         if d.procedimento_id:
             p = await procedimento_dell_ente(sessione, d.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)
-            risultato["procedimento"] = {"codice": p.codice, "denominazione": p.denominazione}
+            risultato["procedimento"] = {"codice": p.codice, "denominazione": p.denominazione, "catalogo": catalogo_adattabile(p)}
+        await _adattamento(sessione, d.procedimento_adattato)
+        if "procedimento_adattato" not in d.model_fields_set:  # assente: all'approvazione resta com'è
+            risultato.pop("procedimento_adattato", None)
     if isinstance(d, ProcedimentoIn):
         await _verifica_procedimento(sessione, d)
     if isinstance(d, ProcessoIn):
@@ -2543,7 +2580,8 @@ async def esporta_ptpct():
             base_a = [a.codice, a.descrizione] if a else ["", ""]
             # l'attività che è un procedimento del catalogo: codice, termine e norma
             pr = procedimenti.get(a.procedimento_id) if a else None
-            procedimento = [f"{pr.codice} {pr.denominazione}", pr.termine_conclusione, pr.norma_riferimento] if pr else ["", "", ""]
+            termine = ((a.procedimento_adattato or {}).get("termine_conclusione") or pr.termine_conclusione) if pr else None
+            procedimento = [f"{pr.codice} {pr.denominazione}", termine, pr.norma_riferimento] if pr else ["", "", ""]
             rischi_a = [r for r in rischi if a and r.attivita_id == a.id] or [None]
             for r in rischi_a:
                 base_r = [r.codice, r.evento, r.probabilita, r.impatto, r.livello] if r else ["", "", "", "", ""]

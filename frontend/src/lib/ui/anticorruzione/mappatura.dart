@@ -422,7 +422,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
       icona: procedimento == null ? Icons.subdirectory_arrow_right : Icons.gavel_outlined,
       titolo: '${a['codice']} - ${a['descrizione']}',
       dettagli: [
-        if (procedimento != null) 'Procedimento ${procedimento['codice']} - ${procedimento['denominazione']}',
+        if (procedimento != null)
+          'Procedimento ${procedimento['codice']} - ${procedimento['denominazione']}${a['procedimento_adattato'] != null ? ' (adattato)' : ''}',
         '${rischi.length} rischi, $misure misure',
       ],
       onTap: () => setState(() => _attivitaId = a['id'] as String),
@@ -473,6 +474,8 @@ class _VistaProcessoState extends State<VistaProcesso> {
           if (a['procedimento'] case final Map p)
             Text('Procedimento ${p['codice']} - ${p['denominazione']} (catalogo dei procedimenti)',
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          // adattamento del procedimento per questo processo, con i valori del catalogo
+          for (final riga in righeAdattamento(dati, a)) Text(riga),
           if (voceRitoccata(a, a['descrizione'] as String?) case final voce?)
             Text(voce, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
           if (dati.coinvolte(a['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(a['coinvolte'])}'),

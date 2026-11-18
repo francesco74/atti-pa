@@ -36,6 +36,7 @@ configMapGenerator:
       - sql/0010_messaggio_benvenuto.sql
       - sql/0011_motivazione_valutazione.sql
       - sql/0012_catalogo_procedimenti.sql
+      - sql/0013_procedimento_adattato.sql
     options:
       disableNameSuffixHash: true   # cambiare lo schema non riavvia MySQL
 

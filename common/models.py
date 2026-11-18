@@ -779,6 +779,9 @@ class AcAttivita(Base):
     voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))  # radice nel catalogo
     # in alternativa alla voce: l'attività è un procedimento del catalogo dei procedimenti
     procedimento_id: Mapped[str | None] = mapped_column(ForeignKey("ac_procedimenti.id", ondelete="SET NULL"))
+    # adattamento del procedimento per questa attività: solo i campi cambiati (unità
+    # responsabile, uffici, termine; common/anticorruzione/art35.ADATTABILI), gli altri dal catalogo
+    procedimento_adattato: Mapped[dict[str, Any] | None] = mapped_column(JSON)
 
 
 class AcRischio(Base):

@@ -28,6 +28,35 @@ SCHEMA, SEZIONE = "ART_35", "PROCEDIMENTI"
 # Strutture scelte nel procedimento (oltre alla struttura responsabile del processo)
 STRUTTURE = ("uff_resp_struttura_id", "uff_finale_struttura_id", "ist_struttura_id", "sost_struttura_id")
 
+# Dati del procedimento che un'attività della mappatura può adattare per il suo processo (gli
+# altri, che vengono dalla norma, restano quelli del catalogo): unità responsabile
+# dell'istruttoria, uffici e termine di conclusione.
+ADATTABILI = ("struttura_id", *STRUTTURE, "termine_conclusione")
+
+
+class Adattamento(BaseModel):
+    """L'adattamento di un procedimento in un'attività: i soli campi diversi dal catalogo."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    struttura_id: str | None = None
+    uff_resp_struttura_id: str | None = None
+    uff_finale_struttura_id: str | None = None
+    ist_struttura_id: str | None = None
+    sost_struttura_id: str | None = None
+    termine_conclusione: str | None = Field(default=None, max_length=255)
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _vuoti(cls, v):
+        if isinstance(v, str):
+            return v.strip() or None
+        return v
+
+    def dati(self) -> dict | None:
+        """I campi indicati; None se nessuno (vale tutto il catalogo)."""
+        return self.model_dump(exclude_none=True) or None
+
 _RE_URL = re.compile(r'^https?://[^\s/$.?#"<>]+[^\s"<>]*$', re.IGNORECASE)
 
 

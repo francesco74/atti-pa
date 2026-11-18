@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../comuni.dart';
+import 'albero.dart' show campiAdattabili;
 import 'art35.dart';
 import 'catalogo.dart' show controllaSimili;
 import 'comune.dart';
@@ -275,6 +276,22 @@ class _ProcedimentoPageState extends State<ProcedimentoPage> {
             .then((r) => (r[0] as Map<String, dynamic>, (r[1] as List).cast<Map<String, dynamic>>()));
       });
 
+  /// "adattato: Ufficio responsabile del procedimento: X; Termine di conclusione: 60 giorni".
+  String? _adattamento(Map<String, dynamic> a, List<Map<String, dynamic>> strutture) {
+    final d = (a['adattamento'] as Map?) ?? const {};
+    if (d.isEmpty) return null;
+    String valore(String k, Object? v) {
+      if (!k.endsWith('struttura_id')) return '$v';
+      final s = strutture.where((s) => s['id'] == v).firstOrNull;
+      return s == null ? '—' : '${s['codice']} - ${s['descrizione']}';
+    }
+
+    return 'adattato: ${[
+      for (final MapEntry(key: k, value: etichetta) in campiAdattabili.entries)
+        if (d[k] != null) '$etichetta: ${valore(k, d[k])}',
+    ].join('; ')}';
+  }
+
   bool _proposte(Map<String, dynamic> p) => widget.gestione == GestioneProcedimenti.proposte && p['proponibile'] == true;
 
   /// Salva o propone i dati generali o quelli dell'art. 35 (gli altri restano); l'errore passa
@@ -389,7 +406,11 @@ class _ProcedimentoPageState extends State<ProcedimentoPage> {
                       RigaVoce(
                         icona: Icons.subdirectory_arrow_right,
                         titolo: '${a['codice']} - ${a['descrizione']}',
-                        dettagli: ['${(a['processo'] as Map)['codice']} - ${(a['processo'] as Map)['denominazione']}'],
+                        dettagli: [
+                          '${(a['processo'] as Map)['codice']} - ${(a['processo'] as Map)['denominazione']}',
+                          // adattato a quel processo: si vede cosa cambia rispetto al catalogo
+                          ?_adattamento(a, strutture),
+                        ],
                         onTap: widget.apriAttivita == null ? null : () => widget.apriAttivita!(context, a),
                       ),
                   ]),

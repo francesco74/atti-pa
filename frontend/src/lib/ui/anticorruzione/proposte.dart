@@ -497,6 +497,7 @@ const _etichetteCampi = {
   'tipo_voce': 'Voce del catalogo per',
   'voce': 'Voce del catalogo',
   'procedimento': 'Procedimento',
+  'procedimento_adattato': 'Procedimento adattato per questo processo',
   'tipo_misura': 'Tipo di misura',
   'struttura_id': 'Struttura',
   'coinvolte': 'Strutture coinvolte',
@@ -545,6 +546,10 @@ class TabellaCampi extends StatelessWidget {
       'coinvolte' => dati.coinvolte(v) ?? '—',
       'voce' => '${(v as Map)['codice']} - ${v['descrizione']}',
       'procedimento' => '${(v as Map)['codice']} - ${v['denominazione']}',
+      'procedimento_adattato' => [
+          for (final MapEntry(key: k, value: etichetta) in campiAdattabili.entries)
+            if ((v as Map)[k] != null) '$etichetta: ${k.endsWith('struttura_id') ? dati.struttura(v[k]) ?? '—' : v[k]}',
+        ].join('; '),
       'tipo_voce' => const {'ATTIVITA': 'un\'attività', 'RISCHIO': 'un rischio', 'MISURA': 'una misura'}[v] ?? '$v',
       'tipo_misura' => const {'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
       'tipo' => const {'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',

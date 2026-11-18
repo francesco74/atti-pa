@@ -287,15 +287,39 @@ class AnticorruzioneApi(unittest.TestCase):
         self.assertEqual((ap["procedimento_id"], ap["voce_id"]), (pr["id"], None))  # senza voce automatica
         albero = self._ok(c.get(f"{API}/processi/{p['id']}", base_url=ENTE))
         att = next(a for a in albero["attivita"] if a["id"] == ap["id"])
-        self.assertEqual(att["procedimento"], {"id": pr["id"], "codice": pr["codice"], "denominazione": "Autorizzazione unica ambientale"})
+        self.assertEqual({k: att["procedimento"][k] for k in ("id", "codice", "denominazione")},
+                         {"id": pr["id"], "codice": pr["codice"], "denominazione": "Autorizzazione unica ambientale"})
         dettaglio = self._ok(c.get(f"{API}/procedimenti/{pr['id']}", base_url=ENTE))
         self.assertEqual(([a["id"] for a in dettaglio["attivita"]], dettaglio["attivita"][0]["processo"]["id"]), ([ap["id"]], p["id"]))
         elenco = self._ok(c.get(f"{API}/elenco", base_url=ENTE))
         self.assertLessEqual({pr["codice"], pr2["codice"]}, {x["codice"] for x in elenco["procedimenti"]})
-        # usato: non si elimina; passando l'attività a una voce si libera
+        # adattamento del procedimento per questa attività: solo i campi cambiati, il collegamento resta
+        self.assertEqual(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={
+            "descrizione": "Rilascio dell'AUA", "procedimento_adattato": {"struttura_id": "inesistente"}}).status_code, 422)  # fmt: skip
+        self.assertEqual(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={
+            "descrizione": "Rilascio dell'AUA", "procedimento_adattato": {"tipologia": "x"}}).status_code, 422)  # fmt: skip
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={
+            "descrizione": "Rilascio dell'AUA", "procedimento_adattato": {"uff_resp_struttura_id": self.uo,
+                                                                         "termine_conclusione": "60 giorni", "ist_struttura_id": ""}}))  # fmt: skip
+        self.assertEqual(a["procedimento_adattato"], {"uff_resp_struttura_id": self.uo, "termine_conclusione": "60 giorni"})
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio dell'AUA"}))
+        self.assertEqual(a["procedimento_adattato"]["termine_conclusione"], "60 giorni")  # assente: resta
+        att = next(x for x in self._ok(c.get(f"{API}/processi/{p['id']}", base_url=ENTE))["attivita"] if x["id"] == ap["id"])
+        self.assertEqual(att["procedimento"]["catalogo"]["termine_conclusione"], "90 giorni")  # per il confronto
+        usi = self._ok(c.get(f"{API}/procedimenti/{pr['id']}", base_url=ENTE))["attivita"]
+        self.assertEqual(usi[0]["adattamento"]["termine_conclusione"], "60 giorni")  # dove è usato, anche se adattato
+        # l'attività si trova tra quelle dell'ufficio indicato nell'adattamento
+        self.assertIn(p["id"], [x["id"] for x in self._ok(c.get(f"{API}/processi?struttura={self.uo}", base_url=ENTE))])
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio dell'AUA",
+                                                                              "procedimento_adattato": None}))  # fmt: skip
+        self.assertIsNone(a["procedimento_adattato"])
+        self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={
+            "descrizione": "Rilascio dell'AUA", "procedimento_adattato": {"termine_conclusione": "45 giorni"}}))  # fmt: skip
+
+        # usato: non si elimina; passando l'attività a una voce si libera (e l'adattamento si toglie)
         self.assertEqual(c.delete(f"{API}/procedimenti/{pr['id']}", base_url=ENTE).status_code, 409)
         a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Istruttoria", "voce_id": voce["id"]}))
-        self.assertEqual((a["voce_id"], a["procedimento_id"]), (voce["id"], None))
+        self.assertEqual((a["voce_id"], a["procedimento_id"], a["procedimento_adattato"]), (voce["id"], None, None))
         a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio", "procedimento_id": pr2["id"]}))
         self.assertEqual((a["voce_id"], a["procedimento_id"]), (None, pr2["id"]))
         a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio dell'accesso"}))
@@ -363,11 +387,14 @@ class AnticorruzioneApi(unittest.TestCase):
         processo = self._ok(rpct.post(f"{API}/processi", base_url=ENTE,
                                       json={"denominazione": "Diritto allo studio", "struttura_id": self.uo}), 201)  # fmt: skip
         a = self._proponi(ref, tipo="CREA", oggetto="ATTIVITA", padre_id=processo["id"],
-                          dati={"descrizione": "Erogazione del contributo", "procedimento_id": proc["id"]})  # fmt: skip
-        self.assertEqual(a["dati"]["procedimento"], {"codice": proc["codice"], "denominazione": "Contributo libri di testo"})
+                          dati={"descrizione": "Erogazione del contributo", "procedimento_id": proc["id"],
+                                "procedimento_adattato": {"termine_conclusione": "15 giorni"}})  # fmt: skip
+        self.assertEqual((a["dati"]["procedimento"]["codice"], a["dati"]["procedimento"]["denominazione"]),
+                         (proc["codice"], "Contributo libri di testo"))
         a = self._approva(rpct, a)
         attivita = self._ok(rpct.get(f"{API}/processi/{processo['id']}", base_url=ENTE))["attivita"]
-        self.assertEqual([x["procedimento_id"] for x in attivita], [proc["id"]])
+        self.assertEqual([(x["procedimento_id"], x["procedimento_adattato"]) for x in attivita],
+                         [(proc["id"], {"termine_conclusione": "15 giorni"})])
         # usato in un'attività: l'eliminazione non si propone
         self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
             "tipo": "ELIMINA", "oggetto": "PROCEDIMENTO", "elemento_id": proc["id"]}).status_code, 409)  # fmt: skip

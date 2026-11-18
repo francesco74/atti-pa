@@ -114,6 +114,7 @@ void main() {
           'scheda_art35': _scheda, 'art35_mancanti': ['Ufficio responsabile - PEC istituzionale: campo obbligatorio', 'Altro'],
           'attivita': [
             {'id': 'a1', 'codice': 'C.3.2', 'descrizione': 'Erogazione del contributo',
+             'adattamento': {'termine_conclusione': '60 giorni'},
              'processo': {'id': 'x', 'codice': 'C.3', 'denominazione': 'Sostegno alla casa'}},
           ],
         });
@@ -138,6 +139,7 @@ void main() {
     expect(find.text('Art. 35: mancano 2 dati'), findsOneWidget);
     expect(find.text('Attività della mappatura (1)'), findsOneWidget);
     expect(find.text('C.3.2 - Erogazione del contributo'), findsOneWidget);
+    expect(find.textContaining('adattato: Termine di conclusione: 60 giorni'), findsOneWidget); // usato anche se adattato
     expect(find.text('Modifica'), findsWidgets); // dati generali e art. 35
     expect(find.text('Elimina'), findsNothing); // è un'attività della mappatura
     await tester.tap(find.text('Dati mancanti o da correggere'));

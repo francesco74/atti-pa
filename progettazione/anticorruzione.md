@@ -425,3 +425,14 @@ Decisioni del 04/11/2026:
     stesso id (restano validi i link pubblici); quelli con attività restano processi e nel
     catalogo entra una copia; tutti i procedimenti prendono un codice `P.<n>` (chi lo aveva lo
     tiene); le proposte non decise sui procedimenti si chiudono come respinte.
+31. **Procedimento adattato nell'attività e codici proposti** (18/11/2026): l'attività che è un
+    procedimento può **adattarne** per il suo processo unità responsabile dell'istruttoria,
+    uffici (responsabile, provvedimento finale, informazioni e istanze, potere sostitutivo) e
+    termine di conclusione (`ac_attivita.procedimento_adattato`, solo i campi cambiati;
+    migrazione `0013_procedimento_adattato.sql`); gli altri dati, che vengono dalla norma,
+    restano quelli del catalogo, come la scheda art. 35 e la pagina pubblica (una per
+    tipologia). Il collegamento al procedimento resta: la scheda del procedimento elenca tutte
+    le attività che lo usano, con l'adattamento di ciascuna. Gli uffici adattati contano nei
+    filtri per struttura; nell'allegato al PTPCT vale il termine adattato. Codici: per una nuova
+    area il sistema propone la lettera successiva, che si può cambiare (breve, senza punti, non
+    già usata); gli altri codici della mappatura restano assegnati dal sistema.

@@ -6,6 +6,7 @@ import '../admin/strutture.dart' show alberoStrutture, etichettaStruttura;
 import '../comuni.dart';
 import '../ricerca.dart';
 import '../trasparenza/browser.dart' show scaricaBytes;
+import 'albero.dart' show righeAdattamento;
 import 'comune.dart';
 import 'mappatura.dart' show VistaProcesso;
 
@@ -144,7 +145,12 @@ class MappaturaPiatta {
   /// Strutture coinvolte dell'elemento: quelle del processo e della sua attività (per il
   /// processo anche quelle di tutte le sue attività). Servono ai filtri, non alla responsabilità.
   Set<String> coinvolte(String livello, Map<String, dynamic> x) {
-    Iterable<String> di(Map<String, dynamic>? e) => ((e?['coinvolte'] as List?) ?? const []).cast<String>();
+    // coinvolte e, per l'attività che è un procedimento adattato, le strutture dell'adattamento
+    Iterable<String> di(Map<String, dynamic>? e) => [
+          ...((e?['coinvolte'] as List?) ?? const []).cast<String>(),
+          for (final v in ((e?['procedimento_adattato'] as Map?) ?? const {}).entries)
+            if (v.key.toString().endsWith('struttura_id') && v.value is String) v.value as String,
+        ];
     final processo = processoDi(livello, x);
     final attivita = livello == 'ATTIVITA' ? x : percorso(livello, x).attivita;
     return {
@@ -812,6 +818,7 @@ class SchedaElementoPage extends StatelessWidget {
       'ATTIVITA' => [
           ('Descrizione', x['descrizione']),
           ('Procedimento', m.procedimento(x)),
+          ('Adattato per questo processo', righeAdattamento(dati, x).join('; ')),
           ('Strutture coinvolte', dati.coinvolte(x['coinvolte'])),
           ('Note sulle strutture coinvolte', x['strutture_coinvolte']),
           ('Struttura responsabile', struttura()),

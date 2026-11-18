@@ -106,10 +106,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Procedimento P.7'), findsWidgets);
     expect(find.widgetWithText(TextField, 'Rilascio del permesso di costruire'), findsOneWidget);
+    // adattamento per questo processo: vuoto vale il catalogo
+    expect(find.textContaining('Nel catalogo: 60 giorni'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'Termine di conclusione (per questo processo)'), '90 giorni');
     await tester.tap(find.text('Salva'));
     await tester.pumpAndSettle();
     final v = await esito;
     expect((v?['descrizione'], v?['procedimento_id'], v?.containsKey('voce_id')), ('Rilascio del permesso di costruire', 'pr7', false));
+    expect(v?['procedimento_adattato'], {'termine_conclusione': '90 giorni'});
+    expect(v?.keys.where((k) => k.startsWith('adatta_')), isEmpty);
     expect((v?['procedimento'] as Map?)?['codice'], 'P.7');
   });
 
