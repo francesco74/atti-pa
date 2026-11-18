@@ -158,6 +158,21 @@ class Importazione(unittest.TestCase):
         self.assertIn("non letta", esito["avvisi"][0])
         self.assertTrue(all("Premessa senza nulla\nPremessa" not in t or "obiettiv" in t.lower() for t in llm.testi))
 
+    def test_indicatori_scambiati_per_fasi(self):
+        from common.performance.importazione import unisci
+
+        ind = {"descrizione": "Approvazione del piano di protezione civile", "tipo": None, "valore_atteso": "30/06/2026"}
+        letture = [
+            {"codice": "P2", "titolo": "Rischi", "azioni": [{"descrizione": "Aggiornamento del piano", "fine": None}],
+             "indicatori": [ind]},
+            {"codice": "P2", "titolo": "Rischi", "indicatori": [ind],
+             "azioni": [{"descrizione": "Approvazione del piano di protezione civile", "fine": "30/06/2026"}]},
+        ]  # fmt: skip
+        self.assertEqual([a["descrizione"] for a in unisci(letture)[0]["azioni"]], ["Aggiornamento del piano"])
+        # se tutte le fasi coincidono con indicatori restano (meglio che nessuna)
+        solo = [{"codice": "P3", "titolo": "X", "indicatori": [ind], "azioni": [{"descrizione": ind["descrizione"], "fine": None}]}]
+        self.assertEqual(len(unisci(solo)[0]["azioni"]), 1)
+
     def test_documento_senza_obiettivi(self):
         import asyncio
 

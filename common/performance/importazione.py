@@ -99,7 +99,17 @@ def unisci(grezzi: list[dict]) -> list[dict]:
                 nuovo = {c: _testo(x.get(c)) or None for c in campi}
                 if not any(_stesso(nuovo["descrizione"], y["descrizione"]) for y in o[lista]):
                     o[lista].append(nuovo)
+    for o in per_chiave.values():
+        # un indicatore trascritto per errore anche come fase (succede in una delle letture
+        # sovrapposte): la fase si toglie, se ne restano altre
+        fasi = [a for a in o["azioni"] if not any(_uguale(a["descrizione"], i["descrizione"]) for i in o["indicatori"])]
+        if fasi:
+            o["azioni"] = fasi
     return list(per_chiave.values())
+
+
+def _uguale(a: str, b: str) -> bool:
+    return normalizza(a) == normalizza(b) or somiglianza_parole(a, b) >= 0.9
 
 
 def _stesso(a: str, b: str) -> bool:
