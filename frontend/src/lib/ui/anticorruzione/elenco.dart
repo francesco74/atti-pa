@@ -842,6 +842,7 @@ class SchedaElementoPage extends StatelessWidget {
                   ? '${x['impatto']} (calcolato ${x['impatto_calcolato']})'
                   : x['impatto']),
           ('Motivazione della correzione', x['motivazione_correzione']),
+          ('Motivazione della valutazione', x['motivazione_valutazione']),
           ('Valutato il', x['valutato_il'] == null ? null : formatData(x['valutato_il'])),
         ],
       _ => [

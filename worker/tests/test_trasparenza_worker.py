@@ -134,6 +134,35 @@ class LavoriWorker(unittest.TestCase):
         self.assertIn("Primo semestre", self.llm.sistemi[0])
         self.assertFalse((Path(self.cartella.name) / file["percorso"]).exists())
 
+    def test_importazione_obiettivi(self):
+        """Importazione dal PIAO nella stessa coda: letta a parti, con l'avanzamento registrato."""
+
+        class LlmObiettivi:
+            modello = "finto"
+
+            async def dati_json(self, sistema, testo, schema):
+                return {"obiettivi": [{"codice": "P1", "titolo": "Concorsi", "descrizione": None, "struttura": "Settore 2",
+                                       "responsabile": None, "azioni": [], "indicatori": []}]}  # fmt: skip
+
+        self.lavori.llm = LlmObiettivi()
+        testo = "Scheda obiettivo P1 Concorsi, indicatori: tempi medi\n" * 1000  # più parti
+        file = self._file("piao.csv", testo.encode())
+        lavoro_id = self._lavoro({"importazione": "OBIETTIVI", "origine": "performance", "file": [file]})
+        self.assertIsNone(self._esegui(lavoro_id))
+        lavoro = self._leggi(lavoro_id)
+        self.assertEqual(lavoro.stato, StatoVerifica.COMPLETATA, lavoro.errore)
+        self.assertEqual([o["codice"] for o in lavoro.risultato["obiettivi"]], ["P1"])  # le parti si uniscono
+        lette, totale = lavoro.richiesta["avanzamento"]
+        self.assertEqual(lette, totale)
+        self.assertGreater(totale, 1)
+
+        # un documento senza obiettivi chiude subito il lavoro
+        vuoto = self._lavoro({"importazione": "OBIETTIVI", "file": [self._file("altro.csv", b"Relazione sul lavoro agile")]})
+        self.assertIsNone(self._esegui(vuoto))
+        lavoro = self._leggi(vuoto)
+        self.assertEqual((lavoro.stato, lavoro.tentativi), (StatoVerifica.ERRORE, 1))
+        self.assertIn("non ci sono obiettivi", lavoro.errore)
+
     def test_errore_della_richiesta_senza_nuovi_tentativi(self):
         file = self._file("eseguibile.exe", b"MZ")
         lavoro_id = self._lavoro({"controllo": "ART_23_DIRIGENTI", "file": [file]})

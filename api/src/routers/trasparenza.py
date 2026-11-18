@@ -211,7 +211,7 @@ def _descrizione(richiesta: dict) -> tuple[str, str]:
     titolo = (
         f"{schema.articolo[:1].upper()}{schema.articolo[1:]} - {variante.titolo if variante else schema.titolo}"
         if schema
-        else richiesta.get("controllo") or richiesta.get("schema_id") or ""
+        else richiesta.get("controllo") or richiesta.get("schema_id") or richiesta.get("titolo") or ""
     )
     fonte = richiesta.get("url") or ", ".join(f["nome"] for f in richiesta.get("file") or [])
     return titolo, fonte
@@ -230,6 +230,8 @@ def _lavoro(lavoro: TrasparenzaLavoro, risultato: bool = False) -> dict:
         "created_at": lavoro.created_at.isoformat() if lavoro.created_at else None,
         "avviato_il": lavoro.avviato_il.isoformat() if lavoro.avviato_il else None,
         "completato_il": lavoro.completato_il.isoformat() if lavoro.completato_il else None,
+        # importazioni lette a parti: [lette, totale]
+        "avanzamento": (lavoro.richiesta or {}).get("avanzamento"),
     }
     if risultato:
         dati["risultato"] = lavoro.risultato
@@ -293,7 +295,8 @@ async def elenco_lavori():
         .order_by(TrasparenzaLavoro.created_at.desc())
         .limit(200)
     )
-    return [_lavoro(lavoro) for lavoro in lavori]
+    # le importazioni degli altri moduli (es. obiettivi dal PIAO) usano la stessa coda: qui no
+    return [_lavoro(lavoro) for lavoro in lavori if not (lavoro.richiesta or {}).get("importazione")]
 
 
 @bp.get("/lavori/<lavoro_id>")

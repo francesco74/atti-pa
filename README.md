@@ -287,6 +287,27 @@ rilevamento: se il modello non risponde il documento non viene prodotto, mai con
 chiaro. Il controllo rapido delle bozze, immediato e senza modello, non li cerca. Si
 disattiva con `LLM_DATI_PERSONALI=false`.
 
+**Obiettivi dal PIAO.** Nella performance l'approvatore può importare gli obiettivi di un anno
+dal PIAO o dal Piano della performance (PDF, Word, ODT, fogli di calcolo): il worker legge il
+documento a parti di circa 18.000 caratteri, sovrapposte, e il modello trascrive le schede degli
+obiettivi (codice, titolo, struttura, fasi con la data di fine, indicatori con il valore
+atteso). Le parti senza obiettivi non vanno al modello; dopo ogni parte il lavoro registra
+l'avanzamento. Le fasi diventano azioni e il tipo degli indicatori si ricava dal valore atteso
+(data, percentuale, numero; altrimenti sì/no, con un avviso); la struttura proposta è la più
+simile a quella scritta nel documento. Si rivede tutto e si salvano gli obiettivi scelti, con
+impegni a 0 da distribuire. Con un modello locale (Qwen 3.5 35B) una parte richiede circa un
+minuto: per un PIAO completo conviene caricare solo l'allegato con le schede degli obiettivi.
+
+**Valutazione del rischio assistita.** Nella finestra di valutazione di un rischio (mappatura e
+proposte) chi valuta, dopo aver dato i suoi valori, può chiedere il parere dell'IA: il modello
+propone un valore con una breve motivazione per ogni indicatore della metodologia dell'ente,
+tenendo conto di processo, attività, evento, fattore abilitante e misure; probabilità, impatto
+e livello si calcolano come per le valutazioni a mano (moda e matrice) e solo dopo il modello
+scrive il giudizio sintetico motivato, coerente con il risultato (due chiamate, circa 15
+secondi con un modello locale). Gli indicatori su cui l'IA la vede diversamente sono
+evidenziati; valori e giudizio si adottano con un clic e si salvano con la valutazione
+(campo "Motivazione della valutazione", migrazione `0011`).
+
 **Modello di embedding (ricerca).** La ricerca in linguaggio naturale nella mappatura e nei
 procedimenti (anche nelle pagine pubbliche) usa, oltre alle parole con radici e sinonimi, un
 modello di embedding con API `/embeddings` compatibile OpenAI, configurato a parte

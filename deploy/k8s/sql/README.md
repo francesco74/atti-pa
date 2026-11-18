@@ -14,6 +14,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0008_catalogo_mappatura.sql` | catalogo della mappatura (voci di attività, rischi e misure) e collegamento degli elementi; rieseguibile |
 | `0009_radici_negli_obiettivi.sql` | azioni e misure degli obiettivi collegate alla loro voce del catalogo (radice); rieseguibile |
 | `0010_messaggio_benvenuto.sql` | messaggio dell'amministratore nella pagina iniziale (Home); rieseguibile |
+| `0011_motivazione_valutazione.sql` | motivazione della valutazione del rischio (anche proposta dall'IA); rieseguibile |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

@@ -32,6 +32,11 @@ senza toccare il codice: le modifiche valgono al riavvio di API e worker.
 | `azione_estrai.md` | tabella finale degli elementi estratti, senza duplicati | `elementi`, `istruzioni` |
 | `relazione_sistema.md` | prompt di sistema della scrittura di una sezione di relazione (RPCT, PIAO, performance) solo dai dati forniti | — |
 | `relazione_utente.md` | messaggio con l'ente, la relazione, la sezione e i suoi dati (JSON) | `ente`, `relazione`, `sezione`, `dati` |
+| `importazione_sistema.md` | prompt di sistema dell'importazione di dati da un documento (PIAO, PTPCT), una parte alla volta | — |
+| `importazione_obiettivi.md` | obiettivi di performance di una parte del PIAO o del Piano della performance | `testo` |
+| `valutazione_sistema.md` | prompt di sistema della valutazione del rischio suggerita (anticorruzione) | — |
+| `valutazione_utente.md` | messaggio con processo, attività, evento, misure e metodologia dell'ente | `ente`, `processo`, `attivita`, `evento`, `fattore`, `misure`, `scala`, `indicatori_probabilita`, `indicatori_impatto` |
+| `valutazione_giudizio.md` | giudizio sintetico motivato dai valori proposti e dal livello calcolato | `evento`, `indicatori`, `probabilita`, `impatto`, `livello` |
 
 I segnaposto si scrivono `${nome}`. Per un simbolo `$` letterale nel testo scrivere `$$`.
 Un segnaposto sconosciuto o scritto male blocca l'avvio di API e worker con un errore che

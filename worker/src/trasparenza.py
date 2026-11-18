@@ -1,7 +1,10 @@
 """Lavori del modulo trasparenza (coda "trasparenza", tabella trasparenza_lavori): analisi con
 l'LLM di pagine o documenti di Amministrazione Trasparente ed estrazione dei dati per il form
 di uno schema. La logica è in common/trasparenza/analisi.py; qui stato, nuovi tentativi e
-pulizia dei file caricati.
+pulizia dei file caricati. Nella stessa coda le importazioni da un documento degli altri moduli
+(richiesta["importazione"]: OBIETTIVI della performance), lette a parti (common/importazione):
+dopo ogni parte il lavoro registra l'avanzamento e si rinnova l'ora di avvio, così un'importazione
+lunga non sembra abbandonata.
 
 Come per le verifiche, la presa in carico usa SELECT ... FOR UPDATE SKIP LOCKED; gli errori
 temporanei (LLM, converter, rete) si ritentano fino a WORKER_MAX_TENTATIVI, quelli della
@@ -21,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from common import archivio
 from common.config import Settings
 from common.models import Ente, StatoVerifica, TrasparenzaLavoro
+from common.performance import importazione as importazione_obiettivi
 from common.trasparenza import analisi, fonti
 from common.trasparenza.rete import UrlNonConsentito
 
@@ -82,6 +86,8 @@ class LavoriTrasparenza:
             max_documenti=int(r.get("max_documenti") or fonti.MAX_DOCUMENTI),
             segui_link=bool(r.get("segui_link")), max_link=int(r.get("max_link") or fonti.MAX_LINK),
         )  # fmt: skip
+        if r.get("importazione") == "OBIETTIVI":
+            return await importazione_obiettivi.estrai(contenuti.testo, self.llm, avanza=self._avanzamento(lavoro.id))
         if lavoro.tipo == analisi.ANALISI:
             contesto = analisi.Contesto(
                 ente=ente.nome, caratteristiche=ente.caratteristiche or "", note=r.get("note") or "",
@@ -90,6 +96,19 @@ class LavoriTrasparenza:
             return await analisi.analizza(r["controllo"], contenuti, contesto, self.llm)
         return await analisi.estrai_dati(r["schema_id"], r.get("variante") or "", contenuti, self.llm,
                                          r.get("sezione") or "")  # fmt: skip
+
+    def _avanzamento(self, lavoro_id: str):
+        """Registra le parti lette di un'importazione (per l'app) e rinnova l'ora di avvio."""
+
+        async def avanza(lette: int, totale: int) -> None:
+            async with self.sessionmaker() as db:
+                lavoro = await db.get(TrasparenzaLavoro, lavoro_id)
+                if lavoro is not None:
+                    lavoro.richiesta = {**lavoro.richiesta, "avanzamento": [lette, totale]}
+                    lavoro.avviato_il = _ora()
+                    await db.commit()
+
+        return avanza
 
     async def _elimina_file(self, richiesta: dict) -> None:
         for f in richiesta.get("file") or []:

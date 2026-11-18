@@ -104,3 +104,95 @@ class Controlli(unittest.TestCase):
         tolta = {**bando, "attivita_id": None, "impegno": 100}
         testi = [c["testo"] for c in controlli_obiettivo(100, 2026, "s1", [tolta], misure_attive=True)]
         self.assertEqual(testi, ["Azione «Bando»: l'attività C.3.1 non è più nella mappatura dei rischi"])
+
+
+class Importazione(unittest.TestCase):
+    """Obiettivi letti da un documento a parti (common/importazione, common/performance/importazione)."""
+
+    def test_parti(self):
+        from common.importazione import parti
+
+        testo = "".join(f"riga {i:04d}\n" for i in range(1000))  # 10.000 caratteri
+        p = parti(testo, dimensione=3000, sovrapposizione=500)
+        self.assertTrue(all(len(x) <= 3000 for x in p))
+        self.assertTrue(all(x.endswith("\n") for x in p))  # tagliate a fine riga
+        self.assertIn("riga 0999", p[-1])
+        for prima, dopo in zip(p, p[1:]):  # ogni parte riprende la fine della precedente
+            self.assertIn(dopo.splitlines()[0], prima)
+        self.assertEqual(parti("breve"), ["breve"])
+
+    def test_estrai_unisce_le_parti(self):
+        """La scheda spezzata tra due parti diventa un obiettivo; una parte non letta è un
+        avviso; le parti senza obiettivi non vanno al modello."""
+        import asyncio
+
+        from common.llm import LlmError
+        from common.performance.importazione import estrai
+
+        class LlmFinto:
+            def __init__(self):
+                self.testi = []
+
+            async def dati_json(self, sistema, testo, schema):
+                self.testi.append(testo)
+                if "GUASTO" in testo:
+                    raise LlmError("Il modello non ha risposto")
+                if "PRIMA" in testo:
+                    return {"obiettivi": [{"codice": "P1_26_1", "titolo": "Concorsi", "descrizione": "Breve",
+                                           "struttura": "Settore 2", "responsabile": None,
+                                           "azioni": [{"descrizione": "Bando", "fine": "30/06/2026"}], "indicatori": []}]}
+                return {"obiettivi": [{"codice": "p1_26_1 ", "titolo": "Concorsi", "descrizione": "Descrizione più lunga",
+                                       "struttura": None, "responsabile": "Rossi",
+                                       "azioni": [{"descrizione": "bando.", "fine": None}, {"descrizione": "Prove", "fine": None}],
+                                       "indicatori": [{"descrizione": "Tempi", "tipo": None, "valore_atteso": "90 giorni"}]}]}  # fmt: skip
+
+        pagina = "Scheda obiettivo PRIMA indicatori\n" + "x" * 30_000 + "\nScheda obiettivo SECONDA fasi\n"
+        llm = LlmFinto()
+        esito = asyncio.run(estrai(pagina + "Premessa senza nulla\n" * 2000 + "obiettivo GUASTO indicatori\n", llm))
+        self.assertEqual(len(esito["obiettivi"]), 1)
+        o = esito["obiettivi"][0]
+        self.assertEqual((o["codice"], o["struttura"], o["responsabile"], o["descrizione"]),
+                         ("P1_26_1", "Settore 2", "Rossi", "Descrizione più lunga"))  # fmt: skip
+        self.assertEqual([a["descrizione"] for a in o["azioni"]], ["Bando", "Prove"])
+        self.assertEqual(len(esito["avvisi"]), 1)
+        self.assertIn("non letta", esito["avvisi"][0])
+        self.assertTrue(all("Premessa senza nulla\nPremessa" not in t or "obiettiv" in t.lower() for t in llm.testi))
+
+    def test_documento_senza_obiettivi(self):
+        import asyncio
+
+        from common.importazione import ImportazioneNonRiuscita
+        from common.performance.importazione import estrai
+
+        with self.assertRaisesRegex(ImportazioneNonRiuscita, "non ci sono obiettivi"):
+            asyncio.run(estrai("Relazione sul lavoro agile", None))
+
+    def test_indicatori_dal_valore_atteso(self):
+        from common.performance.importazione import indicatore
+
+        def tipo(valore):
+            i, avviso = indicatore({"descrizione": "Indicatore", "valore_atteso": valore}, 2026)
+            return i["tipo"], i["target"], i["target_data"], i["unita"], avviso is not None
+
+        self.assertEqual(tipo("31/12/2026"), ("DATA", None, "2026-12-31", None, False))
+        self.assertEqual(tipo("entro il 30.06.2026"), ("DATA", None, "2026-06-30", None, False))
+        self.assertEqual(tipo("100,00 %"), ("PERCENTUALE", 100.0, None, None, False))
+        self.assertEqual(tipo("2,00 N."), ("NUMERO", 2.0, None, None, False))
+        self.assertEqual(tipo("1.558.203"), ("NUMERO", 1558203.0, None, None, False))
+        self.assertEqual(tipo("Km 42,385"), ("NUMERO", 42.385, None, "Km", False))
+        self.assertEqual(tipo("150%"), ("NUMERO", 150.0, None, "%", False))  # non è una percentuale valida
+        self.assertEqual(tipo("SI"), ("SI_NO", None, None, None, False))
+        self.assertEqual(tipo("miglioramento"), ("SI_NO", None, None, None, True))
+        self.assertEqual(tipo(None), ("SI_NO", None, None, None, True))
+
+    def test_abbina_struttura(self):
+        from types import SimpleNamespace as S
+
+        from common.performance.importazione import abbina_struttura
+
+        strutture = [S(id="s5", codice="SETTORE 5", descrizione="Lavori pubblici e traffico"),
+                     S(id="s6", codice="SETTORE 6", descrizione="Protezione civile e sistemi informativi")]  # fmt: skip
+        self.assertEqual(abbina_struttura("Settore Dipartimentale 5 Lavori Pubblici e Traffico", strutture), "s5")
+        self.assertEqual(abbina_struttura("Settore Dipartimentale 6 Protezione Civile e Sistemi Infomativi", strutture), "s6")
+        self.assertIsNone(abbina_struttura("Gabinetto del Sindaco", strutture))
+        self.assertIsNone(abbina_struttura(None, strutture))

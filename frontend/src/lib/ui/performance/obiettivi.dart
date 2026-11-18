@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../anticorruzione/comune.dart' show Percorso, IconaAzione;
 import '../comuni.dart';
 import 'comune.dart';
+import 'importa_obiettivi.dart';
 import 'proposte.dart';
 
 /// Obiettivi di una struttura in un anno del PIAO, con il totale degli impegni e il
@@ -68,6 +69,13 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
     if (diretto) return setState(() => _obiettivoId = creato);
     await apriPropostaPf(context, creato!);
     _carica();
+  }
+
+  Future<void> _importa(DatiPerformance dati) async {
+    final fatto = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => ImportaObiettiviPage(dati: dati, piao: dati.piaoDi(_piaoId)!, anno: _anno!),
+    ));
+    if (fatto == true && mounted) _carica();
   }
 
   Widget _rigaProposta(Map<String, dynamic> p) => Card(
@@ -231,6 +239,13 @@ class _ObiettiviTabState extends State<ObiettiviTab> with AutomaticKeepAliveClie
                   (aggiunta == 'DIRETTA'
                       ? 'Impegno già al 100%: per un nuovo obiettivo riduci prima l\'impegno di un altro.'
                       : 'Impegno già al 100%: per un nuovo obiettivo proponi prima di ridurre l\'impegno di un altro.')),
+            // gli obiettivi del PIAO letti dal documento (approvatore, PIAO aperto)
+            if (dati.approvatore && dati.piaoDi(_piaoId)?['stato'] == 'APERTO')
+              OutlinedButton.icon(
+                onPressed: () => _importa(dati),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Importa dal PIAO'),
+              ),
           ]),
           const SizedBox(height: 16),
           if (obiettivi.isEmpty && proposti.isEmpty) const Center(child: Text('Nessun obiettivo per la struttura in questo anno.')),

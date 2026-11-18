@@ -139,6 +139,12 @@ SEGNAPOSTO = {
     "azione_estrai": {"elementi", "istruzioni"},
     "relazione_sistema": set(),
     "relazione_utente": {"ente", "relazione", "sezione", "dati"},
+    "importazione_sistema": set(),
+    "importazione_obiettivi": {"testo"},
+    "valutazione_sistema": set(),
+    "valutazione_utente": {"ente", "processo", "attivita", "evento", "fattore", "misure", "scala",
+                           "indicatori_probabilita", "indicatori_impatto"},
+    "valutazione_giudizio": {"evento", "indicatori", "probabilita", "impatto", "livello"},
 }
 
 
@@ -330,13 +336,14 @@ class LlmClient:
             testo_prompt("dati_personali_sistema"), prompt, DatiTrovati, interattiva=interattiva
         )
 
-    async def dati_json(self, sistema: str, testo: str, schema: dict) -> dict:
+    async def dati_json(self, sistema: str, testo: str, schema: dict, *, interattiva: bool = False) -> dict:
         """Risposta JSON conforme a uno schema costruito al momento (JSON Schema); se non è
         un oggetto JSON valido si riprova una volta. La conformità ai dettagli dello schema
-        la verifica chi chiama."""
+        la verifica chi chiama. [interattiva]: durante una richiesta HTTP (timeout e
+        temperatura della redazione)."""
         messaggi = [{"role": "user", "content": testo}]
         for tentativo in (1, 2):
-            contenuto = await self._chiama(sistema, messaggi, formato=schema, redazione=False)
+            contenuto = await self._chiama(sistema, messaggi, formato=schema, redazione=interattiva)
             try:
                 testo_json = contenuto.strip()
                 if testo_json.startswith("```"):

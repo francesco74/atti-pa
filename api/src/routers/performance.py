@@ -1718,3 +1718,124 @@ async def riepilogo():
     ordine = {s.id: (s.ordine, chiave_naturale(s.codice)) for s in strutture.values()}
     risultato.sort(key=lambda r: (r["anno"], ordine.get(r["struttura_id"], (0, []))))
     return risultato
+
+
+# --- importazione degli obiettivi da un documento ---------------------------------------------
+
+
+@bp.post("/importazioni")
+@approvatore
+async def importa_obiettivi():
+    """Avvia la lettura degli obiettivi di performance dal PIAO o dal Piano della performance
+    (file caricati o indirizzo di un documento): il worker la esegue a parti con l'LLM, che
+    trascrive le schede degli obiettivi (common/performance/importazione.py). Il risultato si
+    rivede con GET /<id> e si salva con POST /obiettivi/importati."""
+    from routers.trasparenza import ESTRAZIONE, FonteIn, _accoda, _richiesta
+
+    dati, files = _richiesta(FonteIn)
+    specifici = {"origine": "performance", "importazione": "OBIETTIVI", "titolo": "Obiettivi di performance"}
+    return await _accoda(ESTRAZIONE, dati, files, specifici), HTTPStatus.ACCEPTED
+
+
+class ImportazioneFiltri(BaseModel):
+    piao_id: str
+    anno: int
+
+
+@bp.get("/importazioni/<lavoro_id>")
+@approvatore
+async def importazione_obiettivi(lavoro_id: str):
+    """Stato della lettura (con le parti lette) e, completata, gli obiettivi trovati nella forma
+    di atti-pa per l'anno del PIAO: azioni con gli indicatori, la struttura proposta (la più simile
+    a quella del documento) e l'obiettivo già presente con lo stesso codice o titolo."""
+    from sqlalchemy.orm import undefer
+
+    from common.anticorruzione.catalogo import normalizza
+    from common.models import StatoVerifica, TrasparenzaLavoro
+    from common.performance.importazione import abbina_struttura, proposta
+    from routers.trasparenza import _lavoro
+
+    f = parametri(ImportazioneFiltri)
+    sessione = db()
+    lavoro = await sessione.scalar(
+        select(TrasparenzaLavoro).where(TrasparenzaLavoro.id == lavoro_id, TrasparenzaLavoro.ente_id == ente_id())
+        .options(undefer(TrasparenzaLavoro.risultato)))  # fmt: skip
+    if lavoro is None or lavoro.utente_id != utente().id or (lavoro.richiesta or {}).get("importazione") != "OBIETTIVI":
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Importazione non trovata")
+    risposta = _lavoro(lavoro)
+    if lavoro.stato != StatoVerifica.COMPLETATA or not lavoro.risultato:
+        return risposta
+    p = await _piao_dell_ente(f.piao_id)
+    _nel_triennio(p, f.anno)
+    strutture = [s for s in (await _strutture()).values() if s.attiva]
+    presenti = list(await sessione.scalars(select(PfObiettivo).where(PfObiettivo.piao_id == p.id, PfObiettivo.anno == f.anno)))
+    per_codice = {o.codice.strip().upper(): o for o in presenti if o.codice}
+    per_titolo = {normalizza(o.titolo): o for o in presenti}
+    obiettivi = []
+    for o in lavoro.risultato.get("obiettivi") or []:
+        pr = proposta(o, f.anno)
+        pr["struttura_id"] = abbina_struttura(pr["struttura"], strutture)
+        gia = per_codice.get((pr["codice"] or "").strip().upper()) or per_titolo.get(normalizza(pr["titolo"]))
+        pr["presente"] = None if gia is None else {"id": gia.id, "codice": gia.codice, "titolo": gia.titolo,
+                                                    "struttura_id": gia.struttura_id}  # fmt: skip
+        obiettivi.append(pr)
+    return risposta | {"obiettivi": obiettivi, "avvisi": lavoro.risultato.get("avvisi") or []}
+
+
+class AzioneImportata(BaseModel):
+    descrizione: str = Field(min_length=1, max_length=10000)
+    scadenza: date
+    indicatori: list[IndicatoreIn] = Field(default=[], max_length=50)
+
+
+class ObiettivoImportato(BaseModel):
+    struttura_id: str
+    codice: str | None = Field(default=None, max_length=100)
+    titolo: str = Field(min_length=1, max_length=500)
+    descrizione: str | None = Field(default=None, max_length=10000)
+    tipo: Literal["OPERATIVO", "FUNZIONAMENTO", "MIGLIORAMENTO"] = "OPERATIVO"
+    elementi: list[AzioneImportata] = Field(default=[], max_length=100)
+
+
+class ObiettiviImportati(BaseModel):
+    piao_id: str
+    anno: int
+    obiettivi: list[ObiettivoImportato] = Field(min_length=1, max_length=500)
+    fonte: str | None = Field(default=None, max_length=500)  # per lo storico
+
+
+@bp.post("/obiettivi/importati")
+@approvatore
+async def salva_obiettivi_importati():
+    """Crea gli obiettivi confermati dopo la revisione, con le azioni e gli indicatori, tutti
+    insieme (se uno non va, nessuno si salva). Gli impegni partono da 0: si distribuiscono poi."""
+    dati = corpo(ObiettiviImportati)
+    sessione = db()
+    p = await _piao_dell_ente(dati.piao_id)
+    _aperto(p)
+    _nel_triennio(p, dati.anno)
+    nota = f"Importato da {dati.fonte}" if dati.fonte else "Importato da un documento"
+    creati = []
+    for n, d in enumerate(dati.obiettivi, start=1):
+        try:
+            s = await _struttura_dell_ente(d.struttura_id)
+            o = PfObiettivo(ente_id=ente_id(), piao_id=p.id, anno=dati.anno, struttura_id=s.id)
+            _imposta_obiettivo(o, {**d.model_dump(), "impegno": 0})
+            sessione.add(o)
+            await sessione.flush()
+            _registra("OBIETTIVO", o.id, "CREATO", _nome_obiettivo(o), piao_id=p.id, obiettivo_id=o.id,
+                      campi=_differenze({}, {**_campi_obiettivo(o), "anno": o.anno, "struttura": s.codice}), nota=nota)  # fmt: skip
+            for ordine, a in enumerate(d.elementi):
+                definizioni = [_definizione(i) for i in a.indicatori]
+                x = PfElemento(id=nuovo_id(), ente_id=ente_id(), obiettivo_id=o.id, tipo="AZIONE", impegno=0, completamento=0,
+                               scadenza=a.scadenza, descrizione=a.descrizione.strip(), ordine=ordine)  # fmt: skip
+                sessione.add(x)
+                await _sincronizza_indicatori(x, [], definizioni, piao_id=p.id, nota=nota)
+                _registra(x.tipo, x.id, "CREATO", _nome_elemento(x), piao_id=p.id, obiettivo_id=o.id,
+                          campi=_differenze({}, _campi_elemento(x)), nota=nota)  # fmt: skip
+        except ErroreApi as e:
+            await sessione.rollback()
+            raise ErroreApi(e.stato, f"Obiettivo {n} ({d.codice or d.titolo[:60]}): {e.detail}") from e
+        creati.append(o.id)
+    await sessione.commit()
+    return {"creati": len(creati), "ids": creati}, HTTPStatus.CREATED

@@ -135,6 +135,43 @@ class AnticorruzioneApi(unittest.TestCase):
                            json={**corpo, "motivazione_correzione": "Dati oggettivi di segno opposto"}))  # fmt: skip
         self.assertEqual((v["probabilita_calcolata"], v["probabilita"], v["livello"]), ("Alto", "Medio", "Rischio Medio"))
 
+        # giudizio motivato della valutazione: si salva e si toglie
+        v = self._ok(c.put(f"{API}/rischi/{r['id']}/valutazione", base_url=ENTE, json={
+            **corpo, "motivazione_correzione": "Dati oggettivi di segno opposto",
+            "motivazione_valutazione": " Commissioni con rotazione. "}))  # fmt: skip
+        self.assertEqual((v["motivazione_valutazione"], v["livello"]), ("Commissioni con rotazione.", "Rischio Medio"))
+
+        # valutazione suggerita dall'IA (modello simulato): valori, livello calcolato, giudizio
+        class LlmFinto:
+            def __init__(self):
+                self.messaggi = []
+
+            async def dati_json(self, sistema, testo, schema, *, interattiva=False):
+                self.messaggi.append(testo)
+                assert interattiva
+                return {"indicatori": [{"id": i, "valore": "Alto" if i == "3" else "Basso", "motivazione": f"Motivo {i}"}
+                                       for i in schema["properties"]["indicatori"]["items"]["properties"]["id"]["enum"]]}  # fmt: skip
+
+            async def scrivi(self, sistema, testo):
+                self.messaggi.append(testo)
+                return "Rischio basso: interessi rilevanti ma poca discrezionalità."
+
+        llm = self.app.state.llm = LlmFinto()
+        s = self._ok(self._client("referente").post(f"{API}/rischi/suggerimento", base_url=ENTE, json={
+            "evento": "Commissari in conflitto di interessi", "rischio_id": r["id"]}))  # fmt: skip
+        self.assertEqual((s["probabilita"], s["impatto"], s["livello"]), ("Basso", "Basso", "Rischio Minimo"))
+        self.assertEqual((s["valori_probabilita"]["3"], s["motivazioni"]["3"]), ("Alto", "Motivo 3"))
+        self.assertEqual(s["motivazione_valutazione"], "Rischio basso: interessi rilevanti ma poca discrezionalità.")
+        self.assertIn("Concorsi pubblici", llm.messaggi[0])  # il contesto: processo, attività, misure
+        self.assertIn("Dichiarazioni di assenza di conflitto", llm.messaggi[0])
+        self.assertIn('livello "Rischio Minimo"', llm.messaggi[1])  # il giudizio parte dal livello calcolato
+        # rischio ancora da creare: basta l'attività; senza nessuna delle due no
+        self._ok(c.post(f"{API}/rischi/suggerimento", base_url=ENTE, json={"evento": "Altro evento", "attivita_id": a["id"]}))
+        self.assertEqual(c.post(f"{API}/rischi/suggerimento", base_url=ENTE, json={"evento": "Altro evento"}).status_code, 404)
+        self.app.state.llm = None
+        self.assertEqual(c.post(f"{API}/rischi/suggerimento", base_url=ENTE, json={
+            "evento": "Altro evento", "attivita_id": a["id"]}).status_code, 503)  # fmt: skip
+
         # albero, elenco con conteggi e livello, filtri
         albero = self._ok(c.get(f"{API}/processi/{p['id']}", base_url=ENTE))
         self.assertEqual(len(albero["attivita"][0]["rischi"][0]["misure"]), 2)

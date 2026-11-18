@@ -551,7 +551,8 @@ class TabellaCampi extends StatelessWidget {
   /// Per il confronto: la valutazione conta anche con i valori degli indicatori, che possono
   /// cambiare senza cambiare il livello.
   String _confronto(String campo, Object? v) => campo == 'valutazione' && v is Map
-      ? jsonEncode([v['valori_probabilita'], v['valori_impatto'], v['probabilita'], v['impatto'], v['motivazione_correzione']])
+      ? jsonEncode([v['valori_probabilita'], v['valori_impatto'], v['probabilita'], v['impatto'], v['motivazione_correzione'],
+          v['motivazione_valutazione']])
       : _testo(campo, v);
 
   @override

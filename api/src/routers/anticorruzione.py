@@ -24,7 +24,7 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import undefer
 
 import ricerca as servizio_ricerca
-from deps import audit, autenticato, db, ente, ente_id, utente
+from deps import audit, autenticato, db, ente, ente_id, risorse, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
 from common.ricerca import Documento
@@ -385,6 +385,7 @@ def _rischio(r: AcRischio) -> dict:
         "valori_impatto": r.valori_impatto, "probabilita_calcolata": r.probabilita_calcolata,
         "impatto_calcolato": r.impatto_calcolato, "probabilita": r.probabilita, "impatto": r.impatto,
         "livello": r.livello, "motivazione_correzione": r.motivazione_correzione,
+        "motivazione_valutazione": r.motivazione_valutazione,
         "valutato_il": r.valutato_il.isoformat() if r.valutato_il else None,
     }  # fmt: skip
 
@@ -775,6 +776,8 @@ class ValutazioneProposta(BaseModel):
     probabilita: str | None = None
     impatto: str | None = None
     motivazione_correzione: str | None = Field(default=None, max_length=5000)
+    # giudizio sintetico motivato (facoltativo; lo può proporre l'IA, POST /rischi/suggerimento)
+    motivazione_valutazione: str | None = Field(default=None, max_length=5000)
 
 
 class MisuraIn(BaseModel):
@@ -945,6 +948,7 @@ def _valuta(r: AcRischio, m: Metodologia, v: ValutazioneProposta | None) -> None
     if v is None:
         r.valori_probabilita = r.valori_impatto = r.probabilita_calcolata = r.impatto_calcolato = None
         r.probabilita = r.impatto = r.livello = r.motivazione_correzione = r.valutato_il = None
+        r.motivazione_valutazione = None
         return
     esito, corretta = _esito(m, v)
     nuova = (r.valori_probabilita, r.valori_impatto, r.probabilita, r.impatto) != (
@@ -953,6 +957,7 @@ def _valuta(r: AcRischio, m: Metodologia, v: ValutazioneProposta | None) -> None
     r.probabilita_calcolata, r.impatto_calcolato = esito.probabilita_calcolata, esito.impatto_calcolato
     r.probabilita, r.impatto, r.livello = esito.probabilita, esito.impatto, esito.livello
     r.motivazione_correzione = (v.motivazione_correzione or "").strip() if corretta else None
+    r.motivazione_valutazione = (v.motivazione_valutazione or "").strip() or None
     if nuova or r.valutato_il is None:
         r.valutato_il = datetime.now()
 
@@ -1121,6 +1126,48 @@ async def _rischio_dell_ente(sessione, rischio_id: str) -> AcRischio:
     if r is None or r.ente_id != ente_id():
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Rischio non trovato")
     return r
+
+
+class SuggerimentoIn(BaseModel):
+    """L'evento da valutare e dove sta: il rischio (anche proposto con un altro testo), o
+    l'attività di un rischio nuovo; con le misure del rischio, se c'è."""
+
+    evento: str = Field(min_length=3, max_length=5000)
+    fattore_abilitante: str | None = Field(default=None, max_length=500)
+    rischio_id: str | None = None
+    attivita_id: str | None = None
+
+
+@bp.post("/rischi/suggerimento")
+@lettore
+async def suggerisci_valutazione():
+    """Valutazione proposta dall'intelligenza artificiale con la metodologia dell'ente: valore e
+    motivazione per indicatore, probabilità, impatto, livello e giudizio sintetico
+    (common/anticorruzione/suggerimento.py). Non salva nulla."""
+    from common.anticorruzione.suggerimento import suggerisci
+    from common.llm import LlmError
+
+    d = corpo(SuggerimentoIn)
+    sessione = db()
+    llm = risorse().llm
+    if llm is None:
+        raise ErroreApi(HTTPStatus.SERVICE_UNAVAILABLE, "Modello linguistico non configurato")
+    rischio = await sessione.get(AcRischio, d.rischio_id) if d.rischio_id else None
+    if rischio is not None and rischio.ente_id != ente_id():
+        rischio = None
+    attivita_id = rischio.attivita_id if rischio is not None else d.attivita_id
+    a = await sessione.get(AcAttivita, attivita_id) if attivita_id else None
+    if a is None or a.ente_id != ente_id():
+        raise ErroreApi(HTTPStatus.NOT_FOUND, "Attività non trovata")
+    p = await sessione.get(AcProcesso, a.processo_id)
+    misure = [] if rischio is None else [
+        m.descrizione for m in await sessione.scalars(select(AcMisura).where(AcMisura.rischio_id == rischio.id).order_by(AcMisura.codice))]  # fmt: skip
+    try:
+        return await suggerisci(llm, await metodologia_ente(), ente=ente().nome, processo=f"{p.codice} {p.denominazione}",
+                                attivita=f"{a.codice} {a.descrizione}", evento=d.evento.strip(),
+                                fattore=d.fattore_abilitante, misure=misure)  # fmt: skip
+    except LlmError as e:
+        raise ErroreApi(HTTPStatus.BAD_GATEWAY, str(e)) from e
 
 
 @bp.post("/attivita/<attivita_id>/rischi")
@@ -1309,7 +1356,7 @@ def _valutazione_di(r: AcRischio) -> dict | None:
     if not r.valori_probabilita:
         return None
     campi = ("valori_probabilita", "valori_impatto", "probabilita", "impatto", "motivazione_correzione",
-             "probabilita_calcolata", "impatto_calcolato", "livello")  # fmt: skip
+             "motivazione_valutazione", "probabilita_calcolata", "impatto_calcolato", "livello")  # fmt: skip
     return {k: getattr(r, k) for k in campi}
 
 

@@ -783,6 +783,8 @@ class AcRischio(Base):
     impatto: Mapped[str | None] = mapped_column(String(50))
     livello: Mapped[str | None] = mapped_column(String(50))
     motivazione_correzione: Mapped[str | None] = mapped_column(Text)
+    # giudizio sintetico motivato della valutazione (anche proposto dall'IA, confermato da chi valuta)
+    motivazione_valutazione: Mapped[str | None] = mapped_column(Text)
     valutato_il: Mapped[datetime | None] = mapped_column(DateTime)
 
 

@@ -14,7 +14,7 @@ Map<String, dynamic> daAlbero(Map<String, dynamic> albero) {
       : {
           for (final k in const [
             'valori_probabilita', 'valori_impatto', 'probabilita', 'impatto', 'motivazione_correzione',
-            'probabilita_calcolata', 'impatto_calcolato', 'livello',
+            'motivazione_valutazione', 'probabilita_calcolata', 'impatto_calcolato', 'livello',
           ])
             k: r[k],
         };
@@ -380,7 +380,49 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
   String? iCorr = v['impatto'] != null && v['impatto'] != iCalc0 ? v['impatto'] as String : null;
   String? fattore = r['fattore_abilitante'] as String?;
   final motivazione = TextEditingController(text: v['motivazione_correzione'] as String? ?? '');
+  final giudizio = TextEditingController(text: v['motivazione_valutazione'] as String? ?? '');
   String? errore;
+  // parere dell'intelligenza artificiale, chiesto da chi valuta (dopo aver dato i suoi valori)
+  Map<String, dynamic>? ia;
+  String? erroreIa;
+  var attesaIa = false;
+  final puoChiedereIa = r['id'] != null || r['attivita_id'] != null;
+  final api = apiDi(context);
+
+  Future<void> chiediIa(void Function(void Function()) aggiorna) async {
+    aggiorna(() => (attesaIa, erroreIa) = (true, null));
+    try {
+      final s = await api.post('$apiAnticorruzione/rischi/suggerimento', {
+        'evento': r['evento'],
+        'fattore_abilitante': fattore,
+        'rischio_id': ?r['id'],
+        'attivita_id': ?r['attivita_id'],
+      }) as Map<String, dynamic>;
+      aggiorna(() => (ia, attesaIa) = (s, false));
+    } catch (e) {
+      aggiorna(() => (erroreIa, attesaIa) = ('$e', false));
+    }
+  }
+
+  /// Il valore dell'IA per l'indicatore, accanto a quello scelto (evidenziato se diverso).
+  Widget valoreIa(BuildContext c, String id, String scelto) {
+    final proposto = ((ia?['valori_probabilita'] as Map?)?[id] ?? (ia?['valori_impatto'] as Map?)?[id]) as String?;
+    if (proposto == null) return const SizedBox.shrink();
+    final diverso = proposto != scelto;
+    final tema = Theme.of(c).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Tooltip(
+        message: (ia?['motivazioni'] as Map?)?[id] as String? ?? '',
+        child: Chip(
+          visualDensity: VisualDensity.compact,
+          avatar: Icon(Icons.auto_awesome, size: 14, color: diverso ? tema.onTertiaryContainer : null),
+          backgroundColor: diverso ? tema.tertiaryContainer : null,
+          label: Text('IA: $proposto'),
+        ),
+      ),
+    );
+  }
 
   Widget indicatori(String titolo, List<Map<String, dynamic>> lista, Map<String, String> valori, void Function(void Function()) aggiorna) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -401,6 +443,7 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
                 selected: {valori[i['id']]!},
                 onSelectionChanged: (s) => aggiorna(() => valori[i['id'] as String] = s.first),
               ),
+              Builder(builder: (c) => valoreIa(c, i['id'] as String, valori[i['id']]!)),
             ]),
           ),
       ]);
@@ -416,6 +459,7 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
       'impatto': corretta ? (iCorr ?? iCalc) : null,
       'motivazione_correzione': corretta ? motivazione.text.trim() : null,
       'fattore_abilitante': fattore ?? '',
+      'motivazione_valutazione': giudizio.text.trim().isEmpty ? null : giudizio.text.trim(),
       // per mostrare subito l'esito nelle proposte (il server lo ricalcola)
       'probabilita_calcolata': pCalc,
       'impatto_calcolato': iCalc,
@@ -426,7 +470,7 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
   final ok = await showDialog<bool>(
     context: context,
     // il campo si libera quando la finestra è sparita (l'animazione di chiusura lo usa ancora)
-    builder: (c) => LiberaAllaFine([motivazione], child: StatefulBuilder(builder: (c, aggiorna) {
+    builder: (c) => LiberaAllaFine([motivazione, giudizio], child: StatefulBuilder(builder: (c, aggiorna) {
       final pCalc = d.moda(prob.values), iCalc = d.moda(imp.values);
       final p = pCorr ?? pCalc, i = iCorr ?? iCalc;
       return AlertDialog(
@@ -436,6 +480,18 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
           child: SingleChildScrollView(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(r['evento'] as String? ?? ''),
+              if (puoChiedereIa) _pannelloIa(c, d, ia, erroreIa, attesaIa,
+                  chiedi: () => chiediIa(aggiorna),
+                  usaValori: () => aggiorna(() {
+                        prob.addAll((ia!['valori_probabilita'] as Map).cast<String, String>());
+                        imp.addAll((ia!['valori_impatto'] as Map).cast<String, String>());
+                        pCorr = iCorr = null;
+                      }),
+                  usaGiudizio: () => aggiorna(() => giudizio.text = ia!['motivazione_valutazione'] as String? ?? ''),
+                  diversi: [
+                    for (final e in [...prob.entries, ...imp.entries])
+                      if (((ia?['valori_probabilita'] as Map?)?[e.key] ?? (ia?['valori_impatto'] as Map?)?[e.key]) case final x? when x != e.value) e.key,
+                  ].length),
               indicatori('Probabilità', d.indicatoriProbabilita, prob, aggiorna),
               indicatori('Impatto', d.indicatoriImpatto, imp, aggiorna),
               const Divider(),
@@ -469,6 +525,16 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
                   maxLines: 3,
                   decoration: const InputDecoration(labelText: 'Motivazione della correzione *'),
                 ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: giudizio,
+                minLines: 2,
+                maxLines: 6,
+                decoration: const InputDecoration(
+                  labelText: 'Motivazione della valutazione',
+                  helperText: 'Giudizio sintetico motivato (facoltativo), riportato nel PTPCT',
+                ),
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String?>(
                 initialValue: fattore,
@@ -512,6 +578,45 @@ Future<Map<String, dynamic>?> valutaRischio(BuildContext context, DatiAnticorruz
     })),
   );
   return ok == true ? risultato() : null;
+}
+
+/// Il parere dell'IA nella finestra di valutazione: prima il pulsante (chi valuta esprime
+/// prima i suoi valori), poi il risultato proposto, quanti indicatori sono diversi e i pulsanti
+/// per adottare i valori o il giudizio. Nulla si salva senza "Salva".
+Widget _pannelloIa(BuildContext c, DatiAnticorruzione d, Map<String, dynamic>? ia, String? errore, bool attesa,
+    {required VoidCallback chiedi, required VoidCallback usaValori, required VoidCallback usaGiudizio, required int diversi}) {
+  final tema = Theme.of(c);
+  return Container(
+    margin: const EdgeInsets.only(top: 8),
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(color: tema.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Icon(Icons.auto_awesome, size: 18, color: tema.colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(ia == null
+              ? 'Dai prima i tuoi valori, poi puoi confrontarli con quelli proposti dall\'intelligenza artificiale.'
+              : 'Proposta dell\'IA: probabilità ${ia['probabilita']}, impatto ${ia['impatto']}, ${ia['livello']}. '
+                  '${diversi == 0 ? 'Gli indicatori coincidono con i tuoi.' : 'Indicatori diversi dai tuoi: $diversi (evidenziati; la motivazione è nel suggerimento).'}'),
+        ),
+        if (attesa)
+          const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+        else if (ia == null)
+          TextButton(onPressed: chiedi, child: const Text('Parere dell\'IA')),
+      ]),
+      if (errore != null) Text(errore, style: TextStyle(color: tema.colorScheme.error)),
+      if (ia != null)
+        Wrap(spacing: 8, children: [
+          if (diversi > 0) TextButton(onPressed: usaValori, child: const Text('Usa i valori dell\'IA')),
+          if ((ia['motivazione_valutazione'] as String?)?.isNotEmpty ?? false)
+            TextButton(onPressed: usaGiudizio, child: const Text('Usa il giudizio dell\'IA')),
+          TextButton(onPressed: chiedi, child: const Text('Chiedi di nuovo')),
+        ]),
+      if (ia != null)
+        Text('È una proposta: controlla i valori e il giudizio prima di salvare.', style: tema.textTheme.bodySmall),
+    ]),
+  );
 }
 
 // --- vista dell'albero -------------------------------------------------------------------
@@ -797,6 +902,11 @@ class ValoriIndicatori extends StatelessWidget {
           padding: const EdgeInsets.only(top: 4),
           child: Text('Corretta in probabilità ${valutazione['probabilita']}, impatto ${valutazione['impatto']}: '
               '${valutazione['motivazione_correzione']}'),
+        ),
+      if (valutazione['motivazione_valutazione'] != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text('Motivazione: ${valutazione['motivazione_valutazione']}'),
         ),
     ]);
   }

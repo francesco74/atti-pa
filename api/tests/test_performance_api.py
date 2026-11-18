@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E4
 
 from auth import password as pw  # noqa: E402
 from common.config import Settings  # noqa: E402
-from common.models import Base, Ente, EnteDominio, Modulo, Ruolo, Struttura, User  # noqa: E402
+from common.models import Base, Ente, EnteDominio, Modulo, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User  # noqa: E402
 
 PASSWORD = "Password-di-prova-1"
 ENTE = "http://lucca.example.it"
@@ -38,7 +38,7 @@ class PerformanceApi(unittest.TestCase):
         from main import create_app
 
         cls.cartella = tempfile.TemporaryDirectory()
-        url = f"sqlite+aiosqlite:///{cls.cartella.name}/prova.db"
+        url = cls.url = f"sqlite+aiosqlite:///{cls.cartella.name}/prova.db"
 
         async def dati():
             motore = create_async_engine(url)
@@ -593,6 +593,86 @@ class PerformanceApi(unittest.TestCase):
         # l'approvatore vede tutto; chi ha solo il modulo anticorruzione no
         contesto = self._ok(self._client("approvatore").get(f"{API}/contesto", base_url=ENTE))
         self.assertEqual((contesto["approvatore"], contesto["visibili"]), (True, None))
+
+    def test_importazione_obiettivi(self):
+        """Obiettivi letti dal PIAO (lettura del worker simulata): proposte nella forma di
+        atti-pa per l'anno, con la struttura abbinata e l'obiettivo già presente; si salvano
+        quelli confermati, tutti o nessuno, con impegni a 0."""
+        amm, appr, dirigente = self._client("amm"), self._client("approvatore"), self._client("dirigente")
+        p = self._piao(amm, 2080)
+        imp = f"{API}/importazioni"
+        self.assertEqual(dirigente.post(imp, base_url=ENTE, json={"url": "https://www.ente.it/piao.pdf"}).status_code, 403)
+        lavoro = self._ok(appr.post(imp, base_url=ENTE, json={"url": "https://www.ente.it/piao.pdf"}), 202)
+        q = {"piao_id": p["id"], "anno": 2080}
+        stato = self._ok(appr.get(f"{imp}/{lavoro['id']}", base_url=ENTE, query_string=q))
+        self.assertEqual((stato["stato"], stato["titolo"]), ("IN_CODA", "Obiettivi di performance"))
+        self.assertNotIn("obiettivi", stato)
+        # già presente con lo stesso codice
+        gia = self._ok(appr.post(f"{API}/obiettivi", base_url=ENTE, json={
+            "piao_id": p["id"], "anno": 2080, "struttura_id": self.altra, "codice": "P1_OG1_80_2", "titolo": "Strade",
+            "impegno": 10}), 201)  # fmt: skip
+
+        letti = [
+            {"codice": "P1_OG1_80_1", "titolo": "Concorsi più rapidi", "descrizione": "Ridurre i tempi",
+             "struttura": "Settore 2 Risorse Umane", "responsabile": "Rossi",
+             "azioni": [{"descrizione": "Bando unico per i profili tecnici", "fine": "30/06/2080"},
+                        {"descrizione": "Digitalizzazione delle prove", "fine": None}],
+             "indicatori": [{"descrizione": "Prove digitalizzate", "tipo": "EFFICIENZA", "valore_atteso": "100,00 %"},
+                            {"descrizione": "Pubblicazione del bando unico", "tipo": "ADEMPIMENTO", "valore_atteso": "30/06/2080"},
+                            {"descrizione": "Qualità percepita", "tipo": "RISULTATO", "valore_atteso": "buona"}]},
+            {"codice": "P1_OG1_80_2", "titolo": "Strade", "descrizione": None, "struttura": "Ufficio che non c'è",
+             "responsabile": None, "azioni": [], "indicatori": [{"descrizione": "Km asfaltati", "tipo": None, "valore_atteso": "12 km"}]},
+        ]  # fmt: skip
+
+        async def completa():
+            motore = create_async_engine(self.url)
+            async with AsyncSession(motore) as db:
+                lv = await db.get(TrasparenzaLavoro, lavoro["id"])
+                self.assertEqual(lv.richiesta["importazione"], "OBIETTIVI")
+                lv.stato, lv.risultato = StatoVerifica.COMPLETATA, {"obiettivi": letti, "avvisi": ["Parte 3 di 9 non letta"]}
+                await db.commit()
+            await motore.dispose()
+
+        asyncio.run(completa())
+        esito = self._ok(appr.get(f"{imp}/{lavoro['id']}", base_url=ENTE, query_string=q))
+        self.assertEqual(esito["avvisi"], ["Parte 3 di 9 non letta"])
+        primo, secondo = esito["obiettivi"]
+        self.assertEqual((primo["struttura_id"], primo["presente"], primo["tipo"]), (self.settore, None, "OPERATIVO"))
+        bando, digitale = primo["elementi"]
+        self.assertEqual((bando["scadenza"], digitale["scadenza"]), ("2080-06-30", "2080-12-31"))
+        # ogni indicatore all'azione con più parole in comune (o alla prima)
+        self.assertEqual([(i["tipo"], i["target"], i["target_data"]) for i in bando["indicatori"]],
+                         [("DATA", None, "2080-06-30"), ("SI_NO", None, None)])  # fmt: skip
+        self.assertEqual([(i["tipo"], i["target"]) for i in digitale["indicatori"]], [("PERCENTUALE", 100.0)])
+        self.assertIn("Qualità percepita", primo["avvisi"][0])
+        # senza fasi: una sola azione con il titolo; struttura non riconosciuta; già presente
+        self.assertEqual((secondo["struttura_id"], secondo["presente"]["id"]), (None, gia["id"]))
+        self.assertEqual(secondo["elementi"][0]["descrizione"], "Strade")
+        self.assertEqual(secondo["elementi"][0]["indicatori"][0] | {}, {**secondo["elementi"][0]["indicatori"][0], "tipo": "NUMERO",
+                                                                         "target": 12.0, "unita": "km"})  # fmt: skip
+        # di chi l'ha avviata
+        self.assertEqual(self._client("approvatore").get(f"{imp}/{lavoro['id']}", base_url=ENTE, query_string=q).status_code, 200)
+        self.assertEqual(amm.get(f"{imp}/{lavoro['id']}", base_url=ENTE, query_string=q).status_code, 403)
+
+        # salvataggio: un indicatore non valido blocca tutto
+        da_salvare = {**primo, "struttura_id": self.settore}
+        errato = {**da_salvare, "elementi": [{**bando, "indicatori": [{"descrizione": "x", "tipo": "PERCENTUALE", "target": 150}]}]}
+        salva = f"{API}/obiettivi/importati"
+        r = appr.post(salva, base_url=ENTE, json={**q, "obiettivi": [da_salvare, errato]})
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("Obiettivo 2 (P1_OG1_80_1)", r.get_json()["detail"])
+        elenco = self._ok(appr.get(f"{API}/obiettivi", base_url=ENTE, query_string={**q, "struttura_id": self.settore}))
+        self.assertEqual(elenco["obiettivi"], [])
+        self.assertEqual(dirigente.post(salva, base_url=ENTE, json={**q, "obiettivi": [da_salvare]}).status_code, 403)
+
+        r = self._ok(appr.post(salva, base_url=ENTE, json={**q, "obiettivi": [da_salvare], "fonte": "PIAO 2080.pdf"}), 201)
+        self.assertEqual(r["creati"], 1)
+        o = self._ok(appr.get(f"{API}/obiettivi/{r['ids'][0]}", base_url=ENTE))
+        self.assertEqual((o["codice"], o["impegno"], o["struttura_id"]), ("P1_OG1_80_1", 0, self.settore))
+        self.assertEqual([(x["descrizione"], x["impegno"], len(x["indicatori"])) for x in o["elementi"]],
+                         [("Bando unico per i profili tecnici", 0, 2), ("Digitalizzazione delle prove", 0, 1)])  # fmt: skip
+        storico = self._ok(amm.get(f"{API}/piao/{p['id']}/storico", base_url=ENTE))
+        self.assertTrue(any(v.get("nota") == "Importato da PIAO 2080.pdf" for v in storico))
 
 
 if __name__ == "__main__":
