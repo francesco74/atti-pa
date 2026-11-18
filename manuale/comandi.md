@@ -400,6 +400,15 @@ oggetto. Da riga di comando, in sviluppo (usa il `DATABASE_URL` del `.env`):
 Al posto di `FILE.zip` si può indicare una cartella con la struttura del pacchetto (es.
 `pacchetto/`).
 
+`importa` da riga di comando non chiede il tipo di ente: importa i processi sia dei comuni sia
+delle province. Per l'anticorruzione conviene l'app, che lo chiede e importa solo quelli
+dell'ente (oltre a quelli comuni a entrambi).
+
+I codici del pacchetto anticorruzione (aree, processi `A.1`, voci `ATT-`/`RIS-`/`MIS-`,
+procedimenti `PRC-`) restano stabili da una versione all'altra: un ente aggiorna importando lo
+zip nuovo, senza svuotare la mappatura. Per ricominciare da zero vedi `azzera_mappatura.py`
+(§ 8).
+
 Per una nuova versione: si modificano i file in `pacchetto/`, si aumenta `versione` in
 `pacchetto/pacchetto.yaml`, si controlla con `prova` e si crea lo zip con `crea`; lo zip si
 importa poi dall'app in ogni ente (Amministrazione → Pacchetti).
@@ -462,6 +471,30 @@ Aggiornare il database (si può rieseguire: aggiunge solo le mancanti):
 ```bash
 python deploy/manutenzione/strutture_coinvolte.py
 ```
+
+### Svuotare la mappatura di un ente (`azzera_mappatura.py`)
+
+Per ricaricare da zero il pacchetto standard dell'anticorruzione senza tenere i dati presenti
+(per esempio per passare dal pacchetto del Comune di Lucca a quello degli enti locali). Elimina
+aree, processi con attività, rischi e misure, voci del catalogo, proposte dei referenti,
+dichiarazioni del monitoraggio e contatori dei codici della mappatura. Restano la metodologia,
+le strutture e il catalogo dei procedimenti (condiviso con la trasparenza): il pacchetto li
+completa senza duplicare. Gli obiettivi della performance tengono la loro copia di azioni e
+misure. Fare prima il backup.
+
+Vedere cosa eliminerebbe, senza modificare:
+```bash
+python deploy/manutenzione/azzera_mappatura.py --ente CODICE --dry-run
+```
+
+Svuotare la mappatura dell'ente:
+```bash
+python deploy/manutenzione/azzera_mappatura.py --ente CODICE
+```
+
+Poi si importa lo zip da Amministrazione → Pacchetti, indicando il tipo di ente (Comune,
+Provincia o città metropolitana) e applicando la metodologia se risulta da aggiornare: con
+una metodologia diversa da quella standard i rischi arrivano senza valutazione proposta.
 
 ---
 
