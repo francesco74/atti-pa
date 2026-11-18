@@ -238,14 +238,30 @@ List<(String?, String)> _scelteCoinvolte(DatiAnticorruzione d, Object? gia) {
   ];
 }
 
-/// Area di rischio (il codice lo assegna il sistema; l'elenco segue la descrizione breve).
+/// Area di rischio (l'elenco segue la descrizione breve). Nuova: il codice è precompilato con
+/// quello che il sistema propone (la lettera successiva) e si può cambiare; poi non cambia più.
 /// Le finestre degli elementi: con [salva] il salvataggio lo fa la finestra, che si chiude solo
 /// se riesce (altrimenti l'errore si legge nella finestra e i dati restano).
-Future<Map<String, dynamic>?> modificaArea(BuildContext context, {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva}) =>
-    modificaCampi(context, salva: salva, titolo: a?['codice'] == null ? 'Nuova area di rischio' : 'Area ${a!['codice']}', valori: a ?? const {}, campi: const [
-      Campo('descrizione', 'Descrizione', righe: 3, obbligatorio: true),
-      Campo('descrizione_breve', 'Descrizione breve', aiuto: 'Le aree si elencano in ordine alfabetico di questa'),
-    ]);
+Future<Map<String, dynamic>?> modificaArea(BuildContext context,
+    {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva, bool? nuova}) async {
+  nuova ??= a?['id'] == null; // nelle proposte lo dice chi chiama (creazione o modifica)
+  var valori = a ?? const <String, dynamic>{};
+  if (nuova && valori['codice'] == null) {
+    try {
+      final r = await apiDi(context).get('$apiAnticorruzione/aree/codice-proposto') as Map;
+      valori = {...valori, 'codice': r['codice']};
+    } catch (_) {
+      // senza proposta il campo resta vuoto: il sistema assegna la lettera successiva
+    }
+  }
+  if (!context.mounted) return null;
+  return modificaCampi(context, salva: salva, titolo: nuova ? 'Nuova area di rischio' : 'Area ${a!['codice']}', valori: valori, campi: [
+    if (nuova)
+      const Campo('codice', 'Codice', aiuto: 'Proposto dal sistema, si può cambiare: breve, senza punti (dà il codice ai processi, es. A.1)'),
+    const Campo('descrizione', 'Descrizione', righe: 3, obbligatorio: true),
+    const Campo('descrizione_breve', 'Descrizione breve', aiuto: 'Le aree si elencano in ordine alfabetico di questa'),
+  ]);
+}
 
 /// Processo (il codice lo assegna il sistema dall'area, es. C.11; senza area X.n). I
 /// procedimenti non sono processi: un'attività del processo può essere un procedimento.

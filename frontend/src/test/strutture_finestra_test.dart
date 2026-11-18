@@ -34,7 +34,9 @@ void main() {
     await tester.tap(find.text('Nuova struttura'));
     await tester.pumpAndSettle();
 
-    // manca il codice: niente invio, la finestra resta aperta
+    // il codice è proposto (STR.n); tolto, niente invio e la finestra resta aperta
+    expect(find.widgetWithText(TextField, 'STR.1'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'STR.1'), '');
     await tester.enterText(find.widgetWithText(TextField, 'Descrizione *'), 'Servizi tecnici');
     await tester.enterText(find.widgetWithText(TextField, 'Telefono'), '0583 123456');
     await tester.tap(find.text('Salva'));

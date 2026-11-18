@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../util/codici.dart';
 import '../../util/scelta_file.dart';
 import '../comuni.dart';
 
@@ -113,7 +114,8 @@ class _StrutturePageState extends State<StrutturePage> {
 
   Future<void> _modifica(List<Map<String, dynamic>> tutte, {Map<String, dynamic>? s, String? padre}) async {
     final nuova = s == null;
-    final codice = TextEditingController(text: s?['codice'] as String? ?? '');
+    // nuova: il codice successivo della serie STR.n, che si può cambiare
+    final codice = TextEditingController(text: s?['codice'] as String? ?? prossimoCodice('STR.', tutte.map((x) => x['codice'])));
     final descrizione = TextEditingController(text: s?['descrizione'] as String? ?? '');
     final ordine = TextEditingController(text: '${s?['ordine'] ?? 0}');
     var padreId = nuova ? padre : s['padre_id'] as String?;
@@ -175,7 +177,11 @@ class _StrutturePageState extends State<StrutturePage> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(
                   controller: codice,
-                  decoration: const InputDecoration(labelText: 'Codice *', hintText: 'es. SETTORE 2, U.O. 2.1'),
+                  decoration: InputDecoration(
+                    labelText: 'Codice *',
+                    hintText: 'es. SETTORE 2, U.O. 2.1',
+                    helperText: nuova ? 'Proposto il successivo della serie STR.n: si può cambiare (es. con quello dell\'organigramma)' : null,
+                  ),
                 ),
                 TextField(controller: descrizione, decoration: const InputDecoration(labelText: 'Descrizione *')),
                 const SizedBox(height: 8),

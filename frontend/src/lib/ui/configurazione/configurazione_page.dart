@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../util/codici.dart';
 import '../comuni.dart';
 import 'editor_checklist_page.dart';
 import 'editor_comune.dart';
@@ -38,7 +39,13 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
   }
 
   Future<void> _nuovo(String tipo, List<Map<String, dynamic>> esistenti) async {
-    final codice = TextEditingController();
+    // codice proposto: il successivo della serie del tipo (MODELLO_n...) o, partendo da una
+    // copia, <codice>_n; si può cambiare (finché l'utente non lo tocca segue la scelta)
+    final codici = esistenti.map((e) => e['codice']);
+    String proposto(String? copia) => copia != null
+        ? prossimoCodice('${copia}_', codici, primo: 2)
+        : prossimoCodice(switch (tipo) { 'modello' => 'MODELLO_', 'modulo' => 'SPECIFICITA_', _ => 'CHECKLIST_' }, codici);
+    final codice = TextEditingController(text: proposto(null));
     String? copiaDa;
     final api = apiDi(context);
     String? errore;
@@ -62,7 +69,7 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
                 textCapitalization: TextCapitalization.characters,
                 decoration: const InputDecoration(
                   labelText: 'Codice',
-                  helperText: 'Lettere maiuscole, cifre e _ (es. DD_ACQUISTO_ARREDI)',
+                  helperText: 'Proposto dal sistema, si può cambiare: lettere maiuscole, cifre e _ (es. DD_ACQUISTO_ARREDI)',
                 ),
               ),
               const SizedBox(height: 12),
@@ -76,7 +83,10 @@ class _ConfigurazionePageState extends State<ConfigurazionePage> {
                     if (e['nuovo'] != true && e['stato'] != 'DISATTIVATO')
                       DropdownMenuItem<String?>(value: e['codice'] as String, child: Text('Copia di: ${e['titolo']}')),
                 ],
-                onChanged: (v) => aggiorna(() => copiaDa = v),
+                onChanged: (v) => aggiorna(() {
+                  if (codice.text.trim().toUpperCase() == proposto(copiaDa)) codice.text = proposto(v);
+                  copiaDa = v;
+                }),
               ),
               if (errore != null)
                 Padding(

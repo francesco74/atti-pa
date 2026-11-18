@@ -223,9 +223,17 @@ class AnticorruzioneApi(unittest.TestCase):
     def test_codici_univoci_e_procedimenti(self):
         c = self._client("rpct")
         x = self._ok(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Prima"}), 201)
-        y = self._ok(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Seconda", "codice": "ZZ"}), 201)
-        self.assertNotEqual(y["codice"], "ZZ")  # il codice non si sceglie
-        self.assertEqual(ord(y["codice"][-1]) - ord(x["codice"][-1]), 1)
+        proposto = self._ok(c.get(f"{API}/aree/codice-proposto", base_url=ENTE))["codice"]
+        self.assertEqual(ord(proposto[-1]) - ord(x["codice"][-1]), 1)
+        self.assertEqual(self._ok(c.get(f"{API}/aree/codice-proposto", base_url=ENTE))["codice"], proposto)  # non si consuma
+        y = self._ok(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Seconda", "codice": proposto}), 201)
+        self.assertEqual(y["codice"], proposto)
+        # un codice scelto: breve, senza punti, non già usato
+        k = self._ok(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Scelta", "codice": " zz "}), 201)
+        self.assertEqual(k["codice"], "ZZ")
+        self.assertEqual(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Doppia", "codice": "ZZ"}).status_code, 409)
+        self.assertEqual(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Punti", "codice": "A.1"}).status_code, 422)
+        self.assertEqual(c.delete(f"{API}/aree/{k['id']}", base_url=ENTE).status_code, 204)
         self.assertEqual(c.delete(f"{API}/aree/{y['id']}", base_url=ENTE).status_code, 204)
         z = self._ok(c.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Terza"}), 201)
         self.assertEqual(ord(z["codice"][-1]) - ord(y["codice"][-1]), 1)  # quello eliminato non torna

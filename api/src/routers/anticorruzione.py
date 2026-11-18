@@ -266,6 +266,13 @@ class AreaIn(BaseModel):
     descrizione_breve: str | None = Field(default=None, max_length=255)
 
 
+class AreaNuova(AreaIn):
+    """Nuova area: il codice proposto (GET /aree/codice-proposto) o uno scelto, breve e senza
+    punti perché da lì nascono i codici dei processi (A.1); assente: quello proposto."""
+
+    codice: str | None = Field(default=None, pattern=r"^\s*[A-Za-z0-9]{1,10}\s*$")
+
+
 def _area(a: AcArea) -> dict:
     return {"id": a.id, "codice": a.codice, "descrizione": a.descrizione,
             "descrizione_breve": a.descrizione_breve}  # fmt: skip
@@ -278,9 +285,25 @@ async def _area_dell_ente(sessione, area_id: str) -> AcArea:
     return a
 
 
+async def _codice_area_proposto(sessione) -> str:
+    """La lettera successiva, senza consumarla (come _nuovo_codice: contatore e codici usati)."""
+    contatore = await sessione.get(AcContatore, (ente_id(), "#aree"))
+    usati = [n for c in await sessione.scalars(select(AcArea.codice).where(AcArea.ente_id == ente_id()))
+             if (n := _numero_lettere(c))]  # fmt: skip
+    return _lettere(max([contatore.ultimo if contatore else 0, *usati]) + 1)
+
+
 async def _crea_area(sessione, dati: AreaIn) -> AcArea:
-    a = AcArea(id=nuovo_id(), ente_id=ente_id(), codice=await _nuovo_codice(sessione, AcArea, "", lettere=True),
-               **dati.model_dump())  # fmt: skip
+    """Con il codice proposto (o senza codice) la lettera successiva; con un altro codice
+    quello, se non è già usato."""
+    scelto = (getattr(dati, "codice", None) or "").strip().upper()
+    if scelto and scelto != await _codice_area_proposto(sessione):
+        if await sessione.scalar(select(AcArea.id).where(AcArea.ente_id == ente_id(), AcArea.codice == scelto)):
+            raise ErroreApi(HTTPStatus.CONFLICT, f"Il codice {scelto} è già di un'altra area: scegline un altro")
+        codice = scelto
+    else:
+        codice = await _nuovo_codice(sessione, AcArea, "", lettere=True)
+    a = AcArea(id=nuovo_id(), ente_id=ente_id(), codice=codice, **dati.model_dump(include=set(AreaIn.model_fields)))
     sessione.add(a)
     return a
 
@@ -302,10 +325,17 @@ async def aree():
     return [_area(a) for a in sorted(righe, key=chiave_area)]
 
 
+@bp.get("/aree/codice-proposto")
+@lettore
+async def codice_area_proposto():
+    """Il codice che il sistema propone per una nuova area (la lettera successiva)."""
+    return {"codice": await _codice_area_proposto(db())}
+
+
 @bp.post("/aree")
 @rpct
 async def crea_area():
-    dati = corpo(AreaIn)
+    dati = corpo(AreaNuova)
     sessione = db()
     a = await _crea_area(sessione, dati)
     audit(sessione, utente(), "ac_area", a.id, "CREATA", {"codice": a.codice})
@@ -1517,7 +1547,7 @@ class VoceProposta(BaseModel):
 PADRE: dict[str, str] = {"ATTIVITA": "PROCESSO", "RISCHIO": "ATTIVITA", "MISURA": "RISCHIO"}
 
 DATI_PROPOSTA: dict[tuple[str, str], type[BaseModel]] = {
-    ("AREA", "CREA"): AreaIn, ("AREA", "MODIFICA"): AreaIn,
+    ("AREA", "CREA"): AreaNuova, ("AREA", "MODIFICA"): AreaIn,
     ("PROCESSO", "CREA"): ProcessoNuovo, ("PROCESSO", "MODIFICA"): ProcessoIn,
     ("ATTIVITA", "CREA"): AttivitaNuova, ("ATTIVITA", "MODIFICA"): AttivitaIn,
     ("RISCHIO", "CREA"): RischioNuovo, ("RISCHIO", "MODIFICA"): RischioModificato,

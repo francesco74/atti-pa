@@ -277,7 +277,7 @@ class _PropostaPageState extends State<PropostaPage> {
   Future<void> _modificaDati(DatiAnticorruzione d) async {
     final dati = _dati!;
     final v = await switch (_proposta!['oggetto']) {
-      'AREA' => modificaArea(context, a: dati),
+      'AREA' => modificaArea(context, a: dati, nuova: _proposta!['tipo'] == 'CREA'),
       'PROCESSO' => modificaProcesso(context, d, p: dati),
       'ATTIVITA' => modificaAttivita(context, d, a: dati),
       'RISCHIO' => modificaRischio(context, d, r: dati),
