@@ -4,7 +4,13 @@
     anticorruzione/aree.yaml              aree di rischio (create se mancano, mai cancellate)
     anticorruzione/catalogo.yaml          voci standard di attività, rischi e misure (create se
                                           mancano, mai cancellate: common/anticorruzione/catalogo.py)
+    anticorruzione/procedimenti.yaml      procedimenti standard (codici PRC-0001...): creati se
+                                          mancano, con il codice P.n dell'ente, mai cancellati
     anticorruzione/processi/*.yaml        processi standard, un file per area
+
+Un'attività di un processo standard nasce da una voce del catalogo oppure è un procedimento
+standard (`procedimento: PRC-0012`), come nella mappatura dell'ente. Un processo può valere
+solo per i comuni o solo per le province (`ambito`): l'importazione lo segnala e l'ente sceglie.
 
 Un processo standard porta attività, rischi (con una valutazione proposta) e misure. Il
 confronto a tre vie usa l'impronta del contenuto standard: codici e testi di processo,
@@ -25,16 +31,21 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import re
+
+from common.anticorruzione.art35 import DatiArt35
 from common.anticorruzione.catalogo import Catalogo, normalizza
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.configurazione import impronta
 from common.models import (
-    AcArea, AcAttivita, AcMetodologia, AcMisura, AcProcesso, AcRischio, AcVoce, nuovo_id,
+    AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcProcedimento, AcProcesso, AcRischio, AcVoce,
+    nuovo_id,
 )  # fmt: skip
 
 CARTELLA = "anticorruzione"
 FILE_METODOLOGIA = f"{CARTELLA}/metodologia.yaml"
 FILE_AREE = f"{CARTELLA}/aree.yaml"
+FILE_PROCEDIMENTI = f"{CARTELLA}/procedimenti.yaml"
 CARTELLA_PROCESSI = f"{CARTELLA}/processi"
 
 
@@ -81,16 +92,80 @@ class AttivitaStd(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
     descrizione: str = Field(min_length=1)
     voce: str | None = Field(default=None, max_length=20)
+    procedimento: str | None = Field(default=None, max_length=20)  # procedimento standard (PRC-...), invece della voce
     rischi: list[RischioStd] = []
+
+
+Ambito = Literal["COMUNE", "PROVINCIA"]
+AMBITI = {"COMUNE": "solo comuni", "PROVINCIA": "solo province e città metropolitane"}
 
 
 class ProcessoStd(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
+    # enti a cui serve (assente: a tutti); non entra nell'impronta, non è un dato dell'ente
+    ambito: Ambito | None = None
     denominazione: str = Field(min_length=1, max_length=500)
     descrizione: str | None = None
     tempi: str | None = None
     attori_esterni: str | None = None
     attivita: list[AttivitaStd] = []
+
+
+class ProcedimentoStd(BaseModel):
+    """Procedimento standard: i dati che vengono dalla norma (uffici e recapiti li mette l'ente)."""
+
+    codice: str = Field(pattern=r"^PRC-\d{4}$")
+    ambito: Ambito | None = None
+    denominazione: str = Field(min_length=1, max_length=500)
+    descrizione: str | None = None
+    norma_riferimento: str | None = None
+    termine_conclusione: str | None = Field(default=None, max_length=255)
+    art35: DatiArt35 | None = None
+
+
+class FileProcedimenti(BaseModel):
+    procedimenti: list[ProcedimentoStd]
+
+
+def leggi_procedimenti(sorgente: str) -> list[ProcedimentoStd]:
+    f = FileProcedimenti.model_validate(yaml.safe_load(sorgente) or {})
+    codici = [p.codice for p in f.procedimenti]
+    ripetuti = sorted({c for c in codici if codici.count(c) > 1})
+    if ripetuti:
+        raise ValueError(f"codici ripetuti: {', '.join(ripetuti)}")
+    for p in f.procedimenti:
+        if p.art35 is not None and any(getattr(p.art35, k) for k in ("uff_resp_struttura_id", "uff_finale_struttura_id",
+                                                                      "ist_struttura_id", "sost_struttura_id")):  # fmt: skip
+            raise ValueError(f"{p.codice}: gli uffici sono dell'ente, non del pacchetto")
+    return f.procedimenti
+
+
+async def crea_procedimenti(db: AsyncSession, ente_id: str, procedimenti: list[ProcedimentoStd], pacchetto: str) -> list[str]:
+    """I procedimenti standard che l'ente non ha (per codice standard), con il codice P.n
+    successivo; quelli che ha restano com'è (li ha potuti adattare)."""
+    presenti = set(await db.scalars(select(AcProcedimento.standard).where(
+        AcProcedimento.ente_id == ente_id, AcProcedimento.standard.is_not(None))))  # fmt: skip
+    nuovi = [p for p in procedimenti if p.codice not in presenti]
+    if not nuovi:
+        return []
+    contatore = await db.get(AcContatore, (ente_id, "P."))
+    usati = [int(m.group(1)) for c in await db.scalars(select(AcProcedimento.codice).where(AcProcedimento.ente_id == ente_id))
+             if (m := re.fullmatch(r"P\.(\d+)", c or ""))]  # fmt: skip
+    n = max([contatore.ultimo if contatore else 0, *usati])
+    for p in nuovi:
+        n += 1
+        db.add(AcProcedimento(
+            id=nuovo_id(), ente_id=ente_id, codice=f"P.{n}", standard=p.codice, pacchetto=pacchetto,
+            denominazione=p.denominazione, descrizione=p.descrizione, norma_riferimento=p.norma_riferimento,
+            termine_conclusione=p.termine_conclusione,
+            art35=p.art35.model_dump(exclude_none=True) or None if p.art35 is not None else None,
+        ))  # fmt: skip
+    if contatore is None:
+        db.add(AcContatore(ente_id=ente_id, prefisso="P.", ultimo=n))
+    else:
+        contatore.ultimo = n
+    await db.flush()
+    return [p.codice for p in nuovi]
 
 
 class FileProcessi(BaseModel):
@@ -100,12 +175,14 @@ class FileProcessi(BaseModel):
 
 def impronta_processo(p: ProcessoStd, area: str | None) -> str:
     """Impronta del contenuto standard (senza valutazioni, che sono dell'ente)."""
-    dati = p.model_dump(mode="json", exclude={"attivita": {"__all__": {"rischi": {"__all__": {"valutazione"}}}}})
+    dati = p.model_dump(mode="json", exclude={"ambito": True, "attivita": {"__all__": {"rischi": {"__all__": {"valutazione"}}}}})
     # la voce del catalogo entra solo se indicata: i processi senza mantengono l'impronta di prima
     for a in dati.get("attivita", []):
         for el in [a, *a.get("rischi", []), *(m for r in a.get("rischi", []) for m in r.get("misure", []))]:
             if el.get("voce") is None:
                 el.pop("voce", None)
+        if a.get("procedimento") is None:
+            a.pop("procedimento", None)
     return impronta({"area": area, **dati})
 
 
@@ -129,6 +206,9 @@ def leggi_processi(sorgente: str) -> FileProcessi:
         doppi = sorted({c for c in codici if codici.count(c) > 1})
         if doppi:
             raise ValueError(f"processo {p.codice}: codici ripetuti {', '.join(doppi)}")
+        for a in p.attivita:
+            if a.voce and a.procedimento:
+                raise ValueError(f"{a.codice}: l'attività viene da una voce oppure è un procedimento, non entrambi")
     return f
 
 
@@ -155,6 +235,9 @@ async def processo_ente(db: AsyncSession, ente_id: str, codice: str) -> tuple[Ac
                     key=lambda x: chiave_naturale(x.codice))  # fmt: skip
     ids_voci = {x.voce_id for x in [*attivita, *rischi, *misure] if x.voce_id}
     voci = {v.id: v for v in await db.scalars(select(AcVoce).where(AcVoce.id.in_(ids_voci)))} if ids_voci else {}
+    ids_proc = {a.procedimento_id for a in attivita if a.procedimento_id}
+    standard = dict((await db.execute(select(AcProcedimento.id, AcProcedimento.standard).where(
+        AcProcedimento.id.in_(ids_proc)))).all()) if ids_proc else {}  # fmt: skip
 
     def voce(el, testo: str) -> str | None:
         """Il codice della voce, se il testo dell'elemento è diverso dal suo."""
@@ -164,7 +247,8 @@ async def processo_ente(db: AsyncSession, ente_id: str, codice: str) -> tuple[Ac
     std = ProcessoStd(
         codice=p.codice, denominazione=p.denominazione, descrizione=p.descrizione,
         tempi=p.tempi, attori_esterni=p.attori_esterni,
-        attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, voce=voce(a, a.descrizione), rischi=[
+        attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, voce=voce(a, a.descrizione),
+                              procedimento=standard.get(a.procedimento_id), rischi=[
             RischioStd(codice=r.codice, evento=r.evento, voce=voce(r, r.evento), fattore_abilitante=r.fattore_abilitante, misure=[
                 MisuraStd(codice=m.codice, descrizione=m.descrizione, voce=voce(m, m.descrizione), tipo=m.tipo, categoria=m.categoria,
                           obbligo_trasparenza=m.obbligo_trasparenza, fasi=m.fasi, tempi=m.tempi,
@@ -240,7 +324,15 @@ async def applica_processo(
     for a_std in std.attivita:
         a = attivita.get(a_std.codice) or AcAttivita(id=nuovo_id(), ente_id=ente_id, codice=a_std.codice)
         a.processo_id, a.descrizione = p.id, a_std.descrizione
-        await catalogo.collega("ATTIVITA", a, a_std.voce)
+        proc = await db.scalar(select(AcProcedimento.id).where(
+            AcProcedimento.ente_id == ente_id, AcProcedimento.standard == a_std.procedimento)) if a_std.procedimento else None  # fmt: skip
+        if proc is not None:  # l'attività è il procedimento standard (l'adattamento dell'ente resta)
+            if a.procedimento_id != proc:
+                a.procedimento_adattato = None
+            a.procedimento_id, a.voce_id = proc, None
+        else:
+            a.procedimento_id = a.procedimento_adattato = None
+            await catalogo.collega("ATTIVITA", a, a_std.voce)
         db.add(a)
         for r_std in a_std.rischi:
             r = rischi.get(r_std.codice)
@@ -270,7 +362,7 @@ async def applica_processo(
 
 
 async def esporta(db: AsyncSession, ente_id: str) -> dict[str, str]:
-    """Metodologia (se adattata), aree e processi dell'ente come file di pacchetto."""
+    """Metodologia (se adattata), aree, procedimenti standard e processi dell'ente come file di pacchetto."""
     file: dict[str, str] = {}
     riga = await db.get(AcMetodologia, ente_id)
     if riga is not None:
@@ -279,6 +371,16 @@ async def esporta(db: AsyncSession, ente_id: str) -> dict[str, str]:
     if aree:
         file[FILE_AREE] = yaml.safe_dump(
             {"aree": [AreaStd.model_validate(a, from_attributes=True).model_dump(exclude_none=True) for a in aree]},
+            allow_unicode=True, sort_keys=False, width=100)  # fmt: skip
+    # i procedimenti venuti dal pacchetto, con il loro codice standard (le attività lo indicano)
+    procedimenti = [p for p in await db.scalars(select(AcProcedimento).where(
+        AcProcedimento.ente_id == ente_id, AcProcedimento.standard.is_not(None))) if re.fullmatch(r"PRC-\d{4}", p.standard)]  # fmt: skip
+    if procedimenti:
+        file[FILE_PROCEDIMENTI] = yaml.safe_dump({"procedimenti": [ProcedimentoStd(
+            codice=p.standard, denominazione=p.denominazione, descrizione=p.descrizione, norma_riferimento=p.norma_riferimento,
+            termine_conclusione=p.termine_conclusione,
+            art35=DatiArt35.model_validate({k: v for k, v in (p.art35 or {}).items() if not k.endswith("struttura_id")}),
+        ).model_dump(mode="json", exclude_none=True) for p in sorted(procedimenti, key=lambda p: p.standard)]},
             allow_unicode=True, sort_keys=False, width=100)  # fmt: skip
     per_area: dict[str | None, list[ProcessoStd]] = {}
     for codice in sorted(await db.scalars(select(AcProcesso.codice).where(AcProcesso.ente_id == ente_id)), key=chiave_naturale):

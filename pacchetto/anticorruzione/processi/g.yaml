@@ -1,72 +1,302 @@
-# Processi standard dell'area G: ricavati dalla mappatura del Comune di Lucca
-# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
-# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+# Processi standard dell'area G per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
 area: G
 processi:
 - codice: G.1
-  denominazione: Incarichi professionali
-  tempi: Termini di legge
-  attori_esterni: professionisti
+  denominazione: Conferimento di incarichi di collaborazione e consulenza
+  descrizione: Incarichi a soggetti esterni (art. 7, c. 6, d.lgs. 165/2001)
+  attori_esterni: Professionisti, esperti
   attivita:
   - codice: G.1.1
-    descrizione: Scelta dell'operatore
+    descrizione: Ricognizione delle professionalità interne
     rischi:
     - codice: G.1.1_R.1
-      evento: Inosservanza delle regole procedurali a garanzia della trasparenza e dell'imparzialità della
-        selezione.
+      evento: Motivazione fittizia sull'assenza di professionalità interne per giustificare l'incarico esterno
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: G.1.1_R.1_M.1
-        descrizione: Verifica conflitti di interessi
+        descrizione: Ricognizione interna documentata (interpello) prima di ogni incarico esterno
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni incarico
+        indicatore: Incarichi preceduti da interpello
+        target: 100%
+  - codice: G.1.2
+    descrizione: Scelta del collaboratore e conferimento
+    rischi:
+    - codice: G.1.2_R.1
+      evento: Motivazione generica e tautologica sulla sussistenza dei presupposti di legge, allo scopo di agevolare
+        soggetti particolari
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: G.1.2_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: G.1.2_R.1_M.2
+        descrizione: Procedura comparativa pubblica, salvo i casi di esclusione motivati
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni incarico
+        indicatore: Incarichi con procedura comparativa
+        target: 100% salvo eccezioni motivate
+      - codice: G.1.2_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
         categoria: Disciplina del conflitto di interessi
-    - codice: G.1.1_R.2
-      evento: Motivazione generica e tautologica circa la sussistenza dei presupposti di legge per il
-        conferimento di incarichi professionali allo scopo di agevolare soggetti particolari
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: G.1.2_R.1_M.4
+        descrizione: Pubblicazione dei dati sugli incarichi di collaborazione e consulenza, con curriculum e compensi,
+          prima del pagamento (art. 15 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_15
+        tempi: Entro 3 mesi dal conferimento
+        indicatore: Incarichi pubblicati prima della liquidazione
+        target: 100%
+  - codice: G.1.3
+    descrizione: Verifica delle prestazioni e liquidazione del compenso
+    rischi:
+    - codice: G.1.3_R.1
+      evento: Liquidazione senza verifica della prestazione resa
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
-      - codice: G.1.1_R.2_M.1
-        descrizione: Utilizzo dell'elenco professionisti pubblicato sul sito istituzionale
-    - codice: G.1.1_R.3
-      evento: Previsioni di requisiti di accesso "personalizzati" ed insufficienza di meccanismi oggettivi
-        e trasparenti idonei a verificare il possesso dei requisiti attitudinali e professionali richiesti
-        in relazione all'incarico da ricoprire allo scopo di reclutare determinati soggetti
-      valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: G.1.1_R.3_M.1
-        descrizione: Utilizzo del metodo indagine di mercato con almeno tre operatori, anche ove la normativa
-          dà la possibilità di affidamento diretto
-    - codice: G.1.1_R.4
-      evento: Ripetitività nell'assegnazione dell'incarico al medesimo soggetto
-      valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: G.1.1_R.4_M.1
-        descrizione: Rotazione delle chiamate per le gare/indagini di mercato etc.
-        categoria: Rotazione
+      - codice: G.1.3_R.1_M.1
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
 - codice: G.2
-  denominazione: Attività istruttoria relativa alle nomine dei rappresentanti del Comune di Lucca in enti,
-    istituzioni e organismi partecipati
-  tempi: Ricognizione annuale nei termini indicati dal regolamento e nomine in base alle scadenze degli
-    organi degli organismi partecipati
-  attori_esterni: Società e organismi partecipati e candidati
+  denominazione: Nomina e designazione dei rappresentanti dell'ente
+  descrizione: Nomine in società, enti, fondazioni, consorzi e organismi esterni
+  attori_esterni: Candidati, enti partecipati
   attivita:
   - codice: G.2.1
-    descrizione: Ricognizione delle posizioni in scadenza
-  - codice: G.2.3
-    descrizione: Raccolta e verifica sulle candidature pervenute
-  - codice: G.2.4
-    descrizione: Controlli in ordine all'insussistenza di cause di incompatibilità e inconferibilità ai
-      sensi del D.Lgs. n. 39/2013
-  - codice: G.2.5
-    descrizione: Predisposizione dei decreti di nomina
+    descrizione: Avviso pubblico e raccolta delle candidature
+    rischi:
+    - codice: G.2.1_R.1
+      evento: Nomina di soggetti privi dei requisiti o per sola appartenenza politica, senza avviso pubblico
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: G.2.1_R.1_M.1
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: G.2.1_R.1_M.2
+        descrizione: Avviso pubblico con requisiti e criteri, indirizzi del consiglio per le nomine
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni nomina
+        indicatore: Nomine con avviso
+        target: 100%
+  - codice: G.2.2
+    descrizione: Verifica delle cause di inconferibilità e incompatibilità
+    rischi:
+    - codice: G.2.2_R.1
+      evento: Nomina in presenza di cause di inconferibilità o incompatibilità
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: G.2.2_R.1_M.1
+        descrizione: Acquisizione e verifica delle dichiarazioni di insussistenza di cause di inconferibilità e
+          incompatibilità prima del conferimento e annualmente (d.lgs. 39/2013)
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Prima del conferimento e annuale
+        indicatore: Dichiarazioni acquisite e verificate prima del conferimento
+        target: 100%
+      - codice: G.2.2_R.1_M.2
+        descrizione: Pubblicazione tempestiva dei dati e degli atti in Amministrazione trasparente (d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        tempi: Nei termini di legge
+        indicatore: Atti pubblicati nei termini sul totale
+        target: 100%
+- codice: G.3
+  denominazione: Nomina del Nucleo di valutazione o dell'OIV
+  descrizione: Scelta dei componenti dell'organismo di valutazione della performance
+  tempi: Alla scadenza dell'incarico
+  attivita:
+  - codice: G.3.1
+    descrizione: Avviso, valutazione dei curricula e nomina
+    rischi:
+    - codice: G.3.1_R.1
+      evento: Nomina di componenti privi di indipendenza rispetto agli organi politici e alla dirigenza
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: G.3.1_R.1_M.1
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: G.3.1_R.1_M.2
+        descrizione: Avviso pubblico, verifica dei requisiti di indipendenza e iscrizione all'elenco nazionale (dove
+          richiesta)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni nomina
+        indicatore: Nomine conformi
+        target: 100%
+      - codice: G.3.1_R.1_M.3
+        descrizione: Pubblicazione tempestiva dei dati e degli atti in Amministrazione trasparente (d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        tempi: Nei termini di legge
+        indicatore: Atti pubblicati nei termini sul totale
+        target: 100%
+- codice: G.4
+  denominazione: Nomina dei componenti di commissioni e organi collegiali dell'ente
+  descrizione: 'Commissioni tecniche e consultive: paesaggio, vigilanza, pari opportunità, ecc.'
+  attivita:
+  - codice: G.4.1
+    descrizione: Scelta dei componenti
+    rischi:
+    - codice: G.4.1_R.1
+      evento: Componenti nominati in conflitto di interessi o senza i requisiti di competenza
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: G.4.1_R.1_M.1
+        descrizione: Verifica dell'assenza di condanne per reati contro la pubblica amministrazione per componenti
+          di commissioni e uffici a rischio (art. 35-bis d.lgs. 165/2001)
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: A ogni nomina
+        indicatore: Verifiche effettuate sulle nomine
+        target: 100%
+      - codice: G.4.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: G.4.1_R.1_M.3
+        descrizione: Rotazione dei componenti delle commissioni tecniche alla scadenza
+        tipo: SPECIFICA
+        categoria: Rotazione
+        tempi: Alla scadenza
+        indicatore: Commissioni rinnovate con rotazione
+        target: 100%
+- codice: G.5
+  denominazione: Verifica delle cause di inconferibilità e incompatibilità degli incarichi
+  descrizione: Vigilanza del RPCT sul rispetto del d.lgs. 39/2013 negli incarichi dirigenziali e amministrativi
+    di vertice
+  tempi: Al conferimento e annualmente
+  attivita:
+  - codice: G.5.1
+    descrizione: Acquisizione delle dichiarazioni e verifica
+    rischi:
+    - codice: G.5.1_R.1
+      evento: Verifica solo formale delle dichiarazioni, senza controllo nei registri e nelle banche dati
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: G.5.1_R.1_M.1
+        descrizione: Verifica delle dichiarazioni su casellario, registro delle imprese e curriculum, con esito
+          documentato
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Annuale
+        indicatore: Dichiarazioni verificate nel merito
+        target: 100%
+      - codice: G.5.1_R.1_M.2
+        descrizione: Pubblicazione tempestiva dei dati e degli atti in Amministrazione trasparente (d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        tempi: Nei termini di legge
+        indicatore: Atti pubblicati nei termini sul totale
+        target: 100%
+  - codice: G.5.2
+    descrizione: Contestazione e procedimento in caso di violazione
+    rischi:
+    - codice: G.5.2_R.1
+      evento: Mancata contestazione e mancata segnalazione ad ANAC delle violazioni accertate
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: G.5.2_R.1_M.1
+        descrizione: Procedimento di contestazione del RPCT secondo le linee guida ANAC (delibera 833/2016)
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni violazione
+        indicatore: Violazioni contestate
+        target: 100%
+- codice: G.6
+  denominazione: Nomina dei responsabili di procedimento e di progetto
+  descrizione: Assegnazione della responsabilità dei procedimenti e nomina dei RUP
+  attivita:
+  - codice: G.6.1
+    descrizione: Assegnazione e nomina
+    rischi:
+    - codice: G.6.1_R.1
+      evento: Concentrazione degli stessi procedimenti in capo a un'unica persona per lunghi periodi
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: G.6.1_R.1_M.1
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: G.6.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%

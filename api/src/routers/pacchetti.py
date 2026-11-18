@@ -9,6 +9,7 @@ pacchetto con tutto ciò che è attivo nell'ente.
 
 from datetime import datetime
 from http import HTTPStatus
+from typing import Literal
 
 from flask import Blueprint
 from pydantic import BaseModel
@@ -46,6 +47,8 @@ class PacchettoOut(Schema):
 
 class DecisioniIn(BaseModel):
     decisioni: dict[str, str] = {}  # {"modello:CODICE": "applica" | "mantieni" | "disattiva"}
+    # tipo di ente: i processi e i procedimenti nuovi dell'altro tipo non si importano
+    ambito: Literal["COMUNE", "PROVINCIA"] | None = None
 
 
 @bp.get("")
@@ -112,7 +115,7 @@ async def importa_pacchetto(pacchetto_id: str):
         pacchetto = leggi_pacchetto(da_zip(riga.contenuto))
     except PacchettoNonValido as e:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, str(e)) from e
-    resoconto = await importa(sessione, ente_id(), pacchetto, dati.decisioni, utente().id)
+    resoconto = await importa(sessione, ente_id(), pacchetto, dati.decisioni, utente().id, ambito=dati.ambito)
     riga.stato = "IMPORTATO"
     riga.resoconto_json = resoconto.come_dict()
     riga.importato_il = func.now()

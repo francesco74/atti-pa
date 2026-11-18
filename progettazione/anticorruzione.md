@@ -1,6 +1,6 @@
 # Modulo Anticorruzione — analisi di Si.Ge.Ri.Co. e piano di integrazione
 
-Stato: **backend, pacchetto standard e app fatti** (passi 1-4: strutture organizzative, metodologia, mappatura e valutazione, proposte, monitoraggio, riepilogo e allegati al PTPCT, processi standard in `pacchetto/anticorruzione` da rivedere: vedi [processi_standard.md](processi_standard.md)); resta il passo 5 (collegamenti con gli altri moduli, sospeso). Decisioni al §7; quelle del 04/11/2026 (proposte per elemento, procedimenti, codici, niente PIAO) dalla 13.
+Stato: **backend, pacchetto standard e app fatti** (passi 1-4: strutture organizzative, metodologia, mappatura e valutazione, proposte, monitoraggio, riepilogo e allegati al PTPCT, processi standard per gli enti locali in `pacchetto/anticorruzione`: vedi [processi_standard.md](processi_standard.md)); resta il passo 5 (collegamenti con gli altri moduli, sospeso). Decisioni al §7; quelle del 04/11/2026 (proposte per elemento, procedimenti, codici, niente PIAO) dalla 13.
 del 29/10/2026, v1.4). Si.Ge.Ri.Co. = Sistema Gestione Rischi Corruttivi, nato per il Comune di
 Lucca.
 
@@ -436,3 +436,12 @@ Decisioni del 04/11/2026:
     filtri per struttura; nell'allegato al PTPCT vale il termine adattato. Codici: per una nuova
     area il sistema propone la lettera successiva, che si può cambiare (breve, senza punti, non
     già usata); gli altri codici della mappatura restano assegnati dal sistema.
+32. **Pacchetto standard per gli enti locali** (18/11/2026): il pacchetto 2026.4 sostituisce
+    quello ricavato dal Comune di Lucca (vedi [processi_standard.md](processi_standard.md)): 11
+    aree, 131 processi per comuni e province, 53 procedimenti standard. Il formato dei pacchetti
+    ha `anticorruzione/procedimenti.yaml` (creati se mancano, con il codice P.n dell'ente e il
+    riferimento al codice standard: `ac_procedimenti.standard`, migrazione
+    `0014_procedimenti_standard.sql`), l'attività che indica `procedimento` e il processo con
+    `ambito` (COMUNE, PROVINCIA). All'importazione si indica il tipo di ente: processi nuovi e
+    procedimenti dell'altro tipo non si importano (salvo scelta esplicita del processo). Per
+    passare dal pacchetto di prima: `deploy/manutenzione/azzera_mappatura.py`.

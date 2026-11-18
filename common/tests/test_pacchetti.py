@@ -254,11 +254,23 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             r = await importa(db, ENTE, pacchetto)
             await db.commit()
             self.assertEqual(r.errori, [])
-            self.assertEqual(len((await db.scalars(select(AcProcesso))).all()), 130)
-            self.assertEqual(len((await db.scalars(select(AcArea))).all()), 14)
+            n_processi = len(pacchetto.di_tipo("processo"))
+            self.assertGreaterEqual(n_processi, 120)
+            self.assertEqual(len((await db.scalars(select(AcProcesso))).all()), n_processi)
+            self.assertEqual(len((await db.scalars(select(AcArea))).all()), len(pacchetto.aree))
             self.assertIsNotNone(await db.get(AcMetodologia, ENTE))
-            valutati = [x for x in (await db.scalars(select(AcRischio))).all() if x.livello]
-            self.assertEqual(len(valutati), 252)  # valutazione proposta nei rischi nuovi
+            rischi = (await db.scalars(select(AcRischio))).all()
+            self.assertTrue(rischi and all(x.livello for x in rischi))  # valutazione proposta nei rischi nuovi
+            # procedimenti standard: tutti creati (nessun tipo di ente indicato), con il codice P.n
+            from common.models import AcProcedimento
+
+            procedimenti = (await db.scalars(select(AcProcedimento))).all()
+            self.assertEqual(len(procedimenti), len(pacchetto.procedimenti))
+            self.assertTrue(all(p.codice.startswith("P.") and p.standard.startswith("PRC-") for p in procedimenti))
+            # le attività che sono procedimenti puntano a quello dell'ente, senza voce
+            att_proc = (await db.scalars(select(AcAttivita).where(AcAttivita.procedimento_id.is_not(None)))).all()
+            self.assertTrue(att_proc)
+            self.assertFalse([a for a in att_proc if a.voce_id])
             # catalogo: le voci standard e ogni elemento collegato a una di loro (testi uguali: una voce)
             from common.models import AcMisura, AcVoce
 
@@ -266,14 +278,12 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(voci_std), len(pacchetto.catalogo.voci()))
             self.assertFalse([v for v in voci_std if "-E" in v.codice])  # nessuna voce dell'ente
             for modello in (AcAttivita, AcRischio, AcMisura):
-                self.assertFalse((await db.scalars(select(modello).where(modello.voce_id.is_(None)))).all(), modello)
+                senza = select(modello).where(modello.voce_id.is_(None))
+                if modello is AcAttivita:
+                    senza = senza.where(AcAttivita.procedimento_id.is_(None))
+                self.assertFalse((await db.scalars(senza)).all(), modello)
             misure = (await db.scalars(select(AcMisura))).all()
             self.assertLess(len({x.voce_id for x in misure}), len(misure))
-            # variante riunita nel catalogo: l'elemento indica la voce, il suo testo resta
-            variante = await db.scalar(select(AcMisura).where(AcMisura.codice == "C.5.1_R.1_M.1"))
-            voce = await db.get(AcVoce, variante.voce_id)
-            self.assertEqual(voce.codice, "MIS-0074")
-            self.assertTrue(variante.descrizione.endswith("27/10/2020-"))
             voci = await analizza(db, ENTE, pacchetto)
             self.assertEqual({v.stato for v in voci if v.tipo == "processo"}, {"INVARIATO"})
 
@@ -308,9 +318,10 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             # esportazione rileggibile come pacchetto
             esportato = await esporta(db, ENTE, "Esportazione", "1")
             riletto = leggi_pacchetto(esportato)
-            self.assertEqual(len(riletto.di_tipo("processo")), 130)
-            self.assertEqual(len(riletto.aree), 14)
+            self.assertEqual(len(riletto.di_tipo("processo")), n_processi)
+            self.assertEqual(len(riletto.aree), len(pacchetto.aree))
             self.assertEqual(len(riletto.catalogo.voci()), len(pacchetto.catalogo.voci()))
+            self.assertEqual(len(riletto.procedimenti), len(pacchetto.procedimenti))
 
     async def test_catalogo_con_codici_ripetuti(self):
         file = {**self.file, "anticorruzione/catalogo.yaml": "attivita:\n- {codice: ATT-0001, descrizione: a}\n"
@@ -320,10 +331,39 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
 
     async def test_voce_indicata_fuori_dal_catalogo(self):
         nome = "anticorruzione/processi/c.yaml"
-        file = {**self.file, nome: self.file[nome].replace("voce: MIS-0074", "voce: MIS-9999", 1)}
+        dati = yaml.safe_load(self.file[nome])
+        dati["processi"][0]["attivita"][0]["rischi"][0]["misure"][0]["voce"] = "MIS-9999"
+        with self.assertRaises(PacchettoNonValido) as e:
+            leggi_pacchetto({**self.file, nome: yaml.safe_dump(dati, allow_unicode=True)})
+        self.assertIn("MIS-9999", str(e.exception.errori))
+
+    async def test_procedimento_fuori_dal_catalogo(self):
+        nome = "anticorruzione/processi/c.yaml"
+        file = {**self.file, nome: self.file[nome].replace("procedimento: PRC-0004", "procedimento: PRC-9999", 1)}
         with self.assertRaises(PacchettoNonValido) as e:
             leggi_pacchetto(file)
-        self.assertIn("MIS-9999", str(e.exception.errori))
+        self.assertIn("PRC-9999", str(e.exception.errori))
+
+    async def test_tipo_di_ente(self):
+        """Una provincia non importa i processi e i procedimenti dei soli comuni (e viceversa)."""
+        from common.models import AcProcedimento, AcProcesso
+
+        pacchetto = leggi_pacchetto(self.file)
+        dei_comuni = {o.codice for o in pacchetto.di_tipo("processo") if o.ambito == "COMUNE"}
+        delle_province = {o.codice for o in pacchetto.di_tipo("processo") if o.ambito == "PROVINCIA"}
+        self.assertTrue(dei_comuni and delle_province)
+        async with AsyncSession(self.motore, expire_on_commit=False) as db:
+            voci = {v.codice: v for v in await analizza(db, ENTE, pacchetto) if v.tipo == "processo"}
+            self.assertIn("solo comuni", voci[min(dei_comuni)].nota)
+            r = await importa(db, ENTE, pacchetto, {f"processo:{max(dei_comuni)}": "applica"}, ambito="PROVINCIA")
+            await db.commit()
+            importati = set(await db.scalars(select(AcProcesso.codice)))
+            self.assertEqual(importati & dei_comuni, {max(dei_comuni)})  # solo quello scelto esplicitamente
+            self.assertLessEqual(delle_province, importati)
+            standard = set(await db.scalars(select(AcProcedimento.standard)))
+            self.assertFalse({p.codice for p in pacchetto.procedimenti if p.ambito == "COMUNE"} & standard)
+            self.assertLessEqual({p.codice for p in pacchetto.procedimenti if p.ambito == "PROVINCIA"}, standard)
+            self.assertEqual(r.errori, [])
 
     async def test_area_mancante(self):
         file = {**self.file, "anticorruzione/aree.yaml": "aree: []\n"}

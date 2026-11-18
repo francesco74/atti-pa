@@ -8,8 +8,8 @@ standard forniti dall'azienda arrivano come pacchetti: una cartella o uno zip co
     modelli/*.yaml          modelli di atto
     modelli/regole/*.yaml   specificità
     checklist/*.json        schede di controllo
-    anticorruzione/...      metodologia, aree di rischio e processi standard (modulo
-                            anticorruzione: common/anticorruzione/pacchetto.py)
+    anticorruzione/...      metodologia, aree di rischio, catalogo, procedimenti e processi
+                            standard (modulo anticorruzione: common/anticorruzione/pacchetto.py)
 
 Il sistema parte vuoto: il pacchetto standard (sorgenti in pacchetto/, zip creato con
 deploy/pacchetto.py crea) si carica da Amministrazione come tutti i successivi. Nessun file
@@ -59,6 +59,7 @@ from common.configurazione import (
     leggi_checklist,
     sorgente_checklist,
 )
+from common import procedimenti as catalogo_procedimenti
 from common.anticorruzione import catalogo as ac_catalogo
 from common.anticorruzione import pacchetto as ac
 from common.models import (
@@ -128,6 +129,7 @@ class Oggetto:
     percorso: str
     sorgente: str
     impronta: str
+    ambito: str | None = None  # processi: solo comuni (COMUNE) o solo province (PROVINCIA)
 
     @property
     def chiave(self) -> str:
@@ -140,6 +142,7 @@ class Pacchetto:
     oggetti: list[Oggetto]
     aree: list[ac.AreaStd] = field(default_factory=list)  # aree di rischio (anticorruzione)
     catalogo: ac_catalogo.CatalogoStd | None = None  # voci standard della mappatura (anticorruzione)
+    procedimenti: list[ac.ProcedimentoStd] = field(default_factory=list)  # procedimenti standard
 
     def di_tipo(self, tipo: Tipo) -> list[Oggetto]:
         return [o for o in self.oggetti if o.tipo == tipo]
@@ -173,6 +176,7 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
     moduli: list[ModuloRegole] = []
     aree: list[ac.AreaStd] = []
     catalogo: ac_catalogo.CatalogoStd | None = None
+    procedimenti: list[ac.ProcedimentoStd] = []
     for percorso in sorted(file):
         p = PurePosixPath(percorso)
         sorgente = file[percorso]
@@ -205,12 +209,14 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                 aree = ac.leggi_aree(sorgente)
             elif percorso == ac_catalogo.FILE_CATALOGO:
                 catalogo = ac_catalogo.leggi_catalogo(sorgente)
+            elif percorso == ac.FILE_PROCEDIMENTI:
+                procedimenti = ac.leggi_procedimenti(sorgente)
             elif p.parent == PurePosixPath(ac.CARTELLA_PROCESSI) and p.suffix == ".yaml":
                 f = ac.leggi_processi(sorgente)
                 for proc in f.processi:  # ogni processo è un oggetto
                     oggetti.append(
                         Oggetto("processo", proc.codice, proc.denominazione, percorso,
-                                ac.sorgente_processo(proc, f.area), ac.impronta_processo(proc, f.area))
+                                ac.sorgente_processo(proc, f.area), ac.impronta_processo(proc, f.area), proc.ambito)
                     )  # fmt: skip
         except (ModelloNonValido, ValueError) as e:
             errori.append(f"{percorso}: {e}")
@@ -226,6 +232,7 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                 errori.append(f"{o.percorso} con le specificità: {e}")
     codici_aree = {a.codice for a in aree}
     voci = {v.codice: tipo for tipo, v in catalogo.voci()} if catalogo else {}
+    codici_procedimenti = {p.codice for p in procedimenti}
     for o in oggetti:
         if o.tipo == "processo":
             f = ac.leggi_processi(o.sorgente)
@@ -237,9 +244,12 @@ def leggi_pacchetto(file: dict[str, str]) -> Pacchetto:
                                  *(("MISURA", m) for a in p.attivita for r in a.rischi for m in r.misure)]:  # fmt: skip
                     if el.voce and voci.get(el.voce) != tipo:
                         errori.append(f"{o.percorso}: {el.codice} indica la voce {el.voce}, che non è nel catalogo come {tipo.lower()}")
+                for a in p.attivita:
+                    if a.procedimento and a.procedimento not in codici_procedimenti:
+                        errori.append(f"{o.percorso}: {a.codice} indica il procedimento {a.procedimento}, che non è in {ac.FILE_PROCEDIMENTI}")
     if errori:
         raise PacchettoNonValido(errori)
-    return Pacchetto(manifesto, oggetti, aree, catalogo)
+    return Pacchetto(manifesto, oggetti, aree, catalogo, procedimenti)
 
 
 def da_cartella(cartella: Path) -> dict[str, str]:
@@ -253,6 +263,7 @@ def da_cartella(cartella: Path) -> dict[str, str]:
         cartella / ac.FILE_METODOLOGIA,
         cartella / ac.FILE_AREE,
         cartella / ac_catalogo.FILE_CATALOGO,
+        cartella / ac.FILE_PROCEDIMENTI,
         *sorted((cartella / ac.CARTELLA_PROCESSI).glob("*.yaml")),
     ]
     for f in candidati:
@@ -286,7 +297,7 @@ def da_zip(dati: bytes) -> dict[str, str]:
         p = PurePosixPath(relativo)
         if ".." in p.parts or p.is_absolute():
             continue
-        if relativo in (MANIFESTO, ac.FILE_METODOLOGIA, ac.FILE_AREE, ac_catalogo.FILE_CATALOGO) or (
+        if relativo in (MANIFESTO, ac.FILE_METODOLOGIA, ac.FILE_AREE, ac_catalogo.FILE_CATALOGO, ac.FILE_PROCEDIMENTI) or (
             str(p.parent) in ("modelli", "modelli/regole", "checklist", ac.CARTELLA_PROCESSI)
             and p.suffix in (".yaml", ".json")
         ):
@@ -537,6 +548,7 @@ class Voce:
     azioni: list[Azione] = field(default_factory=list)  # ammesse
     nota: str = ""
     versione_ente: int | None = None
+    ambito: str | None = None  # processi solo dei comuni o solo delle province
 
     def come_dict(self) -> dict:
         return asdict(self)
@@ -565,8 +577,9 @@ def _voce(o, stato: Stato, azione: Azione, azioni: list[Azione], versione=None) 
         stato=stato,
         azione=azione,
         azioni=azioni,
-        nota=_NOTE[stato],
+        nota=_NOTE[stato] + (f" Processo per {ac.AMBITI[a]}." if (a := getattr(o, "ambito", None)) else ""),
         versione_ente=versione,
+        ambito=getattr(o, "ambito", None),
     )
 
 
@@ -712,9 +725,12 @@ async def importa(
     pacchetto: Pacchetto,
     decisioni: dict[str, str] | None = None,
     utente_id: str | None = None,
+    ambito: str | None = None,
 ) -> Resoconto:
     """Importa il pacchetto con le decisioni dell'ente ({chiave: azione}); per le voci senza
-    decisione vale l'azione proposta dall'analisi. Non fa il commit."""
+    decisione vale l'azione proposta dall'analisi. Con [ambito] (tipo di ente: COMUNE o
+    PROVINCIA) i processi nuovi e i procedimenti dell'altro tipo non si importano, salvo
+    decisione esplicita per il processo. Non fa il commit."""
     decisioni = decisioni or {}
     r = Resoconto(pacchetto=pacchetto.manifesto.etichetta)
     await _tipologie(db, pacchetto.manifesto)
@@ -723,9 +739,16 @@ async def importa(
     # prima dei processi, perché i loro elementi si colleghino alle voci standard
     if pacchetto.catalogo and await _con_anticorruzione(db, ente_id):
         await ac_catalogo.crea_voci(db, ente_id, pacchetto.catalogo)
+    # e ai procedimenti standard: catalogo condiviso con la trasparenza (common/procedimenti.py)
+    ente = await db.get(Ente, ente_id)
+    if pacchetto.procedimenti and ente is not None and catalogo_procedimenti.disponibili(ente):
+        await ac.crea_procedimenti(db, ente_id, [p for p in pacchetto.procedimenti if not ambito or p.ambito in (None, ambito)],
+                                   pacchetto.manifesto.etichetta)  # fmt: skip
     oggetti = {o.chiave: o for o in pacchetto.oggetti}
     for voce in await analizza(db, ente_id, pacchetto):
         azione = decisioni.get(voce.chiave, voce.azione)
+        if voce.chiave not in decisioni and ambito and voce.ambito not in (None, ambito) and voce.stato == "NUOVO":
+            azione = "mantieni"  # processo dell'altro tipo di ente
         if azione not in voce.azioni:
             r.errori.append(f"{voce.chiave}: azione {azione!r} non ammessa ({voce.stato})")
             continue

@@ -1,0 +1,671 @@
+# Procedimenti standard degli enti locali (art. 35 d.lgs. 33/2013): solo i dati che vengono
+# dalla norma. Nell'ente prendono il codice P.n e si completano con uffici, recapiti, modulistica
+# e orari; il codice PRC non va cambiato né riusato. Creati se mancano, mai cancellati.
+procedimenti:
+- codice: PRC-0001
+  denominazione: Selezione pubblica per l'assunzione di personale
+  norma_riferimento: D.lgs. 165/2001, art. 35; d.P.R. 487/1994; regolamento dell'ente sull'accesso agli impieghi
+  termine_conclusione: 180 giorni dalla prima prova (art. 11 d.P.R. 487/1994)
+  art35:
+    tipologia: Personale - reclutamento
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0002
+  denominazione: Mobilità volontaria esterna tra enti
+  norma_riferimento: D.lgs. 165/2001, art. 30
+  termine_conclusione: Termine fissato dall'avviso
+  art35:
+    tipologia: Personale - reclutamento
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0003
+  denominazione: Autorizzazione allo svolgimento di incarichi extraistituzionali dei dipendenti
+  norma_riferimento: D.lgs. 165/2001, art. 53
+  termine_conclusione: 30 giorni (art. 53, c. 10, d.lgs. 165/2001)
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0004
+  ambito: COMUNE
+  denominazione: Concessione di occupazione temporanea o permanente di suolo pubblico
+  norma_riferimento: L. 160/2019, art. 1, cc. 816-847 (canone unico); regolamento comunale del canone
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Autorizzazioni e concessioni
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0005
+  ambito: COMUNE
+  denominazione: Autorizzazione all'apertura di passo carrabile
+  norma_riferimento: D.lgs. 285/1992, art. 22; d.P.R. 495/1992, art. 46
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Autorizzazioni e concessioni
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0006
+  ambito: COMUNE
+  denominazione: Autorizzazione all'installazione di mezzi e impianti pubblicitari
+  norma_riferimento: D.lgs. 285/1992, art. 23; d.P.R. 495/1992, artt. 47-59; regolamento comunale
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Autorizzazioni e concessioni
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0007
+  ambito: COMUNE
+  denominazione: Autorizzazione per attività produttive e commerciali (SUAP, procedimento ordinario)
+  norma_riferimento: D.P.R. 160/2010, art. 7; d.lgs. 114/1998; d.lgs. 222/2016
+  termine_conclusione: 30 giorni dalla ricezione (procedimento ordinario SUAP)
+  art35:
+    tipologia: Attività produttive
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0008
+  ambito: COMUNE
+  denominazione: Segnalazione certificata di inizio attività per attività produttive e commerciali (SCIA)
+  norma_riferimento: L. 241/1990, art. 19; d.P.R. 160/2010, art. 5; d.lgs. 222/2016
+  termine_conclusione: 60 giorni per i controlli (art. 19 l. 241/1990)
+  art35:
+    tipologia: Attività produttive
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0009
+  ambito: COMUNE
+  denominazione: Autorizzazione all'apertura di medie e grandi strutture di vendita
+  norma_riferimento: D.lgs. 114/1998, artt. 8-9; normativa regionale sul commercio
+  termine_conclusione: 90 giorni (medie) o termine regionale (grandi)
+  art35:
+    tipologia: Attività produttive
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0010
+  ambito: COMUNE
+  denominazione: Licenza per manifestazioni e spettacoli temporanei e agibilità dei locali di pubblico spettacolo
+  norma_riferimento: R.d. 773/1931 (TULPS), artt. 68, 69 e 80; d.P.R. 311/2001
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Polizia amministrativa
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0011
+  ambito: COMUNE
+  denominazione: Rilascio delle licenze taxi e delle autorizzazioni di noleggio con conducente
+  norma_riferimento: L. 21/1992; regolamento comunale
+  termine_conclusione: Termine fissato dal bando
+  art35:
+    tipologia: Polizia amministrativa
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0012
+  ambito: COMUNE
+  denominazione: Rilascio del contrassegno di parcheggio per persone con disabilità
+  norma_riferimento: D.P.R. 495/1992, art. 381; d.P.R. 151/2012
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Mobilità e traffico
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0013
+  ambito: COMUNE
+  denominazione: Rilascio di permessi di transito e sosta in zone a traffico limitato
+  norma_riferimento: D.lgs. 285/1992, art. 7; ordinanze e disciplinare comunale
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Mobilità e traffico
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0014
+  ambito: COMUNE
+  denominazione: Concessione di sepolture private (loculi, ossari, aree e cappelle)
+  norma_riferimento: D.P.R. 285/1990, artt. 90-95; regolamento comunale di polizia mortuaria
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi cimiteriali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0015
+  ambito: COMUNE
+  denominazione: Autorizzazione alla cremazione, all'affidamento e alla dispersione delle ceneri
+  norma_riferimento: L. 130/2001; d.P.R. 285/1990; legge regionale
+  termine_conclusione: 2 giorni
+  art35:
+    tipologia: Servizi cimiteriali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0016
+  ambito: COMUNE
+  denominazione: Iscrizione anagrafica e cambio di residenza
+  norma_riferimento: L. 1228/1954; d.P.R. 223/1989; d.l. 5/2012, art. 5
+  termine_conclusione: 2 giorni lavorativi per la registrazione, 45 giorni per gli accertamenti (silenzio assenso)
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0017
+  ambito: COMUNE
+  denominazione: Riconoscimento della cittadinanza italiana (iure sanguinis) e giuramento
+  norma_riferimento: L. 91/1992; d.P.R. 572/1993; d.l. 36/2025
+  termine_conclusione: 180 giorni
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0018
+  ambito: COMUNE
+  denominazione: Rilascio della carta d'identità elettronica
+  norma_riferimento: D.l. 78/2015, art. 10; d.m. 23/12/2015
+  termine_conclusione: Immediato (richiesta), consegna entro 6 giorni lavorativi
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0019
+  ambito: COMUNE
+  denominazione: Attribuzione della numerazione civica
+  norma_riferimento: L. 1228/1954; d.P.R. 223/1989, artt. 42-43
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0020
+  ambito: COMUNE
+  denominazione: Iscrizione all'albo degli scrutatori e dei presidenti di seggio
+  norma_riferimento: L. 95/1989; l. 53/1990
+  termine_conclusione: Gennaio di ogni anno (scrutatori), ottobre (presidenti)
+  art35:
+    tipologia: Servizi elettorali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0021
+  denominazione: Accesso ai documenti amministrativi
+  norma_riferimento: L. 241/1990, artt. 22-28; d.P.R. 184/2006
+  termine_conclusione: 30 giorni (silenzio rigetto)
+  art35:
+    tipologia: Accesso
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 30 giorni o al Difensore civico/Commissione per l'accesso (art. 25 l.
+      241/1990)
+- codice: PRC-0022
+  denominazione: Accesso civico semplice e generalizzato
+  norma_riferimento: D.lgs. 33/2013, artt. 5 e 5-bis
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Accesso
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Richiesta di riesame al RPCT, ricorso al Difensore civico o al TAR (art. 5, cc. 7-8, d.lgs.
+      33/2013)
+- codice: PRC-0023
+  ambito: COMUNE
+  denominazione: Iscrizione ai servizi educativi per la prima infanzia (asilo nido) e graduatoria
+  norma_riferimento: D.lgs. 65/2017; normativa regionale; regolamento comunale
+  termine_conclusione: Termine fissato dal bando
+  art35:
+    tipologia: Servizi educativi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0024
+  ambito: COMUNE
+  denominazione: Iscrizione ai servizi di ristorazione e trasporto scolastico, con tariffa agevolata ISEE
+  norma_riferimento: D.lgs. 63/2017; d.P.C.M. 159/2013; regolamento comunale
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi scolastici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0025
+  ambito: COMUNE
+  denominazione: Contributo economico di assistenza a persone e nuclei in condizione di bisogno
+  norma_riferimento: L. 328/2000; d.P.C.M. 159/2013; regolamento comunale dei servizi sociali
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi sociali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0026
+  ambito: COMUNE
+  denominazione: Assegnazione di alloggi di edilizia residenziale pubblica
+  norma_riferimento: Legge regionale ERP; regolamento comunale
+  termine_conclusione: Termini del bando e della graduatoria
+  art35:
+    tipologia: Politiche abitative
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0027
+  ambito: COMUNE
+  denominazione: Contributo per il sostegno alla locazione e per la morosità incolpevole
+  norma_riferimento: L. 431/1998, art. 11; d.l. 102/2013, art. 6; bando comunale
+  termine_conclusione: Termine fissato dal bando
+  art35:
+    tipologia: Politiche abitative
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0028
+  denominazione: Concessione di contributi e vantaggi economici ad associazioni ed enti
+  norma_riferimento: L. 241/1990, art. 12; regolamento comunale dei contributi
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Contributi e vantaggi economici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0029
+  denominazione: Concessione di patrocinio e di uso gratuito di sale e spazi
+  norma_riferimento: Regolamento comunale dei contributi e del patrocinio
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Contributi e vantaggi economici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0030
+  ambito: COMUNE
+  denominazione: Integrazione della retta per l'inserimento in strutture residenziali
+  norma_riferimento: L. 328/2000; d.P.C.M. 159/2013; normativa regionale
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Servizi sociali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0031
+  ambito: COMUNE
+  denominazione: Accesso al servizio di assistenza domiciliare
+  norma_riferimento: L. 328/2000; regolamento comunale
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi sociali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0032
+  ambito: COMUNE
+  denominazione: Contributi per libri di testo e borse di studio
+  norma_riferimento: L. 448/1998, art. 27; d.lgs. 63/2017; bando
+  termine_conclusione: Termine fissato dal bando
+  art35:
+    tipologia: Diritto allo studio
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0033
+  ambito: COMUNE
+  denominazione: Contributi per l'eliminazione delle barriere architettoniche negli edifici privati
+  norma_riferimento: L. 13/1989, artt. 9-11
+  termine_conclusione: Termine fissato dalla legge regionale
+  art35:
+    tipologia: Contributi e vantaggi economici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0034
+  denominazione: Rimborso di tributi locali versati e non dovuti
+  norma_riferimento: L. 296/2006, art. 1, c. 164; regolamento generale delle entrate
+  termine_conclusione: 180 giorni
+  art35:
+    tipologia: Tributi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso alla Corte di giustizia tributaria di primo grado entro 60 giorni dalla notifica;
+      istanza di riesame in autotutela
+- codice: PRC-0035
+  denominazione: Rateizzazione di debiti tributari e patrimoniali
+  norma_riferimento: L. 160/2019, art. 1, cc. 796-802; regolamento generale delle entrate
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Tributi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso alla Corte di giustizia tributaria di primo grado entro 60 giorni dalla notifica;
+      istanza di riesame in autotutela
+- codice: PRC-0036
+  denominazione: Accertamento con adesione e autotutela tributaria
+  norma_riferimento: D.lgs. 218/1997; l. 212/2000, art. 10-quater; regolamento dell'ente
+  termine_conclusione: 90 giorni
+  art35:
+    tipologia: Tributi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso alla Corte di giustizia tributaria di primo grado entro 60 giorni dalla notifica;
+      istanza di riesame in autotutela
+- codice: PRC-0037
+  ambito: COMUNE
+  denominazione: Riduzioni e agevolazioni della tassa sui rifiuti (TARI)
+  norma_riferimento: L. 147/2013, art. 1, cc. 659-660; regolamento TARI
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Tributi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso alla Corte di giustizia tributaria di primo grado entro 60 giorni dalla notifica;
+      istanza di riesame in autotutela
+- codice: PRC-0038
+  ambito: COMUNE
+  denominazione: Permesso di costruire
+  norma_riferimento: D.P.R. 380/2001, art. 20
+  termine_conclusione: 60 giorni per l'istruttoria, 30 per il provvedimento (silenzio assenso salvo vincoli)
+  art35:
+    tipologia: Edilizia
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0039
+  ambito: COMUNE
+  denominazione: SCIA e CILA edilizia
+  norma_riferimento: D.P.R. 380/2001, artt. 6-bis, 22-23; l. 241/1990, art. 19
+  termine_conclusione: 30 giorni per il controllo della SCIA edilizia
+  art35:
+    tipologia: Edilizia
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0040
+  ambito: COMUNE
+  denominazione: Permesso di costruire e SCIA in sanatoria (accertamento di conformità)
+  norma_riferimento: D.P.R. 380/2001, artt. 36 e 36-bis
+  termine_conclusione: 45 giorni (silenzio assenso per la SCIA in sanatoria)
+  art35:
+    tipologia: Edilizia
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0041
+  ambito: COMUNE
+  denominazione: Segnalazione certificata per l'agibilità
+  norma_riferimento: D.P.R. 380/2001, art. 24
+  termine_conclusione: Controllo entro 60 giorni
+  art35:
+    tipologia: Edilizia
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0042
+  ambito: COMUNE
+  denominazione: Autorizzazione paesaggistica ordinaria e semplificata
+  norma_riferimento: D.lgs. 42/2004, art. 146; d.P.R. 31/2017
+  termine_conclusione: 120 giorni (ordinaria), 60 giorni (semplificata)
+  art35:
+    tipologia: Paesaggio
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0043
+  ambito: COMUNE
+  denominazione: Certificato di destinazione urbanistica
+  norma_riferimento: D.P.R. 380/2001, art. 30, c. 3
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Urbanistica
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0044
+  denominazione: Autorizzazione per interventi in aree con vincolo idrogeologico
+  norma_riferimento: R.d.l. 3267/1923; legge regionale forestale
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Ambiente e territorio
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0045
+  ambito: COMUNE
+  denominazione: Approvazione di piani attuativi di iniziativa privata
+  norma_riferimento: Legge urbanistica regionale; l. 1150/1942, art. 28
+  termine_conclusione: Termini della legge regionale
+  art35:
+    tipologia: Urbanistica
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0046
+  denominazione: Autorizzazione unica ambientale
+  norma_riferimento: D.P.R. 59/2013
+  termine_conclusione: 90 o 150 giorni (art. 4 d.P.R. 59/2013)
+  art35:
+    tipologia: Ambiente
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0047
+  ambito: COMUNE
+  denominazione: Autorizzazione allo scarico di acque reflue domestiche non in pubblica fognatura
+  norma_riferimento: D.lgs. 152/2006, art. 124; legge regionale
+  termine_conclusione: 90 giorni
+  art35:
+    tipologia: Ambiente
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0048
+  ambito: PROVINCIA
+  denominazione: Iscrizione nel registro delle imprese che recuperano rifiuti in procedura semplificata
+  norma_riferimento: D.lgs. 152/2006, artt. 214-216
+  termine_conclusione: 90 giorni dalla comunicazione
+  art35:
+    tipologia: Ambiente - rifiuti
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0049
+  ambito: PROVINCIA
+  denominazione: Autorizzazione unica per impianti di smaltimento e recupero dei rifiuti (ove delegata)
+  norma_riferimento: D.lgs. 152/2006, art. 208; legge regionale
+  termine_conclusione: 150 giorni
+  art35:
+    tipologia: Ambiente - rifiuti
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0050
+  ambito: PROVINCIA
+  denominazione: Autorizzazione al transito di trasporti e veicoli eccezionali su strade provinciali
+  norma_riferimento: D.lgs. 285/1992, art. 10; d.P.R. 495/1992, artt. 13-20
+  termine_conclusione: 15 giorni (singola), 30 giorni (periodica)
+  art35:
+    tipologia: Viabilità
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0051
+  ambito: PROVINCIA
+  denominazione: Concessioni e autorizzazioni per accessi, attraversamenti e occupazioni di strade provinciali
+  norma_riferimento: D.lgs. 285/1992, artt. 21-27; regolamento provinciale
+  termine_conclusione: 60 giorni
+  art35:
+    tipologia: Viabilità
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0052
+  ambito: PROVINCIA
+  denominazione: Controllo dell'efficienza energetica degli impianti termici
+  norma_riferimento: D.lgs. 192/2005; d.P.R. 74/2013
+  termine_conclusione: Programma annuale di ispezioni
+  art35:
+    tipologia: Energia
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0053
+  ambito: PROVINCIA
+  denominazione: Rilascio di tesserini e autorizzazioni per caccia e pesca (ove delegati)
+  norma_riferimento: L. 157/1992; legge regionale
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Caccia e pesca
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)

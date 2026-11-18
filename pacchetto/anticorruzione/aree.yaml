@@ -1,47 +1,39 @@
-# Aree di rischio (PNA 2019 e PIAO del Comune di Lucca, § 2.3): create negli enti che non
-# le hanno, mai cancellate.
+# Aree di rischio degli enti locali: generali (PNA 2019, All. 1, Tab. 3) e specifiche di
+# comuni e province (governo del territorio, pianificazione urbanistica, rifiuti). Create negli
+# enti che non le hanno, mai cancellate.
 aree:
 - codice: A
-  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari privi di effetto economico
-    diretto ed immediato per il destinatario
-  descrizione_breve: Autorizzazioni, concessioni, abilitazioni
+  descrizione: Acquisizione e gestione del personale
+  descrizione_breve: 'Personale: reclutamento, progressioni, gestione'
 - codice: B
-  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari con effetto economico diretto
-    ed immediato per il destinatario
-  descrizione_breve: Contributi, sussidi, agevolazioni
+  descrizione: Contratti pubblici (affidamento ed esecuzione di lavori, servizi e forniture)
+  descrizione_breve: 'Contratti pubblici: programmazione, affidamento, esecuzione'
 - codice: C
-  descrizione: Contratti pubblici (ex affidamento di lavori, servizi e forniture)
-  descrizione_breve: Affidamenti di lavori, servizi e forniture
+  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari privi di effetto economico diretto
+    ed immediato per il destinatario
+  descrizione_breve: Autorizzazioni, concessioni, servizi demografici
 - codice: D
-  descrizione: Acquisizione e gestione del personale (ex acquisizione, progressione e gestione del personale)
-  descrizione_breve: Concorsi, assunzioni, progressioni
+  descrizione: Provvedimenti ampliativi della sfera giuridica dei destinatari con effetto economico diretto ed immediato
+    per il destinatario
+  descrizione_breve: Contributi, sussidi, agevolazioni
 - codice: E
   descrizione: Gestione delle entrate, delle spese e del patrimonio
-  descrizione_breve: Tributi, bilancio, patrimonio
+  descrizione_breve: Tributi, bilancio, patrimonio, partecipate
 - codice: F
   descrizione: Controlli, verifiche, ispezioni e sanzioni
-  descrizione_breve: Attività ispettive e sanzionatorie
+  descrizione_breve: Vigilanza, polizia locale, sanzioni
 - codice: G
   descrizione: Incarichi e nomine
-  descrizione_breve: Incarichi professionali e nomine
+  descrizione_breve: Incarichi esterni, nomine e designazioni
 - codice: H
   descrizione: Affari legali e contenzioso
-  descrizione_breve: Contenzioso
+  descrizione_breve: Contenzioso, incarichi legali, transazioni
 - codice: I
   descrizione: Governo del territorio
-  descrizione_breve: Edilizia e territorio
+  descrizione_breve: Edilizia, paesaggio, vincoli
 - codice: L
-  descrizione: Gestione dei rifiuti
-  descrizione_breve: Igiene urbana
-- codice: M
   descrizione: Pianificazione urbanistica
-  descrizione_breve: Piani urbanistici e varianti
-- codice: N
-  descrizione: Programmazione e controlli
-  descrizione_breve: Programmazione e controlli interni
-- codice: O
-  descrizione: Supporto agli organi
-  descrizione_breve: Organi istituzionali
-- codice: EXL
-  descrizione: Servizi demografici (ex area L)
-  descrizione_breve: Anagrafe, stato civile, elettorale
+  descrizione_breve: Piani urbanistici, varianti, convenzioni
+- codice: M
+  descrizione: Gestione dei rifiuti
+  descrizione_breve: Igiene urbana e rifiuti

@@ -1,74 +1,245 @@
-# Processi standard dell'area M: ricavati dalla mappatura del Comune di Lucca
-# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
-# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+# Processi standard dell'area M per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
 area: M
 processi:
 - codice: M.1
-  denominazione: Atti di Governo del Territorio e/o relative Varianti
+  ambito: COMUNE
+  denominazione: Affidamento e controllo del servizio di igiene urbana
+  descrizione: Contratto di servizio per raccolta, trasporto e spazzamento, anche tramite l'ente di governo d'ambito
+  attori_esterni: Gestore del servizio, ente di governo d'ambito
   attivita:
   - codice: M.1.1
-    descrizione: Redazione
+    descrizione: Definizione del contratto di servizio e degli standard di qualità
     rischi:
     - codice: M.1.1_R.1
-      evento: Assenza di chiara e specifica indicazione degli obiettivi da conseguire e dei criteri generali
-        da utilizzare;
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Standard di servizio e penali definiti in modo da non poter essere verificati
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: M.1.1_R.1_M.1
-        descrizione: Regolazione contenuto atto avvio procedimento pianificatorio. La misura consiste
-          nell'indicare con apposito atto gli indirizzi e gli obiettivi assegnati dall'Amministrazione
-          per la redazione dell'atto di avvio del procedimento, di cui all'art. 17 della L.R. n. 65/2014,
-          all'interno del quale sarà contenuto lo specifico riferimento di attuazione e declinazione degli
-          stessi
-    - codice: M.1.1_R.2
-      evento: Possibile sussistenza cause di incompatibilità e/o conflitti di interesse in capo ai componenti
-        gruppo di lavoro interno/esterno incaricato
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
-      misure:
-      - codice: M.1.1_R.2_M.1
-        descrizione: Regolazione procedimento atto avvio procedimento pianificatorio. La misura consiste,
-          in sede di avvio del procedimento di pianificazione e individuazione del gruppo di lavoro interno/esterno
-          incaricato della redazione dell'atto di pianificazione, di acquisire e verificare apposita dichiarazione
-          individuale di assenza di cause di incompatibilità e/o conflitti di interesse
-        categoria: Disciplina del conflitto di interessi
+        descrizione: Contratto di servizio con indicatori di qualità misurabili (regolazione ARERA) e penali
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Al rinnovo
+        indicatore: Indicatori previsti nel contratto
+        target: 100%
   - codice: M.1.2
-    descrizione: Pubblicazione e raccolta osservazioni
+    descrizione: Controllo dell'esecuzione del servizio
     rischi:
     - codice: M.1.2_R.1
-      evento: Possibili asimmetrie informative fra gli interessati che possono agevolare alcuni o taluni
-        degli stessi, dovute anche all'elevato tecnicismo degli atti
+      evento: Mancata verifica dei servizi resi e mancata applicazione delle penali al gestore
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: M.1.2_R.1_M.1
-        descrizione: Regolazione istruttoria osservazioni. La misura consiste nella redazione e divulgazione
-          di documenti informativi ulteriori rispetto a quelli già previsti dalla normativa sul Governo
-          del Territorio, di natura sintetica e atecnica
-  - codice: M.1.3
-    descrizione: Approvazione controdeduzioni e approvazione Definitiva
+        descrizione: Verifiche a campione sul territorio e sui dati di servizio (tracciamento dei mezzi, pesate)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Controlli effettuati
+        target: Almeno mensile
+      - codice: M.1.2_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
+- codice: M.2
+  ambito: COMUNE
+  denominazione: Piano economico finanziario e tariffe della TARI
+  descrizione: Predisposizione e validazione del PEF secondo il metodo ARERA e approvazione delle tariffe
+  attori_esterni: Gestore, ente di governo d'ambito, ARERA
+  attivita:
+  - codice: M.2.1
+    descrizione: Raccolta dei dati di costo e validazione del piano
     rischi:
-    - codice: M.1.3_R.1
-      evento: Indebito accoglimento di osservazioni in contrasto con l'interesse pubblico generale, le
-        norme vigenti e gli obiettivi generali del piano
+    - codice: M.2.1_R.1
+      evento: Costi del gestore inseriti nel piano senza verifica, con aumenti tariffari a carico degli utenti
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: M.2.1_R.1_M.1
+        descrizione: Validazione del PEF da soggetto terzo rispetto al gestore
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Annuale
+        indicatore: PEF validati
+        target: 100%
+- codice: M.3
+  ambito: COMUNE
+  denominazione: Gestione dei centri di raccolta e dei conferimenti
+  descrizione: Accesso ai centri di raccolta, pesature e riduzioni tariffarie collegate
+  attori_esterni: Utenti, gestore
+  attivita:
+  - codice: M.3.1
+    descrizione: Registrazione dei conferimenti
+    rischi:
+    - codice: M.3.1_R.1
+      evento: Registrazione di conferimenti fittizi per ottenere riduzioni della tariffa o accettazione di rifiuti
+        di imprese non ammessi
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Alto, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Alto, '4': Medio}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
-      - codice: M.1.3_R.1_M.1
-        descrizione: Regolazione procedimento di esame/decisioni osservazioni. La misura consiste nel
-          disciplinare, con apposito atto generale, l'obbligo ulteriore di individuare e pubblicizzare
-          preventivamente i criteri generali per l'istruttoria e le decisioni delle osservazioni.
+      - codice: M.3.1_R.1_M.1
+        descrizione: Registrazione informatica dei conferimenti con tessera dell'utente e controlli a campione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Conferimenti registrati
+        target: 100%
+- codice: M.4
+  ambito: COMUNE
+  denominazione: Rimozione dei rifiuti abbandonati e bonifiche
+  descrizione: Ordinanze di rimozione e smaltimento, bonifica dei siti inquinati
+  attori_esterni: Proprietari delle aree, ARPA
+  attivita:
+  - codice: M.4.1
+    descrizione: Ordinanza di rimozione e individuazione dell'obbligato
+    rischi:
+    - codice: M.4.1_R.1
+      evento: Rimozione a carico dell'ente senza rivalsa sul responsabile individuato
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: M.4.1_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: M.4.1_R.1_M.2
+        descrizione: Avvio dell'azione di rivalsa per le spese di rimozione e bonifica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni intervento
+        indicatore: Rivalse avviate
+        target: 100% dei casi con responsabile
+  - codice: M.4.2
+    descrizione: Affidamento degli interventi di rimozione e bonifica
+    rischi:
+    - codice: M.4.2_R.1
+      evento: Affidamenti diretti ricorrenti in urgenza per interventi programmabili
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: M.4.2_R.1_M.1
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: M.4.2_R.1_M.2
+        descrizione: Programmazione triennale e aggiornamento annuale degli acquisti e dei lavori, con verifica
+          degli acquisti fuori programma
+        tipo: SPECIFICA
         categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Acquisti non programmati sul totale
+        target: ≤ 10%
+- codice: M.5
+  ambito: PROVINCIA
+  denominazione: Iscrizioni e autorizzazioni per il recupero e lo smaltimento dei rifiuti
+  descrizione: Procedure semplificate di recupero e autorizzazioni agli impianti dove delegate alla provincia
+  attori_esterni: Imprese di gestione dei rifiuti, ARPA
+  attivita:
+  - codice: M.5.1
+    descrizione: Iscrizione nel registro delle imprese che recuperano rifiuti in procedura semplificata
+    procedimento: PRC-0048
+  - codice: M.5.2
+    descrizione: Autorizzazione unica per impianti di smaltimento e recupero dei rifiuti (ove delegata)
+    procedimento: PRC-0049
+  - codice: M.5.3
+    descrizione: Istruttoria e prescrizioni
+    rischi:
+    - codice: M.5.3_R.1
+      evento: Istruttoria compiacente sui requisiti tecnici degli impianti e sulle garanzie finanziarie
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: M.5.3_R.1_M.1
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
+      - codice: M.5.3_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: M.5.3_R.1_M.3
+        descrizione: Verifica delle garanzie finanziarie presso l'emittente
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni autorizzazione
+        indicatore: Garanzie verificate
+        target: 100%
+- codice: M.6
+  ambito: PROVINCIA
+  denominazione: Controlli sugli impianti di gestione dei rifiuti
+  descrizione: Ispezioni sugli impianti autorizzati o iscritti
+  attori_esterni: Imprese, ARPA
+  attivita:
+  - codice: M.6.1
+    descrizione: Programmazione ed esecuzione delle ispezioni
+    rischi:
+    - codice: M.6.1_R.1
+      evento: Ispezioni preannunciate o compiacenti, mancata contestazione delle violazioni
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: M.6.1_R.1_M.1
+        descrizione: Sopralluoghi svolti da almeno due addetti, con verbale e documentazione fotografica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni sopralluogo
+        indicatore: Sopralluoghi con verbale congiunto
+        target: 100%
+      - codice: M.6.1_R.1_M.2
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: M.6.1_R.1_M.3
+        descrizione: Rispetto del codice di comportamento dell'ente, con le regole specifiche per chi opera nel
+          processo
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: Annuale
+        indicatore: Violazioni accertate e procedimenti disciplinari avviati
+        target: Monitoraggio annuale

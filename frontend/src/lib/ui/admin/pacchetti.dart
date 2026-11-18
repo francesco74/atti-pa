@@ -43,6 +43,7 @@ class _PacchettiPageState extends State<PacchettiPage> {
   bool _vuoto = false; // nessun modello, specificità o checklist: sistema appena installato
   Map<String, dynamic>? _analisi; // pacchetto caricato e analizzato, in attesa di decisione
   final Map<String, String> _decisioni = {};
+  String? _ambito; // tipo di ente (COMUNE, PROVINCIA): i processi nuovi dell'altro tipo non si importano
   bool _mostraInvariati = false;
   bool _inCorso = false;
 
@@ -79,6 +80,7 @@ class _PacchettiPageState extends State<PacchettiPage> {
       setState(() {
         _analisi = analisi;
         _decisioni.clear();
+        _ambito = null;
       });
     } catch (e) {
       if (mounted) mostraErrore(context, e);
@@ -99,7 +101,7 @@ class _PacchettiPageState extends State<PacchettiPage> {
     try {
       final r = await apiDi(context).post(
         '/api/v1/pacchetti/${analisi['id']}/importa',
-        {'decisioni': _decisioni},
+        {'decisioni': _decisioni, 'ambito': ?_ambito},
       ) as Map<String, dynamic>;
       if (!mounted) return;
       final resoconto = Map<String, dynamic>.from(r['resoconto_json'] as Map);
@@ -149,9 +151,24 @@ class _PacchettiPageState extends State<PacchettiPage> {
     );
   }
 
+  /// Sceglie il tipo di ente: i processi nuovi dell'altro tipo passano a "mantieni" (non si
+  /// importano), gli altri tornano all'azione proposta.
+  void _scegliAmbito(String? ambito, List<Map<String, dynamic>> voci) => setState(() {
+        _ambito = ambito;
+        for (final v in voci.where((v) => v['ambito'] != null && v['stato'] == 'NUOVO')) {
+          final chiave = v['chiave'] as String;
+          if (ambito != null && v['ambito'] != ambito) {
+            _decisioni[chiave] = 'mantieni';
+          } else {
+            _decisioni.remove(chiave);
+          }
+        }
+      });
+
   Widget _tabellaAnalisi() {
     final analisi = _analisi!;
     final voci = List<Map<String, dynamic>>.from(analisi['analisi_json'] as List);
+    final conAmbito = voci.any((v) => v['ambito'] != null);
     final daDecidere = voci.where((v) => (v['azioni'] as List).length > 1 || v['stato'] != 'INVARIATO');
     final mostrate = _mostraInvariati
         ? voci
@@ -172,6 +189,22 @@ class _PacchettiPageState extends State<PacchettiPage> {
                   label: Text('${_stati[s]!.$1}: ${voci.where((v) => v['stato'] == s).length}'),
                 ),
           ]),
+          if (conAmbito) ...[
+            const SizedBox(height: 8),
+            Text('Il pacchetto ha processi e procedimenti dei soli comuni o delle sole province: indica il tipo di ente '
+                'per non importare quelli dell\'altro tipo.', style: tema.textTheme.bodySmall),
+            const SizedBox(height: 4),
+            SegmentedButton<String?>(
+              segments: const [
+                ButtonSegment(value: 'COMUNE', label: Text('Comune')),
+                ButtonSegment(value: 'PROVINCIA', label: Text('Provincia o città metropolitana')),
+                ButtonSegment(value: null, label: Text('Tutti')),
+              ],
+              selected: {_ambito},
+              showSelectedIcon: false,
+              onSelectionChanged: (s) => _scegliAmbito(s.first, voci),
+            ),
+          ],
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Mostra anche gli oggetti invariati'),
@@ -188,7 +221,8 @@ class _PacchettiPageState extends State<PacchettiPage> {
               contentPadding: EdgeInsets.zero,
               leading: Icon(_stati[v['stato']]?.$2 ?? Icons.help_outline,
                   color: v['stato'] == 'CONFLITTO' ? tema.colorScheme.error : null),
-              title: Text('${_tipi[v['tipo']] ?? v['tipo']}: ${v['titolo']}'),
+              title: Text('${_tipi[v['tipo']] ?? v['tipo']}: ${v['titolo']}'
+                  '${switch (v['ambito']) { 'COMUNE' => ' (solo comuni)', 'PROVINCIA' => ' (solo province)', _ => '' }}'),
               subtitle: Text('${v['codice']} · ${_stati[v['stato']]?.$1 ?? v['stato']}'
                   '${v['versione_ente'] != null ? ' · versione dell\'ente v${v['versione_ente']}' : ''}\n'
                   '${v['nota']}'),

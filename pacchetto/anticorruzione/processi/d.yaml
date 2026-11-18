@@ -1,600 +1,1137 @@
-# Processi standard dell'area D: ricavati dalla mappatura del Comune di Lucca
-# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
-# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+# Processi standard dell'area D per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
 area: D
 processi:
 - codice: D.1
-  denominazione: Concorso pubblico
-  tempi: Sei mesi dalla data di effettuazione delle prove scritte o, se trattasi di selezioni per titoli,
-    dalla data della prima convocazione. (Art. 17 Allegato L al Regolamento sull'ordinamento degli uffici
-    e dei servizi)
-  attori_esterni: Pubblicazione sul portale InPA e sito istituzionale dell'Ente e secondo quanto previsto
-    dal Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici
-    e dei Servizi dell'Ente)
+  ambito: COMUNE
+  denominazione: Contributi economici di assistenza sociale
+  descrizione: Contributi ordinari e straordinari a persone e nuclei in condizione di bisogno, sulla base del progetto
+    individuale
+  attori_esterni: Cittadini
   attivita:
   - codice: D.1.1
-    descrizione: Predisposizione bando di concorso in attuazione della programmazione triennale del fabbisogno
-      di personale.
+    descrizione: Avviso o bando e raccolta delle domande
     rischi:
     - codice: D.1.1_R.1
-      voce: RIS-0087
-      evento: Predisposizione di un bando contenente requisiti che possano avvantaggiare particolari categorie
-        di soggetti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.1.1_R.1_M.1
-        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
-          Responsabile del servizio a cui le risorse sono destinate.
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.1.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.1.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
   - codice: D.1.2
-    descrizione: Determinazione dirigenziale di approvazione del bando.
+    descrizione: Contributo economico di assistenza a persone e nuclei in condizione di bisogno
+    procedimento: PRC-0025
   - codice: D.1.3
-    descrizione: Pubblicazione sul portale InPA e sito istituzionale dell'Ente e secondo quanto previsto
-      dal Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici
-      e dei Servizi dell'Ente)
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.1.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.1.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.1.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.1.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.1.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.1.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
   - codice: D.1.4
-    descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione
-      dirigenziale di ammissione con riserva ed eventuale esclusione dei candidati. Comunicazione ai concorrenti
-      della esclusione e pubblicazione sul portale InPA e sito istituzionale dell'Ente dei concorrenti
-      ammessi con riserva ed eventuali esclusi.
+    descrizione: Concessione, liquidazione e pubblicazione
     rischi:
     - codice: D.1.4_R.1
-      evento: Ammissione di soggetto che non ha i requisiti o esclusione di soggetto che ha i requisiti
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.1.4_R.1_M.1
-        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
-          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
-          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota. Tutti i candidati
-          la cui domanda sia pervenuta tramite portale nei termini perentori di scadenza, sono ammessi
-          con riserva alla selezione, sulla base delle dichiarazioni sottoscritte. L'accertamento del
-          possesso dei requisiti viene fatto ai sensi dell'art. 15 del Regolamento.
-        categoria: Regolamentazione
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.1.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
   - codice: D.1.5
-    descrizione: Nomina della commissione esaminatrice.
+    descrizione: Valutazione professionale del bisogno e progetto individualizzato
     rischi:
     - codice: D.1.5_R.1
-      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Valutazione del bisogno condizionata da rapporti personali o pressioni esterne
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.1.5_R.1_M.1
-        descrizione: La composizione e il funzionamento delle Commissioni è disciplinato dal Regolamento
-          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
-          dell'Ente).
-        categoria: Regolamentazione
-  - codice: D.1.6
-    descrizione: Predisposizione fascicolo degli atti del concorso per la Commissione Esaminatrice.
-  - codice: D.1.7
-    descrizione: Ausilio alla Commissione Esaminatrice per eventuali problemi o pareri durante lo svolgimento
-      del concorso.
-  - codice: D.1.8
-    descrizione: Svolgimento procedura di selezione (valutazione dei titoli e svolgimento prove la cui
-      responsabilità è in capo alla Commissione Esaminatrice). Formulazione graduatoria di merito da parte
-      della Commissione esaminatrice e trasmissione atti all'Ufficio personale.
-    rischi:
-    - codice: D.1.8_R.1
-      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
-      misure:
-      - codice: D.1.8_R.1_M.1
-        descrizione: I criteri stabiliti dalla Commissione, nell'ambito di quanto previsto dal bando di
-          concorso, per la valutazione dei titoli, saranno pubblicati sul portale InPA e nella pagina
-          del sito web.
-    - codice: D.1.8_R.2
-      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
-      misure:
-      - codice: D.1.8_R.2_M.1
-        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
-          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).La Commissione propone
-          tre tracce per ciascuna prova scritta. Deve essere garantita analoga complessità e rilevanza
-          nella formulazione dei quesiti. Le tracce sono segrete, elaborate con modalità digitale e ne
-          è vietata la divulgazione. L'estrazione della prova è effettuata da almeno 2 candidati.
-        categoria: Regolamentazione
-  - codice: D.1.9
-    descrizione: Ricevimento atti della Commissione Esaminatrice.
-  - codice: D.1.10
-    descrizione: Predisposizione e adozione determinazione di approvazione dei lavori della Commissione.
-  - codice: D.1.11
-    descrizione: Approvazione graduatoria finale con applicazione delle eventuali riserve e preferenze
-      e nomina dei vincitori.
-    rischi:
-    - codice: D.1.11_R.1
-      evento: Avvantaggiare/svantaggiare i singoli concorrenti nella fase di applicazione delle riserve
-        /preferenze.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
-      misure:
-      - codice: D.1.11_R.1_M.1
-        descrizione: Indicazione specifiche delle singole posizioni di riserva/precedenza nella determinazione
-          di approvazione della graduatoria finale.
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: D.1.5_R.1_M.2
+        descrizione: Valutazione in équipe multiprofessionale per i contributi straordinari, con verbale
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni richiesta
+        indicatore: Contributi straordinari valutati in équipe
+        target: 100%
 - codice: D.2
-  denominazione: Assunzione tramite centro per l'impiego
-  tempi: Art. 35 del Decreto n. 7/R del 4.2.2004:- 6 mesi dalla pubblicazione della graduatoria per le
-    assunzioni a tempo indeterminato- 12 mesi dalla pubblicazione della graduatoria per le assunzioni
-    a tempo determinato
-  attori_esterni: Centro per l'Impiego
+  ambito: COMUNE
+  denominazione: Assegnazione degli alloggi di edilizia residenziale pubblica
+  descrizione: Bando, graduatoria, assegnazione e mobilità negli alloggi ERP
+  attori_esterni: Cittadini, ente gestore
   attivita:
   - codice: D.2.1
-    descrizione: Predisposizione bando di concorso in attuazione della programmazione triennale del fabbisogno
-      di personale.
+    descrizione: Avviso o bando e raccolta delle domande
     rischi:
     - codice: D.2.1_R.1
-      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
-        particolari categorie di soggetti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.2.1_R.1_M.1
-        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
-          Responsabile del servizio a cui le risorse sono destinate e viene inviato per un preventivo
-          esame al Centro per l'Impiego.
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.2.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.2.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
   - codice: D.2.2
-    descrizione: Determinazione dirigenziale di approvazione del bando.
+    descrizione: Assegnazione di alloggi di edilizia residenziale pubblica
+    procedimento: PRC-0026
   - codice: D.2.3
-    descrizione: Invio del bando di concorso al Centro per l'Impiego per la pubblicazione.
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.2.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.2.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.2.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.2.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: D.2.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.2.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
   - codice: D.2.4
-    descrizione: Ricevimento della graduatoria dal Centro per l'Impiego.
+    descrizione: Concessione, liquidazione e pubblicazione
+    rischi:
+    - codice: D.2.4_R.1
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.2.4_R.1_M.1
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.2.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
   - codice: D.2.5
-    descrizione: Nomina della commissione esaminatrice.
+    descrizione: Proposta dell'alloggio all'avente diritto
     rischi:
     - codice: D.2.5_R.1
-      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Assegnazione al di fuori dell'ordine di graduatoria o di alloggi non adeguati per favorire alcuni
+        assegnatari
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: D.2.5_R.1_M.1
-        descrizione: La composizione e il funzionamento delle Commissioni è disciplinato dal Regolamento
-          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
-          dell'Ente).
-        categoria: Regolamentazione
+        descrizione: Assegnazione secondo l'ordine di graduatoria e la tabella di abbinamento alloggio-nucleo, con
+          verbale
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni assegnazione
+        indicatore: Assegnazioni conformi alla graduatoria
+        target: 100%
   - codice: D.2.6
-    descrizione: Predisposizione fascicolo degli atti del concorso per la Commissione Esaminatrice.
-  - codice: D.2.7
-    descrizione: Ausilio alla Commissione Esaminatrice per eventuali problemi o pareri durante lo svolgimento
-      del concorso.
-  - codice: D.2.8
-    descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti idonei da parte della
-      Commissione Esaminatrice; trasmissione atti all'Ufficio personale.
+    descrizione: Verifica del mantenimento dei requisiti e decadenze
     rischi:
-    - codice: D.2.8_R.1
-      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
+    - codice: D.2.6_R.1
+      evento: Mancata verifica della permanenza dei requisiti e tolleranza delle occupazioni senza titolo
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
-      - codice: D.2.8_R.1_M.1
-        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
-          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
-        categoria: Regolamentazione
-    - codice: D.2.8_R.2
-      evento: Dichiarare /non dichiarare un soggetto idoneo facendo una valutazione non oggettiva della
-        prova.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Alto, '3': Alto, '4': Basso}
-      misure:
-      - codice: D.2.8_R.2_M.1
-        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
-          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente).
-        categoria: Regolamentazione
-  - codice: D.2.9
-    descrizione: Predisposizione e adozione della determinazione di approvazione dei lavori della Commissione
-      esaminatrice e nomina dei vincitori.
+      - codice: D.2.6_R.1_M.1
+        descrizione: Verifica periodica dei requisiti degli assegnatari con l'ente gestore
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Biennale
+        indicatore: Assegnatari verificati
+        target: Biennale
 - codice: D.3
-  denominazione: Assunzione personale di ruolo per mobilità volontaria
-  tempi: entro 30 gg. dalla determinazione contenente l'individuazione dei soggetti scelti per la copertura
-    dei posti, fatti salvi eventuali altri accordi con l'Amministrazione cedente se compatibili con le
-    esigenze organizzative
+  ambito: COMUNE
+  denominazione: Contributi per l'affitto e per la morosità incolpevole
+  descrizione: Sostegno alla locazione con fondi statali, regionali e comunali
+  attori_esterni: Cittadini
   attivita:
   - codice: D.3.1
-    descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
-      del fabbisogno di personale, dove vengono indicati i posti/profili per i quali si procede a selezione,
-      i requisiti di partecipazione, nonché le modalità di selezione e pubblicazione sulla piattaforma
-      InPA e sul sito istituzionale dell'Ente e secondo quanto previsto dal Regolamento delle Procedure
-      Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi dell'Ente)
+    descrizione: Avviso o bando e raccolta delle domande
     rischi:
     - codice: D.3.1_R.1
-      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
-        particolari categorie di soggetti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.3.1_R.1_M.1
-        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
-          Responsabile del servizio a cui le risorse sono destinate. Alle selezioni per mobilità volontaria
-          - ancorché non qualificabili strettamente quali concorsi pubblici - si applicano le disposizioni
-          di carattere generale di cui al Regolamento delle Procedure Selettive (Allegato L del Regolamento
-          sull'Ordinamento degli Uffici e dei Servizi dell'Ente). ritenute compatibili con la disciplina
-          normativa specifica di riferimento.
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
         categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.3.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.3.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
   - codice: D.3.2
-    descrizione: Determinazione dirigenziale di approvazione dell'avviso.
+    descrizione: Contributo per il sostegno alla locazione e per la morosità incolpevole
+    procedimento: PRC-0027
+  - codice: D.3.3
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.3.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.3.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.3.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.3.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.3.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.3.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
   - codice: D.3.4
-    descrizione: Ricezione delle domande di partecipazione attraverso il portale InPA. Determinazione
-      dirigenziale di ammissione con riserva ed eventuale esclusione dei candidati. Pubblicazione sul
-      portale InPA e sito istituzionale dell'Ente dei concorrenti ammessi con riserva ed eventuali esclusi.
+    descrizione: Concessione, liquidazione e pubblicazione
     rischi:
     - codice: D.3.4_R.1
-      voce: RIS-0088
-      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.3.4_R.1_M.1
-        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
-          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
-          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota.
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.3.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
         categoria: Controllo
-  - codice: D.3.5
-    descrizione: Nomina della Commissione esaminatrice.
-    rischi:
-    - codice: D.3.5_R.1
-      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.3.5_R.1_M.1
-        descrizione: Alle selezioni per mobilità volontaria - ancorché non qualificabili strettamente
-          quali concorsi pubblici - si applicano le disposizioni di carattere generale di cui al Regolamento
-          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
-          dell'Ente) ritenute compatibili con la disciplina normativa specifica di riferimento. In ogni
-          caso per dette selezioni trova applicazione la disciplina sulla composizione delle Commissioni
-          deputate alla valutazione dei candidati.
-        categoria: Regolamentazione
-  - codice: D.3.6
-    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
-      della selezione.
-  - codice: D.3.7
-    descrizione: Svolgimento procedura di selezione ed individuazione dei soggetti scelti per la copertura
-      dei posti mediante formulazione della graduatoria di merito
-    rischi:
-    - codice: D.3.7_R.1
-      evento: Far conoscere preventivamente i contenuti della selezione ai candidati
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Medio, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.3.7_R.1_M.1
-        descrizione: Le materie oggetto di colloquio e valutazione sono inserite nell'Avviso.
-  - codice: D.3.8
-    descrizione: Adozione determinazione contenente l'individuazione dei soggetti scelti per la copertura
-      dei posti, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
-  - codice: D.3.9
-    descrizione: Acquisizione del nulla-osta da parte dell'Amministrazione di appartenenza dei soggetti
-      scelti.
-  - codice: D.3.10
-    descrizione: Definizione della data di entrata in servizio, in accordo con l'Amministrazione cedente.
-  - codice: D.3.11
-    descrizione: Sottoscrizione contratto individuale di lavoro.
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
 - codice: D.4
-  denominazione: Tirocini formativi extracurriculari
-  tempi: entro 30 gg. dalla determinazione contenentel'individuazione dei soggetti scelti per l'inserimento
-    nei progetti formativi oggetto di tirocinio, fermi restando ulteriori tempi necessari al Centro perl'Impiego
-    per i propri adempimenti.
-  attori_esterni: Centro per l'Impiego
+  denominazione: Contributi, sovvenzioni e vantaggi economici ad associazioni ed enti
+  descrizione: Contributi ordinari e straordinari per attività culturali, sportive, sociali e del tempo libero (art.
+    12 l. 241/1990)
+  attori_esterni: Associazioni ed enti del territorio
   attivita:
   - codice: D.4.1
-    descrizione: Predisposizione avviso di selezione pubblica in attuazione della programmazione triennale
-      del fabbisogno di personale, dove vengono individuati i progetti di tirocinio, gli uffici comunali
-      interessati, i requisiti di partecipazione, nonché le modalità di selezione.
+    descrizione: Avviso o bando e raccolta delle domande
     rischi:
     - codice: D.4.1_R.1
-      evento: Predisposizione di un bando contenente requisiti troppo specifici che possano avvantaggiare
-        particolari categorie di soggetti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.4.1_R.1_M.1
-        descrizione: Il bando viene definito congiuntamente dal Dirigente del Personale e dal Dirigente
-          Responsabile del servizio a cui le risorse sono destinate. Alle presenti selezioni - ancorché
-          non qualificabili strettamente quali concorsi pubblici - si applicano le disposizioni di carattere
-          generale di cui al Regolamento delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento
-          degli Uffici e dei Servizi dell'Ente) ritenute compatibili con la disciplina normativa specifica
-          di riferimento.
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
         categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.4.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.4.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
   - codice: D.4.2
-    descrizione: Determinazione dirigenziale di approvazione dell'avviso.
+    descrizione: Concessione di contributi e vantaggi economici ad associazioni ed enti
+    procedimento: PRC-0028
   - codice: D.4.3
-    descrizione: Pubblicazione all'Albo Pretorio, sul sito istituzionale e su quotidiani a rilevanza locale.
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.4.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.4.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.4.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.4.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.4.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.4.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
   - codice: D.4.4
-    descrizione: Ricezione delle domande di partecipazione ed esame delle stesse;determinazione dirigenziale
-      di ammissione con riserva ed esclusione dei candidati. Pubblicazione sul sito istituzionale degli
-      ammessi con riserva e degli esclusi;comunicazione ai concorrenti della esclusione.
+    descrizione: Concessione, liquidazione e pubblicazione
     rischi:
     - codice: D.4.4_R.1
-      voce: RIS-0088
-      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.4.4_R.1_M.1
-        descrizione: Le domande vengono controllate da più dipendenti dell'Ufficio Personale.Nella determinazione
-          dirigenziale di ammissione ed esclusione devono essere indicati per ogni candidato escluso i
-          singoli e specifici motivi di esclusione.
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.4.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
         categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
   - codice: D.4.5
-    descrizione: Nomina della Commissione esaminatrice.
+    descrizione: Rendicontazione e verifica dell'attività svolta
     rischi:
     - codice: D.4.5_R.1
-      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti
+      evento: Liquidazione senza rendiconto o con spese non pertinenti
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: D.4.5_R.1_M.1
-        descrizione: Applicazione delle disposizioni sulla composizione delle Commissioni di cui al Regolamento
-          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
-          dell'Ente).
-        categoria: Regolamentazione
-  - codice: D.4.6
-    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
-      della selezione.
-  - codice: D.4.7
-    descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
-      nei progetti formativi oggetto di tirocinio mediante formulazione della graduatoria di merito. Adozione
-      determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti formativi
-      oggetto di tirocinio, sulla base delle valutazioni effettuate dalla Commissione esaminatrice.
-    rischi:
-    - codice: D.4.7_R.1
-      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.4.7_R.1_M.1
-        descrizione: I criteri stabiliti dalla Commissione per la valutazione dei titoli, nell'ambito
-          di quanto previsto dal bando di selezione, saranno eventualmente pubblicati nella pagina del
-          sito web.
-    - codice: D.4.7_R.2
-      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.4.7_R.2_M.1
-        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
-          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi) per quanto ritenuto compatibile
-          con la disciplina normativa specifica di riferimento.
-        categoria: Regolamentazione
-  - codice: D.4.8
-    descrizione: Comunicazione dei soggetti individuati al Centro per l'Impiego della Provincia di Lucca
-      (ARTI).
-  - codice: D.4.9
-    descrizione: Inizio tirocinio.
+        descrizione: Rendicontazione delle spese con giustificativi e liquidazione proporzionata alle spese ammissibili
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni contributo
+        indicatore: Contributi liquidati dopo rendiconto
+        target: 100%
 - codice: D.5
-  denominazione: Servizio civile Regionale
-  tempi: entro 30 gg. dalla determinazione contenente l'individuazione dei soggetti scelti per l'inserimento
-    nei progetti di Servizio civile Regionale, fermi restando ulteriori tempi necessari alla Regione per
-    i propri adempimenti
-  attori_esterni: Regione Toscana
+  denominazione: Patrocinio e concessione dell'uso gratuito di sale e spazi
+  descrizione: Patrocinio dell'ente e uso gratuito o agevolato di beni e spazi per iniziative di terzi
+  attori_esterni: Associazioni
   attivita:
   - codice: D.5.1
-    descrizione: Individuazione di progetti di Servizio civile da sottoporre alla Regione Toscana per
-      ottenerne il finanziamento.
+    descrizione: Concessione di patrocinio e di uso gratuito di sale e spazi
+    procedimento: PRC-0029
   - codice: D.5.2
-    descrizione: Pubblicizzazione sul sito istituzionale e su quotidiani locali del bando per la selezione
-      dei giovani da inserire nei progetti, bando redatto dalla Regione Toscana dove sono indicati i progetti,
-      gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
-  - codice: D.5.3
-    descrizione: Pubblicizzazione sul sito istituzionale e su quotidiani locali del bando per la selezione
-      dei giovani da inserire nei progetti, bando redatto dalla Regione Toscana dove sono indicati i progetti,
-      gli uffici comunali interessati, i requisiti di partecipazione nonché le modalità di selezione.
+    descrizione: Valutazione della richiesta e concessione
     rischi:
-    - codice: D.5.3_R.1
-      voce: RIS-0088
-      evento: Ammissione di soggetto che non ha i requisiti ed esclusione di soggetto che ha i requisiti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+    - codice: D.5.2_R.1
+      evento: Concessione discrezionale del patrocinio o dell'uso gratuito a soggetti vicini all'amministrazione
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
-      - codice: D.5.3_R.1_M.1
-        voce: MIS-0090
-        descrizione: Le domande vengono controllate più dipendenti dell'Ufficio Personale.Nella determinazione
-          dirigenziale di ammissione ed esclusione devono essere indicati i candidati ammessi e quelli
-          eventualmente esclusi. Ad ogni candidato escluso viene inviata apposita nota.
-        categoria: Controllo
-  - codice: D.5.4
-    descrizione: Nomina della Commissione esaminatrice.
-    rischi:
-    - codice: D.5.4_R.1
-      evento: Nomina di soggetti che abbiano un certo tipo di parentela o affinità con i soggetti partecipanti.
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.5.4_R.1_M.1
-        descrizione: Applicazione delle disposizioni sulla composizione delle Commissioni di cui al Regolamento
-          delle Procedure Selettive (Allegato L del Regolamento sull'Ordinamento degli Uffici e dei Servizi
-          dell'Ente).
+      - codice: D.5.2_R.1_M.1
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
         categoria: Regolamentazione
-  - codice: D.5.5
-    descrizione: Ausilio alla Commissione esaminatrice per eventuali problemi o pareri durante lo svolgimento
-      della selezione.
-  - codice: D.5.6
-    descrizione: Svolgimento procedura di selezione. Individuazione dei soggetti scelti per l'inserimento
-      nei progetti di Servizio civile regionale mediante formulazione della graduatoria di merito. Adozione
-      determinazione contenente l'individuazione dei soggetti scelti per l'inserimento nei progetti, sulla
-      base delle valutazioni effettuate dalla Commissione esaminatrice.
-    rischi:
-    - codice: D.5.6_R.1
-      evento: Attribuzione di maggiore/minor punteggio nella valutazione dei titoli
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.5.6_R.1_M.1
-        descrizione: I criteri stabiliti dalla Commissione per la valutazione dei titoli, nell'ambito
-          di quanto previsto dal bando di selezione, saranno eventualmente pubblicati nella pagina del
-          sito web.
-    - codice: D.5.6_R.2
-      evento: Far conoscere preventivamente i contenuti della prova di esame ai candidati
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: D.5.6_R.2_M.1
-        descrizione: La disciplina delle prove è stabilita dal Regolamento delle Procedure Selettive (Allegato
-          L del Regolamento sull'Ordinamento degli Uffici e dei Servizi) per quanto ritenuto compatibile
-          con la disciplina normativa specifica di riferimento.
-        categoria: Regolamentazione
-  - codice: D.5.7
-    descrizione: Comunicazione dei soggetti individuati alla Regione Toscana.
-  - codice: D.5.8
-    descrizione: Inizio progetti.
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.5.2_R.1_M.2
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
 - codice: D.6
-  denominazione: Erogazione di compensi e retribuzioni per dipendenti e Amministratori e denunce mensili
-    e annuali relative ai compensi nonché ai versamenti contributivi effettuati
+  ambito: COMUNE
+  denominazione: Agevolazioni tariffarie per i servizi a domanda individuale
+  descrizione: Riduzioni ed esenzioni delle tariffe di mensa, trasporto, nidi e altri servizi in base all'ISEE
+  attori_esterni: Famiglie
   attivita:
   - codice: D.6.1
-    descrizione: Erogazione delle retribuzioni ai dipendenti dell'Ente. Erogazione delle indennità per
-      gli Amministratori in carica. Effettuazione dei versamenti contributivi mensili relativi alle retribuzioni
-      percepite. Effettuazione delle denunce mensili e annuali relative ai contributi versati
+    descrizione: Domanda di agevolazione tariffaria
+    procedimento: PRC-0024
+  - codice: D.6.2
+    descrizione: Calcolo della tariffa agevolata
+    rischi:
+    - codice: D.6.2_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.6.2_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.6.2_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.6.2_R.2
+      evento: Applicazione di tariffe agevolate non spettanti o mancato recupero delle quote non pagate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.6.2_R.2_M.1
+        descrizione: Calcolo automatico della tariffa dal gestionale e procedura di recupero degli insoluti
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: Annuale
+        indicatore: Insoluti avviati al recupero
+        target: 100% entro l'anno
 - codice: D.7
-  denominazione: Valutazione della performance dei dirigenti, PO e dipendenti privi di incarico
-  tempi: Entro 30 giorni dalla validazione della Relazione sulla performance da parte del NDV, salvo slittamento
-    dei tempi per ricorsi dei dipendenti
-  attori_esterni: NdVGestore conservazione digitale della documentazione
+  ambito: COMUNE
+  denominazione: Integrazione delle rette per l'inserimento in strutture residenziali
+  descrizione: Compartecipazione dell'ente al costo delle strutture per anziani e persone con disabilità
+  attori_esterni: Utenti, familiari, strutture
   attivita:
   - codice: D.7.1
-    descrizione: Predisposizione ed aggiornamento SMVP
+    descrizione: Integrazione della retta per l'inserimento in strutture residenziali
+    procedimento: PRC-0030
   - codice: D.7.2
-    descrizione: Validazione da parte del NDV del documento SMVP
+    descrizione: Valutazione della situazione economica e del contributo dei familiari
+    rischi:
+    - codice: D.7.2_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.7.2_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.7.2_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
   - codice: D.7.3
-    descrizione: Comunicazione e cura dei rapporti con gli uffici
-  - codice: D.7.4
-    descrizione: Predisposizione schede, con i fattori valutativi, per la valutazione dei dirigenti e
-      dei dipendenti ( a supporto ai dirigenti, per valutare i propri collaboratori e supporto al NDV/
-      Sindaco per la valutazione dei Dirigenti)
-  - codice: D.7.5
-    descrizione: Raccolta schede di valutazione e verifica della presenza di tutti gli elementi (firme
-      valutatore e valutato, data certa di consegna e presa visione, assegnazione punteggio)
-  - codice: D.7.6
-    descrizione: Caricamento dato sul data base e verifica di eventuali anomalie
-  - codice: D.7.7
-    descrizione: Elaborazione file valutazione definitive e trasmissione all'ufficio preposto all'erogazione
-      dei premi correlati alla performance
-  - codice: D.7.8
-    descrizione: Archiviazione e conservazione schede di valutazione dirigenti e dipendenti
+    descrizione: Scelta della struttura e controllo delle rette
+    rischi:
+    - codice: D.7.3_R.1
+      evento: Indirizzo degli utenti verso strutture determinate o rette non verificate
+      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.7.3_R.1_M.1
+        descrizione: Rispetto del codice di comportamento dell'ente, con le regole specifiche per chi opera nel
+          processo
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: Annuale
+        indicatore: Violazioni accertate e procedimenti disciplinari avviati
+        target: Monitoraggio annuale
+      - codice: D.7.3_R.1_M.2
+        descrizione: Elenco delle strutture accreditate fornito all'utente e verifica delle rette fatturate
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni fattura
+        indicatore: Rette verificate
+        target: 100%
 - codice: D.8
-  denominazione: Rimborso Spese sostenute da Amministratori e dipendenti per missioni autorizzate nell'interesse
-    dell'Ente
+  ambito: COMUNE
+  denominazione: Accesso ai servizi domiciliari e alle prestazioni sociali
+  descrizione: Assistenza domiciliare, pasti a domicilio, trasporto sociale e altre prestazioni
+  attori_esterni: Utenti, gestore del servizio
   attivita:
   - codice: D.8.1
-    descrizione: Preventiva ricezione dell'autorizzazione alla missione da parte dei soggetti titolati.
-      Successiva ricezione delle pezze d'appoggio attestanti le spese sostenute in occasione della missione
-      e relativo controllo sulla ammissibilità delle spese da rimborsare. Rimborso della missione sul
-      cedolino.
+    descrizione: Accesso al servizio di assistenza domiciliare
+    procedimento: PRC-0031
+  - codice: D.8.2
+    descrizione: Valutazione del bisogno e definizione del piano di assistenza
+    rischi:
+    - codice: D.8.2_R.1
+      evento: Ammissione al servizio al di fuori dei criteri o delle liste d'attesa
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.8.2_R.1_M.1
+        descrizione: Trattazione delle istanze nell'ordine cronologico di arrivo, con registro informatico tracciato
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Istanze trattate fuori ordine senza motivazione
+        target: '0'
+      - codice: D.8.2_R.1_M.2
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+  - codice: D.8.3
+    descrizione: Controllo delle prestazioni rese dal gestore
+    rischi:
+    - codice: D.8.3_R.1
+      evento: Pagamento di prestazioni non rese o non conformi al piano di assistenza
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.8.3_R.1_M.1
+        descrizione: Verifica delle ore rese con il sistema di rilevazione e i fogli firmati dagli utenti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Prestazioni verificate a campione
+        target: Almeno 10%
 - codice: D.9
-  denominazione: Corresponsione di trattamenti accessori per dipendenti del comparto e della dirigenza
+  ambito: COMUNE
+  denominazione: Contributi per libri di testo e borse di studio
+  descrizione: Benefici per il diritto allo studio
+  attori_esterni: Famiglie, scuole
   attivita:
   - codice: D.9.1
-    descrizione: Verifica del rispetto dei limiti individuali annuali di lavoro straordinario. Verifica
-      del rispetto di requisiti di legge, del CCNL nazionale e/o decentrato nonché di regolamenti per
-      l'erogazione dei trattamenti accessori.
+    descrizione: Avviso o bando e raccolta delle domande
+    rischi:
+    - codice: D.9.1_R.1
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.9.1_R.1_M.1
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.9.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.9.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: D.9.2
+    descrizione: Contributi per libri di testo e borse di studio
+    procedimento: PRC-0032
+  - codice: D.9.3
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.9.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.9.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.9.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.9.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.9.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.9.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
+  - codice: D.9.4
+    descrizione: Concessione, liquidazione e pubblicazione
+    rischi:
+    - codice: D.9.4_R.1
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.9.4_R.1_M.1
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.9.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
 - codice: D.10
-  denominazione: Cessazione dal servizio per qualsiasi causa e conseguente gestione del trattamento pensionistico
-    e di TFR/TFS
+  ambito: COMUNE
+  denominazione: Contributi per l'eliminazione delle barriere architettoniche
+  descrizione: Contributi ai privati (l. 13/1989)
+  attori_esterni: Cittadini
   attivita:
   - codice: D.10.1
-    descrizione: Comunicazione della risoluzione unilaterale del rapporto di lavoro al dipendente che
-      ha maturato i requisiti pensionistici con un preavviso di 6 mesi e conseguente inserimento, nella
-      posizione assicurativa, delle retribuzioni relative agli ultimi 6 mesi di impiego prima della cessazione
-      (anticipo DMA). Inserimento dati di ultimo miglio per il calcolo del TFS/TFR.
+    descrizione: Avviso o bando e raccolta delle domande
+    rischi:
+    - codice: D.10.1_R.1
+      evento: Assegnazione del beneficio con criteri non predeterminati o discrezionali, per favorire determinati
+        soggetti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.10.1_R.1_M.1
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.10.1_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.10.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: D.10.2
+    descrizione: Contributi per l'eliminazione delle barriere architettoniche negli edifici privati
+    procedimento: PRC-0033
+  - codice: D.10.3
+    descrizione: Istruttoria delle domande e formazione della graduatoria
+    rischi:
+    - codice: D.10.3_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.10.3_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.10.3_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
+    - codice: D.10.3_R.2
+      evento: Istruttoria compiacente o alterazione dei punteggi della graduatoria
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.10.3_R.2_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: D.10.3_R.2_M.2
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
+  - codice: D.10.4
+    descrizione: Concessione, liquidazione e pubblicazione
+    rischi:
+    - codice: D.10.4_R.1
+      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.10.4_R.1_M.1
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+      - codice: D.10.4_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
 - codice: D.11
-  denominazione: Redazione CU dipendenti
+  ambito: COMUNE
+  denominazione: Misure di sostegno straordinarie ed emergenziali
+  descrizione: Buoni spesa, contributi per calamità e altre misure straordinarie
+  attori_esterni: Cittadini, enti del Terzo settore
   attivita:
   - codice: D.11.1
-    descrizione: Invio della CU ordinaria all'AE entro il termine perentorio stabilito. Successivo invio
-      delle CU modello sintetico ai dipendenti e ai percettori di redditi assimilati.
+    descrizione: Definizione dei criteri e dell'avviso
+    rischi:
+    - codice: D.11.1_R.1
+      evento: Criteri definiti in modo da favorire determinati beneficiari o assegnazione senza avviso
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.11.1_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.11.1_R.1_M.2
+        descrizione: Pubblicazione dei provvedimenti e dei criteri adottati in emergenza (art. 42 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_42
+        tempi: Entro 30 giorni
+        indicatore: Provvedimenti pubblicati
+        target: 100%
+  - codice: D.11.2
+    descrizione: Istruttoria delle domande ed erogazione
+    rischi:
+    - codice: D.11.2_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.11.2_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.11.2_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
 - codice: D.12
-  denominazione: Certificazioni stipendio per richieste cessione del quinto
+  ambito: COMUNE
+  denominazione: Riduzioni ed esenzioni dei tributi per motivi sociali
+  descrizione: Agevolazioni TARI e di altri tributi per nuclei in difficoltà
+  attori_esterni: Contribuenti
   attivita:
   - codice: D.12.1
-    descrizione: Certificazione stipendiale rilasciata ai dipendenti e/o finanziarie su delega del dipendente
-      per rilascio finanziamenti.
+    descrizione: Riduzioni e agevolazioni della tassa sui rifiuti (TARI)
+    procedimento: PRC-0037
+  - codice: D.12.2
+    descrizione: Verifica dei requisiti e applicazione dell'agevolazione
+    rischi:
+    - codice: D.12.2_R.1
+      evento: Riconoscimento del beneficio sulla base di dichiarazioni ISEE o sostitutive non veritiere, non verificate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.12.2_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.12.2_R.1_M.2
+        descrizione: Controlli sull'ISEE tramite la banca dati INPS e segnalazione delle difformità alla Guardia
+          di finanza
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Beneficiari controllati
+        target: Almeno 10%
 - codice: D.13
-  denominazione: Certificazioni e attestazioni posizioni assicurative per pratiche pensionistiche, ricongiunzioni
-    e riscatti del personale a tempo determinato e indeterminato
+  ambito: PROVINCIA
+  denominazione: Trasferimenti e contributi ai comuni del territorio
+  descrizione: Contributi e trasferimenti della provincia ai comuni e ad altri enti per opere e servizi
+  attori_esterni: Comuni ed enti del territorio
   attivita:
   - codice: D.13.1
-    descrizione: Ricezione delle richieste di sistemazione posizione assicurativa da parte di altri enti,
-      degli interessati e/o da parte dell'INPS. Conseguente istruttoria e ricostruzione della posizione
-      richiesta sia da un punto di vista giuridico che economico. Eventuale correzione dei dati in caso
-      di inesattezze sull'applicativo passweb e conseguente certificazione della posizione.
-- codice: D.14
-  denominazione: Denunce infortuni e malattie professionali dipendenti
-  attivita:
-  - codice: D.14.1
-    descrizione: Tempestiva denuncia (entro 48 h dall'evento) all'istituto nazionale assicurazione contro
-      gli infortuni sul lavoro e successivi adempimenti
-- codice: D.15
-  denominazione: Certificazioni stipendio ex art. 547 cpc
-  attivita:
-  - codice: D.15.1
-    descrizione: Dichiarazione resa nei confronti del creditore procedente in cui si specifica l'ammontare
-      dello stipendio netto del soggetto pignorato e si dichiarano eventuali e ulteriori pignoramenti
-      e/o cessioni già in corso
+    descrizione: Definizione dei criteri di riparto
+    rischi:
+    - codice: D.13.1_R.1
+      evento: Riparto delle risorse non trasparente o orientato da ragioni politiche
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.13.1_R.1_M.1
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
+      - codice: D.13.1_R.1_M.2
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+  - codice: D.13.2
+    descrizione: Erogazione e verifica della rendicontazione
+    rischi:
+    - codice: D.13.2_R.1
+      evento: Erogazione senza verifica dell'utilizzo delle risorse
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.13.2_R.1_M.1
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno

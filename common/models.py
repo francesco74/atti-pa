@@ -735,6 +735,10 @@ class AcProcedimento(Base):
     struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
     # dati propri dell'art. 35 d.lgs. 33/2013 (common/anticorruzione/art35.py)
     art35: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # procedimento standard da cui viene (codice nel pacchetto, es. PRC-0012) e pacchetto: le
+    # attività dei processi standard lo ritrovano anche se l'ente ha il suo codice P.n
+    standard: Mapped[str | None] = mapped_column(String(20))
+    pacchetto: Mapped[str | None] = mapped_column(String(150))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 

@@ -1,42 +1,391 @@
-# Processi standard dell'area L: ricavati dalla mappatura del Comune di Lucca
-# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
-# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+# Processi standard dell'area L per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
 area: L
 processi:
 - codice: L.1
-  denominazione: Segnalazioni disservizi nell'erogazione servizio igiene urbana
-  tempi: 30 giorni
-  attori_esterni: privati/ditte/Az. USL/ARPAT/Sistema Ambiente
+  ambito: COMUNE
+  denominazione: Formazione e varianti generali degli strumenti urbanistici
+  descrizione: 'Piano urbanistico generale e sue varianti: avvio, adozione, osservazioni, approvazione'
+  attori_esterni: Cittadini, portatori di interessi, regione
   attivita:
   - codice: L.1.1
-    descrizione: ricevimento segnalazione di disservizio da parte di privati, ditte, enti, ecc.
+    descrizione: Elaborazione del piano e partecipazione
     rischi:
     - codice: L.1.1_R.1
-      evento: omissione dell'attivazione del procedimento di verifica della segnalazione
-      fattore_abilitante: discrepanza tra l'ordine di arrivo dal protocollo e l'ordine di trattazione
-        della pratica
+      evento: Indebite pressioni di interessi particolari sulle scelte di pianificazione, con varianti o previsioni
+        che attribuiscono vantaggi a soggetti determinati
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: L.1.1_R.1_M.1
-        descrizione: Utilizzo di registro informatizzato (file excel) di arrivo delle pratiche con annotazione
-          data di avanzamento della fase del procedimento
-        categoria: Controllo
+        descrizione: Pubblicazione degli atti di pianificazione e delle proposte di trasformazione urbanistica (art.
+          39 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_39
+        tempi: Prima dell'adozione
+        indicatore: Atti e proposte pubblicati
+        target: 100%
+      - codice: L.1.1_R.1_M.2
+        descrizione: Motivazione delle scelte di pianificazione e registro degli incontri con i portatori di interessi
+        tipo: SPECIFICA
+        categoria: Regolazione dei rapporti con i rappresentanti di interessi particolari
+        tempi: Continuativa
+        indicatore: Incontri registrati
+        target: 100%
+      - codice: L.1.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
   - codice: L.1.2
-    descrizione: inserimento in apposito registro informatico (file excel) e trasmissione al gestore del
-      servizio di igiene urbana per la verifica e successiva risposta al segnalante
+    descrizione: Adozione, pubblicazione e controdeduzioni alle osservazioni
     rischi:
     - codice: L.1.2_R.1
-      evento: Mancato rispetto ordine cronologico
-      fattore_abilitante: inserimento in apposito registro informatico (file excel) e trasmissione al
-        gestore del servizio di igiene urbana per la verifica e successiva risposta al segnalante
+      evento: Accoglimento delle osservazioni non motivato o non coerente con gli obiettivi del piano
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: L.1.2_R.1_M.1
-        descrizione: monitoraggio dei tempi procedimentali e annotazione dell'esito delle stesse
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
         categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: L.1.2_R.1_M.2
+        descrizione: Pubblicazione degli atti di pianificazione e delle proposte di trasformazione urbanistica (art.
+          39 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_39
+        tempi: Prima dell'adozione
+        indicatore: Atti e proposte pubblicati
+        target: 100%
+  - codice: L.1.3
+    descrizione: Approvazione
+    rischi:
+    - codice: L.1.3_R.1
+      evento: Partecipazione al voto di amministratori con interessi nelle aree interessate
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.1.3_R.1_M.1
+        descrizione: Obbligo di astensione degli amministratori (art. 78 TUEL) con dichiarazione a verbale
+        tipo: SPECIFICA
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni seduta
+        indicatore: Dichiarazioni a verbale
+        target: 100%
+- codice: L.2
+  ambito: COMUNE
+  denominazione: Varianti puntuali su istanza dei privati
+  descrizione: Varianti specifiche, anche tramite sportello unico per le attività produttive
+  attori_esterni: Proponenti
+  attivita:
+  - codice: L.2.1
+    descrizione: Valutazione dell'interesse pubblico della variante
+    rischi:
+    - codice: L.2.1_R.1
+      evento: Indebite pressioni di interessi particolari sulle scelte di pianificazione, con varianti o previsioni
+        che attribuiscono vantaggi a soggetti determinati
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.2.1_R.1_M.1
+        descrizione: Pubblicazione degli atti di pianificazione e delle proposte di trasformazione urbanistica (art.
+          39 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_39
+        tempi: Prima dell'adozione
+        indicatore: Atti e proposte pubblicati
+        target: 100%
+      - codice: L.2.1_R.1_M.2
+        descrizione: Motivazione delle scelte di pianificazione e registro degli incontri con i portatori di interessi
+        tipo: SPECIFICA
+        categoria: Regolazione dei rapporti con i rappresentanti di interessi particolari
+        tempi: Continuativa
+        indicatore: Incontri registrati
+        target: 100%
+      - codice: L.2.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: L.2.2
+    descrizione: Istruttoria e approvazione
+    rischi:
+    - codice: L.2.2_R.1
+      evento: Istruttoria orientata a favorire il proponente
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.2.2_R.1_M.1
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+      - codice: L.2.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+- codice: L.3
+  ambito: COMUNE
+  denominazione: Piani attuativi e convenzioni urbanistiche
+  descrizione: Piani attuativi di iniziativa privata e pubblica, convenzioni e cessioni
+  attori_esterni: Proponenti, lottizzanti
+  attivita:
+  - codice: L.3.1
+    descrizione: Approvazione di piani attuativi di iniziativa privata
+    procedimento: PRC-0045
+  - codice: L.3.2
+    descrizione: Istruttoria del piano e del progetto delle opere di urbanizzazione
+    rischi:
+    - codice: L.3.2_R.1
+      evento: Mancata verifica della coerenza con il piano generale e della congruità delle opere
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.3.2_R.1_M.1
+        descrizione: Lista di controllo istruttoria standard, allegata alla pratica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni pratica
+        indicatore: Pratiche con la lista di controllo compilata
+        target: 100%
+      - codice: L.3.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: L.3.3
+    descrizione: Stipula della convenzione
+    rischi:
+    - codice: L.3.3_R.1
+      evento: Convenzione urbanistica con obbligazioni sbilanciate a favore del privato (opere, cessioni, garanzie,
+        tempi)
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.3.3_R.1_M.1
+        descrizione: Schema di convenzione tipo e parere degli uffici tecnico e legale sulle obbligazioni e le garanzie
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni convenzione
+        indicatore: Convenzioni conformi allo schema tipo
+        target: 100%
+      - codice: L.3.3_R.1_M.2
+        descrizione: Garanzie fideiussorie pari al valore delle opere, verificate presso l'emittente
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Alla stipula
+        indicatore: Garanzie verificate
+        target: 100%
+- codice: L.4
+  ambito: COMUNE
+  denominazione: Opere di urbanizzazione a scomputo
+  descrizione: Realizzazione diretta delle opere da parte del titolare del permesso, a scomputo degli oneri
+  attori_esterni: Titolari dei permessi, imprese
+  attivita:
+  - codice: L.4.1
+    descrizione: Approvazione del progetto e del computo delle opere
+    rischi:
+    - codice: L.4.1_R.1
+      evento: Sovrastima del valore delle opere a scomputo rispetto agli oneri dovuti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.4.1_R.1_M.1
+        descrizione: Verifica del computo sui prezzari ufficiali da parte dell'ufficio lavori pubblici
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni convenzione
+        indicatore: Computi verificati
+        target: 100%
+  - codice: L.4.2
+    descrizione: Esecuzione, collaudo e acquisizione delle opere
+    rischi:
+    - codice: L.4.2_R.1
+      evento: Collaudo compiacente e acquisizione di opere difformi o incomplete
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.4.2_R.1_M.1
+        descrizione: Collaudatore nominato dall'ente, con oneri a carico del privato
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni opera
+        indicatore: Collaudi con collaudatore dell'ente
+        target: 100%
+      - codice: L.4.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+- codice: L.5
+  denominazione: Accordi pubblico-privati e accordi di programma
+  descrizione: Accordi con i privati (art. 11 l. 241/1990), perequazione, compensazione e accordi di programma
+  attori_esterni: Privati, altri enti pubblici
+  attivita:
+  - codice: L.5.1
+    descrizione: Negoziazione dell'accordo
+    rischi:
+    - codice: L.5.1_R.1
+      evento: Indebite pressioni di interessi particolari sulle scelte di pianificazione, con varianti o previsioni
+        che attribuiscono vantaggi a soggetti determinati
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.5.1_R.1_M.1
+        descrizione: Pubblicazione degli atti di pianificazione e delle proposte di trasformazione urbanistica (art.
+          39 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_39
+        tempi: Prima dell'adozione
+        indicatore: Atti e proposte pubblicati
+        target: 100%
+      - codice: L.5.1_R.1_M.2
+        descrizione: Motivazione delle scelte di pianificazione e registro degli incontri con i portatori di interessi
+        tipo: SPECIFICA
+        categoria: Regolazione dei rapporti con i rappresentanti di interessi particolari
+        tempi: Continuativa
+        indicatore: Incontri registrati
+        target: 100%
+      - codice: L.5.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+    - codice: L.5.1_R.2
+      evento: Convenzione urbanistica con obbligazioni sbilanciate a favore del privato (opere, cessioni, garanzie,
+        tempi)
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.5.1_R.2_M.1
+        descrizione: Schema di convenzione tipo e parere degli uffici tecnico e legale sulle obbligazioni e le garanzie
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni convenzione
+        indicatore: Convenzioni conformi allo schema tipo
+        target: 100%
+      - codice: L.5.1_R.2_M.2
+        descrizione: Garanzie fideiussorie pari al valore delle opere, verificate presso l'emittente
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Alla stipula
+        indicatore: Garanzie verificate
+        target: 100%
+- codice: L.6
+  ambito: PROVINCIA
+  denominazione: Piano territoriale di coordinamento e pareri sugli strumenti urbanistici comunali
+  descrizione: Pianificazione di area vasta e verifica di compatibilità dei piani comunali
+  attori_esterni: Comuni, regione
+  attivita:
+  - codice: L.6.1
+    descrizione: Formazione e aggiornamento del piano provinciale
+    rischi:
+    - codice: L.6.1_R.1
+      evento: Indebite pressioni di interessi particolari sulle scelte di pianificazione, con varianti o previsioni
+        che attribuiscono vantaggi a soggetti determinati
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: L.6.1_R.1_M.1
+        descrizione: Pubblicazione degli atti di pianificazione e delle proposte di trasformazione urbanistica (art.
+          39 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_39
+        tempi: Prima dell'adozione
+        indicatore: Atti e proposte pubblicati
+        target: 100%
+      - codice: L.6.1_R.1_M.2
+        descrizione: Motivazione delle scelte di pianificazione e registro degli incontri con i portatori di interessi
+        tipo: SPECIFICA
+        categoria: Regolazione dei rapporti con i rappresentanti di interessi particolari
+        tempi: Continuativa
+        indicatore: Incontri registrati
+        target: 100%
+      - codice: L.6.1_R.1_M.3
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: L.6.2
+    descrizione: Pareri di compatibilità sugli strumenti urbanistici comunali
+    rischi:
+    - codice: L.6.2_R.1
+      evento: Parere di compatibilità favorevole non motivato o condizionato da pressioni
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: L.6.2_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: L.6.2_R.1_M.2
+        descrizione: Monitoraggio dei tempi di conclusione dei procedimenti, con verifica degli scostamenti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Procedimenti conclusi nei termini
+        target: Almeno 95%

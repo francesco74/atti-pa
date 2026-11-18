@@ -1,1038 +1,1694 @@
-# Processi standard dell'area B: ricavati dalla mappatura del Comune di Lucca
-# (PTPCT 2026-2028), senza le strutture e le valutazioni dell'ente (la valutazione
-# è solo proposta: entra nei rischi nuovi e l'ente la rivede).
+# Processi standard dell'area B per comuni e province. La valutazione
+# di ogni rischio è una proposta: entra nei rischi nuovi e l'ente la rivede.
 area: B
 processi:
 - codice: B.1
-  denominazione: Concessione Contributi
+  denominazione: Programmazione triennale dei lavori e degli acquisti di beni e servizi
+  descrizione: Programma triennale dei lavori pubblici e programma triennale degli acquisti (art. 37 d.lgs. 36/2023)
+  tempi: Annuale, con il bilancio
+  attori_esterni: Organi di indirizzo
   attivita:
   - codice: B.1.1
-    descrizione: Concessione Contributi
+    descrizione: Rilevazione dei fabbisogni delle strutture e quadro esigenziale
+  - codice: B.1.2
+    descrizione: Redazione dei programmi e loro aggiornamento
     rischi:
-    - codice: B.1.1_R.1
-      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+    - codice: B.1.2_R.1
+      evento: Programmazione non aderente ai fabbisogni effettivi, orientata a interessi particolari, o ricorso
+        sistematico agli acquisti non programmati e alle proroghe
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
-      - codice: B.1.1_R.1_M.1
-        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
-          comunale n. 2 del 08/01/2019
+      - codice: B.1.2_R.1_M.1
+        descrizione: Programmazione triennale e aggiornamento annuale degli acquisti e dei lavori, con verifica
+          degli acquisti fuori programma
+        tipo: SPECIFICA
         categoria: Regolamentazione
-    - codice: B.1.1_R.2
-      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
+        tempi: Annuale
+        indicatore: Acquisti non programmati sul totale
+        target: ≤ 10%
+      - codice: B.1.2_R.1_M.2
+        descrizione: Monitoraggio delle scadenze dei contratti in essere per avviare per tempo le nuove procedure
+          ed evitare proroghe
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Proroghe tecniche sul totale dei contratti scaduti
+        target: ≤ 10%
+  - codice: B.1.3
+    descrizione: Pubblicazione dei programmi sulla piattaforma e in Amministrazione trasparente
+    rischi:
+    - codice: B.1.3_R.1
+      evento: Mancata o ritardata pubblicazione dei programmi
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
-      - codice: B.1.1_R.2_M.1
-        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
-          comunale n. 2 del 08/01/2019
-        categoria: Regolamentazione
-    - codice: B.1.1_R.3
-      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
-        disparità di trattamento
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.1.1_R.3_M.1
-        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
-          comunale n. 2 del 08/01/2019
-        categoria: Regolamentazione
-    - codice: B.1.1_R.4
-      evento: Riconoscimento del diritto al contributo in caso di rendicontazione non congrua
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.1.1_R.4_M.1
-        descrizione: Puntuale rispetto del nuovo Regolamento approvato con deliberazione del Consiglio
-          comunale n. 2 del 08/01/2019
-        categoria: Regolamentazione
+      - codice: B.1.3_R.1_M.1
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
 - codice: B.2
-  denominazione: Prestazioni agevolate, bonus, assegni di maternità e assegni per nucleo familiare numeroso
+  denominazione: Progettazione della procedura di affidamento
+  descrizione: Definizione dell'oggetto, dell'importo stimato, della procedura e dei criteri di aggiudicazione
+  tempi: Prima dell'avvio della procedura
   attivita:
   - codice: B.2.1
-    descrizione: Ricezione istanza
+    descrizione: Nomina del responsabile unico di progetto
     rischi:
     - codice: B.2.1_R.1
-      evento: Non rispetto diritto di precedenza
+      evento: Nomina di un RUP privo dei requisiti o in conflitto di interessi
+      fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.2.1_R.1_M.1
-        descrizione: Protocollazione istanze
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.2.1_R.1_M.2
+        descrizione: Nomina del RUP con atto motivato sul possesso dei requisiti (allegato I.2 d.lgs. 36/2023)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni procedura
+        indicatore: Nomine con verifica dei requisiti
+        target: 100%
   - codice: B.2.2
-    descrizione: Valutazione requisiti - istruttoria
+    descrizione: Definizione dell'oggetto, delle specifiche tecniche e dei requisiti di partecipazione
     rischi:
     - codice: B.2.2_R.1
-      evento: Alterazione del corretto svolgimento dell'istruttoria Assecondare la richiesta del richiedente
-        ad avere lo stesso operatore
+      evento: Definizione dei requisiti di partecipazione e delle specifiche tecniche al fine di favorire un'impresa
+        (bandi «fotografia»)
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.2.2_R.1_M.1
-        descrizione: Rotazione del personale che evita che una funzione dell'Ente vada, nel tempo, a identificarsi
-          con il dipendente che la svolge e che si creino relazioni particolari tra i destinatari dei
-          provvedimenti e il persona degli uffici interessati.
-        categoria: Rotazione
+        descrizione: Consultazioni preliminari di mercato verbalizzate e uso di bandi e capitolati tipo, con motivazione
+          dei requisiti speciali proporzionati all'oggetto
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni procedura
+        indicatore: Procedure con requisiti motivati e capitolato tipo
+        target: 100%
+      - codice: B.2.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
   - codice: B.2.3
-    descrizione: Adozione provvedimento
+    descrizione: Stima del valore e scelta della procedura
     rischi:
     - codice: B.2.3_R.1
-      evento: Tardività
+      evento: Sottostima del valore dell'appalto o scelta di una procedura non giustificata per restringere la concorrenza
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.2.3_R.1_M.1
-        descrizione: Verifica del rispetto dei tempi procedimentali al fine di evitare la protrazione
-          illegittima dei tempi di conclusione dei procedimenti che, in alcuni casi, può essere strumentale
-          rispetto a comportamenti non conformi.
+        descrizione: Stima del valore documentata (prezzari, indagini di mercato) e determina a contrarre con la
+          motivazione della procedura
+        tipo: SPECIFICA
         categoria: Controllo
+        tempi: A ogni procedura
+        indicatore: Determine a contrarre con stima documentata
+        target: 100%
+      - codice: B.2.3_R.1_M.2
+        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
+          147-bis TUEL), con esiti al RPCT
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Atti controllati sul totale
+        target: Almeno 5% degli atti
+  - codice: B.2.4
+    descrizione: Scelta del criterio di aggiudicazione e dei criteri di valutazione
+    rischi:
+    - codice: B.2.4_R.1
+      evento: Uso distorto del criterio dell'offerta economicamente più vantaggiosa, con criteri e punteggi che
+        favoriscono un'impresa
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.2.4_R.1_M.1
+        descrizione: Criteri di valutazione dettagliati, con sub-punteggi e modalità di attribuzione predeterminati
+          negli atti di gara
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni gara
+        indicatore: Gare OEPV con criteri e sub-criteri predeterminati
+        target: 100%
 - codice: B.3
-  denominazione: Ritrovamento e riconsegna oggetti smarriti
-  attori_esterni: soggetto che ritrova
+  denominazione: Affidamento diretto di servizi e forniture
+  descrizione: Affidamenti sotto 140.000 euro (art. 50, c. 1, lett. b, d.lgs. 36/2023), anche sul mercato elettronico
+  tempi: Entro 3 mesi dalla decisione a contrarre
+  attori_esterni: Operatori economici
   attivita:
   - codice: B.3.1
-    descrizione: Ricezione cose smarrite o abbandonate
+    descrizione: Individuazione dell'operatore economico e richiesta di preventivi
     rischi:
     - codice: B.3.1_R.1
-      evento: Omissione di repertoriare quanto ricevuto o ritrovato
-      fattore_abilitante: Inadeguata diffusione della cultura della legalità
+      evento: Artificioso frazionamento dell'affidamento per rimanere sotto le soglie e ricorrere all'affidamento
+        diretto
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Medio, '6': Basso, '7': Medio,
-          '8': Medio, '9': Basso}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.3.1_R.1_M.1
-        descrizione: Rilascio di copia del verbale (di ritrovamento e consegna alla PM) al soggetto che
-          consegna le cose
+        descrizione: Programmazione triennale e aggiornamento annuale degli acquisti e dei lavori, con verifica
+          degli acquisti fuori programma
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Acquisti non programmati sul totale
+        target: ≤ 10%
+      - codice: B.3.1_R.1_M.2
+        descrizione: Verifica degli affidamenti dello stesso oggetto nell'anno e allo stesso operatore, con report
+          al RPCT
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report sugli affidamenti ripetuti
+        target: Semestrale
+      - codice: B.3.1_R.1_M.3
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
+    - codice: B.3.1_R.2
+      evento: Abuso dell'affidamento diretto e mancato rispetto della rotazione per favorire sempre gli stessi operatori
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.3.1_R.2_M.1
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: B.3.1_R.2_M.2
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
+      - codice: B.3.1_R.2_M.3
+        descrizione: Richiesta di più preventivi per gli affidamenti sopra 5.000 euro, salvo motivazione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti con confronto di preventivi
+        target: Almeno 70%
   - codice: B.3.2
-    descrizione: Ricerca proprietario
+    descrizione: Verifica dei requisiti e affidamento
+    rischi:
+    - codice: B.3.2_R.1
+      evento: Verifica dei requisiti omessa o svolta al di fuori del FVOE
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.3.2_R.1_M.1
+        descrizione: Verifica dei requisiti degli operatori economici tramite FVOE, con documenti in corso di validità
+          acquisiti prima dell'aggiudicazione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima dell'aggiudicazione
+        indicatore: Aggiudicazioni con verifica FVOE completa
+        target: 100% delle procedure ≥ 40.000 euro
+      - codice: B.3.2_R.1_M.2
+        descrizione: Clausola di divieto di pantouflage negli atti di assunzione, nei contratti e nei bandi, con
+          dichiarazione degli operatori economici (art. 53, c. 16-ter, d.lgs. 165/2001)
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: A ogni atto
+        indicatore: Atti con la clausola
+        target: 100%
   - codice: B.3.3
-    descrizione: Consegna delle cose smarrite e ritrovate
+    descrizione: Pubblicazione e comunicazione dei dati alla BDNCP
     rischi:
     - codice: B.3.3_R.1
-      evento: Consegna a soggetto non avente diritto
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Mancato rispetto degli obblighi di pubblicità e trasparenza tramite la BDNCP
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.3.3_R.1_M.1
-        descrizione: Invio del verbale di riconsegna viene inviata alla segreteria del Comando e visionata
-          dal Responsabile del Servizio
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
 - codice: B.4
-  denominazione: Rilascio certificazioni di certezza, liquidità ed esigibilità del credito relativo a
-    contratti di somministrazione, fornitura, appalti e prestazioni professionali
-  tempi: 30 gg come previsto dall'art.9 c.3 bis D.L.n.185/2008 convertito da L.n.2/2009 e successive modificazioni
-  attori_esterni: FORNITORI
+  denominazione: Affidamento diretto di lavori
+  descrizione: Affidamenti di lavori sotto 150.000 euro (art. 50, c. 1, lett. a, d.lgs. 36/2023)
+  tempi: Entro 3 mesi dalla decisione a contrarre
+  attori_esterni: Operatori economici
   attivita:
   - codice: B.4.1
-    descrizione: 1. Ricevimento tramite l'apposita piattaforma (PCC) messa a disposizione dal Ministero
-      delle Finanze dell'istanza di certificazione del credito
+    descrizione: Scelta dell'operatore economico
+    rischi:
+    - codice: B.4.1_R.1
+      evento: Artificioso frazionamento dell'affidamento per rimanere sotto le soglie e ricorrere all'affidamento
+        diretto
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.4.1_R.1_M.1
+        descrizione: Programmazione triennale e aggiornamento annuale degli acquisti e dei lavori, con verifica
+          degli acquisti fuori programma
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Acquisti non programmati sul totale
+        target: ≤ 10%
+      - codice: B.4.1_R.1_M.2
+        descrizione: Verifica degli affidamenti dello stesso oggetto nell'anno e allo stesso operatore, con report
+          al RPCT
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report sugli affidamenti ripetuti
+        target: Semestrale
+      - codice: B.4.1_R.1_M.3
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
+    - codice: B.4.1_R.2
+      evento: Affidamenti ripetuti allo stesso operatore senza rotazione e senza verifica della congruità dei prezzi
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.4.1_R.2_M.1
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: B.4.1_R.2_M.2
+        descrizione: Verifica di congruità sul prezzario regionale vigente, documentata
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti con congruità documentata
+        target: 100%
   - codice: B.4.2
-    descrizione: '2. Verifica dei requisiti di legge richiesti per il rilascio della certificazione: -
-      liquidazione del credito da parte del responsabile del procedimento - verifica, per crediti di importo
-      superiore a 5.000╒, di eventuali inadempienze tributarie da parte del soggetto beneficiario del
-      pagamento stesso, mediante apposita richiesta da inoltrare a Equitalia Servizi S.p.a'
+    descrizione: Verifica dei requisiti, stipula e consegna dei lavori
     rischi:
     - codice: B.4.2_R.1
-      evento: Non effettuazione dei controlli contabili necessari a verificare il sussistere dei requisiti
-        di legge o effettuare controlli insufficienti o inefficaci
-      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      evento: Consegna dei lavori prima della verifica dei requisiti e della stipula, al di fuori dei casi di urgenza
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Alto, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.4.2_R.1_M.1
-        descrizione: Applicazione del principio della rotazione almeno annuale del personale assegnato
-          all'espletamento di tale fase;Suddivisione tra il personale preposto ai riscontri contabili
-          e quello che provvede alle verifiche delle inadempienze.
-        categoria: Rotazione
-  - codice: B.4.3
-    descrizione: 3. Rilascio, tramite la piattaforma, della certificazione del credito richiesta
-    rischi:
-    - codice: B.4.3_R.1
-      evento: Riconoscimento indebito di un credito verso la P.A.
-      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
-      valutazione:
-        probabilita: {'1': Alto, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Alto, '4': Basso}
-      misure:
-      - codice: B.4.3_R.1_M.1
-        descrizione: Utilizzo della procedura informatica messa a disposizione del MEF;Verifica finale
-          della correttezza del procedimento effettuata dal responsabile del servizio finanziario al momento
-          di firmare digitalmente il rilascio della certificazione richiesta.
-        categoria: Semplificazione
+        descrizione: Verifica dei requisiti degli operatori economici tramite FVOE, con documenti in corso di validità
+          acquisiti prima dell'aggiudicazione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima dell'aggiudicazione
+        indicatore: Aggiudicazioni con verifica FVOE completa
+        target: 100% delle procedure ≥ 40.000 euro
+      - codice: B.4.2_R.1_M.2
+        descrizione: Patto d'integrità negli atti di gara e nei contratti, con sottoscrizione dell'operatore economico
+          prima dell'aggiudicazione
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: A ogni procedura
+        indicatore: Procedure con il patto d'integrità sottoscritto
+        target: 100%
 - codice: B.5
-  denominazione: Attribuzione di misure di sostegno economico
-  tempi: 45 giorni
-  attori_esterni: RESIDENTI NEL COMUNE DI LUCCA, STRANIERI E APOLIDI SECONDO LE NORMATIVE VIGENTI, MINORI
-    ITALIANI O STRANIERI NON RESIDENTI NEL COMUNE DI LUCCA CHE NECESSITANO DI INTERVENTI DI PRIMA NECESSITA'
+  denominazione: Procedura negoziata senza bando
+  descrizione: Procedure negoziate sotto soglia europea con consultazione di almeno 5 o 10 operatori (art. 50 d.lgs.
+    36/2023)
+  tempi: Entro 4 mesi dalla decisione a contrarre
+  attori_esterni: Operatori economici
   attivita:
   - codice: B.5.1
-    descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
-      in carico. Redazione di relazione sociale con proposta di intervento economico. Attivazione su domanda
-      dell'utente.
+    descrizione: Individuazione degli operatori da invitare
     rischi:
     - codice: B.5.1_R.1
-      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      evento: Selezione degli operatori da invitare non trasparente o non rispettosa della rotazione degli inviti
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.5.1_R.1_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
-    - codice: B.5.1_R.2
-      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.5.1_R.2_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
-    - codice: B.5.1_R.3
-      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
-        disparità di trattamento
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.5.1_R.3_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: B.5.1_R.1_M.2
+        descrizione: Inviti tratti da elenchi di operatori o da indagine di mercato pubblicata, con criteri di scelta
+          predeterminati
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni procedura
+        indicatore: Procedure con avviso o elenco
+        target: 100%
+      - codice: B.5.1_R.1_M.3
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
   - codice: B.5.2
-    descrizione: Esame della domanda del cittadino e della proposta assistenziale redatta dal Servizio
-      Sociale Professionale. Istruttoria delle domande da parte dell'ufficio per il successivo inoltro
-      alla Commissione Tecnica ai fini della concessione del beneficio/economico/contributi/sussidio agli
-      utenti.
+    descrizione: Valutazione delle offerte e aggiudicazione
     rischi:
     - codice: B.5.2_R.1
-      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
+      evento: Accordi collusivi tra le imprese invitate per manipolare l'esito della procedura
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.5.2_R.1_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
-    - codice: B.5.2_R.2
-      evento: Discrezionalità nella determinazione delle somme o dei vantaggi da attribuire
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.5.2_R.2_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
-    - codice: B.5.2_R.3
-      evento: L'inadeguatezza della documentazione per l'accesso ai vantaggi che può determinare eventuali
-        disparità di trattamento
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.5.2_R.3_M.1
-        descrizione: Determinazione preventiva dei criteri per la definizione dei soggetti a cui destinare
-          benefici economici, contributi, sussidi. Applicazione del Regolamento per gli interventi economici
-          e socio-economici dei Servizi Sociali del Comune di Lucca. Regolamentazione dei criteri di concessione
-          mediante predeterminazione di appositi bandi per le varie situazioni di bisogno, in via ordinaria.
-          In via straordinaria possibilità di erogare contributi extra ordinari su motivazione specifica
-          dell'A.S. nelle diverse situazioni.
-        categoria: Regolamentazione
+        descrizione: Patto d'integrità negli atti di gara e nei contratti, con sottoscrizione dell'operatore economico
+          prima dell'aggiudicazione
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: A ogni procedura
+        indicatore: Procedure con il patto d'integrità sottoscritto
+        target: 100%
+      - codice: B.5.2_R.1_M.2
+        descrizione: Analisi dei ribassi e delle partecipazioni ricorrenti per individuare indici di collusione,
+          con segnalazione all'AGCM
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni procedura
+        indicatore: Procedure analizzate
+        target: 100% delle procedure con meno di 3 offerte
 - codice: B.6
-  denominazione: Ammissione ai servizi/interventi di assistenza
-  tempi: 45 giorni
-  attori_esterni: ANZIANI, MINORI E FAMIGLIE, DISABILI CHE SI TROVANO IN SITUAZIONE DI DISAGIO SOCIO-ECONOMICO
+  denominazione: Procedure aperte e ristrette
+  descrizione: Affidamenti con procedura ordinaria, sopra o sotto la soglia europea
+  tempi: Entro 6 mesi (sotto soglia) o 9 mesi (sopra soglia) dal bando
+  attori_esterni: Operatori economici
   attivita:
   - codice: B.6.1
-    descrizione: Percorso avviato dal Servizio Sociale Professionale in relazione alle situazioni di presa
-      in carico. Redazione di relazione sociale.
+    descrizione: Redazione e pubblicazione del bando e del disciplinare
     rischi:
     - codice: B.6.1_R.1
-      evento: Analisi parziale o incompleta nella predisposizione della proposta di assistenza..
+      evento: Definizione dei requisiti di partecipazione e delle specifiche tecniche al fine di favorire un'impresa
+        (bandi «fotografia»)
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.6.1_R.1_M.1
-        descrizione: Al fine di evitare disparità di trattamento, l'esame della domanda e della proposta
-          assistenziale viene effettuata da parte della Commissione Tecnica.
+        descrizione: Consultazioni preliminari di mercato verbalizzate e uso di bandi e capitolati tipo, con motivazione
+          dei requisiti speciali proporzionati all'oggetto
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni procedura
+        indicatore: Procedure con requisiti motivati e capitolato tipo
+        target: 100%
+      - codice: B.6.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+  - codice: B.6.2
+    descrizione: Gestione dei chiarimenti e dei termini di presentazione delle offerte
+    rischi:
+    - codice: B.6.2_R.1
+      evento: Termini non congrui o chiarimenti forniti in modo non paritario ai concorrenti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.6.2_R.1_M.1
+        descrizione: Chiarimenti pubblicati sulla piattaforma per tutti i concorrenti e termini motivati
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni gara
+        indicatore: Chiarimenti pubblicati sulla piattaforma
+        target: 100%
+      - codice: B.6.2_R.1_M.2
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
+  - codice: B.6.3
+    descrizione: Revoca o annullamento della procedura
+    rischi:
+    - codice: B.6.3_R.1
+      evento: Abuso della revoca del bando per bloccare una gara il cui risultato non è quello atteso o per concedere
+        un indennizzo all'aggiudicatario
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.6.3_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: B.6.3_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
 - codice: B.7
-  denominazione: Percorso di valutazione avviato sul territorio ai fini della predisposizione dei PAP
-    da parte dell'UVM dell'Azienda USL
-  tempi: 60 giorni
-  attori_esterni: AZIENDA USL TOSCANA NORD OVEST , ANZIANI NON AUTOSUFFICIENTI E DISABILI
+  denominazione: Nomina della commissione giudicatrice e valutazione delle offerte
+  descrizione: Costituzione della commissione e valutazione delle offerte tecniche ed economiche
+  tempi: Durante la procedura
   attivita:
   - codice: B.7.1
-    descrizione: Analisi situazione personale e contesto familiare dell'utente, presa in carico da parte
-      dell'A.S. di riferimento fini della valutazione dell'UVM per la predisposizione del PAP
+    descrizione: Nomina della commissione giudicatrice
     rischi:
     - codice: B.7.1_R.1
-      evento: Analisi parziale o incompleta nella predisposizione della proposta di assistenza..
+      evento: Nomina di commissari compiacenti, in conflitto di interessi o privi di competenza
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
       valutazione:
-        probabilita: {'1': Alto, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.7.1_R.1_M.1
+        descrizione: Verifica dell'assenza di condanne per reati contro la pubblica amministrazione per componenti
+          di commissioni e uffici a rischio (art. 35-bis d.lgs. 165/2001)
+        tipo: GENERALE
+        categoria: Controllo
+        tempi: A ogni nomina
+        indicatore: Verifiche effettuate sulle nomine
+        target: 100%
+      - codice: B.7.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.7.1_R.1_M.3
+        descrizione: Nomina dopo la scadenza delle offerte, con rotazione dei commissari e pubblicazione dei curricula
+        tipo: SPECIFICA
+        categoria: Rotazione
+        tempi: A ogni gara
+        indicatore: Commissioni con curricula pubblicati
+        target: 100%
+  - codice: B.7.2
+    descrizione: Valutazione delle offerte tecniche
+    rischi:
+    - codice: B.7.2_R.1
+      evento: Valutazione non conforme ai criteri del disciplinare o non adeguatamente motivata
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.7.2_R.1_M.1
+        descrizione: Verbali che motivano l'attribuzione dei punteggi per ogni criterio, sedute tracciate sulla
+          piattaforma
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni gara
+        indicatore: Verbali con motivazione dei punteggi
+        target: 100%
+  - codice: B.7.3
+    descrizione: Verifica dell'anomalia delle offerte
+    rischi:
+    - codice: B.7.3_R.1
+      evento: Verifica dell'anomalia omessa o compiacente, per salvare un'offerta non sostenibile o escluderne una
+        congrua
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.7.3_R.1_M.1
+        descrizione: Procedimento di verifica in contraddittorio documentato, con giustificativi agli atti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni gara
+        indicatore: Verifiche documentate
+        target: 100% delle offerte anomale
+- codice: B.8
+  denominazione: Verifica dei requisiti, aggiudicazione e stipula del contratto
+  descrizione: Controlli sull'aggiudicatario tramite il FVOE, aggiudicazione, garanzie e stipula
+  tempi: Entro 30 giorni dall'aggiudicazione (verifiche), stipula entro 30 giorni dall'efficacia
+  attivita:
+  - codice: B.8.1
+    descrizione: Verifica dei requisiti generali e speciali dell'aggiudicatario
+    rischi:
+    - codice: B.8.1_R.1
+      evento: Omessa o parziale verifica dei requisiti, anche al di fuori del FVOE, per agevolare l'aggiudicatario
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.8.1_R.1_M.1
+        descrizione: Verifica dei requisiti degli operatori economici tramite FVOE, con documenti in corso di validità
+          acquisiti prima dell'aggiudicazione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima dell'aggiudicazione
+        indicatore: Aggiudicazioni con verifica FVOE completa
+        target: 100% delle procedure ≥ 40.000 euro
+      - codice: B.8.1_R.1_M.2
+        descrizione: Verifica antimafia tramite banca dati nazionale nei casi previsti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima della stipula
+        indicatore: Verifiche antimafia acquisite
+        target: 100% dei casi previsti
+  - codice: B.8.2
+    descrizione: Aggiudicazione e comunicazioni ai concorrenti
+    rischi:
+    - codice: B.8.2_R.1
+      evento: Mancata o ritardata comunicazione dell'aggiudicazione per comprimere la tutela dei concorrenti
+      fattore_abilitante: Mancanza di trasparenza
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.8.2_R.1_M.1
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
+  - codice: B.8.3
+    descrizione: Acquisizione delle garanzie e stipula del contratto
+    rischi:
+    - codice: B.8.3_R.1
+      evento: Accettazione di garanzie non idonee o stipula con clausole difformi dagli atti di gara
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.8.3_R.1_M.1
+        descrizione: Verifica delle garanzie presso l'emittente e confronto del contratto con gli atti di gara
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima della stipula
+        indicatore: Garanzie verificate
+        target: 100%
+      - codice: B.8.3_R.1_M.2
+        descrizione: Patto d'integrità negli atti di gara e nei contratti, con sottoscrizione dell'operatore economico
+          prima dell'aggiudicazione
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: A ogni procedura
+        indicatore: Procedure con il patto d'integrità sottoscritto
+        target: 100%
 - codice: B.9
-  denominazione: Compartecipazione del Comune alla retta sociale del cittadino per le strutture collegate
-    alla RSA e per l'accesso ai servizi di supporto alla domiciliarità
-  tempi: 45 giorni
-  attori_esterni: ANZIANI e DISABILI CHE SI TROVANO IN SITUAZIONE DI DISAGIO SOCIO-ECONOMICO E SOCIO SANITARIO
-    - USL TOSCANA NORD OVEST
+  denominazione: Gestione digitale delle procedure e pubblicità tramite la BDNCP
+  descrizione: Uso delle piattaforme di approvvigionamento digitale (PAD) per l'intero ciclo di vita del contratto
+  tempi: Continuativa
   attivita:
   - codice: B.9.1
-    descrizione: Ricevimento e valutazione del contenuto della certificazione ISEE o reddituale presentata
-      per l'accesso della compartecipazione da parte del Comune e/o esenzione dal pagamento ed adeguamento
-      della misura in ragione dell'aggiornamento della certificazione ISEE
+    descrizione: Gestione delle fasi del contratto sulla piattaforma
     rischi:
     - codice: B.9.1_R.1
-      evento: Verifica certificazione ISEE
+      evento: Mancata gestione sulla piattaforma di fasi del ciclo di vita del contratto, come l'esecuzione, le
+        modifiche contrattuali e il subappalto
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.9.1_R.1_M.1
-        descrizione: Successiva verifica a campione effettuata da personale/soggetto diverso rispetto
-          a quello che ha effettuato la verifica originaria.
-        categoria: Controllo
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
+      - codice: B.9.1_R.1_M.2
+        descrizione: Formazione su codice dei contratti, piattaforme digitali (PAD, FVOE, BDNCP) e prevenzione della
+          corruzione per RUP e personale degli appalti
+        tipo: GENERALE
+        categoria: Formazione
+        tempi: Annuale
+        indicatore: RUP e addetti formati
+        target: 100% nel triennio
+      - codice: B.9.1_R.1_M.3
+        descrizione: Modello organizzativo per la transizione digitale degli appalti, con il supporto del responsabile
+          per la transizione digitale
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Modello adottato
+        target: Entro l'anno
   - codice: B.9.2
-    descrizione: Adeguamento della misura della compartecipazione in ragione dell'aggiornamento della
-      certificazione ISEE.
+    descrizione: Trasmissione dei dati e pubblicità legale
     rischi:
     - codice: B.9.2_R.1
-      evento: Verifica certificazione ISEE e calcolo compartecipazione su parametri prestabiliti
+      evento: Ritardo nell'invio dei dati, dati incompleti o erronei, link che rinviano a contenuti inadeguati o
+        non corrispondenti
+      fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.9.2_R.1_M.1
-        descrizione: Ad ogni variabile gestita dagli operatori sulla scheda anagrafica dovrà risultare
-          agli atti il documento a supporto.Verifica a campione delle movimentazioni.
+        descrizione: Verifica a campione dei link trasmessi alla BDNCP e della corrispondenza con Amministrazione
+          trasparente
+        tipo: SPECIFICA
         categoria: Controllo
+        tempi: Semestrale
+        indicatore: Procedure verificate a campione
+        target: Almeno 10%
+- codice: B.10
+  denominazione: Acquisti tramite convenzioni, accordi quadro e mercato elettronico
+  descrizione: Adesione a convenzioni Consip e dei soggetti aggregatori, uso del MePA e degli accordi quadro
+  tempi: A ogni acquisto
+  attivita:
+  - codice: B.10.1
+    descrizione: Verifica dell'obbligo di ricorso agli strumenti di acquisto centralizzati
+    rischi:
+    - codice: B.10.1_R.1
+      evento: Mancato ricorso alle convenzioni obbligatorie, o acquisto autonomo a condizioni peggiori, senza motivazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.10.1_R.1_M.1
+        descrizione: Attestazione nella determina della verifica delle convenzioni attive e del rispetto dei parametri
+          prezzo-qualità
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni acquisto
+        indicatore: Determine con attestazione
+        target: 100%
+  - codice: B.10.2
+    descrizione: Emissione degli ordini e degli appalti specifici
+    rischi:
+    - codice: B.10.2_R.1
+      evento: Ordini oltre i limiti dell'accordo quadro o della convenzione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.10.2_R.1_M.1
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
 - codice: B.11
-  denominazione: Concessione di contributi in situazione di disagio abitativo
-  tempi: 60 giorni dalla presentazione della domanda; 30 giorni in caso di assoluta urgenza.
-  attori_esterni: soggetti richiedenti - assistenti sociali
+  denominazione: Appalti tramite centrali di committenza o su delega di stazioni appaltanti qualificate
+  descrizione: Affidamenti oltre le soglie di qualificazione, svolti da centrali di committenza o stazioni appaltanti
+    qualificate per conto dell'ente (art. 62 d.lgs. 36/2023)
+  tempi: A ogni procedura
   attivita:
   - codice: B.11.1
-    descrizione: Istanza di parte/d'Ufficio
+    descrizione: Scelta della centrale di committenza e convenzione
+    rischi:
+    - codice: B.11.1_R.1
+      evento: Scelta della stazione appaltante delegata non trasparente o elusione degli obblighi di qualificazione
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.11.1_R.1_M.1
+        descrizione: Convenzione che ripartisce compiti e responsabilità tra ente e stazione delegata, pubblicata
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni delega
+        indicatore: Convenzioni con ripartizione delle responsabilità
+        target: 100%
   - codice: B.11.2
-    descrizione: Valutazione sociale
+    descrizione: Coordinamento con la stazione delegata nelle fasi di competenza dell'ente
     rischi:
     - codice: B.11.2_R.1
-      evento: Errata analisi della situazione rappresentata della documentazione (completezza, adeguatezza...).
-        Reiterazione dei contributi verso i medesimi soggetti ed esclusione di altri
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Mancato controllo dell'ente sulle fasi delegate e sull'esecuzione
+      fattore_abilitante: Scarsa responsabilizzazione interna
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.11.2_R.1_M.1
-        descrizione: Report periodico di verifica (almeno semestrale) tra richieste e accoglimenti/rigetti
+        descrizione: Referente dell'ente per ogni procedura delegata e flusso informativo sugli esiti
+        tipo: SPECIFICA
         categoria: Controllo
-      - codice: B.11.2_R.1_M.2
-        descrizione: Rafforzare l'analisi condotta di concerto tra U.O. 2.1. e 2.2 per la stesura di progettualità
-          condivise sui bisogni dei cittadini
-  - codice: B.11.3
-    descrizione: Valutazione commissione
-  - codice: B.11.4
-    descrizione: Approvazione degli interventi decisi in Commissione con Determinazione Dirigenziale
-  - codice: B.11.5
-    descrizione: Liquidazione del contributo dietro presentazione della ricevuta attestante l'avvenuto
-      pagamento del canone di locazione o a fronte di delega del conduttore a favore del locatore.
+        tempi: A ogni delega
+        indicatore: Procedure delegate con referente nominato
+        target: 100%
 - codice: B.12
-  denominazione: Richiesta di esenzione o agevolazione al servizio ristorazione e trasporto scolastico
-  tempi: Maggio- settembre (in caso di domanda di agevolazione presentata oltre il termine previsto dall'ufficio
-    comunale, gli effetti dell'applicazione delle tariffe aggiornate decorrono dal primo giorno del mese
-    successivo rispetto alla data di presentazione della medesima ex DGC n. 128/2017)
-  attori_esterni: Utenti del servizio
+  ambito: PROVINCIA
+  denominazione: Stazione unica appaltante per i comuni del territorio
+  descrizione: Svolgimento delle procedure di affidamento per conto dei comuni come centrale di committenza qualificata
+  attori_esterni: Comuni deleganti, operatori economici
   attivita:
   - codice: B.12.1
-    descrizione: Presentazione delle istanze on-line (su sistema gestionale E-civis) per l'esenzione o
-      le agevolazioni tariffarie, nel periodo stabilito dall'ufficio;
+    descrizione: Ricezione delle richieste dei comuni e programmazione delle gare
   - codice: B.12.2
-    descrizione: Istruttoria dell'ufficio volta a verificare la correttezza formale delle istanze con
-      particolare riferimento a controllo valore ISEE dichiarato tramite accesso alle banche dati sul
-      sito dell'INPS e a verifica luogo di residenza;
+    descrizione: Svolgimento delle procedure per conto dei comuni
     rischi:
     - codice: B.12.2_R.1
-      evento: Attribuzione dell'esenzione e/o agevolazione anche in mancanza dei requisiti previsti.
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
+      evento: Gestione non imparziale delle procedure delegate o condizionamenti da parte degli enti deleganti
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.12.2_R.1_M.1
-        descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che
-          ha curato l'istruttoria
-        categoria: Controllo
-  - codice: B.12.3
-    descrizione: Accettazione o respingimento dell'istanza presentata e comunicazione all'interessato
-      tramite portale.
-  - codice: B.12.4
-    descrizione: Valutazione delle istanze presentate dopo la scadenza dei termini previsti dall'ufficio
-      con relativa accettazione o respingimento.
-    rischi:
-    - codice: B.12.4_R.1
-      evento: Mancata applicazione del principio per cui, in caso di accoglimento della domanda di agevolazione
-        presentata oltre il termine previsto dal competente ufficio comunale, gli effetti dell'applicazione
-        delle tariffe aggiornate decorrono dal primo giorno del mese successivo rispetto alla data di
-        presentazione della medesima istanza.
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.12.2_R.1_M.2
+        descrizione: 'Rotazione del personale addetto o, dove non possibile, misure alternative: segregazione delle
+          funzioni tra istruttoria e decisione, affiancamento, condivisione delle pratiche'
+        tipo: GENERALE
+        categoria: Rotazione
+        tempi: Programmazione triennale
+        indicatore: Processi con rotazione o segregazione delle funzioni
+        target: 100% dei processi ad alto rischio
+      - codice: B.12.2_R.1_M.3
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
+    - codice: B.12.2_R.2
+      evento: Perdita o mancato mantenimento dei requisiti di qualificazione della stazione appaltante
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
-      - codice: B.12.4_R.1_M.1
-        voce: MIS-0046
-        descrizione: Controlli a campione da parte di personale diverso rispetto a quello che ha curato
-          l'istruttoria
+      - codice: B.12.2_R.2_M.1
+        descrizione: Monitoraggio annuale dei requisiti di qualificazione (personale, formazione, gare svolte)
+        tipo: SPECIFICA
         categoria: Controllo
-      - codice: B.12.4_R.1_M.2
-        descrizione: Report periodico (almeno annuale) sulle istanze presentate in ritardo/istanze accolte
+        tempi: Annuale
+        indicatore: Requisiti verificati
+        target: Annuale
+      - codice: B.12.2_R.2_M.2
+        descrizione: Formazione su codice dei contratti, piattaforme digitali (PAD, FVOE, BDNCP) e prevenzione della
+          corruzione per RUP e personale degli appalti
+        tipo: GENERALE
+        categoria: Formazione
+        tempi: Annuale
+        indicatore: RUP e addetti formati
+        target: 100% nel triennio
 - codice: B.13
-  denominazione: '"Pacchetto scuola" benefici finalizzati a sostenere le spese necessarie per al frequenza
-    scolastica'
-  tempi: Termini procedimento stabiliti DGRT che annualmente approva indirizzi
-  attori_esterni: '- Regione Tosc.;- Amm. Prov;- Student* scuole secondarie I° e II° grado'
+  denominazione: Affidamento dei servizi di ingegneria e architettura
+  descrizione: Incarichi di progettazione, direzione lavori, coordinamento della sicurezza, collaudo e verifica
+  tempi: A ogni incarico
+  attori_esterni: Professionisti
   attivita:
   - codice: B.13.1
-    descrizione: Predisposizione bando comunale secondo indirizzi espressi con Deliberazione Giunta Regionale;
+    descrizione: Calcolo del corrispettivo e scelta della procedura
+    rischi:
+    - codice: B.13.1_R.1
+      evento: Sottostima del corrispettivo rispetto ai parametri ministeriali per ricorrere all'affidamento diretto
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.13.1_R.1_M.1
+        descrizione: Calcolo del corrispettivo con il decreto parametri (d.m. 17/06/2016), allegato alla determina
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni incarico
+        indicatore: Determine con calcolo allegato
+        target: 100%
+      - codice: B.13.1_R.1_M.2
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
   - codice: B.13.2
-    descrizione: Presentazione delle domande di partecipazione tramite modulo on-line su gestionale in
-      uso all'ufficio;
-  - codice: B.13.3
-    descrizione: Istruttoria dell'ufficio volta ad accertare la sussistenza dei requisiti prescritti dal
-      bando.
+    descrizione: Individuazione del professionista e affidamento
     rischi:
-    - codice: B.13.3_R.1
-      evento: Mancata rilevazione di una causa formale di esclusione secondo i requisiti prevista dal
-        bando.
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
+    - codice: B.13.2_R.1
+      evento: Affidamenti fiduciari ricorrenti agli stessi professionisti
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
-      - codice: B.13.3_R.1_M.1
-        descrizione: Effettuare controlli a campione da parte di personale diverso rispetto a quello che
-          ha curato l'istruttoria per verificarne la correttezza
+      - codice: B.13.2_R.1_M.1
+        descrizione: Rispetto del principio di rotazione degli affidamenti e degli inviti (art. 49 d.lgs. 36/2023),
+          con registro degli operatori affidatari
+        tipo: SPECIFICA
         categoria: Controllo
-  - codice: B.13.4
-    descrizione: determinazione dirigenziale di approvazione della graduatoria provvisoria degli ammessi
-      al concorso, in quanto in possesso dei requisiti previsti dal bando.
-  - codice: B.13.5
-    descrizione: possibilità per coloro che hanno presentato domanda di partecipazione al concorso di
-      inoltrare ricorso avverso la graduatoria di cui alla fase precedente entro i 30 giorni successivi
-      alla sua pubblicazione
-    rischi:
-    - codice: B.13.5_R.1
-      evento: Accoglimento o respingimento ricorsi per motivazioni non fondate
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.13.5_R.1_M.1
-        descrizione: Controllo del ricorso da parte di una commissione interna all'ufficio formata da
-          almeno tre membri.
-        categoria: Controllo
-  - codice: B.13.6
-    descrizione: verifica con le scuole, l' ISCRIZIONE scolastica degli studenti assegnatari dei benefici.
-  - codice: B.13.7
-    descrizione: approvazione graduatoria degli ammessi al concorso (aventi i requisiti).
-  - codice: B.13.8
-    descrizione: approvazione Graduatoria definitiva dei beneficiari IN BASE ALLE RISORSE ASSEGNATE DALLA
-      REGIONE TOSCANA
-    rischi:
-    - codice: B.13.8_R.1
-      evento: Inserimento nella graduatoria di soggetti che non hanno i requisiti previsti dal bando
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
-      valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Medio,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.13.8_R.1_M.1
-        descrizione: Effettuare controlli a campione su almeno il 20% dei ammessi definitivamente ad usufruire
-          del beneficio
-        categoria: Controllo
+        tempi: A ogni affidamento
+        indicatore: Affidamenti al contraente uscente motivati
+        target: 100%
+      - codice: B.13.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.13.2_R.1_M.3
+        descrizione: Gestione dell'intero ciclo del contratto sulle piattaforme di approvvigionamento digitale certificate
+          (artt. 19-36 d.lgs. 36/2023), con verifica a campione dei dati trasmessi alla BDNCP
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: A ogni procedura
+        indicatore: Procedure interamente gestite su PAD
+        target: 100%
 - codice: B.14
-  denominazione: Pratiche in SCIA
-  tempi: 60 gg
-  attori_esterni: ASL+VdF+R.T.+QUEST.+PREF.+C.COMM.+AG.DOG.+INPS+INAIL+AG.ENTRATE+SOC.PARTECIPATE, ECC..
+  denominazione: Esecuzione dei contratti di servizi e forniture
+  descrizione: Direzione dell'esecuzione, controllo delle prestazioni e verifica di conformità
+  tempi: Per la durata del contratto
   attivita:
   - codice: B.14.1
-    descrizione: Ricezione della comunicazione online, verifica della completezza e rilascio ricevuta
+    descrizione: Nomina del direttore dell'esecuzione e avvio dell'esecuzione
+    rischi:
+    - codice: B.14.1_R.1
+      evento: Nomina del direttore dell'esecuzione in conflitto di interessi o privo di competenza
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.14.1_R.1_M.1
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
   - codice: B.14.2
-    descrizione: Trasmissione ad altri uffici di quanto di competenza in tempi definiti dalla legge
+    descrizione: Controllo delle prestazioni e applicazione delle penali
     rischi:
     - codice: B.14.2_R.1
-      evento: Ritardo nella trasmissione/formarsi del silenzio assenso
-      fattore_abilitante: Scarsa responsabilizzazione interna
+      evento: Mancata o insufficiente verifica della qualità e quantità delle prestazioni, mancata applicazione
+        delle penali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.14.2_R.1_M.1
-        descrizione: Le pratiche che si concludono con il formarsi del silenzio assenso devono essere
-          corredate da una motivazione scritta dell'operatore cui erano state assegnate.
+        descrizione: Verbali periodici di controllo delle prestazioni con indicatori di qualità previsti nel capitolato
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Secondo il capitolato
+        indicatore: Contratti con verbali di controllo periodici
+        target: 100%
+      - codice: B.14.2_R.1_M.2
+        descrizione: Registro delle contestazioni e delle penali applicate
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Penali applicate sulle inadempienze accertate
+        target: 100%
   - codice: B.14.3
-    descrizione: Analisi della pratica nel suo insieme
+    descrizione: Verifica di conformità e certificato di regolare esecuzione
     rischi:
     - codice: B.14.3_R.1
-      evento: Scelta operatori
-      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      evento: Attestazione di regolare esecuzione in presenza di prestazioni non conformi
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.14.3_R.1_M.1
-        descrizione: Rotazione del personale sulle pratiche relative allo stesso operatore commerciale.
-          Le pratiche vengono assegnate da due dipendenti addette allo smistamento dei protocolli, che
-          applicano suddetto principio di rotazione.
-        categoria: Rotazione
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
 - codice: B.15
-  denominazione: Pratiche in Autorizzazione
-  tempi: 60 gg
-  attori_esterni: Vedi sopra più ANAS e SOPRINTENDENZA
+  denominazione: Esecuzione dei contratti di lavori
+  descrizione: Direzione lavori, contabilità, stati di avanzamento e sicurezza del cantiere
+  tempi: Per la durata dei lavori
   attivita:
   - codice: B.15.1
-    descrizione: Ricezione della domanda online, verifica della completezza e rilascio ricevuta
+    descrizione: Consegna dei lavori e controllo del cantiere
+    rischi:
+    - codice: B.15.1_R.1
+      evento: Mancata verifica della presenza in cantiere delle sole imprese autorizzate e del personale dichiarato
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.15.1_R.1_M.1
+        descrizione: Controlli in cantiere a campione con verifica dei subappaltatori autorizzati e del personale
+          (badge, giornale dei lavori)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Mensile
+        indicatore: Controlli in cantiere effettuati
+        target: Almeno 1 al mese per i cantieri sopra 150.000 euro
   - codice: B.15.2
-    descrizione: Trasmissione ad altri uffici di quanto di competenza
+    descrizione: Contabilità dei lavori e stati di avanzamento
     rischi:
     - codice: B.15.2_R.1
-      evento: Ritardo nella trasmissione al fine di sfavorire alcuni operatori
-      fattore_abilitante: Scarsa responsabilizzazione interna
+      evento: Contabilizzazione di lavorazioni non eseguite o di quantità superiori a quelle reali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.15.2_R.1_M.1
-        descrizione: rispetto dei tempi procedimentali indicati negli artt. 14-15 del Regolamento dello
-          Sportello Unico delle Attività produttive approvato con D.G.C. 251 del 1999 e s.m.i.
-        categoria: Regolamentazione
+        descrizione: Contabilità digitale dei lavori con verifica in contraddittorio delle misure e visto del RUP
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni SAL
+        indicatore: SAL con verifica del RUP
+        target: 100%
+      - codice: B.15.2_R.1_M.2
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
   - codice: B.15.3
-    descrizione: Analisi della pratica nel suo insieme
+    descrizione: Modifiche del contratto e varianti
     rischi:
     - codice: B.15.3_R.1
-      evento: Favorire alcuni operatori
-      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
+      evento: Ammissione di modifiche e varianti in corso di esecuzione per consentire all'appaltatore di recuperare
+        il ribasso offerto o di conseguire extra guadagni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.15.3_R.1_M.1
-        descrizione: Rotazione del personale sulle pratiche relative allo stesso operatore commerciale.
-          Le pratiche vengono assegnate da due dipendenti addette allo smistamento dei protocolli, che
-          applicano suddetto principio di rotazione
-        categoria: Rotazione
+        descrizione: Relazione motivata del RUP sui presupposti della modifica (art. 120 d.lgs. 36/2023), visto
+          del dirigente e comunicazione ad ANAC nei casi previsti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni modifica
+        indicatore: Modifiche con relazione motivata e comunicazione ad ANAC
+        target: 100%
+      - codice: B.15.3_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
+  - codice: B.15.4
+    descrizione: Sospensioni e proroghe dei termini
+    rischi:
+    - codice: B.15.4_R.1
+      evento: Sospensioni e proroghe non giustificate che consentono all'appaltatore di sottrarsi alle penali
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.15.4_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: B.15.4_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
 - codice: B.16
-  denominazione: Affidamento posteggi presso fiere a seguito spunta
-  tempi: Immediato, il giorno stesso della fiera/mercato
+  denominazione: Modifiche contrattuali e revisione dei prezzi
+  descrizione: Modifiche ai contratti in corso di esecuzione (art. 120 d.lgs. 36/2023) e clausole di revisione prezzi
+    (art. 60)
+  tempi: Durante l'esecuzione
   attivita:
   - codice: B.16.1
-    descrizione: I titolari di posto si presentano nelle ore antecedenti la Fiera per occupare i posti.
-      Gli altri operatori non titolari occupano posti abusivamente senza procedura di spunta
+    descrizione: Valutazione dei presupposti della modifica
+    rischi:
+    - codice: B.16.1_R.1
+      evento: Ammissione di modifiche e varianti in corso di esecuzione per consentire all'appaltatore di recuperare
+        il ribasso offerto o di conseguire extra guadagni
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.16.1_R.1_M.1
+        descrizione: Relazione motivata del RUP sui presupposti della modifica (art. 120 d.lgs. 36/2023), visto
+          del dirigente e comunicazione ad ANAC nei casi previsti
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni modifica
+        indicatore: Modifiche con relazione motivata e comunicazione ad ANAC
+        target: 100%
+      - codice: B.16.1_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
   - codice: B.16.2
-    descrizione: L'assegnazione dei suddetti posti avviene tramite il procedimento della spunta.
+    descrizione: Applicazione della clausola di revisione prezzi
     rischi:
     - codice: B.16.2_R.1
-      evento: Scelta operatori
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      evento: Riconoscimento della revisione prezzi in assenza dei presupposti o con indici non corretti
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-  - codice: B.16.3
-    descrizione: 'Situazioni eccezionali: ritardi nell''arrivo degli operatori fissi'
-    rischi:
-    - codice: B.16.3_R.1
-      evento: Scelta operatori
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.16.2_R.1_M.1
+        descrizione: Istruttoria della revisione con gli indici ISTAT previsti e calcolo verificato da un secondo
+          addetto
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni revisione
+        indicatore: Revisioni con calcolo verificato
+        target: 100%
 - codice: B.17
-  denominazione: Autorizzazione per spettacolo viaggiante
-  tempi: 60 gg
-  attori_esterni: COMM. PROV. DEL V.P.S. (ASL+VdF+R.T.+QUEST.+PREF.)
+  denominazione: Autorizzazione e controllo del subappalto
+  descrizione: Autorizzazione del subappalto, verifica dei requisiti del subappaltatore e controlli in esecuzione
+  tempi: 30 giorni per l'autorizzazione (15 sotto 100.000 euro)
   attivita:
   - codice: B.17.1
-    descrizione: Ricezione della domanda online, verifica della completezza e rilascio ricevuta
+    descrizione: Istruttoria della richiesta di autorizzazione
+    rischi:
+    - codice: B.17.1_R.1
+      evento: Autorizzazione del subappalto senza verifica dei requisiti del subappaltatore o oltre i limiti degli
+        atti di gara
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.17.1_R.1_M.1
+        descrizione: Verifica dei requisiti degli operatori economici tramite FVOE, con documenti in corso di validità
+          acquisiti prima dell'aggiudicazione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Prima dell'aggiudicazione
+        indicatore: Aggiudicazioni con verifica FVOE completa
+        target: 100% delle procedure ≥ 40.000 euro
+      - codice: B.17.1_R.1_M.2
+        descrizione: Istruttoria sulla piattaforma con verifica dei requisiti e dei limiti, entro i termini di legge
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni richiesta
+        indicatore: Autorizzazioni con verifica completa
+        target: 100%
+    - codice: B.17.1_R.2
+      evento: Uso del subappalto per distribuire tra i partecipanti alla gara i vantaggi di un accordo collusivo
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.17.1_R.2_M.1
+        descrizione: Verifica che il subappaltatore non abbia partecipato alla stessa gara e analisi dei legami
+          tra le imprese
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni richiesta
+        indicatore: Verifiche svolte
+        target: 100%
+      - codice: B.17.1_R.2_M.2
+        descrizione: Patto d'integrità negli atti di gara e nei contratti, con sottoscrizione dell'operatore economico
+          prima dell'aggiudicazione
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: A ogni procedura
+        indicatore: Procedure con il patto d'integrità sottoscritto
+        target: 100%
   - codice: B.17.2
-    descrizione: Assegnazione spazi
+    descrizione: Controllo del subappalto in esecuzione e dei pagamenti
     rischi:
     - codice: B.17.2_R.1
-      evento: Favorire alcuni operatori sia di ruolo che nuovi assegnatari a seconda della collocazione
-        sul palco
-      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      evento: Subappalto non autorizzato o subappalto a cascata, mancato controllo del rispetto dei trattamenti
+        economici e normativi del personale
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.17.2_R.1_M.1
-        descrizione: Assegnazioni secondo il regolamento comunale e coinvolgimento della commissione interna
-          del Luna Park. Rispetto del codice di comportamento dei dipendenti del Comune di Lucca.
-        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        descrizione: Controlli in cantiere e verifica delle fatture quietanzate e della congruità della manodopera
+          (DURC di congruità)
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Trimestrale
+        indicatore: Subappalti controllati
+        target: Almeno 20%
 - codice: B.18
-  denominazione: Concessione suolo pubblico per attività commerciali
-  tempi: Max 30 gg come da Regolamento
-  attori_esterni: SOPRINTENDENZA
+  denominazione: Collaudo e liquidazione dei corrispettivi
+  descrizione: Collaudo o certificato di regolare esecuzione, svincolo delle garanzie e pagamenti
+  tempi: Collaudo entro 6 mesi; pagamenti entro 30 giorni
   attivita:
   - codice: B.18.1
-    descrizione: Ricezione richiesta
+    descrizione: Nomina del collaudatore e collaudo
+    rischi:
+    - codice: B.18.1_R.1
+      evento: Nomina del collaudatore in conflitto di interessi o collaudo compiacente
+      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte di pochi
+        o di un unico soggetto
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.18.1_R.1_M.1
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.18.1_R.1_M.2
+        descrizione: Rotazione dei collaudatori e incompatibilità con chi ha progettato o diretto i lavori
+        tipo: SPECIFICA
+        categoria: Rotazione
+        tempi: A ogni collaudo
+        indicatore: Collaudi assegnati con rotazione
+        target: 100%
   - codice: B.18.2
-    descrizione: Istruttoria
+    descrizione: Liquidazione delle fatture e pagamento
     rischi:
     - codice: B.18.2_R.1
-      evento: Inosservanza dei criteri previsti dal regolamento Canone Unico Patrimoniale
-      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di
-        riferimento
+      evento: Pagamenti in assenza di verifica della regolarità della prestazione o alterazione dell'ordine dei
+        pagamenti per favorire alcuni creditori
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
       misure:
       - codice: B.18.2_R.1_M.1
-        descrizione: Esame della domanda per la verifica dei presupposti effettuata da più settori/servizi.Standardizzazione
-          del procedimento di rilascio delle concessioni, come previsto dal vigente regolamento Canone
-          Unico Patrimoniale
-        categoria: Regolamentazione
-  - codice: B.18.3
-    descrizione: Provvedimento accoglimento/rigetto
-    rischi:
-    - codice: B.18.3_R.1
-      evento: Tardività nell'adozione
-      fattore_abilitante: Scarsa responsabilizzazione interna
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.18.3_R.1_M.1
-        descrizione: Verifica semestrale del rispetto dei tempi procedimentali al fine di evitare la protrazione
-          illegittima dei tempi di conclusione dei procedimenti, come stabiliti dal vigente Regolamento
-          Canone Unico Patrimoniale
-        categoria: Regolamentazione
+        descrizione: Liquidazione con attestazione della regolare esecuzione e pagamento in ordine cronologico delle
+          fatture
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Continuativa
+        indicatore: Pagamenti nei termini
+        target: ≥ 95% entro 30 giorni
+      - codice: B.18.2_R.1_M.2
+        descrizione: Pubblicazione dei dati sui pagamenti e dell'indicatore di tempestività (artt. 4-bis e 33 d.lgs.
+          33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_33
+        tempi: Trimestrale
+        indicatore: Indicatore di tempestività dei pagamenti
+        target: ≤ 0 giorni
 - codice: B.19
-  denominazione: Erogazione contributi edifici religiosi
-  tempi: non previsto (in quanto articolato in molteplici attività)
-  attori_esterni: nessuno
+  denominazione: Risoluzione delle controversie in fase di esecuzione
+  descrizione: Accordo bonario, transazione, collegio consultivo tecnico e arbitrato
+  attori_esterni: Appaltatori, componenti del collegio consultivo tecnico
   attivita:
   - codice: B.19.1
-    descrizione: Definizione del programma di interventi per lavori su edifici di culto, inviato da enti
-      religiosi.
+    descrizione: Costituzione del collegio consultivo tecnico
     rischi:
     - codice: B.19.1_R.1
-      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti
-      fattore_abilitante: Mancanza di trasparenza
+      evento: Nomina dei componenti del collegio in conflitto di interessi o senza i requisiti, compensi non congrui
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.19.1_R.1_M.1
-        descrizione: Pubblicizzazione su sito istituzionale della possibilità di richiedere contributi
-          in base agli oneri di urbanizzazione secondaria incassati ed accantonabili nella misura del
-          10%.
-    - codice: B.19.1_R.2
-      evento: Escludere dalla opportunità culti diversi da quello cattolico
-      fattore_abilitante: Mancanza di trasparenza
-      valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.19.1_R.2_M.1
-        descrizione: Pubblicizzazione su sito istituzionale della possibilità di richiedere contributi
-          in base agli oneri di urbanizzazione secondaria incassati ed accantonabili nella misura del
-          10%.
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
+      - codice: B.19.1_R.1_M.2
+        descrizione: Scelta dei componenti tra soggetti con i requisiti dell'allegato V.2 d.lgs. 36/2023, con compensi
+          entro i limiti tabellari
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni costituzione
+        indicatore: Nomine conformi
+        target: 100%
   - codice: B.19.2
-    descrizione: Analisi delle richieste di ammissibilità al contributo.
+    descrizione: Definizione delle riserve e degli accordi
     rischi:
     - codice: B.19.2_R.1
-      evento: Eccessiva discrezionalità
+      evento: Accoglimento di riserve infondate o transazioni sfavorevoli per l'ente
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.19.2_R.1_M.1
-        descrizione: Definizione modalità e criteri della ripartizione.
-  - codice: B.19.3
-    descrizione: Liquidazione contributo
-    rischi:
-    - codice: B.19.3_R.1
-      evento: Analisi non corretta della documentazione
-      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
-      valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Medio}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.19.3_R.1_M.1
-        descrizione: Acquisizione documenti asseverati dai tecnici e dalle imprese che hanno eseguito
-          i lavori.
+        descrizione: Relazione riservata del direttore dei lavori e del RUP sulle riserve, parere legale per le
+          transazioni
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni accordo
+        indicatore: Accordi con relazione e parere
+        target: 100%
+      - codice: B.19.2_R.1_M.2
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
 - codice: B.20
-  denominazione: Concessione d'uso di aree o immobili di proprietà pubblica gestite direttamente dalla
-    U.O.6.1 (cd. sistema congressuale- impianti sportivi)
-  tempi: '30'
+  denominazione: Partenariato pubblico-privato, finanza di progetto e concessioni
+  descrizione: Proposte di finanza di progetto, concessioni di lavori e servizi, altri contratti di partenariato
+  tempi: Per la durata della concessione
+  attori_esterni: Promotori, concessionari
   attivita:
   - codice: B.20.1
-    descrizione: Valutazione della domanda di concessione d'uso Verifica disponibilità
+    descrizione: Valutazione della fattibilità della proposta del promotore
     rischi:
     - codice: B.20.1_R.1
-      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
-        o agevolato in assenza delle condizioni che giustificano la gratuità)'
-      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      evento: Valutazione della proposta orientata a favorire il promotore, con rischi posti a carico dell'ente
+      fattore_abilitante: Inadeguatezza o assenza di competenze del personale addetto ai processi
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.20.1_R.1_M.1
-        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
-          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
-          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
-          tariffe per il servizio offerto (facoltativo)
+        descrizione: Analisi del rischio e del valore per l'ente (allocazione dei rischi, piano economico finanziario
+          asseverato) con supporto tecnico indipendente
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni proposta
+        indicatore: Proposte con analisi indipendente
+        target: 100%
+      - codice: B.20.1_R.1_M.2
+        descrizione: Pubblicazione tempestiva dei dati e degli atti in Amministrazione trasparente (d.lgs. 33/2013)
+        tipo: GENERALE
         categoria: Trasparenza
+        tempi: Nei termini di legge
+        indicatore: Atti pubblicati nei termini sul totale
+        target: 100%
   - codice: B.20.2
-    descrizione: Verifica dei requisiti oggettivi e soggettivi
+    descrizione: Gara e aggiudicazione della concessione
     rischi:
     - codice: B.20.2_R.1
-      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
-        o agevolato in assenza delle condizioni che giustificano la gratuità)'
-      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      evento: Elusione delle regole di affidamento degli appalti mediante l'improprio uso dello schema della concessione
+      fattore_abilitante: Eccessiva regolamentazione, complessità e scarsa chiarezza della normativa di riferimento
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
       - codice: B.20.2_R.1_M.1
-        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
-          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
-          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
-          tariffe per il servizio offerto (facoltativo)
-        categoria: Trasparenza
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: B.20.2_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi di RUP, componenti della commissione, direttore
+          dei lavori o dell'esecuzione e collaboratori, aggiornata nel corso della procedura e verificata a campione
+          (art. 16 d.lgs. 36/2023)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedura
+        indicatore: Dichiarazioni acquisite e verificate a campione
+        target: 100% acquisite, almeno 10% verificate
   - codice: B.20.3
-    descrizione: Verifica pagamento tariffa o della presenza della condizione che giustifica la gratuità
+    descrizione: Monitoraggio dell'esecuzione della concessione
     rischi:
     - codice: B.20.3_R.1
-      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
-        o agevolato in assenza delle condizioni che giustificano la gratuità)'
-      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
-      misure:
-      - codice: B.20.3_R.1_M.1
-        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
-          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
-          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
-          tariffe per il servizio offerto (facoltativo)
-        categoria: Trasparenza
-  - codice: B.20.4
-    descrizione: Concessione d'uso
-    rischi:
-    - codice: B.20.4_R.1
-      evento: 'Rischio di favoritismi o di agevolazioni non volute (es: concessione a titolo gratuito
-        o agevolato in assenza delle condizioni che giustificano la gratuità)'
-      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio,
-          '8': Medio, '9': Medio}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
-      misure:
-      - codice: B.20.4_R.1_M.1
-        descrizione: Chiara individuazione delle tariffe d'uso e pubblicazione- pubblicizzazione dei criteri
-          per la concessione delle tariffe agevolate - criteri generali che non possono essere derogati
-          per singoli casi. Specificare la distinzione delle tariffe per l'uso della sal/impianto e le
-          tariffe per il servizio offerto (facoltativo)
-        categoria: Trasparenza
-- codice: B.21
-  denominazione: Concessione/locazione immobili comunali
-  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
-    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
-  attori_esterni: Tutti i soggetti in possesso dei requisiti per contrarre con la P.A. (altre pubbliche
-    amministrazioni, società, ditte individuali, associazioni e soggetti privati)
-  attivita:
-  - codice: B.21.1
-    descrizione: Atto programmatorio/dispositivo della concessione o locazione l'immobile (non strumentaleall'esercizio
-      delle funzioni istituzionali dell'ente) stima canone di locazione/di concessione
-  - codice: B.21.2
-    descrizione: individuazione concessionario o locatario.
-    rischi:
-    - codice: B.21.2_R.1
-      evento: Valutazione discrezionale
-      fattore_abilitante: Mancanza di trasparenza
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.21.2_R.1_M.1
-        descrizione: a) La misura consiste in via transitoria nel dare attuazione ai principi generali
-          di cui al par. 1.3 lett. e) del presente PTPC; b) per la misura a regime si rinvia invece all'allegato
-          A/3 misura n. 8
-  - codice: B.21.3
-    descrizione: stipula contratto di concessione o locazione
-- codice: B.22
-  denominazione: Concessione aree/immobili comunali per l'istallazione impianti di telefonia mobile
-  tempi: Tempi legati alla approvazione con D.D. della concessione ed alla sua sottoscrizione - normalmente
-    60gg dalla richiesta
-  attori_esterni: Gestori di servizi di telefonia mobile
-  attivita:
-  - codice: B.22.1
-    descrizione: Istanza di concessione
-  - codice: B.22.2
-    descrizione: Verifiche in relazione all'inserimento dell'area nel piano della telefonia approvato
-      dal Comune
-  - codice: B.22.3
-    descrizione: determinazione del canone in base alle apposite tariffe COSAP
-  - codice: B.22.4
-    descrizione: stipula contratto di concessione
-- codice: B.23
-  denominazione: Concessione immobili/locali/spazi a soggetti del Terzo Settore senza finalità di lucro
-  tempi: Non esistono termini prestabiliti. I tempi sono legati allo svolgimento delle procedure di gara
-    ed alla stipula del contratto ma il processo dovrà comunque concludersi entro l'esercizio finanziario.
-  attori_esterni: Associazioni ed altri enti del Terzo Settore
-  attivita:
-  - codice: B.23.1
-    descrizione: Pubblicazione avviso spazi/immobili disponibili e relativi canoni
-  - codice: B.23.2
-    descrizione: Esame delle richieste, verifica requisiti, valutazione attività dei richiedenti, individuazione
-      assegnatari
-    rischi:
-    - codice: B.23.2_R.1
-      evento: Mancanza di trasparenza nella assegnazione dell'immobile
-      fattore_abilitante: Mancanza di trasparenza
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Medio, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.23.2_R.1_M.1
-        descrizione: a) La misura consiste in via transitoria nel dare attuazione ai principi generali
-          di cui al par. 1.3 lett. e) del presente PTPC; b) per la misura a regime si rinvia invece all'allegato
-          A/3 misura n. 8
-  - codice: B.23.3
-    descrizione: stipula convenzione
-- codice: B.25
-  denominazione: Rilascio autorizzazione al transito e sosta sulle Mura Urbane
-  tempi: 5 giorni per le autorizzazioni giornaliere e 30 giorni per altre autorizzazioni
-  attivita:
-  - codice: B.25.1
-    descrizione: Ricezione della richiesta IstruttoriaPredisposizione dell'attoPagamento della tariffa
-    rischi:
-    - codice: B.25.1_R.1
-      evento: Riconoscimento indebito dell'esenzione dal pagamento della tariffa prevista dall'apposito
-        Regolamento d'uso delle Mura urbane
-      fattore_abilitante: Scarsa chiarezza della normativa di riferimento
-      valutazione:
-        probabilita: {'1': Basso, '2': Medio, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.25.1_R.1_M.1
-        descrizione: Controlli periodici da parte del responsabile dell'ufficio dei permessi e delle tariffe
-          riscosse, con particolare attenzione alle esenzioni;Rotazione periodica del personale addetto
-          all'istruttoria
-        categoria: Rotazione
-- codice: B.26
-  denominazione: Assegnazione posteggi presso mercati a seguito di spunta
-  tempi: ogni giorno di mercato
-  attivita:
-  - codice: B.26.1
-    descrizione: Assegnazione
-    rischi:
-    - codice: B.26.1_R.1
-      evento: Modalità assegnazione
-      fattore_abilitante: Esercizio prolungato ed esclusivo della responsabilità di un processo da parte
-        di pochi o di un unico soggetto
-      valutazione:
-        probabilita: {'1': Basso, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Medio, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Medio, '4': Medio}
-      misure:
-      - codice: B.26.1_R.1_M.1
-        descrizione: 'I criteri sono stabiliti dalla L.R. Toscana n. 28/2005 e del Regolamento Comunale
-          del Commercio su Aree Pubbliche (approvato con Delibera C.C. n. 192 del 22/11/2001).I posteggi
-          vengono assegnati in base ad una graduatoria redatta e aggiornata dall''ufficio commercio su
-          aree pubbliche: i soggetti non assegnatari di posteggio fisso nei mercati firmano la presenza
-          entro le ore 8,00 e vengono chiuse le liste degli "spuntisti". I posteggi rimasti liberi, saranno
-          assegnati seguendo la graduatoria sopra descritta e previo pagamento della tariffa per l''occupazione
-          giornaliera del posteggio.Delle operazioni viene redatta apposita documentazione che è trasmessa
-          all''ufficio commercio su aree pubbliche per l''aggiornamento delle graduatorie degli "spuntisti".'
-        categoria: Regolamentazione
-- codice: B.27
-  denominazione: Erogazione di contributi al soggetto del Terzo Settore (associazioni, APS, ecc.)
-  tempi: 60 giorni
-  attori_esterni: ASSOCIAZIONI, ISTITUZIONI, ENTI, COMITATI E GRUPPI DI VOLONTARIATO NON AVENTI FINALITA'
-    DI LUCRO CHE OPERANO IN AMBITO SOCIALE A FAVORE DI ANZIANI, DISABILI, MINORI, ADOLESCENTI E FAMIGLIE
-  attivita:
-  - codice: B.27.1
-    descrizione: Esame della richiesta con concessione del contributo economico.
-    rischi:
-    - codice: B.27.1_R.1
-      evento: Ripetizione del riconoscimento dei contributi ai medesimi soggetti. Discrezionalità nella
-        determinazione delle somme o dei vantaggi da attribuire. Inadeguatezza della documentazione per
-        l'accesso ai vantaggi che può determinare eventuali disparità di trattamento. Ritardi costanti
-        nella valutazione delle domande pervenute. Alla luce del contesto (interno ed esterno), ex Determinazione
-        ANAC n. 12/2015, occorre graduare il rischio in base alle funzioni effettivamente svolte.
-      valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.27.1_R.1_M.1
-        descrizione: Sulla base del "Regolamento generale per la concessione dei contributi e benefici
-          economici (Deliberazione C.C. n. 2 dell'8/01/2019) l'erogazione di contributi finanziari ai
-          soggetti che operano in ambito sociale a favore di anziani, disabili, minori e famiglie, viene
-          concesso tramite la pubblicazione di un Avviso pubblico approvato con determinazione dirigenziale.
-          Nell'Avviso pubblico sono indicati i criteri di valutazione qualitativi-quantitativi per la
-          concessione.
-        categoria: Trasparenza
-- codice: B.28
-  denominazione: Rapporti convenzionali con ETS (ai sensi del D.Lgs. 117/2017)
-  tempi: Convenzioni stipulate annualmente con ETS per servizi e interventi ti carattere sociale
-  attori_esterni: ETS del territorio
-  attivita:
-  - codice: B.28.1
-    descrizione: Individuazione del bisogno sociale del territorio, raccordo con ETS per individuazione
-      modalità di intervento (attraverso rapporto Convenzionale ai sensi del D.Lgs 117/2017)
-    rischi:
-    - codice: B.28.1_R.1
-      evento: Parziale individuazione dei bisogni del territorio e interventi messi in atto poco efficaci
+      evento: Mancato controllo sul rispetto degli obblighi del concessionario e sul riequilibrio economico
       fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
       valutazione:
-        probabilita: {'1': Medio, '2': Basso, '3': Medio, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Medio, '3': Basso, '4': Medio}
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
-      - codice: B.28.1_R.1_M.1
-        descrizione: 'Incremento qualitativo dei Tavoli della Marginalità, sede in cui A.C.ed ETS si confrontano
-          sui bisogni individuati sul territorio e programmano congiuntamente gli interventi necessari
-          in base alle risorse disponibili. Richiesta di modifica: abbiamo provveduto non tanto all''incremento
-          numerico del n. di sedute del Tavolo Marginalità, ma a una crescita qualitativa di questo organo,
-          ampliamento della platea dei partecipanti: costituzione del "Tavolo del Terzo Settore per l''inclusione",
-          che, oltre a coinvolgere gli ETS del Comune di Lucca, comprende tutti gli ETS dell''intera Piana
-          di Lucca che si occupano dei temi della marginalità e dell''inclusione.'
-- codice: B.29
-  denominazione: Co-progettazione di servizi innovativi a supporto delle politiche socio-abitative (ai
-    sensi del D.Lgs. 117/2017)
-  tempi: Co-progettazione pluriennale con Fondazione Casa Lucca
-  attori_esterni: Fondazione Casa Lucca
-  attivita:
-  - codice: B.29.1
-    descrizione: Manifestazione interesse per l'individuazione soggetto con cui co-progettare i servizi
-      innovativi, avvio della fase di coprogettazione e selezione soggetto
-- codice: B.30
-  denominazione: Contributo a privati per manutenzione delle vie vicinali di uso pubblico
-  tempi: 30 gg
-  attori_esterni: cittadini operatori economici
-  attivita:
-  - codice: B.30.1
-    descrizione: Ricezione istanza e istruttoria pratica seguendo ordine di arrivo dell'istanza al Protocollo
-      Generale e in base alle disponibilità previste in Bilancio
-    rischi:
-    - codice: B.30.1_R.1
-      evento: Rischio relativo alla determinazione della congruità della spesa e del corrispondente contributo
-        richiesto dall'utente previsto per l'intervento
-      fattore_abilitante: Mancanza di trasparenza
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
-      misure:
-      - codice: B.30.1_R.1_M.1
-        descrizione: I contributi vengono rilasciati in ordine di arrivo della richiesta al Protocollo
-          Generale, in base alle disponibilità allocate in bilancio; sulla determinazione della congruità
-          della spesa per l'esecuzione dei lavori e del correlato contributo viene effettuato un doppio
-          controllo interno da parte del personale dell'ufficio competente - tecnico incaricato e RUP
+      - codice: B.20.3_R.1_M.1
+        descrizione: Relazione annuale del concessionario e verifica dell'ente sugli indicatori del contratto
+        tipo: SPECIFICA
         categoria: Controllo
-  - codice: B.30.2
-    descrizione: Verifica esecuzione lavori e erogazione contributo
+        tempi: Annuale
+        indicatore: Relazioni verificate
+        target: Annuale
+- codice: B.21
+  denominazione: Affidamenti in somma urgenza e di protezione civile
+  descrizione: Interventi in somma urgenza (art. 140 d.lgs. 36/2023) ed emergenze
+  tempi: Immediato; perizia entro 10 giorni
+  attivita:
+  - codice: B.21.1
+    descrizione: Verbale di somma urgenza e affidamento
     rischi:
-    - codice: B.30.2_R.1
-      evento: Rischio relativo all'erogazione del contributo anche in presenza di lavori non eseguiti
-        regolarmente
+    - codice: B.21.1_R.1
+      evento: Ricorso alla somma urgenza in assenza dei presupposti o affidamenti non congrui
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.21.1_R.1_M.1
+        descrizione: Verbale con i presupposti e perizia giustificativa entro 10 giorni, controllo di congruità
+          dei prezzi
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni intervento
+        indicatore: Interventi con verbale e perizia nei termini
+        target: 100%
+      - codice: B.21.1_R.1_M.2
+        descrizione: Pubblicazione dei provvedimenti adottati in emergenza (art. 42 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_42
+        tempi: Entro 30 giorni
+        indicatore: Provvedimenti pubblicati
+        target: 100%
+  - codice: B.21.2
+    descrizione: Approvazione della perizia e regolarizzazione della spesa
+    rischi:
+    - codice: B.21.2_R.1
+      evento: Regolarizzazione tardiva o importi non giustificati
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.21.2_R.1_M.1
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
+- codice: B.22
+  denominazione: Affidamenti in house
+  descrizione: Affidamento di servizi a società in house dell'ente
+  attori_esterni: Società partecipate
+  attivita:
+  - codice: B.22.1
+    descrizione: Valutazione della congruità dell'offerta della società in house
+    rischi:
+    - codice: B.22.1_R.1
+      evento: Affidamento in house senza la valutazione di congruità economica e dei benefici per la collettività
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.22.1_R.1_M.1
+        descrizione: Relazione sulla congruità economica e sui benefici dell'affidamento (art. 7 d.lgs. 36/2023,
+          art. 17 d.lgs. 201/2022), pubblicata
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni affidamento
+        indicatore: Affidamenti con relazione pubblicata
+        target: 100%
+  - codice: B.22.2
+    descrizione: Controllo analogo sulla società
+    rischi:
+    - codice: B.22.2_R.1
+      evento: Controllo analogo solo formale, che lascia alla società l'autonomia di un operatore di mercato
+      fattore_abilitante: Scarsa responsabilizzazione interna
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.22.2_R.1_M.1
+        descrizione: Regolamento sul controllo analogo con obiettivi, report periodici e poteri di indirizzo
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Semestrale
+        indicatore: Report periodici ricevuti
+        target: Semestrale
+- codice: B.23
+  denominazione: Coprogrammazione, coprogettazione e convenzioni con il Terzo settore
+  descrizione: Amministrazione condivisa con gli enti del Terzo settore (artt. 55-56 d.lgs. 117/2017)
+  attori_esterni: Enti del Terzo settore
+  attivita:
+  - codice: B.23.1
+    descrizione: Avviso pubblico e individuazione degli enti partner
+    rischi:
+    - codice: B.23.1_R.1
+      evento: Individuazione non trasparente degli enti partner o uso della coprogettazione per eludere le procedure
+        di gara
       fattore_abilitante: Mancanza di trasparenza
       valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Alto, '4': Basso, '5': Basso, '6': Basso, '7': Basso,
-          '8': Basso, '9': Basso}
-        impatto: {'1': Basso, '2': Basso, '3': Basso, '4': Basso}
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
       misure:
-      - codice: B.30.2_R.1_M.1
-        descrizione: Doppio controllo sui lavori effettuati - rotazione del personale
-        categoria: Rotazione
+      - codice: B.23.1_R.1_M.1
+        descrizione: Avviso pubblico con criteri di valutazione predeterminati e commissione imparziale
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni procedimento
+        indicatore: Coprogettazioni con avviso pubblico
+        target: 100%
+      - codice: B.23.1_R.1_M.2
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+  - codice: B.23.2
+    descrizione: Rendicontazione delle attività e dei rimborsi
+    rischi:
+    - codice: B.23.2_R.1
+      evento: Rimborsi di spese non effettivamente sostenute o non documentate
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.23.2_R.1_M.1
+        descrizione: Rendicontazione delle spese con giustificativi e verifica a campione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni rendiconto
+        indicatore: Rendiconti verificati
+        target: Almeno 20%
+      - codice: B.23.2_R.1_M.2
+        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
+          della liquidazione (artt. 26-27 d.lgs. 33/2013)
+        tipo: GENERALE
+        categoria: Trasparenza
+        obbligo_trasparenza: ART_26_27
+        tempi: Prima della liquidazione
+        indicatore: Atti di concessione pubblicati prima della liquidazione
+        target: 100%
+- codice: B.24
+  denominazione: Concessione e gestione degli impianti sportivi e dei servizi a domanda individuale
+  descrizione: Affidamento della gestione di impianti e servizi a terzi, anche ad associazioni sportive
+  attori_esterni: Associazioni sportive, gestori
+  attivita:
+  - codice: B.24.1
+    descrizione: Scelta del gestore
+    rischi:
+    - codice: B.24.1_R.1
+      evento: Affidamento diretto della gestione senza procedura comparativa a soggetti vicini all'amministrazione
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: B.24.1_R.1_M.1
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: B.24.1_R.1_M.2
+        descrizione: Procedura comparativa pubblica, anche semplificata, per la scelta del gestore
+        tipo: SPECIFICA
+        categoria: Trasparenza
+        tempi: A ogni affidamento
+        indicatore: Affidamenti con procedura comparativa
+        target: 100%
+  - codice: B.24.2
+    descrizione: Controllo della gestione e delle tariffe
+    rischi:
+    - codice: B.24.2_R.1
+      evento: Mancato controllo degli obblighi del gestore (manutenzioni, tariffe, canone)
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.24.2_R.1_M.1
+        descrizione: Rendiconto annuale del gestore e sopralluoghi di verifica
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Annuale
+        indicatore: Rendiconti verificati
+        target: 100%
+- codice: B.25
+  ambito: PROVINCIA
+  denominazione: Gestione della manutenzione della viabilità e degli edifici scolastici provinciali
+  descrizione: Programmazione ed esecuzione della manutenzione di strade provinciali ed edifici scolastici superiori
+  attivita:
+  - codice: B.25.1
+    descrizione: Programmazione degli interventi di manutenzione
+    rischi:
+    - codice: B.25.1_R.1
+      evento: Priorità degli interventi decise per favorire territori o imprese determinate
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.25.1_R.1_M.1
+        descrizione: Catasto delle strade e degli edifici con stato di conservazione e criteri di priorità pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Annuale
+        indicatore: Interventi programmati secondo i criteri
+        target: 100%
+  - codice: B.25.2
+    descrizione: Esecuzione degli interventi in accordo quadro
+    rischi:
+    - codice: B.25.2_R.1
+      evento: Ordini di intervento non necessari o contabilizzazione non verificata nei contratti aperti
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: B.25.2_R.1_M.1
+        descrizione: Ordini di lavoro motivati e verifica delle quantità eseguite con sopralluogo
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni ordine
+        indicatore: Ordini verificati
+        target: 100%
+      - codice: B.25.2_R.1_M.2
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
