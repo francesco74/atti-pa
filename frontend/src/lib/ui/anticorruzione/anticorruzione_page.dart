@@ -12,9 +12,9 @@ import 'monitoraggio.dart';
 import 'proposte.dart';
 import 'riepilogo.dart';
 
-/// Modulo anticorruzione (ripreso da Si.Ge.Ri.Co.): mappatura dei processi e procedimenti
-/// con la valutazione del rischio, elenco piatto con ricerca e filtri, catalogo delle voci di
-/// attività, rischi e misure, proposte dei referenti,
+/// Modulo anticorruzione (ripreso da Si.Ge.Ri.Co.): mappatura dei processi con la
+/// valutazione del rischio, elenco piatto con ricerca e filtri, catalogo delle voci di
+/// attività, rischi e misure e dei procedimenti, proposte dei referenti,
 /// monitoraggio delle misure, riepilogo con gli allegati al PTPCT.
 class AnticorruzionePage extends StatefulWidget {
   const AnticorruzionePage({super.key});

@@ -108,7 +108,7 @@ class ControlliProposte(unittest.TestCase):
         from common.anticorruzione.controlli import AVVISO, controlli_proposta
 
         dati = {
-            "tipo": "PROCEDIMENTO", "denominazione": "Concessione di contributi alle associazioni", "area_id": None,
+            "denominazione": "Concessione di contributi alle associazioni", "area_id": None,
             "attivita": [{"descrizione": "Istruttoria", "rischi": [
                 {"evento": "Favoritismi", "valutazione": {"livello": "Alto"}, "misure": [
                     {"descrizione": "Codice di comportamento", "tipo": "GENERALE", "struttura_id": "s1",
@@ -119,7 +119,7 @@ class ControlliProposte(unittest.TestCase):
         esito = controlli_proposta("PROCESSO", "CREA", dati, None, self.ctx)
         testi = self._testi(esito)
         self.assertIn("Manca l'area di rischio", testi)
-        self.assertIn("Procedimento senza termine di conclusione", testi)
+        self.assertNotIn("Procedimento senza termine di conclusione", testi)  # è del procedimento
         self.assertTrue(any("molto simile" in t for t in testi))  # doppione
         self.assertTrue(any("«Ritardi»: non è valutato" in t for t in testi))
         self.assertTrue(any("«Ritardi»: nessuna misura" in t for t in testi))
@@ -129,6 +129,19 @@ class ControlliProposte(unittest.TestCase):
         self.ctx.elemento_id = "p1"
         modifica = controlli_proposta("PROCESSO", "MODIFICA", {**dati, "attivita": None}, None, self.ctx)
         self.assertFalse(any("molto simile" in t for t in self._testi(modifica)))
+
+    def test_procedimento(self):
+        from common.anticorruzione.controlli import controlli_proposta
+
+        self.ctx.procedimenti = {"q1": "Contributo per l'affitto"}
+        testi = self._testi(controlli_proposta("PROCEDIMENTO", "CREA", {"denominazione": "Contributo per gli affitti"}, None, self.ctx))
+        for atteso in ("Procedimento senza termine di conclusione", "Procedimento senza riferimenti normativi",
+                       "Manca l'unità responsabile dell'istruttoria"):  # fmt: skip
+            self.assertIn(atteso, testi)
+        self.assertTrue(any("procedimento con una denominazione molto simile" in t for t in testi))
+        completo = {"denominazione": "Accesso civico", "termine_conclusione": "30 giorni", "norma_riferimento": "D.lgs. 33/2013",
+                    "struttura_id": "s1"}  # fmt: skip
+        self.assertEqual(controlli_proposta("PROCEDIMENTO", "MODIFICA", completo, None, self.ctx), [])
 
     def test_misura_rischio_ed_eliminazione(self):
         from common.anticorruzione.controlli import controlli_proposta

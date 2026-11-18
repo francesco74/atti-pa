@@ -15,6 +15,7 @@ File SQL da eseguire **in ordine**, una sola volta ciascuno, sul database MySQL 
 | `0009_radici_negli_obiettivi.sql` | azioni e misure degli obiettivi collegate alla loro voce del catalogo (radice); rieseguibile |
 | `0010_messaggio_benvenuto.sql` | messaggio dell'amministratore nella pagina iniziale (Home); rieseguibile |
 | `0011_motivazione_valutazione.sql` | motivazione della valutazione del rischio (anche proposta dall'IA); rieseguibile |
+| `0012_catalogo_procedimenti.sql` | catalogo dei procedimenti (P.n) separato dai processi; l'attività può essere un procedimento; converte i procedimenti esistenti e toglie dai processi tipo, termine, norma e dati art. 35; rieseguibile |
 
 Nuova installazione: MySQL li esegue da solo, in ordine, al primo avvio con il volume vuoto
 (in Kubernetes: ConfigMap `mysql-schema` generata in `kustomization.yaml` e montata in

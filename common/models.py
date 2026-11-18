@@ -689,7 +689,8 @@ class AcArea(Base):
 class AcProcesso(Base):
     """Processo mappato: si compone di attività, che hanno rischi, mitigati da misure. Senza
     struttura responsabile è trasversale (tutti i servizi). La provenienza (pacchetto) è del
-    processo intero, con le sue attività, rischi e misure."""
+    processo intero, con le sue attività, rischi e misure. I procedimenti amministrativi non
+    sono processi: stanno nel loro catalogo (AcProcedimento) e un'attività può esserne uno."""
 
     __tablename__ = "ac_processi"
     __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_processo"),)
@@ -697,17 +698,12 @@ class AcProcesso(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     codice: Mapped[str] = mapped_column(String(50))  # es. A.1
-    tipo: Mapped[str] = mapped_column(String(20), default="PROCESSO")  # PROCESSO, PROCEDIMENTO
     area_id: Mapped[str | None] = mapped_column(ForeignKey("ac_aree.id", ondelete="SET NULL"))
     area: Mapped["AcArea | None"] = relationship(lazy="raise")
     denominazione: Mapped[str] = mapped_column(String(500))
     descrizione: Mapped[str | None] = mapped_column(Text)
     tempi: Mapped[str | None] = mapped_column(Text)
     attori_esterni: Mapped[str | None] = mapped_column(Text)
-    termine_conclusione: Mapped[str | None] = mapped_column(String(255))  # procedimento
-    norma_riferimento: Mapped[str | None] = mapped_column(Text)  # procedimento
-    # procedimento: dati propri dell'art. 35 d.lgs. 33/2013 (common/anticorruzione/art35.py)
-    art35: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
     # strutture coinvolte (id dell'anagrafica), oltre alla responsabile: servono a trovare il
     # processo tra quelli di una struttura, non a proporne modifiche
@@ -715,6 +711,30 @@ class AcProcesso(Base):
     impronta: Mapped[str | None] = mapped_column(String(64))
     pacchetto: Mapped[str | None] = mapped_column(String(150))
     impronta_base: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class AcProcedimento(Base):
+    """Procedimento amministrativo del catalogo dell'ente (art. 35 d.lgs. 33/2013), codice P.n:
+    condiviso tra anticorruzione e trasparenza (common/procedimenti.py). Nella mappatura un'attività
+    può essere un procedimento (AcAttivita.procedimento_id) invece di una voce del catalogo; lo
+    stesso procedimento può comparire in più processi. La struttura responsabile è l'unità
+    responsabile dell'istruttoria; i riferimenti normativi e il termine li chiede l'art. 35."""
+
+    __tablename__ = "ac_procedimenti"
+    __table_args__ = (UniqueConstraint("ente_id", "codice", name="uq_ac_procedimento"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=nuovo_id)
+    ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
+    codice: Mapped[str] = mapped_column(String(50))  # P.1, P.2...
+    denominazione: Mapped[str] = mapped_column(String(500))
+    descrizione: Mapped[str | None] = mapped_column(Text)
+    termine_conclusione: Mapped[str | None] = mapped_column(String(255))
+    norma_riferimento: Mapped[str | None] = mapped_column(Text)
+    struttura_id: Mapped[str | None] = mapped_column(ForeignKey("strutture.id", ondelete="SET NULL"))
+    # dati propri dell'art. 35 d.lgs. 33/2013 (common/anticorruzione/art35.py)
+    art35: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -757,6 +777,8 @@ class AcAttivita(Base):
     strutture_coinvolte: Mapped[str | None] = mapped_column(Text)  # note libere sulle strutture coinvolte
     coinvolte: Mapped[list[str] | None] = mapped_column(JSON)  # strutture coinvolte (id dell'anagrafica)
     voce_id: Mapped[str | None] = mapped_column(ForeignKey("ac_catalogo.id", ondelete="SET NULL"))  # radice nel catalogo
+    # in alternativa alla voce: l'attività è un procedimento del catalogo dei procedimenti
+    procedimento_id: Mapped[str | None] = mapped_column(ForeignKey("ac_procedimenti.id", ondelete="SET NULL"))
 
 
 class AcRischio(Base):
@@ -825,8 +847,8 @@ class AcContatore(Base):
 
 
 class AcProposta(Base):
-    """Proposta di un referente su un elemento della mappatura (area, processo o
-    procedimento, attività, rischio con la valutazione, misura): creazione, modifica o
+    """Proposta di un referente su un elemento della mappatura (area, processo, attività,
+    rischio con la valutazione, misura, procedimento del catalogo): creazione, modifica o
     eliminazione. La creazione può portare con sé gli elementi sottostanti (es. un'attività
     con i suoi rischi e misure). Stati: INVIATA (alla creazione) -> APPROVATA (applicata) |
     RESPINTA | RESTITUITA (si corregge e torna INVIATA); finché non è decisa si ritira."""
@@ -837,7 +859,7 @@ class AcProposta(Base):
     ente_id: Mapped[str] = mapped_column(ForeignKey("enti.id", ondelete="CASCADE"))
     utente_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     tipo: Mapped[str] = mapped_column(String(10))  # CREA, MODIFICA, ELIMINA
-    oggetto: Mapped[str] = mapped_column(String(20))  # AREA, PROCESSO, ATTIVITA, RISCHIO, MISURA
+    oggetto: Mapped[str] = mapped_column(String(20))  # AREA, PROCESSO, ATTIVITA, RISCHIO, MISURA, VOCE, PROCEDIMENTO
     elemento_id: Mapped[str | None] = mapped_column(String(36))  # modificato, eliminato o creato
     padre_id: Mapped[str | None] = mapped_column(String(36))  # creazione: dove si aggiunge
     # processo interessato: la struttura del referente si controlla su questo

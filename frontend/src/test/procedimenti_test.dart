@@ -2,8 +2,7 @@ import 'dart:convert';
 
 import 'package:atti_pa/api/api_client.dart';
 import 'package:atti_pa/stato/auth_state.dart';
-import 'package:atti_pa/ui/anticorruzione/comune.dart';
-import 'package:atti_pa/ui/anticorruzione/mappatura.dart';
+import 'package:atti_pa/ui/anticorruzione/procedimenti.dart';
 import 'package:atti_pa/ui/pubblico/procedimenti_pubblici.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,8 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
-/// Procedimenti e art. 35: nella mappatura il procedimento mostra la completezza dei dati e la
-/// scheda dell'allegato 11; la pagina pubblica va dalle strutture ai procedimenti alla scheda.
+/// Procedimenti e art. 35: nel catalogo il procedimento mostra la completezza dei dati, la
+/// scheda dell'allegato 11 e le attività della mappatura che lo sono; il referente propone; la
+/// pagina pubblica va dalle strutture ai procedimenti alla scheda.
 const _scheda = {
   'tipologia': 'Contributi economici', 'denominazione': 'Contributo affitto', 'descrizione': 'Contributo per il canone',
   'riferimenti_normativi': 'L. 431/1998', 'unita_istruttoria': 'Servizi sociali',
@@ -94,53 +94,91 @@ void main() {
     expect(find.text('SETTORE 4 - Servizi sociali'), findsOneWidget);
   });
 
-  testWidgets('nella mappatura il procedimento mostra la completezza dei dati art. 35', (tester) async {
+  testWidgets('nel catalogo il procedimento mostra la completezza dei dati art. 35 e le attività che lo sono', (tester) async {
     tester.view.physicalSize = const Size(1400, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    final richieste = <String>[];
     final api = ApiClient('http://prova', client: MockClient((r) async {
-      if (r.url.path.endsWith('/processi')) {
+      richieste.add('${r.method} ${r.url.path}');
+      if (r.url.path.endsWith('/anticorruzione/procedimenti')) {
         return _json([
-          {'id': 'p1', 'codice': 'A.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'a', 'denominazione': 'Contributo affitto',
-           'struttura_id': null, 'attivita': 0, 'rischi': 0, 'misure': 0, 'livello_massimo': null, 'art35_mancanti': 2},
+          {'id': 'p1', 'codice': 'P.1', 'denominazione': 'Contributo affitto', 'struttura_id': null, 'usi': 1,
+           'termine_conclusione': '30 giorni', 'art35_mancanti': ['a', 'b']},
         ]);
       }
-      if (r.url.path.endsWith('/processi/p1')) {
+      if (r.url.path.endsWith('/anticorruzione/procedimenti/p1')) {
         return _json({
-          'id': 'p1', 'codice': 'A.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'a', 'denominazione': 'Contributo affitto',
-          'art35': {'tipologia': 'Contributi economici'}, 'attivita': [],
+          'id': 'p1', 'codice': 'P.1', 'denominazione': 'Contributo affitto', 'termine_conclusione': '30 giorni',
+          'norma_riferimento': 'L. 431/1998', 'art35': {'tipologia': 'Contributi economici'}, 'usi': 1, 'proponibile': true,
           'scheda_art35': _scheda, 'art35_mancanti': ['Ufficio responsabile - PEC istituzionale: campo obbligatorio', 'Altro'],
+          'attivita': [
+            {'id': 'a1', 'codice': 'C.3.2', 'descrizione': 'Erogazione del contributo',
+             'processo': {'id': 'x', 'codice': 'C.3', 'denominazione': 'Sostegno alla casa'}},
+          ],
         });
       }
       return _json(const []);
     }));
-    final dati = DatiAnticorruzione(
-      metodologia: const {'scala': <String>[], 'livelli': ['Basso', 'Alto']},
-      aree: const [{'id': 'a', 'codice': 'A', 'descrizione': 'Servizi sociali', 'descrizione_breve': null}],
-      strutture: const [],
-      obblighi: const [],
-    );
     await tester.pumpWidget(MultiProvider(
-      providers: [
-        Provider<ApiClient>.value(value: api),
-        ChangeNotifierProvider(create: (_) => AuthState(api)),
-        Provider.value(value: dati),
-      ],
-      child: MaterialApp(home: Scaffold(body: MappaturaTab(onDatiCambiati: () {}))),
+      providers: [Provider<ApiClient>.value(value: api), ChangeNotifierProvider(create: (_) => AuthState(api))],
+      child: MaterialApp(
+          home: Scaffold(
+              body: ListView(children: const [ElencoProcedimenti(gestione: GestioneProcedimenti.diretta)]))),
     ));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('A - Servizi sociali'));
-    await tester.pumpAndSettle();
     expect(find.text('Art. 35: mancano 2 dati'), findsOneWidget); // nell'elenco
-    await tester.tap(find.text('A.1 - Contributo affitto'));
+    expect(find.textContaining('in 1 attività'), findsOneWidget);
+    expect(find.text('Nuovo procedimento'), findsOneWidget);
+    expect(find.text('Importa dal sito o da documenti'), findsOneWidget);
+    await tester.tap(find.text('P.1 - Contributo affitto'));
     await tester.pumpAndSettle();
+    expect(find.text('Riferimenti normativi: L. 431/1998'), findsOneWidget);
     expect(find.text('Dati per la trasparenza (art. 35 d.lgs. 33/2013)'), findsOneWidget);
     expect(find.text('Art. 35: mancano 2 dati'), findsOneWidget);
+    expect(find.text('Attività della mappatura (1)'), findsOneWidget);
+    expect(find.text('C.3.2 - Erogazione del contributo'), findsOneWidget);
+    expect(find.text('Modifica'), findsWidgets); // dati generali e art. 35
+    expect(find.text('Elimina'), findsNothing); // è un'attività della mappatura
     await tester.tap(find.text('Dati mancanti o da correggere'));
     await tester.pumpAndSettle();
     expect(find.textContaining('PEC istituzionale: campo obbligatorio'), findsOneWidget);
     await tester.tap(find.text('Scheda del procedimento (allegato 11)'));
     await tester.pumpAndSettle();
     expect(find.text('Potere sostitutivo in caso di inerzia'), findsOneWidget);
+  });
+
+  testWidgets('il referente propone la modifica di un procedimento della sua struttura', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final corpi = <String, Object?>{};
+    final api = ApiClient('http://prova', client: MockClient((r) async {
+      if (r.body.isNotEmpty) corpi['${r.method} ${r.url.path}'] = jsonDecode(r.body);
+      if (r.url.path.endsWith('/anticorruzione/procedimenti/p1')) {
+        return _json({
+          'id': 'p1', 'codice': 'P.1', 'denominazione': 'Contributo affitto', 'struttura_id': 's1', 'usi': 0,
+          'proponibile': true, 'scheda_art35': _scheda, 'art35_mancanti': <String>[], 'attivita': <Object>[],
+          'art35': {'tipologia': 'Contributi economici'},
+        });
+      }
+      if (r.url.path.endsWith('/proposte')) return _json({'id': 'x'});
+      return _json([{'id': 's1', 'codice': 'SETTORE 4', 'descrizione': 'Servizi sociali', 'attiva': true}]);
+    }));
+    await tester.pumpWidget(MultiProvider(
+      providers: [Provider<ApiClient>.value(value: api), ChangeNotifierProvider(create: (_) => AuthState(api))],
+      child: const MaterialApp(home: ProcedimentoPage(procedimentoId: 'p1', gestione: GestioneProcedimenti.proposte)),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Proponi eliminazione'), findsOneWidget);
+    await tester.tap(find.text('Proponi modifica'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Termine di conclusione'), '45 giorni');
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    final proposta = corpi['POST /api/v1/anticorruzione/proposte'] as Map;
+    expect((proposta['tipo'], proposta['oggetto'], proposta['elemento_id']), ('MODIFICA', 'PROCEDIMENTO', 'p1'));
+    expect((proposta['dati'] as Map)['termine_conclusione'], '45 giorni');
+    expect((proposta['dati'] as Map)['art35'], {'tipologia': 'Contributi economici'}); // restano
   });
 }

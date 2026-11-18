@@ -22,6 +22,7 @@ class Contesto:
 
     livelli: list[str]  # dal più basso
     processi: dict[str, str] = field(default_factory=dict)  # id -> denominazione (tutti i processi dell'ente)
+    procedimenti: dict[str, str] = field(default_factory=dict)  # id -> denominazione (catalogo dei procedimenti)
     elemento_id: str | None = None  # elemento modificato (escluso dai doppioni)
     fratelli: list[str] = field(default_factory=list)  # attività del processo o rischi dell'attività già presenti
     misure_del_rischio: int | None = None  # eliminazione di una misura: quante ne ha il suo rischio
@@ -112,11 +113,6 @@ def controlli_proposta(oggetto: str, tipo: str, dati: dict, prima: dict | None, 
             esito.append(_c(AVVISO, "Manca l'area di rischio"))
         if _vuoto(dati.get("struttura_id")):
             esito.append(_c(INFO, "Processo trasversale: nessuna struttura responsabile"))
-        if dati.get("tipo") == "PROCEDIMENTO":
-            if _vuoto(dati.get("termine_conclusione")):
-                esito.append(_c(AVVISO, "Procedimento senza termine di conclusione"))
-            if _vuoto(dati.get("norma_riferimento")):
-                esito.append(_c(AVVISO, "Procedimento senza riferimenti normativi"))
         altri = [d for i, d in ctx.processi.items() if i != ctx.elemento_id]
         if doppio := _doppione(dati.get("denominazione") or "", altri):
             esito.append(_c(AVVISO, f"Esiste già un processo con una denominazione molto simile: «{_breve(doppio, 80)}»"))
@@ -125,6 +121,16 @@ def controlli_proposta(oggetto: str, tipo: str, dati: dict, prima: dict | None, 
                 esito.append(_c(INFO, "Nessuna attività: andranno aggiunte"))
             for a in dati.get("attivita") or []:
                 esito += _attivita(a, "", ctx)
+    elif oggetto == "PROCEDIMENTO":
+        if _vuoto(dati.get("termine_conclusione")):
+            esito.append(_c(AVVISO, "Procedimento senza termine di conclusione"))
+        if _vuoto(dati.get("norma_riferimento")):
+            esito.append(_c(AVVISO, "Procedimento senza riferimenti normativi"))
+        if _vuoto(dati.get("struttura_id")):
+            esito.append(_c(AVVISO, "Manca l'unità responsabile dell'istruttoria"))
+        altri = [d for i, d in ctx.procedimenti.items() if i != ctx.elemento_id]
+        if doppio := _doppione(dati.get("denominazione") or "", altri):
+            esito.append(_c(AVVISO, f"Esiste già un procedimento con una denominazione molto simile: «{_breve(doppio, 80)}»"))
     elif oggetto == "ATTIVITA":
         if doppio := _doppione(dati.get("descrizione") or "", ctx.fratelli):
             esito.append(_c(AVVISO, f"Il processo ha già un'attività molto simile: «{_breve(doppio, 80)}»"))

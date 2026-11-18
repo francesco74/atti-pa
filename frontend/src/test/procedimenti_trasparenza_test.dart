@@ -18,8 +18,8 @@ void main() {
     addTearDown(tester.view.reset);
     final chiamate = <String>[];
     final procedimento = {
-      'id': 'p1', 'codice': 'P.1', 'tipo': 'PROCEDIMENTO', 'denominazione': 'Cambio di residenza', 'descrizione': null,
-      'termine_conclusione': '45 giorni', 'norma_riferimento': null, 'struttura_id': 's1', 'area_id': null,
+      'id': 'p1', 'codice': 'P.1', 'denominazione': 'Cambio di residenza', 'descrizione': null,
+      'termine_conclusione': '45 giorni', 'norma_riferimento': null, 'struttura_id': 's1', 'usi': 0,
       'art35': {'tipologia': 'Anagrafe'}, 'scheda_art35': {'denominazione': 'Cambio di residenza', 'tipologia': 'Anagrafe'},
       'art35_mancanti': ['Ufficio responsabile del procedimento'],
     };
@@ -57,21 +57,22 @@ void main() {
 
     await tester.tap(find.text('P.1 - Cambio di residenza'));
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Modifica'), findsOneWidget);
-    expect(find.byTooltip('Elimina'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Modifica'), findsWidgets);
+    expect(find.widgetWithText(TextButton, 'Elimina'), findsOneWidget);
     expect(find.text('Termine di conclusione: 45 giorni'), findsOneWidget);
+    expect(find.textContaining('Attività della mappatura'), findsNothing); // solo nell'anticorruzione
   });
 
   testWidgets('con l\'anticorruzione si consultano', (tester) async {
     await apri(tester, conIter: true);
-    expect(find.textContaining('si modificano lì, con l\'iter'), findsOneWidget);
+    expect(find.textContaining('li gestisce il RPCT'), findsOneWidget);
     expect(find.text('Nuovo procedimento'), findsNothing);
     expect(find.text('Importa dal sito o da documenti'), findsNothing);
     expect(find.text('Pubblica i procedimenti (art. 35)'), findsOneWidget);
 
     await tester.tap(find.text('P.1 - Cambio di residenza'));
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Modifica'), findsNothing);
-    expect(find.text('Si modifica nella mappatura dell\'anticorruzione.'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Modifica'), findsNothing);
+    expect(find.text('Si modifica nel catalogo dell\'anticorruzione.'), findsOneWidget);
   });
 }

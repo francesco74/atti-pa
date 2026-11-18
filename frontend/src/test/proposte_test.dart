@@ -23,10 +23,10 @@ void main() {
     obblighi: const [],
   );
   final processo = {
-    'id': 'p1', 'codice': 'C.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'c', 'denominazione': 'Gare',
-    'termine_conclusione': '30 giorni', 'proponibile': true,
+    'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare', 'proponibile': true,
     'attivita': [
-      {'id': 'a1', 'codice': 'C.1.1', 'descrizione': 'Bando', 'rischi': [
+      {'id': 'a1', 'codice': 'C.1.1', 'descrizione': 'Bando', 'procedimento': {'id': 'pr1', 'codice': 'P.4', 'denominazione': 'Bando di gara'},
+       'rischi': [
         {'id': 'r1', 'codice': 'C.1.1_R.1', 'evento': 'Bando su misura', 'valori_probabilita': null, 'misure': [
           {'id': 'm1', 'codice': 'C.1.1_R.1_M.1', 'descrizione': 'Doppia verifica', 'tipo': 'SPECIFICA'},
         ]},
@@ -68,7 +68,8 @@ void main() {
     });
     await apri(tester, client, VistaProcesso(processoId: 'p1', onAree: () {}, onArea: (_) {}, onChiuso: () {}));
 
-    expect(find.textContaining('Procedimento C.1'), findsOneWidget);
+    expect(find.textContaining('Processo C.1'), findsOneWidget);
+    expect(find.textContaining('Procedimento P.4 - Bando di gara'), findsOneWidget); // l'attività è un procedimento
     expect(find.text('Proponi un\'attività'), findsOneWidget);
     await tester.tap(find.text('C.1.1 - Bando'));
     await tester.pumpAndSettle();

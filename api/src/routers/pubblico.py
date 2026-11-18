@@ -2,7 +2,8 @@
 cittadini consultano su /pubblico/mappatura, e i procedimenti con i dati dell'art. 35 d.lgs.
 33/2013 (allegato 11 alla delibera ANAC 495/2024) su /pubblico/procedimenti, da collegare nella
 sezione Amministrazione trasparente (Attività e procedimenti > Tipologie di procedimento).
-Ciascuna ha il suo interruttore (Ente.mappatura_pubblica, Ente.procedimenti_pubblici).
+Ciascuna ha il suo interruttore (Ente.mappatura_pubblica, Ente.procedimenti_pubblici). Nella
+mappatura l'attività che è un procedimento lo mostra (e ci collega, se i procedimenti sono pubblici).
 
 L'ente si riconosce dal dominio della richiesta. Le API rispondono solo se la pagina è accesa:
 la mappatura con il modulo anticorruzione (interruttore del RPCT), i procedimenti con
@@ -20,8 +21,8 @@ from sqlalchemy.orm import undefer
 import ricerca as servizio_ricerca
 from deps import db, ente_richiesta, impostazioni
 from routers.anticorruzione import (
-    FiltriProcessi, RicercaIn, albero_processo, documenti_ricerca, elenco_processi, metodologia_ente,
-    processo_dell_ente,
+    FiltriProcessi, RicercaIn, albero_processo, documenti_procedimenti, documenti_ricerca, elenco_processi,
+    metodologia_ente, procedimenti_ente, processo_dell_ente,
 )  # fmt: skip
 from common.anticorruzione import art35 as dati_art35
 from common.anticorruzione.metodologia import chiave_naturale
@@ -29,18 +30,18 @@ from web import ErroreApi, allegato, corpo, parametri
 from common.anticorruzione.metodologia import chiave_area
 from common import procedimenti as catalogo
 from common import registro_ricerche as reg
-from common.models import AcArea, AcProcesso, Ente, Modulo, Struttura
+from common.models import AcArea, AcProcedimento, Ente, Modulo, Struttura
 from routers.ricerche import FeedbackIn, RicercaIn as RicercaConclusaIn, registra_feedback, registra_ricerca
 
 bp = Blueprint("pubblico", __name__, url_prefix="/api/v1/pubblico")
 
 # campi pubblicati di ogni elemento della mappatura
 _PROCESSO = (
-    "id", "codice", "tipo", "area_id", "denominazione", "descrizione", "tempi", "attori_esterni",
-    "termine_conclusione", "norma_riferimento", "struttura_id", "coinvolte",
+    "id", "codice", "area_id", "denominazione", "descrizione", "tempi", "attori_esterni", "struttura_id", "coinvolte",
 )  # fmt: skip
 _CONTEGGI = ("attivita", "rischi", "misure", "livello_massimo")
-_ATTIVITA = ("id", "codice", "descrizione", "strutture_coinvolte", "coinvolte")
+# il procedimento (codice e denominazione) dell'attività che lo è
+_ATTIVITA = ("id", "codice", "descrizione", "strutture_coinvolte", "coinvolte", "procedimento")
 _RISCHIO = ("id", "codice", "evento", "fattore_abilitante", "livello")
 _MISURA = (
     "id", "codice", "descrizione", "tipo", "categoria", "obbligo_trasparenza", "fasi", "tempi",
@@ -53,14 +54,20 @@ _MISURA = (
 _limite: servizio_ricerca.LimiteRichieste | None = None
 
 
-async def _cerca(e: Ente, tipo: str | None) -> dict:
-    """Ricerca dei cittadini: oltre il limite di richieste solo per parole, senza modello."""
+async def _cerca(e: Ente, procedimenti: bool = False) -> dict:
+    """Ricerca dei cittadini nei processi o nei procedimenti: oltre il limite di richieste solo
+    per parole, senza modello."""
     global _limite
     if _limite is None:
         _limite = servizio_ricerca.LimiteRichieste(impostazioni().ricerca_limite_pubblico)
     f = parametri(RicercaIn)
     semantica = _limite.consenti(request.remote_addr or "")
-    return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), tipo), ente_id=e.id, semantica=semantica)
+    sessione = db()
+    if procedimenti:
+        documenti = documenti_procedimenti(await procedimenti_ente(sessione), await _strutture(e))
+    else:
+        documenti = await documenti_ricerca(sessione)
+    return await servizio_ricerca.cerca(f.testo, documenti, ente_id=e.id, semantica=semantica)
 
 
 def _ente(e: Ente) -> dict:
@@ -109,7 +116,7 @@ async def mappatura():
 
 @bp.get("/mappatura/processi")
 async def processi():
-    """Processi e procedimenti con i conteggi e il livello più alto (stessi filtri dell'app)."""
+    """Processi con i conteggi e il livello più alto (stessi filtri dell'app)."""
     await _ente_con_mappatura()
     elenco = await elenco_processi(db(), parametri(FiltriProcessi))
     return [_solo(p, _PROCESSO + _CONTEGGI) for p in elenco]
@@ -117,12 +124,14 @@ async def processi():
 
 @bp.get("/mappatura/processi/<processo_id>")
 async def processo(processo_id: str):
-    """Processo con le attività, i rischi (con il solo livello) e le misure."""
-    await _ente_con_mappatura()
+    """Processo con le attività (con il procedimento, per quelle che lo sono), i rischi (con il
+    solo livello) e le misure; se la pagina dei procedimenti è pubblica, l'app ci collega."""
+    e = await _ente_con_mappatura()
     sessione = db()
     albero = await albero_processo(sessione, await processo_dell_ente(sessione, processo_id))
     return {
         **_solo(albero, _PROCESSO),
+        "procedimenti_pubblici": catalogo.disponibili(e) and bool(e.procedimenti_pubblici),
         "attivita": [
             {**_solo(a, _ATTIVITA), "rischi": [
                 {**_solo(r, _RISCHIO), "misure": [_solo(x, _MISURA) for x in r["misure"]]}
@@ -135,8 +144,8 @@ async def processo(processo_id: str):
 
 @bp.get("/mappatura/ricerca")
 async def ricerca_mappatura():
-    """Ricerca in linguaggio naturale nei processi e procedimenti pubblicati."""
-    return await _cerca(await _ente_con_mappatura(), None)
+    """Ricerca in linguaggio naturale nei processi pubblicati."""
+    return await _cerca(await _ente_con_mappatura())
 
 
 async def _ente_con_procedimenti() -> Ente:
@@ -160,7 +169,7 @@ async def procedimenti():
     pagina pubblica: ente, strutture che hanno procedimenti, elenco."""
     e = await _ente_con_procedimenti()
     strutture = await _strutture(e)
-    righe = await db().scalars(select(AcProcesso).where(AcProcesso.ente_id == e.id, AcProcesso.tipo == "PROCEDIMENTO"))
+    righe = await db().scalars(select(AcProcedimento).where(AcProcedimento.ente_id == e.id))
     elenco = [
         {"id": p.id, "codice": p.codice, "denominazione": p.denominazione,
          "tipologia": (p.art35 or {}).get("tipologia"), "struttura_id": p.struttura_id}
@@ -179,15 +188,15 @@ async def procedimenti():
 async def ricerca_procedimenti():
     """Ricerca in linguaggio naturale nei procedimenti (es. "come chiedo il contributo per
     l'affitto?")."""
-    return await _cerca(await _ente_con_procedimenti(), "PROCEDIMENTO")
+    return await _cerca(await _ente_con_procedimenti(), procedimenti=True)
 
 
 @bp.get("/procedimenti/<procedimento_id>")
 async def procedimento(procedimento_id: str):
     """Tutti i dati dell'allegato 11 (schema ART_35) del procedimento, con i recapiti degli uffici."""
     e = await _ente_con_procedimenti()
-    p = await db().get(AcProcesso, procedimento_id)
-    if p is None or p.ente_id != e.id or p.tipo != "PROCEDIMENTO":
+    p = await db().get(AcProcedimento, procedimento_id)
+    if p is None or p.ente_id != e.id:
         raise ErroreApi(HTTPStatus.NOT_FOUND, "Procedimento non trovato")
     return {"id": p.id, "codice": p.codice, "struttura_id": p.struttura_id,
             "scheda": dati_art35.scheda(p, await _strutture(e))}  # fmt: skip

@@ -986,7 +986,7 @@ async def processi_e_attivita():
     voci.sort(key=lambda v: (priorita(v[0]), chiave_naturale(v[0].codice), v[1] is not None,
                              chiave_naturale(v[1].codice) if v[1] else ""))  # fmt: skip
     return [{"tipo": "ATTIVITA" if a else "PROCESSO", "id": (a or p).id, "codice": (a or p).codice,
-             "descrizione": a.descrizione if a else p.denominazione, "processo_tipo": p.tipo or "PROCESSO",
+             "descrizione": a.descrizione if a else p.denominazione,
              "processo": f"{p.codice} - {p.denominazione}", "struttura_id": p.struttura_id}
             for p, a in voci[:200]]  # fmt: skip
 
@@ -1029,7 +1029,7 @@ async def albero_mappatura():
         return _voce(voci[el.voce_id]) | {"attiva": voci[el.voce_id].attiva} if el.voce_id in voci else None
 
     return {
-        "processo": {"id": p.id, "codice": p.codice, "denominazione": p.denominazione, "tipo": p.tipo or "PROCESSO",
+        "processo": {"id": p.id, "codice": p.codice, "denominazione": p.denominazione,
                      "struttura_id": p.struttura_id},
         "attivita": [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione, "voce": voce(a), "rischi": [
             {"id": r.id, "codice": r.codice, "evento": r.evento, "livello": r.livello, "misure": [

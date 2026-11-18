@@ -86,13 +86,10 @@ class AttivitaStd(BaseModel):
 
 class ProcessoStd(BaseModel):
     codice: str = Field(min_length=1, max_length=50)
-    tipo: Literal["PROCESSO", "PROCEDIMENTO"] = "PROCESSO"
     denominazione: str = Field(min_length=1, max_length=500)
     descrizione: str | None = None
     tempi: str | None = None
     attori_esterni: str | None = None
-    termine_conclusione: str | None = None  # procedimento
-    norma_riferimento: str | None = None  # procedimento
     attivita: list[AttivitaStd] = []
 
 
@@ -102,13 +99,8 @@ class FileProcessi(BaseModel):
 
 
 def impronta_processo(p: ProcessoStd, area: str | None) -> str:
-    """Impronta del contenuto standard (senza valutazioni, che sono dell'ente). Tipo, termine e
-    norma entrano solo se diversi dal valore predefinito: i processi già distribuiti, che non li
-    hanno, mantengono l'impronta di prima."""
+    """Impronta del contenuto standard (senza valutazioni, che sono dell'ente)."""
     dati = p.model_dump(mode="json", exclude={"attivita": {"__all__": {"rischi": {"__all__": {"valutazione"}}}}})
-    for campo, predefinito in (("tipo", "PROCESSO"), ("termine_conclusione", None), ("norma_riferimento", None)):
-        if dati.get(campo) == predefinito:
-            del dati[campo]
     # la voce del catalogo entra solo se indicata: i processi senza mantengono l'impronta di prima
     for a in dati.get("attivita", []):
         for el in [a, *a.get("rischi", []), *(m for r in a.get("rischi", []) for m in r.get("misure", []))]:
@@ -143,8 +135,6 @@ def leggi_processi(sorgente: str) -> FileProcessi:
 def sorgente_processo(p: ProcessoStd, area: str | None) -> str:
     """Un processo come file a sé (sorgente dell'oggetto del pacchetto)."""
     dati = p.model_dump(mode="json", exclude_none=True)
-    if dati.get("tipo") == "PROCESSO":
-        del dati["tipo"]  # predefinito: i processi senza tipo restano scritti come prima
     return yaml.safe_dump({"area": area, "processi": [dati]}, allow_unicode=True, sort_keys=False, width=100)
 
 
@@ -172,9 +162,8 @@ async def processo_ente(db: AsyncSession, ente_id: str, codice: str) -> tuple[Ac
         return v.codice if v is not None and normalizza(v.descrizione) != normalizza(testo) else None
 
     std = ProcessoStd(
-        codice=p.codice, tipo=p.tipo or "PROCESSO", denominazione=p.denominazione, descrizione=p.descrizione,
-        tempi=p.tempi, attori_esterni=p.attori_esterni, termine_conclusione=p.termine_conclusione,
-        norma_riferimento=p.norma_riferimento,
+        codice=p.codice, denominazione=p.denominazione, descrizione=p.descrizione,
+        tempi=p.tempi, attori_esterni=p.attori_esterni,
         attivita=[AttivitaStd(codice=a.codice, descrizione=a.descrizione, voce=voce(a, a.descrizione), rischi=[
             RischioStd(codice=r.codice, evento=r.evento, voce=voce(r, r.evento), fattore_abilitante=r.fattore_abilitante, misure=[
                 MisuraStd(codice=m.codice, descrizione=m.descrizione, voce=voce(m, m.descrizione), tipo=m.tipo, categoria=m.categoria,
@@ -229,7 +218,6 @@ async def applica_processo(
         db.add(p)
     p.area_id = area_id
     p.denominazione, p.descrizione, p.tempi, p.attori_esterni = std.denominazione, std.descrizione, std.tempi, std.attori_esterni
-    p.tipo, p.termine_conclusione, p.norma_riferimento = std.tipo, std.termine_conclusione, std.norma_riferimento
     p.impronta = p.impronta_base = impronta_std
     p.pacchetto = pacchetto
 

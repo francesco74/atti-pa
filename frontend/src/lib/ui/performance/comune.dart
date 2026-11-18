@@ -1155,7 +1155,7 @@ class _SceltaMappaturaState extends State<_SceltaMappatura> {
                             title: Text('${v['codice']} - ${v['descrizione']}'),
                             subtitle: Text([
                               if (v['tipo'] == 'ATTIVITA') 'Attività di ${v['processo']}'
-                              else v['processo_tipo'] == 'PROCEDIMENTO' ? 'Procedimento' : 'Processo',
+                              else 'Processo',
                               if (v['struttura_id'] == null) 'trasversale' else if (v['struttura_id'] == widget.strutturaId) 'della struttura',
                             ].join(' · ')),
                             onTap: () => Navigator.pop(context, v),

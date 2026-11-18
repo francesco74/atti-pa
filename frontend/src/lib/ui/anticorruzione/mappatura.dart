@@ -6,15 +6,14 @@ import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import '../ricerca.dart';
 import 'albero.dart';
-import 'art35.dart';
-import 'importa_procedimenti.dart';
 import 'comune.dart';
 
 /// Area dei processi senza un'area di rischio.
 const _senzaArea = '';
 
-/// Mappatura, un livello alla volta con il percorso in alto: aree di rischio, processi e
-/// procedimenti dell'area, attività del processo, rischi e misure dell'attività. La ricerca
+/// Mappatura, un livello alla volta con il percorso in alto: aree di rischio, processi
+/// dell'area, attività del processo (che possono essere procedimenti del catalogo), rischi e
+/// misure dell'attività. La ricerca
 /// trova un processo in tutte le aree. Il RPCT modifica direttamente; i referenti propongono
 /// con gli stessi pulsanti (aree, e tutto quanto riguarda i processi della loro struttura).
 class MappaturaTab extends StatefulWidget {
@@ -30,7 +29,7 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
   late Future<List<Map<String, dynamic>>> _processi;
   String? _area; // area aperta
   String? _processoId; // processo aperto
-  String? _struttura, _livello, _tipo;
+  String? _struttura, _livello;
   final _testo = TextEditingController(); // ricerca in tutte le aree
   final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
   late final RegistroRicerche _registro;
@@ -63,12 +62,11 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
         _processi = apiDi(context).get('$apiAnticorruzione/processi', query: {
           'struttura': ?_struttura,
           'livello': ?_livello,
-          'tipo': ?_tipo,
         }).then((v) => (v as List).cast<Map<String, dynamic>>());
       });
 
   void _vaiAree() {
-    _processoId = _area = _struttura = _livello = _tipo = null;
+    _processoId = _area = _struttura = _livello = null;
     _testo.clear();
     _testoArea.clear();
     _ricerca.cambia('');
@@ -152,15 +150,13 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
       Column(children: [
         for (final p in processi)
           RigaVoce(
-            icona: p['tipo'] == 'PROCEDIMENTO' ? Icons.gavel_outlined : Icons.account_tree_outlined,
+            icona: Icons.account_tree_outlined,
             titolo: '${p['codice']} - ${p['denominazione']}',
             dettagli: [
-              etichettaTipo(p['tipo']),
               p['struttura_id'] == null ? 'Trasversale' : (dati.struttura(p['struttura_id']) ?? ''),
               '${p['attivita']} attività, ${p['rischi']} rischi, ${p['misure']} misure',
             ],
             finale: [
-              if (p['art35_mancanti'] != null) CompletezzaArt35(p['art35_mancanti'] as int),
               LivelloChip(dati, p['livello_massimo'] as String?),
             ],
             onTap: () {
@@ -185,7 +181,7 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
           child: TextField(
             controller: _testo,
             decoration: const InputDecoration(
-              labelText: 'Cerca un processo o procedimento',
+              labelText: 'Cerca un processo',
               hintText: 'Codice, parole o una domanda',
               isDense: true,
               prefixIcon: Icon(Icons.search),
@@ -198,17 +194,6 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
             onPressed: () => _modificaArea(rpct),
             icon: const Icon(Icons.add),
             label: Text(rpct ? 'Nuova area' : 'Proponi un\'area'),
-          ),
-        if (cerca.isEmpty && rpct)
-          OutlinedButton.icon(
-            icon: const Icon(Icons.download_outlined),
-            label: const Text('Importa procedimenti'),
-            onPressed: () async {
-              final fatto = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(builder: (_) => ImportaProcedimentiPage(strutture: dati.strutture, aree: dati.aree)),
-              );
-              if (fatto == true) _carica();
-            },
           ),
         if (cerca.isEmpty && rpct) const PubblicazioneMappatura(),
       ]),
@@ -281,23 +266,6 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
           ),
         ),
         SizedBox(
-          width: 180,
-          child: DropdownButtonFormField<String?>(
-            initialValue: _tipo,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Tipo', isDense: true),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Tutti')),
-              DropdownMenuItem(value: 'PROCESSO', child: Text('Processi')),
-              DropdownMenuItem(value: 'PROCEDIMENTO', child: Text('Procedimenti')),
-            ],
-            onChanged: (v) {
-              _tipo = v;
-              _carica();
-            },
-          ),
-        ),
-        SizedBox(
           width: 200,
           child: DropdownButtonFormField<String?>(
             initialValue: _livello,
@@ -315,13 +283,13 @@ class _MappaturaTabState extends State<MappaturaTab> with AutomaticKeepAliveClie
         FilledButton.icon(
           onPressed: () => _nuovoProcesso(dati, rpct),
           icon: const Icon(Icons.add),
-          label: Text(rpct ? 'Nuovo processo o procedimento' : 'Proponi un processo o procedimento'),
+          label: Text(rpct ? 'Nuovo processo' : 'Proponi un processo'),
         ),
       ]),
       NotaRicerca(_ricercaArea),
       const SizedBox(height: 16),
       if (dellArea.isEmpty)
-        Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
+        Center(child: Text(cerca.isEmpty ? 'Nessun processo.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
       else
         _elencoProcessi(dati, dellArea, cerca.isEmpty ? null : _ricercaArea),
       if (cerca.isNotEmpty) FeedbackRicerca(_ricercaArea),
@@ -449,10 +417,14 @@ class _VistaProcessoState extends State<VistaProcesso> {
   Widget _rigaAttivita(DatiAnticorruzione dati, Map<String, dynamic> a, OperazioniAlbero? ops) {
     final rischi = (a['rischi'] as List).cast<Map<String, dynamic>>();
     final misure = rischi.fold<int>(0, (n, r) => n + (r['misure'] as List).length);
+    final procedimento = a['procedimento'] as Map?;
     return RigaVoce(
-      icona: Icons.subdirectory_arrow_right,
+      icona: procedimento == null ? Icons.subdirectory_arrow_right : Icons.gavel_outlined,
       titolo: '${a['codice']} - ${a['descrizione']}',
-      dettagli: ['${rischi.length} rischi, $misure misure'],
+      dettagli: [
+        if (procedimento != null) 'Procedimento ${procedimento['codice']} - ${procedimento['denominazione']}',
+        '${rischi.length} rischi, $misure misure',
+      ],
       onTap: () => setState(() => _attivitaId = a['id'] as String),
       finale: [
         LivelloChip(dati, _livelloMassimo(dati, rischi)),
@@ -498,6 +470,9 @@ class _VistaProcessoState extends State<VistaProcesso> {
         ],
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${a['descrizione']}'),
+          if (a['procedimento'] case final Map p)
+            Text('Procedimento ${p['codice']} - ${p['denominazione']} (catalogo dei procedimenti)',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           if (voceRitoccata(a, a['descrizione'] as String?) case final voce?)
             Text(voce, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
           if (dati.coinvolte(a['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(a['coinvolte'])}'),
@@ -550,18 +525,6 @@ class _VistaProcessoState extends State<VistaProcesso> {
           ],
         ],
       ),
-      if (processo['tipo'] == 'PROCEDIMENTO' && albero['scheda_art35'] != null)
-        SezioneArt35(
-          scheda: (albero['scheda_art35'] as Map).cast<String, dynamic>(),
-          mancanti: List<String>.from(albero['art35_mancanti'] as List? ?? const []),
-          etichettaModifica: ops == null ? 'Modifica' : etichettaAzione(ops, 'Modifica'),
-          onModifica: ops == null
-              ? null
-              : () => eseguiOperazione(context, _carica, () async {
-                    await modificaArt35(context, dati.strutture, (processo['art35'] as Map?)?.cast<String, dynamic>(),
-                        procedimento: processo, salva: (v) => ops.processo({...processo, 'art35': v}));
-                  }),
-        ),
       Row(children: [
         Expanded(child: Text('Attività', style: Theme.of(context).textTheme.titleMedium)),
         if (ops != null)

@@ -8,21 +8,46 @@ import '../../stato/auth_state.dart';
 import '../comuni.dart';
 import 'comune.dart';
 import 'mappatura.dart' show VistaProcesso;
+import 'procedimenti.dart';
 
 const apiCatalogo = '$apiAnticorruzione/catalogo';
 
 const tipiVoce = {'ATTIVITA': 'Attività', 'RISCHIO': 'Rischi', 'MISURA': 'Misure'};
-const _singolare = {'ATTIVITA': 'attività', 'RISCHIO': 'rischio', 'MISURA': 'misura'};
+const _singolare = {'ATTIVITA': 'attività', 'RISCHIO': 'rischio', 'MISURA': 'misura', 'PROCEDIMENTO': 'procedimento'};
 
 IconData iconaVoce(String? tipo) => switch (tipo) {
       'ATTIVITA' => Icons.subdirectory_arrow_right,
       'RISCHIO' => Icons.warning_amber_outlined,
+      'PROCEDIMENTO' => Icons.gavel_outlined,
       _ => Icons.shield_outlined,
     };
 
+/// Apre il processo (e l'attività) di un elemento del catalogo: {processo: {id, codice,
+/// denominazione}, attivita_id | id}.
+void apriProcessoDelCatalogo(BuildContext context, Map<String, dynamic> e) {
+  final dati = context.read<DatiAnticorruzione>();
+  final processo = e['processo'] as Map;
+  Navigator.of(context).push(MaterialPageRoute(
+    builder: (c) => Provider<DatiAnticorruzione>.value(
+      value: dati,
+      child: Scaffold(
+        appBar: AppBar(title: Text('${processo['codice']} - ${processo['denominazione']}')),
+        body: VistaProcesso(
+          processoId: processo['id'] as String,
+          attivitaIniziale: (e['attivita_id'] ?? e['id']) as String?,
+          onAree: () => Navigator.of(c).pop(),
+          onArea: (_) => Navigator.of(c).pop(),
+          onChiuso: () => Navigator.of(c).pop(),
+        ),
+      ),
+    ),
+  ));
+}
+
 /// Catalogo della mappatura: le voci (radici) di attività, rischi e misure da cui nascono gli
-/// elementi dei processi, con dove sono usate. Il RPCT le crea, le modifica (se usate con
-/// conferma), le disattiva, le unisce e le elimina se non usate.
+/// elementi dei processi, con dove sono usate, e i procedimenti (un'attività può essere un
+/// procedimento). Il RPCT crea le voci, le modifica (se usate con conferma), le disattiva, le
+/// unisce e le elimina se non usate; gestisce i procedimenti, che il referente propone.
 class CatalogoTab extends StatefulWidget {
   const CatalogoTab({super.key});
 
@@ -82,20 +107,42 @@ class _CatalogoTabState extends State<CatalogoTab> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
     final rpct = context.read<AuthState>().utente?.isAnticorruzioneRpct ?? false;
+    final selettore = SegmentedButton<String>(
+      segments: [
+        for (final e in tipiVoce.entries) ButtonSegment(value: e.key, label: Text(e.value)),
+        const ButtonSegment(value: 'PROCEDIMENTO', label: Text('Procedimenti')),
+      ],
+      selected: {_tipo},
+      showSelectedIcon: false,
+      onSelectionChanged: (s) {
+        _tipo = s.first;
+        if (_tipo == 'PROCEDIMENTO') {
+          setState(() {});
+        } else {
+          _carica();
+        }
+      },
+    );
+    if (_tipo == 'PROCEDIMENTO') {
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        Text('I procedimenti amministrativi dell\'ente con i dati dell\'art. 35 d.lgs. 33/2013 (gli stessi della '
+            'trasparenza). Nei processi un\'attività può essere un procedimento: si sceglie da qui.',
+            style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+        Align(alignment: Alignment.centerLeft, child: selettore),
+        const SizedBox(height: 12),
+        ElencoProcedimenti(
+          gestione: rpct ? GestioneProcedimenti.diretta : GestioneProcedimenti.proposte,
+          apriAttivita: apriProcessoDelCatalogo,
+        ),
+      ]);
+    }
     return ListView(padding: const EdgeInsets.all(16), children: [
       Text('Le voci da cui nascono attività, rischi e misure dei processi. Nel processo il testo si può ritoccare, '
           'ma la voce resta la stessa: così si vede dove una voce è usata.', style: Theme.of(context).textTheme.bodySmall),
       const SizedBox(height: 12),
       Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        SegmentedButton<String>(
-          segments: [for (final e in tipiVoce.entries) ButtonSegment(value: e.key, label: Text(e.value))],
-          selected: {_tipo},
-          showSelectedIcon: false,
-          onSelectionChanged: (s) {
-            _tipo = s.first;
-            _carica();
-          },
-        ),
+        selettore,
         SizedBox(
           width: 320,
           child: TextField(
@@ -183,13 +230,20 @@ Future<Map<String, dynamic>?> modificaVoce(BuildContext context, DatiAnticorruzi
 }
 
 /// Le voci del catalogo dello stesso tipo simili a [testo] (per significato, o per parole in
-/// comune senza il modello), la più simile prima, con la somiglianza da 0 a 1.
-Future<List<Map<String, dynamic>>> vociSimili(ApiClient api, String tipo, String testo, {String? esclusa}) async =>
-    ((await api.get('$apiCatalogo/simili', query: {'tipo': tipo, 'testo': testo, 'esclusa': ?esclusa})) as List)
-        .cast<Map<String, dynamic>>();
+/// comune senza il modello), la più simile prima, con la somiglianza da 0 a 1. Per il tipo
+/// PROCEDIMENTO i procedimenti del catalogo, nella stessa forma (testo nella descrizione).
+Future<List<Map<String, dynamic>>> vociSimili(ApiClient api, String tipo, String testo, {String? esclusa}) async {
+  if (tipo == 'PROCEDIMENTO') {
+    final r = await api.get('$apiProcedimentiAc/simili', query: {'testo': testo, 'escluso': ?esclusa}) as List;
+    return [for (final p in r.cast<Map<String, dynamic>>()) {...p, 'tipo': 'PROCEDIMENTO', 'descrizione': p['denominazione'], 'attiva': true}];
+  }
+  return ((await api.get('$apiCatalogo/simili', query: {'tipo': tipo, 'testo': testo, 'esclusa': ?esclusa})) as List)
+      .cast<Map<String, dynamic>>();
+}
 
 String _usi(Map<String, dynamic> v) {
   final usi = v['usi'] as int? ?? 0;
+  if (v['tipo'] == 'PROCEDIMENTO') return usiProcedimento(usi);
   return usi == 0 ? 'non usata' : (usi == 1 ? 'usata in 1 elemento' : 'usata in $usi elementi');
 }
 
@@ -209,14 +263,15 @@ Future<Map<String, dynamic>?> controllaSimili(BuildContext context, String tipo,
   final esito = await showDialog<Object>(
     context: context,
     builder: (c) => AlertDialog(
-      title: const Text('Nel catalogo ci sono voci simili'),
+      title: Text(tipo == 'PROCEDIMENTO' ? 'Nel catalogo ci sono procedimenti simili' : 'Nel catalogo ci sono voci simili'),
       content: SizedBox(
         width: 600,
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text(scegli
-              ? 'Prima di ${azione == 'Crea' ? 'creare' : 'proporre'} una voce nuova, controlla se una di queste fa già al caso '
-                  'tuo: nel processo il testo si potrà comunque ritoccare.'
-              : 'Prima di creare una voce nuova, controlla che non sia già nel catalogo.'),
+              ? 'Prima di ${azione == 'Crea' ? 'creare' : 'proporre'} ${tipo == 'PROCEDIMENTO' ? 'un procedimento nuovo' : 'una voce nuova'}, '
+                  'controlla se ${tipo == 'PROCEDIMENTO' ? 'uno di questi' : 'una di queste'} fa già al caso tuo: nel processo il testo si potrà comunque ritoccare.'
+              : 'Prima di ${azione == 'Crea' ? 'creare' : 'proporre'} ${tipo == 'PROCEDIMENTO' ? 'un procedimento nuovo' : 'una voce nuova'}, '
+                  'controlla che non sia già nel catalogo.'),
           const SizedBox(height: 8),
           Flexible(
             child: ListView(shrinkWrap: true, children: [
@@ -232,7 +287,7 @@ Future<Map<String, dynamic>?> controllaSimili(BuildContext context, String tipo,
                     if (v['attiva'] != true) 'disattivata',
                   ].join(' · ')),
                   trailing: scegli && v['attiva'] == true
-                      ? TextButton(onPressed: () => Navigator.pop(c, v), child: const Text('Scegli questa'))
+                      ? TextButton(onPressed: () => Navigator.pop(c, v), child: Text(tipo == 'PROCEDIMENTO' ? 'Scegli questo' : 'Scegli questa'))
                       : null,
                 ),
             ]),
@@ -272,9 +327,11 @@ class _VociSimiliPropostaState extends State<VociSimiliProposta> {
           final simili = s.data ?? const [];
           if (simili.isEmpty) return const SizedBox.shrink();
           return Sezione(
-            titolo: 'Voci simili già nel catalogo',
+            titolo: widget.tipo == 'PROCEDIMENTO' ? 'Procedimenti simili già nel catalogo' : 'Voci simili già nel catalogo',
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('Se la voce proposta c\'è già, conviene restituire la proposta indicando quale usare.',
+              Text(widget.tipo == 'PROCEDIMENTO'
+                  ? 'Se il procedimento proposto c\'è già, conviene restituire la proposta indicando quale usare.'
+                  : 'Se la voce proposta c\'è già, conviene restituire la proposta indicando quale usare.',
                   style: Theme.of(context).textTheme.bodySmall),
               for (final v in simili)
                 ListTile(
@@ -416,27 +473,6 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
         if (mounted) Navigator.of(context).pop();
       });
 
-  /// Apre il processo (e l'attività) dove la voce è usata.
-  void _apriProcesso(Map<String, dynamic> e) {
-    final dati = context.read<DatiAnticorruzione>();
-    final processo = e['processo'] as Map;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (c) => Provider<DatiAnticorruzione>.value(
-        value: dati,
-        child: Scaffold(
-          appBar: AppBar(title: Text('${processo['codice']} - ${processo['denominazione']}')),
-          body: VistaProcesso(
-            processoId: processo['id'] as String,
-            attivitaIniziale: e['attivita_id'] as String?,
-            onAree: () => Navigator.of(c).pop(),
-            onArea: (_) => Navigator.of(c).pop(),
-            onChiuso: () => Navigator.of(c).pop(),
-          ),
-        ),
-      ),
-    ));
-  }
-
   @override
   Widget build(BuildContext context) {
     final rpct = context.read<AuthState>().utente?.isAnticorruzioneRpct ?? false;
@@ -503,7 +539,7 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
                       '${(e['processo'] as Map)['codice']} - ${(e['processo'] as Map)['denominazione']}',
                       if (e['diverso'] == true) 'testo ritoccato nel processo',
                     ],
-                    onTap: () => _apriProcesso(e),
+                    onTap: () => apriProcessoDelCatalogo(context, e),
                   ),
               ]),
             ),
@@ -534,22 +570,29 @@ class _SchedaVocePageState extends State<SchedaVocePage> {
 
 /// Scelta di una voce del catalogo (attive, del tipo dato), con la ricerca. Con [dati] (per un
 /// elemento nuovo della mappatura) la voce che manca si crea (RPCT) o si propone (referente:
-/// approvata, si sceglie).
+/// approvata, si sceglie). Per un'attività nuova ([procedimenti]) si può scegliere invece un
+/// procedimento del catalogo dei procedimenti: il risultato ha allora `procedimento: true`, con
+/// id, codice e denominazione.
 Future<Map<String, dynamic>?> scegliVoce(BuildContext context, String tipo,
-        {Set<String> escluse = const {}, String? titolo, DatiAnticorruzione? dati}) =>
+        {Set<String> escluse = const {}, String? titolo, DatiAnticorruzione? dati, bool procedimenti = false}) =>
     showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => _SceltaVoce(
-          tipo: tipo, escluse: escluse, titolo: titolo ?? 'Scegli dal catalogo: ${_singolare[tipo]}', dati: dati),
+          tipo: tipo,
+          escluse: escluse,
+          titolo: titolo ?? (procedimenti ? 'Nuova attività: dal catalogo o un procedimento' : 'Scegli dal catalogo: ${_singolare[tipo]}'),
+          dati: dati,
+          procedimenti: procedimenti),
     );
 
 class _SceltaVoce extends StatefulWidget {
-  const _SceltaVoce({required this.tipo, required this.escluse, required this.titolo, this.dati});
+  const _SceltaVoce({required this.tipo, required this.escluse, required this.titolo, this.dati, this.procedimenti = false});
 
   final String tipo;
   final Set<String> escluse;
   final String titolo;
   final DatiAnticorruzione? dati;
+  final bool procedimenti; // si può scegliere anche un procedimento
 
   @override
   State<_SceltaVoce> createState() => _SceltaVoceState();
@@ -559,6 +602,7 @@ class _SceltaVoceState extends State<_SceltaVoce> {
   final _testo = TextEditingController();
   Timer? _attesa;
   late Future<List<Map<String, dynamic>>> _voci;
+  var _procedimento = false; // si sceglie tra i procedimenti
 
   @override
   void initState() {
@@ -574,15 +618,23 @@ class _SceltaVoceState extends State<_SceltaVoce> {
   }
 
   void _cerca() => setState(() {
+        final testo = _testo.text.trim();
+        if (_procedimento) {
+          _voci = apiDi(context).get(apiProcedimentiAc, query: {if (testo.isNotEmpty) 'testo': testo}).then((v) => [
+                for (final p in (v as List).cast<Map<String, dynamic>>()) {...p, 'procedimento': true},
+              ]);
+          return;
+        }
         _voci = apiDi(context).get(apiCatalogo, query: {
           'tipo': widget.tipo,
           'attive': 'true',
-          if (_testo.text.trim().isNotEmpty) 'testo': _testo.text.trim(),
+          if (testo.isNotEmpty) 'testo': testo,
         }).then((v) => [for (final x in (v as List).cast<Map<String, dynamic>>()) if (!widget.escluse.contains(x['id'])) x]);
       });
 
   /// La voce che manca: il RPCT la crea e la sceglie; il referente la propone.
   Future<void> _manca(bool rpct) async {
+    if (_procedimento) return _mancaProcedimento(rpct);
     final api = apiDi(context);
     Map<String, dynamic>? nuova;
     var esistente = false;
@@ -610,24 +662,50 @@ class _SceltaVoceState extends State<_SceltaVoce> {
     Navigator.pop(context, nuova);
   }
 
+  /// Il procedimento che manca: il RPCT lo crea e lo sceglie; il referente lo propone (approvato,
+  /// lo sceglie).
+  Future<void> _mancaProcedimento(bool rpct) async {
+    final strutture = widget.dati?.strutture ?? const <Map<String, dynamic>>[];
+    final scelto = await nuovoProcedimento(context, apiProcedimentiAc, rpct ? GestioneProcedimenti.diretta : GestioneProcedimenti.proposte,
+        strutture, testo: _testo.text, scegli: true);
+    if (scelto != null && mounted) Navigator.pop(context, {...scelto, 'procedimento': true});
+  }
 
   @override
   Widget build(BuildContext context) {
     final rpct = context.read<AuthState>().utente?.isAnticorruzioneRpct ?? false;
+    final cosa = _procedimento ? 'il procedimento' : 'la voce';
     return AlertDialog(
         title: Text(widget.titolo),
         content: SizedBox(
           width: 640,
           height: 460,
           child: Column(children: [
+            if (widget.procedimenti)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: false, icon: Icon(Icons.subdirectory_arrow_right), label: Text('Voce del catalogo')),
+                    ButtonSegment(value: true, icon: Icon(Icons.gavel_outlined), label: Text('Procedimento')),
+                  ],
+                  selected: {_procedimento},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (s) {
+                    _procedimento = s.first;
+                    _cerca();
+                  },
+                ),
+              ),
             if (widget.dati != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                    rpct
-                        ? 'Il testo della voce si potrà ritoccare per questo processo. Se la voce manca, creala.'
-                        : 'Il testo della voce si potrà ritoccare per questo processo. Se la voce manca, proponila: '
-                            'quando il RPCT la approva la potrai scegliere.',
+                    (_procedimento ? 'L\'attività è un procedimento amministrativo del catalogo (art. 35). ' : '') +
+                        (rpct
+                            ? 'Il testo si potrà ritoccare per questo processo. Se $cosa manca, ${_procedimento ? 'crealo' : 'creala'}.'
+                            : 'Il testo si potrà ritoccare per questo processo. Se $cosa manca, ${_procedimento ? 'proponilo' : 'proponila'}: '
+                                'quando il RPCT ${_procedimento ? 'lo' : 'la'} approva ${_procedimento ? 'lo' : 'la'} potrai scegliere.'),
                     style: Theme.of(context).textTheme.bodySmall),
               ),
             TextField(
@@ -645,16 +723,29 @@ class _SceltaVoceState extends State<_SceltaVoce> {
                 future: _voci,
                 riprova: _cerca,
                 builder: (context, voci) => voci.isEmpty
-                    ? const Center(child: Text('Nessuna voce trovata.'))
+                    ? Center(child: Text(_procedimento ? 'Nessun procedimento trovato.' : 'Nessuna voce trovata.'))
                     : ListView(children: [
                         for (final v in voci)
-                          ListTile(
-                            dense: true,
-                            leading: Icon(iconaVoce(v['tipo'] as String?), size: 20),
-                            title: Text('${v['codice']} - ${v['descrizione']}'),
-                            subtitle: Text([_usi(v), if (v['per_significato'] == true) 'trovata per significato'].join(' · ')),
-                            onTap: () => Navigator.pop(context, v),
-                          ),
+                          if (v['procedimento'] == true)
+                            ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.gavel_outlined, size: 20),
+                              title: Text('${v['codice']} - ${v['denominazione']}'),
+                              subtitle: Text([
+                                usiProcedimento(v['usi'] as int? ?? 0),
+                                ?v['termine_conclusione'] as String?,
+                                if (v['per_significato'] == true) 'trovato per significato',
+                              ].join(' · ')),
+                              onTap: () => Navigator.pop(context, v),
+                            )
+                          else
+                            ListTile(
+                              dense: true,
+                              leading: Icon(iconaVoce(v['tipo'] as String?), size: 20),
+                              title: Text('${v['codice']} - ${v['descrizione']}'),
+                              subtitle: Text([_usi(v), if (v['per_significato'] == true) 'trovata per significato'].join(' · ')),
+                              onTap: () => Navigator.pop(context, v),
+                            ),
                       ]),
               ),
             ),
@@ -664,7 +755,9 @@ class _SceltaVoceState extends State<_SceltaVoce> {
           if (widget.dati != null)
             TextButton.icon(
               icon: Icon(rpct ? Icons.add : Icons.outgoing_mail, size: 18),
-              label: Text(rpct ? 'Nuova voce' : 'Proponi una voce nuova'),
+              label: Text(_procedimento
+                  ? (rpct ? 'Nuovo procedimento' : 'Proponi un procedimento nuovo')
+                  : (rpct ? 'Nuova voce' : 'Proponi una voce nuova')),
               onPressed: () => _manca(rpct),
             ),
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annulla')),

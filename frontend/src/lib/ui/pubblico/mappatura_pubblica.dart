@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
-import '../anticorruzione/albero.dart' show IntestazioneProcesso, etichettaTipo;
+import 'package:url_launcher/url_launcher.dart';
+
+import '../anticorruzione/albero.dart' show IntestazioneProcesso;
 import '../anticorruzione/comune.dart';
 import '../comuni.dart';
 import '../ricerca.dart';
@@ -16,7 +18,8 @@ const percorsoMappaturaPubblica = '/pubblico/mappatura';
 const _senzaArea = '';
 
 /// Mappatura dei processi consultabile dai cittadini, senza accesso: aree di rischio,
-/// processi e procedimenti dell'area, attività del processo, rischi (con il livello) e misure
+/// processi dell'area, attività del processo (con il procedimento, per quelle che lo sono: porta
+/// alla sua scheda se i procedimenti sono pubblici), rischi (con il livello) e misure
 /// dell'attività, con la ricerca e i filtri. Sola lettura; la pubblica il RPCT dalla scheda
 /// Mappatura. Se l'ente non l'ha pubblicata l'API risponde 404.
 class MappaturaPubblicaPage extends StatefulWidget {
@@ -78,7 +81,7 @@ class _MappaturaPubblicaPageState extends State<MappaturaPubblicaPage> {
                 ente: ente,
                 registro: _registro,
                 titolo: 'Mappatura dei processi e valutazione del rischio corruttivo',
-                introduzione: 'Processi e procedimenti dell\'ente raggruppati per area di rischio: per ciascuno le attività, '
+                introduzione: 'Processi dell\'ente raggruppati per area di rischio: per ciascuno le attività, '
                     'i possibili eventi rischiosi con il livello di rischio valutato e le misure adottate per '
                     'prevenirli (Piano triennale per la prevenzione della corruzione e la trasparenza).',
                 child: MappaturaPubblica(ente: '${ente['nome']}'),
@@ -108,7 +111,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
   String? _processoId; // processo aperto
   String _nomeProcesso = ''; // per il titolo della scheda del browser
   String? _attivitaId; // attività aperta
-  String? _struttura, _livello, _tipo;
+  String? _struttura, _livello;
   final _testo = TextEditingController(); // ricerca in tutte le aree
   final _testoArea = TextEditingController(); // ricerca nei processi dell'area aperta
   late final RegistroRicerche _registro;
@@ -138,12 +141,11 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
         _processi = apiDi(context).get('$apiPubblico/mappatura/processi', query: {
           'struttura': ?_struttura,
           'livello': ?_livello,
-          'tipo': ?_tipo,
         }).then((v) => (v as List).cast<Map<String, dynamic>>());
       });
 
   void _vaiAree() => setState(() {
-        _processoId = _attivitaId = _area = _struttura = _livello = _tipo = null;
+        _processoId = _attivitaId = _area = _struttura = _livello = null;
         _testo.clear();
         _testoArea.clear();
         _ricerca.cambia('');
@@ -166,10 +168,9 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       Column(children: [
         for (final p in processi)
           RigaVoce(
-            icona: p['tipo'] == 'PROCEDIMENTO' ? Icons.gavel_outlined : Icons.account_tree_outlined,
+            icona: Icons.account_tree_outlined,
             titolo: '${p['codice']} - ${p['denominazione']}',
             dettagli: [
-              etichettaTipo(p['tipo']),
               p['struttura_id'] == null ? 'Trasversale' : (dati.struttura(p['struttura_id']) ?? ''),
               '${p['attivita']} attività, ${p['rischi']} rischi, ${p['misure']} misure',
             ],
@@ -199,7 +200,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
             controller: _testo,
             textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
-              labelText: 'Cerca un processo o procedimento',
+              labelText: 'Cerca un processo',
               hintText: 'Codice, parole o una domanda',
               isDense: true,
               prefixIcon: Icon(Icons.search),
@@ -277,23 +278,6 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           ),
         ),
         LarghezzaMassima(
-          180,
-          child: DropdownButtonFormField<String?>(
-            initialValue: _tipo,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Tipo', isDense: true),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Tutti')),
-              DropdownMenuItem(value: 'PROCESSO', child: Text('Processi')),
-              DropdownMenuItem(value: 'PROCEDIMENTO', child: Text('Procedimenti')),
-            ],
-            onChanged: (v) {
-              _tipo = v;
-              _carica();
-            },
-          ),
-        ),
-        LarghezzaMassima(
           200,
           child: DropdownButtonFormField<String?>(
             initialValue: _livello,
@@ -315,7 +299,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       Intestazione(dati.area(_area) ?? 'Senza area'),
       const SizedBox(height: 4),
       if (dellArea.isEmpty)
-        Center(child: Text(cerca.isEmpty ? 'Nessun processo o procedimento.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
+        Center(child: Text(cerca.isEmpty ? 'Nessun processo.' : (_ricercaArea.inCorso ? '' : 'Nessun processo trovato.')))
       else
         _elencoProcessi(dati, dellArea, cerca.isEmpty ? null : _ricercaArea),
       if (cerca.isNotEmpty) FeedbackRicerca(_ricercaArea),
@@ -330,6 +314,23 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
       if (l != null && (massimo == null || dati.livelli.indexOf(l) > dati.livelli.indexOf(massimo))) massimo = l;
     }
     return massimo;
+  }
+
+  /// Il procedimento che l'attività è; se i procedimenti sono pubblici, il link alla sua scheda
+  /// nella pagina pubblica dei procedimenti.
+  Widget _procedimento(Map<String, dynamic> processo, Map<String, dynamic> p) {
+    final testo = 'Procedimento ${p['codice']} - ${p['denominazione']}';
+    if (processo['procedimenti_pubblici'] != true) return Text(testo);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+        icon: const Icon(Icons.gavel_outlined, size: 18),
+        label: Text('$testo: scheda del procedimento'),
+        onPressed: () => launchUrl(Uri.base.replace(path: '/pubblico/procedimenti', queryParameters: {'procedimento': '${p['id']}'}),
+            webOnlyWindowName: '_self'),
+      ),
+    );
   }
 
   /// Terzo livello (il processo con le attività) e quarto (l'attività con rischi e misure).
@@ -353,9 +354,10 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
         if (attivita.isEmpty) const Text('Nessuna attività.'),
         for (final a in attivita)
           RigaVoce(
-            icona: Icons.subdirectory_arrow_right,
+            icona: a['procedimento'] == null ? Icons.subdirectory_arrow_right : Icons.gavel_outlined,
             titolo: '${a['codice']} - ${a['descrizione']}',
             dettagli: [
+              if (a['procedimento'] != null) 'Procedimento ${(a['procedimento'] as Map)['codice']}',
               '${rischi(a).length} rischi, ${rischi(a).fold<int>(0, (n, r) => n + (r['misure'] as List).length)} misure',
             ],
             finale: [LivelloChip(dati, _livelloMassimo(dati, rischi(a)))],
@@ -368,6 +370,7 @@ class _MappaturaPubblicaState extends State<MappaturaPubblica> {
           titolo: 'Attività ${aperta['codice']}',
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('${aperta['descrizione']}'),
+            if (aperta['procedimento'] != null) _procedimento(processo, (aperta['procedimento'] as Map).cast<String, dynamic>()),
             if (dati.coinvolte(aperta['coinvolte']) != null) Text('Strutture coinvolte: ${dati.coinvolte(aperta['coinvolte'])}'),
             if (aperta['strutture_coinvolte'] != null) Text('Note sulle strutture coinvolte: ${aperta['strutture_coinvolte']}'),
           ]),

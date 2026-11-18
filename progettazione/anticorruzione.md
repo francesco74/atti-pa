@@ -165,7 +165,7 @@ Riferimento: PIAO 2026-2028 del Comune di Lucca (`docs/Allegato_1_PIAO.pdf`), so
 
 Decisioni del 04/11/2026:
 
-13. **Gerarchia**: area → processo o procedimento → attività → rischio (con la valutazione) →
+13. **Gerarchia**: area → processo o procedimento (fino al 18/11/2026: vedi la 30) → attività → rischio (con la valutazione) →
     misura, ciascuno uno a molti. Il **procedimento** sta allo stesso livello del processo: è un
     processo con `tipo = PROCEDIMENTO` e due campi in più, termine di conclusione e norma di
     riferimento. Così attività, rischi, misure, monitoraggio ed esportazioni valgono per
@@ -402,4 +402,26 @@ Decisioni del 04/11/2026:
     **Fase 3 (17/11/2026)**: gli obiettivi della performance usano le voci come **radici** (vedi
     `progettazione/performance.md`): la scheda della voce elenca anche gli obiettivi; una voce
     usata negli obiettivi chiede conferma prima di cambiarla, non si elimina, e unendola gli
-    obiettivi passano all'altra voce.
+    obiettivi passano all'altra voce.30. **Procedimenti nelle attività** (18/11/2026, sostituisce le decisioni 13 e 20 per quanto
+    riguarda il procedimento): il **processo è solo processo** (niente tipo, termine di
+    conclusione, norma di riferimento e dati art. 35). I procedimenti sono un **catalogo
+    dell'ente** (`ac_procedimenti`, codici `P.<n>`, migrazione `0012_catalogo_procedimenti.sql`),
+    condiviso con la trasparenza come prima (decisione 26, `common/procedimenti.py`), con
+    denominazione, descrizione, termine di conclusione, **riferimenti normativi** (li chiede
+    l'art. 35, c. 1, lett. a; per i processi non c'è un obbligo analogo), unità responsabile
+    dell'istruttoria e dati dell'art. 35. L'aderenza al procedimento è a livello di **attività**:
+    un'attività nasce **o** da una voce del catalogo delle attività **o** da un procedimento del
+    catalogo (`ac_attivita.procedimento_id`), in alternativa; il testo si copia e si ritocca come
+    per le voci. Lo stesso procedimento può essere un'attività di più processi; usato, non si
+    elimina. Scheda **Catalogo**: quarta sezione "Procedimenti" (elenco con i dati art. 35
+    mancanti, scheda del procedimento con le attività che lo sono, importazione dal sito o da
+    documenti). Il RPCT li gestisce direttamente; il referente propone (proposta `PROCEDIMENTO`:
+    creazione, modifica, eliminazione) per i procedimenti della sua struttura o senza struttura,
+    e nella scelta dell'attività può proporre il procedimento che manca. Processi senza area:
+    codice `X.<n>` (`P.<n>` è dei procedimenti). Nella mappatura pubblica l'attività mostra il
+    suo procedimento e, se la pagina dei procedimenti è pubblica, ci collega. Nell'allegato al
+    PTPCT le colonne del procedimento (codice e denominazione, termine, norma) sono per attività.
+    Conversione: i processi di tipo procedimento senza attività diventano procedimenti con lo
+    stesso id (restano validi i link pubblici); quelli con attività restano processi e nel
+    catalogo entra una copia; tutti i procedimenti prendono un codice `P.<n>` (chi lo aveva lo
+    tiene); le proposte non decise sui procedimenti si chiudono come respinte.

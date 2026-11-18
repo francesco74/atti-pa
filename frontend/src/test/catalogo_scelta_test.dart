@@ -11,7 +11,8 @@ import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
 /// Elementi nuovi della mappatura scelti dal catalogo: la voce dà il testo, che si ritocca;
-/// la voce che manca il RPCT la crea, il referente la propone.
+/// la voce che manca il RPCT la crea, il referente la propone. L'attività può essere invece un
+/// procedimento del catalogo dei procedimenti.
 void main() {
   final corpi = <String, Object?>{};
   final dati = DatiAnticorruzione(
@@ -37,6 +38,11 @@ void main() {
           if (r.url.queryParameters['tipo'] == 'MISURA')
             {'id': 'v2', 'tipo': 'MISURA', 'codice': 'MIS-0007', 'descrizione': 'Doppia firma', 'tipo_misura': 'GENERALE',
              'categoria': 'Controllo', 'indicatore': 'Atti firmati', 'target': '100%', 'attiva': true, 'usi': 1},
+        ];
+      } else if (r.url.path.endsWith('/procedimenti') && r.method == 'GET') {
+        corpo = [
+          {'id': 'pr7', 'codice': 'P.7', 'denominazione': 'Rilascio del permesso di costruire', 'usi': 0,
+           'termine_conclusione': '60 giorni', 'art35_mancanti': <String>[]},
         ];
       } else if (r.url.path.endsWith('/catalogo/simili') && simili) {
         corpo = [
@@ -76,7 +82,7 @@ void main() {
     final avvia = await apri(tester, rpct: false, tipo: 'ATTIVITA');
     final esito = avvia();
     await tester.pumpAndSettle();
-    expect(find.text('Scegli dal catalogo: attività'), findsOneWidget);
+    expect(find.text('Nuova attività: dal catalogo o un procedimento'), findsOneWidget);
     await tester.tap(find.text('ATT-0012 - Pubblicazione del bando'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Voce del catalogo ATT-0012'), findsOneWidget);
@@ -86,6 +92,25 @@ void main() {
     await tester.pumpAndSettle();
     final v = await esito;
     expect((v?['descrizione'], v?['voce_id']), ('Pubblicazione del bando sul portale', 'v1'));
+  });
+
+  testWidgets('l\'attività nuova può essere un procedimento del catalogo', (tester) async {
+    final avvia = await apri(tester, rpct: true, tipo: 'ATTIVITA');
+    final esito = avvia();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Procedimento'));
+    await tester.pumpAndSettle();
+    expect(find.text('ATT-0012 - Pubblicazione del bando'), findsNothing);
+    expect(find.text('Nuovo procedimento'), findsOneWidget); // il RPCT crea quello che manca
+    await tester.tap(find.text('P.7 - Rilascio del permesso di costruire'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Procedimento P.7'), findsWidgets);
+    expect(find.widgetWithText(TextField, 'Rilascio del permesso di costruire'), findsOneWidget);
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    final v = await esito;
+    expect((v?['descrizione'], v?['procedimento_id'], v?.containsKey('voce_id')), ('Rilascio del permesso di costruire', 'pr7', false));
+    expect((v?['procedimento'] as Map?)?['codice'], 'P.7');
   });
 
   testWidgets('la misura nuova prende dalla voce tipo, categoria, indicatore e target', (tester) async {

@@ -13,25 +13,21 @@ import 'comune.dart';
 /// Importazione dei procedimenti (art. 35) dalla pagina "Tipologie di procedimento" del sito di
 /// Amministrazione trasparente o da documenti (Word, ODT, PDF, fogli di calcolo). La lettura la
 /// fa il worker con l'estrazione della trasparenza: il modello trascrive i dati, non li inventa.
-/// Poi, per ogni procedimento trovato, si sceglie se aggiornarne uno della mappatura o crearne
-/// uno nuovo, quali dati prendere e a quali strutture corrispondono gli uffici. Si salva con le
-/// API della mappatura (e, per l'amministratore, delle strutture); con il solo modulo
-/// trasparenza con le API dei procedimenti della trasparenza ([api]), senza aree di rischio.
+/// Poi, per ogni procedimento trovato, si sceglie se aggiornarne uno del catalogo dei
+/// procedimenti o crearne uno nuovo, quali dati prendere e a quali strutture corrispondono gli
+/// uffici. Si salva con le API del catalogo dell'anticorruzione (e, per l'amministratore, delle
+/// strutture); con il solo modulo trasparenza con quelle della trasparenza ([api]).
 class ImportaProcedimentiPage extends StatefulWidget {
   const ImportaProcedimentiPage({
     super.key,
     required this.strutture,
-    this.aree = const [],
-    this.api = '$apiAnticorruzione/processi',
+    this.api = '$apiAnticorruzione/procedimenti',
     this.apiImportazioni = '$apiAnticorruzione/procedimenti/importazioni',
-    this.nomeCatalogo = 'mappatura',
   });
 
   final List<Map<String, dynamic>> strutture;
-  final List<Map<String, dynamic>> aree; // vuote: niente scelta dell'area
   final String api; // elenco (GET), creazione (POST), modifica (PUT /<id>) dei procedimenti
   final String apiImportazioni;
-  final String nomeCatalogo; // "mappatura" o "elenco dei procedimenti", nei testi
 
   @override
   State<ImportaProcedimentiPage> createState() => _ImportaProcedimentiPageState();
@@ -39,7 +35,7 @@ class ImportaProcedimentiPage extends StatefulWidget {
 
 const _estensioni = ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods', 'csv', 'xml', 'json'];
 
-/// Campi del procedimento (processo) e dati art. 35 di testo che si possono prendere dalla fonte.
+/// Campi del procedimento e dati art. 35 di testo che si possono prendere dalla fonte.
 const _campiProcesso = {
   'denominazione': 'Denominazione',
   'descrizione': 'Descrizione',
@@ -84,8 +80,7 @@ class _Trovato {
 
   final Map<String, dynamic> elemento;
   bool importa = true;
-  String? destinazione; // procedimento della mappatura; null: nuovo
-  String? area; // per un nuovo procedimento
+  String? destinazione; // procedimento del catalogo; null: nuovo
   final Map<String, (String, String?)> uffici; // ruolo -> (nome nella fonte, struttura scelta)
   final Set<String> campi = {}; // campi da prendere dalla fonte
   String? esito;
@@ -105,7 +100,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
   Timer? _attesa;
   List<_Trovato> _trovati = [];
   List<String> _avvisi = [];
-  Map<String, Map<String, dynamic>> _procedimenti = {}; // della mappatura, per id
+  Map<String, Map<String, dynamic>> _procedimenti = {}; // del catalogo, per id
   bool _completaRecapiti = true;
   bool _inCorso = false;
 
@@ -151,7 +146,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
         }
       } else if (r['stato'] == 'COMPLETATA') {
         _attesa?.cancel();
-        final procedimenti = await api.get(widget.api, query: {'tipo': 'PROCEDIMENTO'}) as List;
+        final procedimenti = await api.get(widget.api) as List;
         if (!mounted) return;
         setState(() {
           _procedimenti = {for (final p in procedimenti.cast<Map<String, dynamic>>()) p['id'] as String: p};
@@ -168,7 +163,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
     }
   }
 
-  /// Valore attuale nella mappatura del campo [k] (della scheda) per il procedimento [id].
+  /// Valore attuale nel catalogo del campo [k] (della scheda) per il procedimento [id].
   String _attuale(String? id, String k) {
     final p = id == null ? null : _procedimenti[id];
     if (p == null) return '';
@@ -176,8 +171,8 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
     return '${(p['art35'] as Map?)?[k] ?? ''}'.trim();
   }
 
-  /// Si propone di prendere i dati presenti nella fonte e diversi da quelli della mappatura;
-  /// la denominazione di un procedimento esistente resta quella della mappatura.
+  /// Si propone di prendere i dati presenti nella fonte e diversi da quelli del catalogo;
+  /// la denominazione di un procedimento esistente resta quella del catalogo.
   void _sceltePredefinite(_Trovato t) {
     t.campi
       ..clear()
@@ -188,8 +183,6 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
   }
 
   Map<String, dynamic>? _struttura(String? id) => widget.strutture.where((s) => s['id'] == id).firstOrNull;
-
-  String _area(Map<String, dynamic> a) => '${a['codice']} - ${a['descrizione_breve'] ?? a['descrizione']}';
 
   /// Recapiti vuoti delle strutture che la fonte completa: id struttura -> {campo: valore}.
   Map<String, Map<String, String>> _recapitiDaCompletare() {
@@ -226,9 +219,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
           if (scelta != null) art35[ruolo] = scelta;
         }
         final corpo = <String, dynamic>{
-          'tipo': 'PROCEDIMENTO',
-          'area_id': attuale == null ? t.area : attuale['area_id'],
-          for (final k in const ['denominazione', 'descrizione', 'tempi', 'attori_esterni', 'termine_conclusione', 'norma_riferimento'])
+          for (final k in const ['denominazione', 'descrizione', 'termine_conclusione', 'norma_riferimento'])
             k: attuale?[k],
           'struttura_id': t.uffici['struttura_id']?.$2 ?? attuale?['struttura_id'],
           'art35': art35,
@@ -397,7 +388,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
               child: DropdownButtonFormField<String?>(
                 initialValue: t.destinazione,
                 isExpanded: true,
-                decoration: InputDecoration(labelText: 'Procedimento della ${widget.nomeCatalogo}', isDense: true),
+                decoration: const InputDecoration(labelText: 'Procedimento del catalogo', isDense: true),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Nuovo procedimento')),
                   for (final p in procedimenti)
@@ -409,21 +400,6 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
                 }),
               ),
             ),
-            if (t.destinazione == null && widget.aree.isNotEmpty)
-              SizedBox(
-                width: 320,
-                child: DropdownButtonFormField<String?>(
-                  initialValue: t.area,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Area di rischio', isDense: true),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('Senza area')),
-                    for (final a in widget.aree)
-                      DropdownMenuItem(value: a['id'] as String, child: Text(_area(a), overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (v) => setState(() => t.area = v),
-                ),
-              ),
           ]),
           const SizedBox(height: 12),
           if (t.uffici.isNotEmpty) ...[
@@ -443,7 +419,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
     final scelti = _trovati.where((t) => t.importa).length;
     return ListView(padding: const EdgeInsets.all(16), children: [
       Text(_trovati.isEmpty ? 'Nella fonte non sono stati trovati procedimenti.' : 'Procedimenti trovati: ${_trovati.length}. '
-          'Per ciascuno scegli se aggiornarne uno della ${widget.nomeCatalogo} o crearne uno nuovo, gli uffici e i dati da prendere.'),
+          'Per ciascuno scegli se aggiornarne uno del catalogo o crearne uno nuovo, gli uffici e i dati da prendere.'),
       if (_avvisi.isNotEmpty)
         Card(
           color: Colors.amber.withValues(alpha: 0.12),
@@ -500,7 +476,7 @@ class _ImportaProcedimentiPageState extends State<ImportaProcedimentiPage> {
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
-          child: FilledButton(onPressed: () => Navigator.pop(context, true), child: Text('Torna alla ${widget.nomeCatalogo}')),
+          child: FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Torna al catalogo')),
         ),
       ]);
 

@@ -127,8 +127,6 @@ class MappaturaPubblicaApi(unittest.TestCase):
         self.assertIsNotNone(elenco[0]["livello_massimo"])
         self.assertNotIn("pacchetto", elenco[0])
         self.assertNotIn("updated_at", elenco[0])
-        filtrati = self._ok(cittadino.get(f"{PUBBLICO}/mappatura/processi?tipo=PROCEDIMENTO", base_url=ENTE))
-        self.assertEqual(filtrati, [])
 
         albero = self._ok(cittadino.get(f"{PUBBLICO}/mappatura/processi/{p['id']}", base_url=ENTE))
         rischio = albero["attivita"][0]["rischi"][0]
@@ -137,6 +135,8 @@ class MappaturaPubblicaApi(unittest.TestCase):
         self.assertNotIn("Nota interna", str(albero))
         self.assertEqual(rischio["misure"][0]["descrizione"], "Dichiarazioni di assenza di conflitto")
         self.assertNotIn("proponibile", albero)
+        # l'attività non è un procedimento; la pagina dei procedimenti non è pubblica
+        self.assertEqual((albero["attivita"][0]["procedimento"], albero["procedimenti_pubblici"]), (None, False))
 
         # altri enti: il processo non si vede dal loro dominio; senza modulo nulla
         self.assertEqual(cittadino.get(f"{PUBBLICO}/mappatura/processi/{p['id']}", base_url=ALTRO).status_code, 404)

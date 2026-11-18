@@ -1,9 +1,9 @@
-"""Procedimenti e art. 35 d.lgs. 33/2013 via HTTP: dati propri del procedimento nella mappatura
+"""Procedimenti e art. 35 d.lgs. 33/2013 via HTTP: catalogo dei procedimenti con i dati propri
 (uffici = strutture con i recapiti, letti al momento), scheda nel formato dello schema ART_35
 con i dati mancanti, conservazione dei dati quando non si inviano, proposte dei referenti,
 importazione nella scheda della trasparenza, pagina pubblica dei procedimenti con il suo
 interruttore; catalogo condiviso: con la sola trasparenza i procedimenti si gestiscono
-direttamente lì, con l'anticorruzione attiva solo nella mappatura.
+direttamente lì, con l'anticorruzione attiva nel catalogo dell'anticorruzione.
     cd api/tests && python test_procedimenti_api.py
 """
 
@@ -114,8 +114,7 @@ class ProcedimentiApi(unittest.TestCase):
         self._ok(admin.put(f"/api/v1/ente/utenti/{referente['id']}", base_url=ENTE,
                            json={"struttura_id": servizi["id"]}))  # fmt: skip
 
-        area = self._ok(rpct.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Servizi sociali"}), 201)
-        base = {"tipo": "PROCEDIMENTO", "area_id": area["id"], "denominazione": "Contributo affitto",
+        base = {"denominazione": "Contributo affitto",
                 "descrizione": "Contributo per il pagamento del canone", "struttura_id": servizi["id"],
                 "termine_conclusione": "30 giorni", "norma_riferimento": "L. 431/1998, art. 11"}  # fmt: skip
         art35 = {"tipologia": "Contributi economici", "istanza_di_parte": "SI", "ist_struttura_id": sportello["id"],
@@ -125,69 +124,68 @@ class ProcedimentiApi(unittest.TestCase):
                  "sost_struttura_id": segreteria["id"], "sost_attivazione": "Istanza scritta al Segretario"}  # fmt: skip
 
         # controlli: URL e strutture dell'ente
-        self.assertEqual(rpct.post(f"{API}/processi", base_url=ENTE, json={
+        self.assertEqual(rpct.post(f"{API}/procedimenti", base_url=ENTE, json={
             **base, "art35": {**art35, "ist_modulistica": "non un link"}}).status_code, 422)  # fmt: skip
-        self.assertEqual(rpct.post(f"{API}/processi", base_url=ENTE, json={
+        self.assertEqual(rpct.post(f"{API}/procedimenti", base_url=ENTE, json={
             **base, "art35": {**art35, "sost_struttura_id": estranea["id"]}}).status_code, 422)  # fmt: skip
 
         # senza dati art. 35: si salva, con i dati mancanti
-        p = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json=base), 201)
-        d = self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))
+        p = self._ok(rpct.post(f"{API}/procedimenti", base_url=ENTE, json=base), 201)
+        d = self._ok(rpct.get(f"{API}/procedimenti/{p['id']}", base_url=ENTE))
         self.assertTrue(any("Tipologia" in m for m in d["art35_mancanti"]))
         self.assertEqual(d["scheda_art35"]["unita_istruttoria"], "Servizi sociali")
         self.assertEqual(d["scheda_art35"]["uff_resp_tel"], "0583 1234")  # ufficio responsabile = struttura
 
         # con i dati: completi, recapiti dalle strutture
-        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "art35": art35}))
-        d = self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))
+        self._ok(rpct.put(f"{API}/procedimenti/{p['id']}", base_url=ENTE, json={**base, "art35": art35}))
+        d = self._ok(rpct.get(f"{API}/procedimenti/{p['id']}", base_url=ENTE))
         self.assertEqual(d["art35_mancanti"], [], d["art35_mancanti"])
         s = d["scheda_art35"]
         self.assertEqual((s["ist_ufficio"], s["ist_peo"], s["ist_indirizzo"]), ("Sportello sociale", "sportello@ente.it", "Via Roma 1, Lucca"))
         self.assertEqual(s["orari"], RECAPITI["orari"])
         self.assertEqual((s["sost_nominativo"], s["sost_qualifica"]), ("Anna Bianchi", "Segretario generale"))
         self.assertEqual((s["ufficio_finale_diverso"], s["riferimenti_normativi"]), ("NO", "L. 431/1998, art. 11"))
-        elenco = self._ok(rpct.get(f"{API}/processi", base_url=ENTE))
-        self.assertEqual([x["art35_mancanti"] for x in elenco if x["id"] == p["id"]], [0])
-        # anche nell'elenco piatto della mappatura, con la scheda
-        voce = next(x for x in self._ok(rpct.get(f"{API}/elenco", base_url=ENTE))["processi"] if x["id"] == p["id"])
-        self.assertEqual((voce["art35_mancanti"], voce["scheda_art35"]["ist_ufficio"]), ([], "Sportello sociale"))
+        elenco = self._ok(rpct.get(f"{API}/procedimenti", base_url=ENTE))
+        self.assertEqual([(x["art35_mancanti"], x["usi"]) for x in elenco if x["id"] == p["id"]], [([], 0)])
+        # nell'elenco piatto della mappatura, per le attività che lo sono
+        self.assertIn(p["id"], [x["id"] for x in self._ok(rpct.get(f"{API}/elenco", base_url=ENTE))["procedimenti"]])
 
         # recapiti scritti nel procedimento al posto di quelli della struttura (es. uno sportello)
         propri = {**art35, "ist_telefono": "0583 9999", "ist_indirizzo": "Piazza Grande 3",
                   "orari": [{"giorni": "Martedì", "ora_inizio": "15:00", "ora_fine": "17:00"}], "sost_nominativo": "Marco Neri"}
-        self.assertEqual(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={
+        self.assertEqual(rpct.put(f"{API}/procedimenti/{p['id']}", base_url=ENTE, json={
             **base, "art35": {**propri, "orari": [{"giorni": "Martedì"}]}}).status_code, 422)  # fmt: skip
-        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "art35": propri}))
-        s = self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["scheda_art35"]
+        self._ok(rpct.put(f"{API}/procedimenti/{p['id']}", base_url=ENTE, json={**base, "art35": propri}))
+        s = self._ok(rpct.get(f"{API}/procedimenti/{p['id']}", base_url=ENTE))["scheda_art35"]
         self.assertEqual((s["ist_telefono"], s["ist_indirizzo"], s["ist_peo"], s["orari"], s["sost_nominativo"], s["sost_qualifica"]),
                          ("0583 9999", "Piazza Grande 3", "sportello@ente.it", propri["orari"], "Marco Neri", "Segretario generale"))  # fmt: skip
-        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "art35": art35}))
+        self._ok(rpct.put(f"{API}/procedimenti/{p['id']}", base_url=ENTE, json={**base, "art35": art35}))
 
         # modifica senza art35: i dati restano; i recapiti si leggono al momento
-        self._ok(rpct.put(f"{API}/processi/{p['id']}", base_url=ENTE, json={**base, "denominazione": "Contributo affitti"}))
+        self._ok(rpct.put(f"{API}/procedimenti/{p['id']}", base_url=ENTE, json={**base, "denominazione": "Contributo affitti"}))
         self._ok(admin.put(f"/api/v1/ente/strutture/{sportello['id']}", base_url=ENTE, json={
             "codice": "U.O. 4.1", "descrizione": "Sportello sociale", "padre_id": servizi["id"],
             **{**RECAPITI, "peo": None, "pec": None}}))  # fmt: skip
-        d = self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))
+        d = self._ok(rpct.get(f"{API}/procedimenti/{p['id']}", base_url=ENTE))
         self.assertEqual(d["art35"]["tipologia"], "Contributi economici")
         self.assertTrue(any("almeno uno" in m for m in d["art35_mancanti"]), d["art35_mancanti"])  # né PEO né PEC
 
-        # un processo non ha dati art. 35
-        pr = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={**base, "tipo": "PROCESSO", "art35": art35}), 201)
-        self.assertIsNone(pr["art35"])
+        # un processo non ha dati art. 35 (né termine e norma): sono del procedimento
+        pr = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={**base, "art35": art35}), 201)
+        self.assertNotIn("art35", pr)
         self.assertNotIn("scheda_art35", self._ok(rpct.get(f"{API}/processi/{pr['id']}", base_url=ENTE)))
 
         # proposta del referente sui dati art. 35
         ref = self._client("referente")
         proposta = self._ok(ref.post(f"{API}/proposte", base_url=ENTE, json={
-            "tipo": "MODIFICA", "oggetto": "PROCESSO", "elemento_id": p["id"],
+            "tipo": "MODIFICA", "oggetto": "PROCEDIMENTO", "elemento_id": p["id"],
             "dati": {**base, "art35": {**art35, "silenzio_assenso": "SI"}}}), 201)  # fmt: skip
         self.assertEqual(proposta["prima"]["art35"]["silenzio_assenso"], "NO")
         # controlli oggettivi per il RPCT (il procedimento ha termine e riferimenti normativi)
         controlli = self._ok(rpct.get(f"{API}/proposte/{proposta['id']}", base_url=ENTE))["controlli"]
         self.assertFalse(any("termine" in c["testo"] for c in controlli), controlli)
         self._ok(rpct.post(f"{API}/proposte/{proposta['id']}/approva", base_url=ENTE, json={}))
-        self.assertEqual(self._ok(rpct.get(f"{API}/processi/{p['id']}", base_url=ENTE))["art35"]["silenzio_assenso"], "SI")
+        self.assertEqual(self._ok(rpct.get(f"{API}/procedimenti/{p['id']}", base_url=ENTE))["art35"]["silenzio_assenso"], "SI")
 
         # trasparenza: importazione nella scheda ART_35
         trasp = self._client("trasparenza")
@@ -220,9 +218,7 @@ class ProcedimentiApi(unittest.TestCase):
         rpct, admin = self._client("rpct"), self._client("admin")
         sociali = self._ok(admin.post("/api/v1/ente/strutture", base_url=ENTE,
                                       json={"codice": "SETTORE 9", "descrizione": "Politiche abitative"}), 201)  # fmt: skip
-        area = self._ok(rpct.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Casa"}), 201)
-        esistente = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
-            "tipo": "PROCEDIMENTO", "area_id": area["id"], "denominazione": "Assegnazione alloggi ERP"}), 201)  # fmt: skip
+        esistente = self._ok(rpct.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "Assegnazione alloggi ERP"}), 201)
 
         # solo il RPCT; serve una fonte
         self.assertEqual(self._client("referente").post(f"{API}/procedimenti/importazioni", base_url=ENTE,
@@ -241,7 +237,7 @@ class ProcedimentiApi(unittest.TestCase):
         self.assertEqual(stato["stato"], "IN_CODA")
         self.assertNotIn("procedimenti", stato)
 
-        # il worker ha letto la pagina (simulato): due procedimenti, uno già nella mappatura
+        # il worker ha letto la pagina (simulato): due procedimenti, uno già nel catalogo
         righe = [
             {"denominazione": "Assegnazione alloggi di ERP", "tipologia": "Concessioni", "uff_resp_denom": "Politiche abitative"},
             {"denominazione": "Contributo morosità incolpevole", "silenzio_assenso": "NO"},
@@ -282,7 +278,7 @@ class ProcedimentiApi(unittest.TestCase):
 
     def test_solo_trasparenza(self):
         """Senza anticorruzione l'operatore della trasparenza gestisce i procedimenti."""
-        from common.models import AcAttivita, AcProcesso
+        from common.models import AcAttivita, AcProcedimento, AcProcesso
 
         tr, admin = self._client("trasparenza", SOLO), self._client("admin", SOLO)
         ufficio = self._ok(admin.post("/api/v1/ente/strutture", base_url=SOLO,
@@ -293,10 +289,12 @@ class ProcedimentiApi(unittest.TestCase):
 
         nuovo = {"denominazione": "Cambio di residenza", "termine_conclusione": "45 giorni", "struttura_id": ufficio["id"],
                  "art35": {"tipologia": "Anagrafe", "uff_resp_struttura_id": ufficio["id"], "istanza_di_parte": "SI"},
-                 "tipo": "PROCESSO", "area_id": "ignorata"}  # campi della mappatura: ignorati  # fmt: skip
+                 "tipo": "PROCESSO", "area_id": "ignorata"}  # campi d'altro: ignorati  # fmt: skip
         self.assertEqual(tr.post(f"{TR}/procedimenti", base_url=SOLO, json={**nuovo, "denominazione": ""}).status_code, 422)
         p = self._ok(tr.post(f"{TR}/procedimenti", base_url=SOLO, json=nuovo), 201)
-        self.assertEqual((p["codice"], p["tipo"], p["area_id"]), ("P.1", "PROCEDIMENTO", None))
+        self.assertEqual(p["codice"], "P.1")
+        self.assertNotIn("tipo", p)
+        self.assertNotIn("area_id", p)
         self.assertEqual(p["scheda_art35"]["uff_resp_tel"], RECAPITI["telefono"])  # recapiti dalla struttura
         self.assertIn("art35_mancanti", p)
         # modifica senza art35: i dati dell'art. 35 restano
@@ -324,10 +322,14 @@ class ProcedimentiApi(unittest.TestCase):
         self._ok(pubblico.post(f"{PUBBLICO}/ricerche/registro", base_url=SOLO, json={
             "ambito": "PROCEDIMENTI", "testo": "residenza", "risultati": 1, "esito": "TROVATA", "posizione": 1}), 201)  # fmt: skip
 
-        # un procedimento con attività della mappatura (anticorruzione avuta in passato) non si elimina
+        # un procedimento che è un'attività della mappatura (anticorruzione avuta in passato) non si elimina
         async def attivita(db):
-            processo = await db.get(AcProcesso, p["id"])
-            db.add(AcAttivita(ente_id=processo.ente_id, processo_id=processo.id, codice="P.1.1", descrizione="Istruttoria"))
+            proc = await db.get(AcProcedimento, p["id"])
+            processo = AcProcesso(ente_id=proc.ente_id, codice="X.1", denominazione="Servizi demografici")
+            db.add(processo)
+            await db.flush()
+            db.add(AcAttivita(ente_id=proc.ente_id, processo_id=processo.id, codice="X.1.1", descrizione="Istruttoria",
+                              procedimento_id=proc.id))  # fmt: skip
 
         self._db(attivita)
         self.assertEqual(tr.delete(f"{TR}/procedimenti/{p['id']}", base_url=SOLO).status_code, 409)
@@ -339,10 +341,9 @@ class ProcedimentiApi(unittest.TestCase):
         self.assertEqual(self._client("trasparenza").get(f"{TR}/procedimenti/{p['id']}", base_url=ENTE).status_code, 404)
 
     def test_con_anticorruzione_solo_lettura(self):
-        """Con l'anticorruzione attiva la trasparenza consulta, la mappatura modifica."""
+        """Con l'anticorruzione attiva la trasparenza consulta, il catalogo dell'anticorruzione modifica."""
         rpct, tr = self._client("rpct"), self._client("trasparenza")
-        p = self._ok(rpct.post(f"{API}/processi", base_url=ENTE, json={
-            "tipo": "PROCEDIMENTO", "denominazione": "Accesso agli atti"}), 201)  # fmt: skip
+        p = self._ok(rpct.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "Accesso agli atti"}), 201)
         self.assertTrue(self._ok(tr.get(f"{TR}/procedimenti/pubblicazione", base_url=ENTE))["con_iter"])
         self.assertIn(p["id"], [x["id"] for x in self._ok(tr.get(f"{TR}/procedimenti", base_url=ENTE))])
         self._ok(tr.get(f"{TR}/procedimenti/{p['id']}", base_url=ENTE))
@@ -351,7 +352,7 @@ class ProcedimentiApi(unittest.TestCase):
                   tr.delete(f"{TR}/procedimenti/{p['id']}", base_url=ENTE),
                   tr.post(f"{TR}/procedimenti/importazioni", base_url=ENTE, json={"url": "https://www.ente.it/at"})):
             self.assertEqual(r.status_code, 409, r.get_data(as_text=True))
-            self.assertIn("mappatura", r.get_json()["detail"])
+            self.assertIn("anticorruzione", r.get_json()["detail"])
         # l'interruttore della pagina pubblica dei procedimenti c'è anche per la trasparenza
         self._ok(tr.put(f"{TR}/procedimenti/pubblicazione", base_url=ENTE, json={"procedimenti_attiva": False}))
         self.assertFalse(self._ok(rpct.get(f"{API}/pubblicazione", base_url=ENTE))["procedimenti_attiva"])

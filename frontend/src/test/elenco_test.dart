@@ -43,16 +43,16 @@ void main() {
             {'id': 'c', 'codice': 'C', 'descrizione': 'Contratti pubblici', 'descrizione_breve': null},
             {'id': 'd', 'codice': 'D', 'descrizione': 'Personale', 'descrizione_breve': null},
           ],
+          'procedimenti': [
+            {'id': 'pr1', 'codice': 'P.1', 'denominazione': 'Pubblicazione del bando di gara'},
+          ],
           'processi': [
-            {'id': 'p1', 'codice': 'C.1', 'tipo': 'PROCESSO', 'area_id': 'c', 'denominazione': 'Gare', 'struttura_id': 'uo'},
-            {'id': 'p3', 'codice': 'C.2', 'tipo': 'PROCESSO', 'area_id': 'c', 'denominazione': 'Affidamenti diretti', 'struttura_id': 's3'},
-            {'id': 'p2', 'codice': 'D.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'd', 'denominazione': 'Concorsi', 'struttura_id': null,
-             'coinvolte': ['s3'],
-             'art35_mancanti': ['Tipologia di procedimento: obbligatorio', 'Silenzio assenso: obbligatorio'],
-             'scheda_art35': {'denominazione': 'Concorsi', 'istanza_di_parte': 'SI', 'ist_ufficio': 'Ufficio personale'}},
+            {'id': 'p1', 'codice': 'C.1', 'area_id': 'c', 'denominazione': 'Gare', 'struttura_id': 'uo'},
+            {'id': 'p3', 'codice': 'C.2', 'area_id': 'c', 'denominazione': 'Affidamenti diretti', 'struttura_id': 's3'},
+            {'id': 'p2', 'codice': 'D.1', 'area_id': 'd', 'denominazione': 'Concorsi', 'struttura_id': null, 'coinvolte': ['s3']},
           ],
           'attivita': [
-            {'id': 'a1', 'processo_id': 'p1', 'codice': 'C.1.1', 'descrizione': 'Bando'},
+            {'id': 'a1', 'processo_id': 'p1', 'codice': 'C.1.1', 'descrizione': 'Bando', 'procedimento_id': 'pr1'},
           ],
           'rischi': [
             {'id': 'r1', 'attivita_id': 'a1', 'codice': 'C.1.1_R.1', 'evento': 'Bando su misura', 'livello': 'Alto',
@@ -102,13 +102,13 @@ void main() {
 
   testWidgets('processi per struttura, con le sottostrutture e le trasversali', (tester) async {
     await apri(tester);
-    expect(find.text('3 processi e procedimenti'), findsOneWidget); // si apre sui processi
+    expect(find.text('3 processi'), findsOneWidget); // si apre sui processi
     expect(find.text('Gare'), findsOneWidget);
     expect(find.text('Trasversale'), findsOneWidget);
 
     // il settore comprende la sua U.O.
     await scegli(tester, 'Struttura organizzativa', 'SETTORE 2 - Servizi tecnici');
-    expect(find.text('1 processi e procedimenti su 3'), findsOneWidget);
+    expect(find.text('1 processi su 3'), findsOneWidget);
     expect(find.text('Gare'), findsOneWidget);
     expect(find.text('Affidamenti diretti'), findsNothing);
     // la tabella è alta quanto le righe filtrate, senza righe vuote in fondo
@@ -122,25 +122,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Concorsi'), findsOneWidget);
 
-    // completezza dei dati art. 35 dei procedimenti, filtro e scheda
-    expect(find.text('Art. 35: mancano 2 dati'), findsOneWidget);
-    await scegli(tester, 'Mostra solo', 'Procedimenti con dati art. 35 mancanti');
-    expect(find.text('1 processi e procedimenti su 3'), findsOneWidget);
-    await tester.tap(find.text('Concorsi'));
+    // attività che sono procedimenti: colonna, filtro e scheda
+    await tester.tap(find.text('Azzera i filtri'));
     await tester.pumpAndSettle();
-    expect(find.text('Dati per la trasparenza (art. 35 d.lgs. 33/2013)'), findsOneWidget);
-    expect(find.text('Dati mancanti o da correggere'), findsOneWidget);
-    await tester.tap(find.text('Scheda del procedimento (allegato 11)'));
+    await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Attività')));
     await tester.pumpAndSettle();
-    expect(find.text('Ufficio personale'), findsOneWidget);
+    await scegli(tester, 'Tipo', 'Procedimenti');
+    expect(find.text('1 attività'), findsOneWidget);
+    await scegli(tester, 'Tipo', 'Altre attività');
+    expect(find.text('Nessun elemento con questi filtri.'), findsOneWidget);
+    await scegli(tester, 'Tipo', 'Procedimenti');
+    await tester.tap(find.text('Bando'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('P.1 - Pubblicazione del bando di gara', findRichText: true), findsOneWidget);
     await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Processi')));
     await tester.pumpAndSettle();
 
     // lacune: processi senza attività
     await tester.tap(find.text('Azzera i filtri'));
     await tester.pumpAndSettle();
     await scegli(tester, 'Mostra solo', 'Senza attività');
-    expect(find.text('2 processi e procedimenti su 3'), findsOneWidget);
+    expect(find.text('2 processi su 3'), findsOneWidget);
     expect(find.text('Gare'), findsNothing);
   });
 
@@ -197,7 +201,7 @@ void main() {
     await apri(tester);
     await scegli(tester, 'Struttura organizzativa', 'SETTORE 3 - Finanze');
     // Affidamenti diretti è del settore; Concorsi è trasversale, con il settore coinvolto
-    expect(find.text('2 processi e procedimenti su 3'), findsOneWidget);
+    expect(find.text('2 processi su 3'), findsOneWidget);
     expect(find.text('Affidamenti diretti'), findsOneWidget);
     expect(find.text('Concorsi'), findsOneWidget);
     await tester.tap(find.text('Concorsi'));
@@ -221,7 +225,7 @@ void main() {
     final pagina = tester.getSize(find.byType(ElencoTab)).width;
     double tabella() => tester.getSize(find.byType(DataTable)).width;
 
-    for (final livello in ['Aree', 'Processi e procedimenti', 'Attività', 'Rischi', 'Misure']) {
+    for (final livello in ['Aree', 'Processi', 'Attività', 'Rischi', 'Misure']) {
       await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text(livello)));
       await tester.pumpAndSettle();
       expect(tabella(), lessThanOrEqualTo(pagina - 32), reason: livello);
@@ -246,8 +250,8 @@ void main() {
     expect(esportato['intestazioni'], containsAll(['Categoria', 'Struttura']));
 
     // la scelta vale per il livello: tornando ai processi, Area resta nascosta
-    await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Processi e procedimenti')));
+    await tester.tap(find.descendant(of: find.byType(SegmentedButton<String>), matching: find.text('Processi')));
     await tester.pumpAndSettle();
-    expect(find.text('Colonne (7 di 11)'), findsOneWidget);
+    expect(find.text('Colonne (7 di 9)'), findsOneWidget);
   });
 }

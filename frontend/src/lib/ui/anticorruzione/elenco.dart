@@ -6,15 +6,13 @@ import '../admin/strutture.dart' show alberoStrutture, etichettaStruttura;
 import '../comuni.dart';
 import '../ricerca.dart';
 import '../trasparenza/browser.dart' show scaricaBytes;
-import 'albero.dart' show etichettaTipo;
-import 'art35.dart' show CompletezzaArt35, SezioneArt35;
 import 'comune.dart';
 import 'mappatura.dart' show VistaProcesso;
 
 /// Livelli della mappatura che l'elenco mostra, uno alla volta.
 const livelliElenco = {
   'AREA': 'Aree',
-  'PROCESSO': 'Processi e procedimenti',
+  'PROCESSO': 'Processi',
   'ATTIVITA': 'Attività',
   'RISCHIO': 'Rischi',
   'MISURA': 'Misure',
@@ -27,7 +25,6 @@ const _lacune = {
     'SENZA_ATTIVITA': 'Senza attività',
     'SENZA_RISCHI': 'Senza rischi',
     'SENZA_MISURE': 'Senza misure',
-    'ART35_INCOMPLETI': 'Procedimenti con dati art. 35 mancanti',
   },
   'ATTIVITA': {'SENZA_RISCHI': 'Senza rischi', 'SENZA_MISURE': 'Senza misure'},
   'RISCHIO': {'SENZA_MISURE': 'Senza misure', 'NON_VALUTATI': 'Non valutati'},
@@ -57,7 +54,8 @@ class MappaturaPiatta {
         processi = _lista(json['processi']),
         attivita = _lista(json['attivita']),
         rischi = _lista(json['rischi']),
-        misure = _lista(json['misure']) {
+        misure = _lista(json['misure']),
+        procedimenti = {for (final p in _lista(json['procedimenti'])) p['id'] as String: p} {
     for (final (livello, elenco) in [
       ('AREA', aree), ('PROCESSO', processi), ('ATTIVITA', attivita), ('RISCHIO', rischi), ('MISURA', misure),
     ]) {
@@ -83,6 +81,13 @@ class MappaturaPiatta {
   static List<Map<String, dynamic>> _lista(Object? v) => (v as List? ?? const []).cast<Map<String, dynamic>>();
 
   final List<Map<String, dynamic>> aree, processi, attivita, rischi, misure;
+  final Map<String, Map<String, dynamic>> procedimenti; // del catalogo, per le attività che lo sono
+
+  /// "P.3 - Denominazione" del procedimento che l'attività è ('' se non lo è).
+  String procedimento(Map<String, dynamic> attivita) {
+    final p = procedimenti[attivita['procedimento_id']];
+    return p == null ? '' : '${p['codice']} - ${p['denominazione']}';
+  }
   final perId = <String, Map<String, dynamic>>{};
   final livelloDi = <String, String>{};
   final processiDi = <String, List<Map<String, dynamic>>>{}; // per area ('' senza area)
@@ -150,9 +155,9 @@ class MappaturaPiatta {
   }
 }
 
-/// Elenco piatto della mappatura: un livello alla volta (aree, processi e procedimenti,
-/// attività, rischi, misure) con il percorso nelle prime colonne, la ricerca in linguaggio
-/// naturale e i filtri (area, struttura con le sottostrutture, tipo, livello di rischio,
+/// Elenco piatto della mappatura: un livello alla volta (aree, processi, attività, rischi,
+/// misure) con il percorso nelle prime colonne, la ricerca in linguaggio naturale e i filtri
+/// (area, struttura con le sottostrutture, attività che sono procedimenti, livello di rischio,
 /// misure, lacune). Si ordina per colonna, si esporta in Excel; una riga apre la scheda
 /// dell'elemento.
 class ElencoTab extends StatefulWidget {
@@ -263,7 +268,7 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
       final area = _livello == 'AREA' ? x['id'] : (processo?['area_id'] ?? _senzaArea);
       if (area != _area) return false;
     }
-    if (_tipo != null && _livello != 'AREA' && processo?['tipo'] != _tipo) return false;
+    if (_tipo != null && _livello == 'ATTIVITA' && (x['procedimento_id'] != null) != (_tipo == 'PROCEDIMENTO')) return false;
     if (strutture != null) {
       // responsabile o coinvolta
       bool ok(String? id) => id == null ? _trasversali : strutture.contains(id);
@@ -287,7 +292,6 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
       'NON_VALUTATI' => x['livello'] == null,
       'SENZA_STRUTTURA' => m.struttura(_livello, x).id == null,
       'SENZA_INDICATORE' => (x['indicatore'] as String? ?? '').trim().isEmpty,
-      'ART35_INCOMPLETI' => x['tipo'] == 'PROCEDIMENTO' && (x['art35_mancanti'] as List? ?? const []).isNotEmpty,
       _ => true,
     };
   }
@@ -339,32 +343,20 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
       'PROCESSO' => [
           area,
           _Colonna('Codice', codice, ordine: codice),
-          _Colonna('Processo o procedimento', testo, largo: true),
-          _Colonna('Tipo', (x) => etichettaTipo(x['tipo']), secondaria: true),
+          _Colonna('Processo', testo, largo: true),
           _Colonna('Struttura', struttura, testo: true),
           _Colonna('Strutture coinvolte', (x) => dati.coinvolte(x['coinvolte']) ?? '', testo: true, secondaria: true),
           _Colonna('Attività', (x) => quanti(m.figliDi(x['id'])), numerica: true),
           _Colonna('Rischi', (x) => quanti(m.rischiSotto('PROCESSO', x)), numerica: true),
           _Colonna('Misure', (x) => quanti(m.misureSotto('PROCESSO', x)), numerica: true),
           livello,
-          _Colonna('Art. 35', (x) {
-            final mancanti = x['art35_mancanti'] as List?;
-            if (x['tipo'] != 'PROCEDIMENTO' || mancanti == null) return '';
-            return mancanti.isEmpty ? 'Completo' : 'Mancano ${mancanti.length}';
-          }, ordine: (x) => (x['art35_mancanti'] as List?)?.length ?? -1, cella: (x) {
-            final mancanti = x['art35_mancanti'] as List?;
-            return x['tipo'] != 'PROCEDIMENTO' || mancanti == null ? const SizedBox.shrink() : CompletezzaArt35(mancanti.length);
-          }, testoCella: (x) {
-            final mancanti = x['art35_mancanti'] as List?;
-            if (x['tipo'] != 'PROCEDIMENTO' || mancanti == null) return '';
-            return mancanti.isEmpty ? 'Art. 35 completo' : 'Art. 35: mancano ${mancanti.length} dati';
-          }, secondaria: true),
         ],
       'ATTIVITA' => [
           area,
           processo,
           _Colonna('Codice', codice, ordine: codice),
           _Colonna('Attività', testo, largo: true),
+          _Colonna('Procedimento', (x) => m.procedimento(x), testo: true, secondaria: true),
           _Colonna('Struttura', struttura, testo: true),
           _Colonna('Strutture coinvolte', (x) => dati.coinvolte(x['coinvolte']) ?? '', testo: true, secondaria: true),
           _Colonna('Rischi', (x) => quanti(m.figliDi(x['id'])), numerica: true),
@@ -524,8 +516,8 @@ class _ElencoTabState extends State<ElencoTab> with AutomaticKeepAliveClientMixi
           onSelected: (v) => setState(() => _trasversali = v),
         ),
       ],
-      if (_livello != 'AREA')
-        _menu<String>('Tipo', _tipo, const {'PROCESSO': 'Processi', 'PROCEDIMENTO': 'Procedimenti'}, (v) => _tipo = v, larghezza: 170),
+      if (_livello == 'ATTIVITA')
+        _menu<String>('Tipo', _tipo, const {'PROCEDIMENTO': 'Procedimenti', 'VOCE': 'Altre attività'}, (v) => _tipo = v, larghezza: 170),
       _menu<String>(_livello == 'RISCHIO' || _livello == 'MISURA' ? 'Livello di rischio' : 'Livello più alto', _rischio,
           {for (final l in dati.livelli.reversed) l: l}, (v) => _rischio = v),
       if (_livello == 'MISURA') ...[
@@ -770,8 +762,8 @@ const _nomiLivello = {'AREA': 'Area', 'PROCESSO': 'Processo', 'ATTIVITA': 'Attiv
 
 IconData _icona(String livello, Map<String, dynamic> x) => switch (livello) {
       'AREA' => Icons.folder_outlined,
-      'PROCESSO' => x['tipo'] == 'PROCEDIMENTO' ? Icons.gavel_outlined : Icons.account_tree_outlined,
-      'ATTIVITA' => Icons.subdirectory_arrow_right,
+      'PROCESSO' => Icons.account_tree_outlined,
+      'ATTIVITA' => x['procedimento_id'] != null ? Icons.gavel_outlined : Icons.subdirectory_arrow_right,
       'RISCHIO' => Icons.warning_amber_outlined,
       _ => Icons.shield_outlined,
     };
@@ -810,20 +802,16 @@ class SchedaElementoPage extends StatelessWidget {
     return switch (livello) {
       'AREA' => [('Descrizione', x['descrizione']), ('Descrizione breve', x['descrizione_breve'])],
       'PROCESSO' => [
-          ('Tipo', etichettaTipo(x['tipo'])),
           ('Denominazione', x['denominazione']),
           ('Struttura responsabile', struttura()),
           ('Strutture coinvolte', dati.coinvolte(x['coinvolte'])),
           ('Descrizione', x['descrizione']),
           ('Tempi', x['tempi']),
           ('Attori esterni', x['attori_esterni']),
-          if (x['tipo'] == 'PROCEDIMENTO') ...[
-            ('Termine di conclusione', x['termine_conclusione']),
-            ('Norma di riferimento', x['norma_riferimento']),
-          ],
         ],
       'ATTIVITA' => [
           ('Descrizione', x['descrizione']),
+          ('Procedimento', m.procedimento(x)),
           ('Strutture coinvolte', dati.coinvolte(x['coinvolte'])),
           ('Note sulle strutture coinvolte', x['strutture_coinvolte']),
           ('Struttura responsabile', struttura()),
@@ -861,7 +849,7 @@ class SchedaElementoPage extends StatelessWidget {
 
   /// Elementi del livello sotto (con il titolo della sezione).
   (String, String, List<Map<String, dynamic>>)? _sotto(String livello) => switch (livello) {
-        'AREA' => ('Processi e procedimenti', 'PROCESSO', mappatura.processiDi[elemento['id']] ?? const []),
+        'AREA' => ('Processi', 'PROCESSO', mappatura.processiDi[elemento['id']] ?? const []),
         'PROCESSO' => ('Attività', 'ATTIVITA', mappatura.figliDi(elemento['id'])),
         'ATTIVITA' => ('Rischi', 'RISCHIO', mappatura.figliDi(elemento['id'])),
         'RISCHIO' => ('Misure', 'MISURA', mappatura.figliDi(elemento['id'])),
@@ -933,11 +921,6 @@ class SchedaElementoPage extends StatelessWidget {
                 ),
           ]),
         ),
-        if (livello == 'PROCESSO' && elemento['tipo'] == 'PROCEDIMENTO' && elemento['scheda_art35'] != null)
-          SezioneArt35(
-            scheda: (elemento['scheda_art35'] as Map).cast<String, dynamic>(),
-            mancanti: List<String>.from(elemento['art35_mancanti'] as List? ?? const []),
-          ),
         if (sotto != null)
           Sezione(
             titolo: '${sotto.$1} (${sotto.$3.length})',
@@ -949,7 +932,7 @@ class SchedaElementoPage extends StatelessWidget {
                         icona: _icona(sotto.$2, e),
                         titolo: '${e['codice']} - ${_titolo(e)}',
                         dettagli: [
-                          if (sotto.$2 == 'PROCESSO') etichettaTipo(e['tipo']),
+                          if (sotto.$2 == 'ATTIVITA' && e['procedimento_id'] != null) 'Procedimento ${mappatura.procedimento(e)}',
                           if (sotto.$2 == 'MISURA') e['tipo'] == 'GENERALE' ? 'Generale' : 'Specifica',
                         ],
                         finale: [if (sotto.$2 == 'RISCHIO') LivelloChip(dati, e['livello'] as String?)],

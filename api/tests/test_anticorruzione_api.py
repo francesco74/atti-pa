@@ -206,7 +206,7 @@ class AnticorruzioneApi(unittest.TestCase):
     def test_accesso_ed_enti_separati(self):
         c = self._client("rpct")
         p = self._ok(c.post(f"{API}/processi", base_url=ENTE, json={"denominazione": "Trasversale"}), 201)
-        self.assertEqual(p["codice"], "P.1")  # senza area
+        self.assertEqual(p["codice"], "X.1")  # senza area (P.n sono i procedimenti)
         altro = self._client("rpct", ALTRO)
         self.assertEqual(altro.get(f"{API}/processi/{p['id']}", base_url=ALTRO).status_code, 404)
         self.assertEqual(self._ok(altro.get(f"{API}/processi", base_url=ALTRO)), [])
@@ -244,17 +244,61 @@ class AnticorruzioneApi(unittest.TestCase):
         a3 = self._ok(c.post(f"{API}/processi/{p['id']}/attivita", base_url=ENTE, json={"descrizione": "c"}), 201)
         self.assertEqual([a1["codice"], a3["codice"]], [f"{p['codice']}.1", f"{p['codice']}.3"])
 
-        # procedimento: termine e norma; per un processo non si conservano
-        pr = self._ok(c.post(f"{API}/processi", base_url=ENTE, json={
-            "tipo": "PROCEDIMENTO", "area_id": x["id"], "denominazione": "Autorizzazione unica",
-            "termine_conclusione": "30 giorni", "norma_riferimento": "L. 241/1990, art. 2"}), 201)  # fmt: skip
-        self.assertEqual(pr["codice"], f"{x['codice']}.2")  # stessa numerazione dei processi dell'area
-        self.assertEqual((pr["tipo"], pr["termine_conclusione"]), ("PROCEDIMENTO", "30 giorni"))
-        self.assertEqual([q["id"] for q in self._ok(c.get(f"{API}/processi?tipo=PROCEDIMENTO", base_url=ENTE))], [pr["id"]])
-        pr = self._ok(c.put(f"{API}/processi/{pr['id']}", base_url=ENTE, json={
-            "tipo": "PROCESSO", "area_id": z["id"], "denominazione": "Autorizzazione unica",
-            "termine_conclusione": "30 giorni"}))  # fmt: skip
-        self.assertEqual((pr["termine_conclusione"], pr["codice"]), (None, f"{x['codice']}.2"))  # il codice resta
+        # il processo non ha più tipo, termine e norma: sono del procedimento
+        self.assertNotIn("tipo", p)
+        self.assertNotIn("termine_conclusione", p)
+
+        # catalogo dei procedimenti: codici P.n, dati dell'art. 35
+        pr = self._ok(c.post(f"{API}/procedimenti", base_url=ENTE, json={
+            "denominazione": "Autorizzazione unica", "termine_conclusione": "30 giorni",
+            "norma_riferimento": "L. 241/1990, art. 2", "art35": {"tipologia": "Autorizzazioni"}}), 201)  # fmt: skip
+        self.assertEqual((pr["codice"][:2], pr["usi"], pr["art35"]), ("P.", 0, {"tipologia": "Autorizzazioni"}))
+        n = int(pr["codice"][2:])
+        self.assertEqual(pr["scheda_art35"]["riferimenti_normativi"], "L. 241/1990, art. 2")
+        self.assertIn("responsabile dell'istruttoria", " ".join(pr["art35_mancanti"]))
+        pr2 = self._ok(c.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "Accesso agli atti"}), 201)
+        self.assertEqual(pr2["codice"], f"P.{n + 1}")
+        # art35 assente: resta com'è
+        pr = self._ok(c.put(f"{API}/procedimenti/{pr['id']}", base_url=ENTE, json={
+            "denominazione": "Autorizzazione unica ambientale", "termine_conclusione": "90 giorni",
+            "norma_riferimento": "DPR 59/2013"}))  # fmt: skip
+        self.assertEqual((pr["termine_conclusione"], pr["art35"]), ("90 giorni", {"tipologia": "Autorizzazioni"}))
+        trovati = self._ok(c.get(f"{API}/procedimenti?testo=accesso", base_url=ENTE))
+        self.assertEqual(trovati[0]["id"], pr2["id"])
+        simili = self._ok(c.get(f"{API}/procedimenti/simili?testo=Autorizzazione unica ambientale AUA", base_url=ENTE))
+        self.assertEqual(simili[0]["id"], pr["id"])
+
+        # un'attività è una voce del catalogo oppure un procedimento, non entrambi
+        voce = self._ok(c.post(f"{API}/catalogo", base_url=ENTE, json={"tipo": "ATTIVITA", "descrizione": "Istruttoria"}), 201)
+        self.assertEqual(c.post(f"{API}/processi/{p['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "x", "voce_id": voce["id"], "procedimento_id": pr["id"]}).status_code, 422)  # fmt: skip
+        self.assertEqual(c.post(f"{API}/processi/{p['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "x", "procedimento_id": "inesistente"}).status_code, 422)  # fmt: skip
+        ap = self._ok(c.post(f"{API}/processi/{p['id']}/attivita", base_url=ENTE, json={
+            "descrizione": "Rilascio dell'AUA", "procedimento_id": pr["id"]}), 201)  # fmt: skip
+        self.assertEqual((ap["procedimento_id"], ap["voce_id"]), (pr["id"], None))  # senza voce automatica
+        albero = self._ok(c.get(f"{API}/processi/{p['id']}", base_url=ENTE))
+        att = next(a for a in albero["attivita"] if a["id"] == ap["id"])
+        self.assertEqual(att["procedimento"], {"id": pr["id"], "codice": pr["codice"], "denominazione": "Autorizzazione unica ambientale"})
+        dettaglio = self._ok(c.get(f"{API}/procedimenti/{pr['id']}", base_url=ENTE))
+        self.assertEqual(([a["id"] for a in dettaglio["attivita"]], dettaglio["attivita"][0]["processo"]["id"]), ([ap["id"]], p["id"]))
+        elenco = self._ok(c.get(f"{API}/elenco", base_url=ENTE))
+        self.assertLessEqual({pr["codice"], pr2["codice"]}, {x["codice"] for x in elenco["procedimenti"]})
+        # usato: non si elimina; passando l'attività a una voce si libera
+        self.assertEqual(c.delete(f"{API}/procedimenti/{pr['id']}", base_url=ENTE).status_code, 409)
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Istruttoria", "voce_id": voce["id"]}))
+        self.assertEqual((a["voce_id"], a["procedimento_id"]), (voce["id"], None))
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio", "procedimento_id": pr2["id"]}))
+        self.assertEqual((a["voce_id"], a["procedimento_id"]), (None, pr2["id"]))
+        a = self._ok(c.put(f"{API}/attivita/{ap['id']}", base_url=ENTE, json={"descrizione": "Rilascio dell'accesso"}))
+        self.assertEqual(a["procedimento_id"], pr2["id"])  # assenti: restano
+        self.assertEqual(c.delete(f"{API}/procedimenti/{pr['id']}", base_url=ENTE).status_code, 204)
+        p3 = self._ok(c.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "Terzo"}), 201)
+        self.assertEqual(p3["codice"], f"P.{n + 2}")  # il codice eliminato non torna
+        # il referente legge il catalogo, non lo modifica direttamente
+        ref = self._client("referente")
+        self.assertTrue(self._ok(ref.get(f"{API}/procedimenti", base_url=ENTE)))
+        self.assertEqual(ref.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "x"}).status_code, 403)
 
     def _valutazione(self, c, valore="Basso"):
         met = self._ok(c.get(f"{API}/metodologia", base_url=ENTE))
@@ -274,6 +318,51 @@ class AnticorruzioneApi(unittest.TestCase):
 
     def _approva(self, rpct, pr, **corpo):
         return self._ok(rpct.post(f"{API}/proposte/{pr['id']}/approva", base_url=ENTE, json=corpo))
+
+    def test_proposte_procedimenti(self):
+        rpct, ref = self._client("rpct"), self._client("referente")
+        # il referente propone un procedimento nuovo, assegnato alla sua struttura
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "CREA", "oggetto": "PROCEDIMENTO", "dati": {"denominazione": "Senza struttura"}}).status_code, 403)  # fmt: skip
+        pr = self._proponi(ref, tipo="CREA", oggetto="PROCEDIMENTO",
+                           dati={"denominazione": "Contributo libri di testo", "struttura_id": self.uo})  # fmt: skip
+        dettaglio = self._ok(rpct.get(f"{API}/proposte/{pr['id']}", base_url=ENTE))
+        self.assertIn("Procedimento senza termine di conclusione", [x["testo"] for x in dettaglio["controlli"]])
+        self.assertIsNone(dettaglio["processo_id"])
+        pr = self._approva(rpct, pr)
+        proc = self._ok(rpct.get(f"{API}/procedimenti/{pr['elemento_id']}", base_url=ENTE))
+        self.assertRegex(proc["codice"], r"^P\.\d+$")
+        self.assertEqual(pr["codice"], proc["codice"])
+        self.assertTrue(self._ok(ref.get(f"{API}/procedimenti/{proc['id']}", base_url=ENTE))["proponibile"])
+
+        # modifica con i dati dell'art. 35
+        campi = {k: proc[k] for k in ("denominazione", "descrizione", "termine_conclusione", "norma_riferimento", "struttura_id")}
+        m = self._proponi(ref, tipo="MODIFICA", oggetto="PROCEDIMENTO", elemento_id=proc["id"],
+                          dati={**campi, "termine_conclusione": "30 giorni", "art35": {"istanza_di_parte": "SI"}})  # fmt: skip
+        self.assertIsNone(m["prima"]["termine_conclusione"])
+        self._approva(rpct, m)
+        proc = self._ok(rpct.get(f"{API}/procedimenti/{proc['id']}", base_url=ENTE))
+        self.assertEqual((proc["termine_conclusione"], proc["art35"]), ("30 giorni", {"istanza_di_parte": "SI"}))
+
+        # procedimento di un'altra struttura: niente proposte
+        altro = self._ok(rpct.post(f"{API}/procedimenti", base_url=ENTE, json={"denominazione": "Opere", "struttura_id": self.lavori}), 201)
+        self.assertFalse(self._ok(ref.get(f"{API}/procedimenti/{altro['id']}", base_url=ENTE))["proponibile"])
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "MODIFICA", "oggetto": "PROCEDIMENTO", "elemento_id": altro["id"],
+            "dati": {"denominazione": "Opere pubbliche", "struttura_id": self.lavori}}).status_code, 403)  # fmt: skip
+
+        # attività che è il procedimento: il referente lo sceglie dal catalogo
+        processo = self._ok(rpct.post(f"{API}/processi", base_url=ENTE,
+                                      json={"denominazione": "Diritto allo studio", "struttura_id": self.uo}), 201)  # fmt: skip
+        a = self._proponi(ref, tipo="CREA", oggetto="ATTIVITA", padre_id=processo["id"],
+                          dati={"descrizione": "Erogazione del contributo", "procedimento_id": proc["id"]})  # fmt: skip
+        self.assertEqual(a["dati"]["procedimento"], {"codice": proc["codice"], "denominazione": "Contributo libri di testo"})
+        a = self._approva(rpct, a)
+        attivita = self._ok(rpct.get(f"{API}/processi/{processo['id']}", base_url=ENTE))["attivita"]
+        self.assertEqual([x["procedimento_id"] for x in attivita], [proc["id"]])
+        # usato in un'attività: l'eliminazione non si propone
+        self.assertEqual(ref.post(f"{API}/proposte", base_url=ENTE, json={
+            "tipo": "ELIMINA", "oggetto": "PROCEDIMENTO", "elemento_id": proc["id"]}).status_code, 409)  # fmt: skip
 
     def test_proposte(self):
         rpct, ref, dirig = self._client("rpct"), self._client("referente"), self._client("dirigente")

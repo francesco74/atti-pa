@@ -9,6 +9,7 @@ import 'albero.dart';
 import 'art35.dart';
 import 'catalogo.dart' show VociSimiliProposta, modificaVoce;
 import 'comune.dart';
+import 'procedimenti.dart' show modificaProcedimento;
 
 const _etichetteStato = {
   'INVIATA': 'In fase di approvazione',
@@ -31,14 +32,13 @@ const _azioni = {
   'RISCHIO': ('Nuova analisi del rischio', 'Modifica dell\'analisi del rischio', 'Eliminazione del rischio'),
   'MISURA': ('Nuova misura', 'Modifica della misura', 'Eliminazione della misura'),
   'VOCE': ('Nuova voce del catalogo', 'Modifica della voce', 'Eliminazione della voce'),
+  'PROCEDIMENTO': ('Nuovo procedimento', 'Modifica del procedimento', 'Eliminazione del procedimento'),
 };
 
 /// Titolo della proposta: "Nuova attività", "Modifica della misura C.1.1_R.1_M.2"...
 String titoloProposta(Map<String, dynamic> p) {
   final azioni = _azioni[p['oggetto']] ?? ('Nuovo elemento', 'Modifica', 'Eliminazione');
-  var titolo = switch (p['tipo']) { 'CREA' => azioni.$1, 'MODIFICA' => azioni.$2, _ => azioni.$3 };
-  final dati = p['dati'] as Map?;
-  if (p['oggetto'] == 'PROCESSO' && p['tipo'] == 'CREA' && dati?['tipo'] == 'PROCEDIMENTO') titolo = 'Nuovo procedimento';
+  final titolo = switch (p['tipo']) { 'CREA' => azioni.$1, 'MODIFICA' => azioni.$2, _ => azioni.$3 };
   return p['codice'] == null ? titolo : '$titolo ${p['codice']}';
 }
 
@@ -282,6 +282,7 @@ class _PropostaPageState extends State<PropostaPage> {
       'ATTIVITA' => modificaAttivita(context, d, a: dati),
       'RISCHIO' => modificaRischio(context, d, r: dati),
       'VOCE' => modificaVoce(context, d, dati['tipo_voce'] as String, v: dati),
+      'PROCEDIMENTO' => modificaProcedimento(context, d.strutture, p: dati),
       _ => modificaMisura(context, d, m: dati),
     };
     if (v == null) return;
@@ -474,6 +475,9 @@ class _PropostaPageState extends State<PropostaPage> {
           // la voce nuova proposta: il RPCT vede se nel catalogo ce n'è già una simile
           if (rpct && p['oggetto'] == 'VOCE' && p['tipo'] == 'CREA' && p['stato'] == 'INVIATA' && _dati?['descrizione'] is String)
             VociSimiliProposta(tipo: _dati!['tipo_voce'] as String, testo: _dati!['descrizione'] as String),
+          // il procedimento nuovo proposto: quelli simili già nel catalogo
+          if (rpct && p['oggetto'] == 'PROCEDIMENTO' && p['tipo'] == 'CREA' && p['stato'] == 'INVIATA' && _dati?['denominazione'] is String)
+            VociSimiliProposta(tipo: 'PROCEDIMENTO', testo: _dati!['denominazione'] as String),
         ]),
       ),
     );
@@ -489,9 +493,10 @@ const _etichetteCampi = {
   'tempi': 'Tempi',
   'attori_esterni': 'Attori esterni',
   'termine_conclusione': 'Termine di conclusione',
-  'norma_riferimento': 'Norma di riferimento',
+  'norma_riferimento': 'Riferimenti normativi',
   'tipo_voce': 'Voce del catalogo per',
   'voce': 'Voce del catalogo',
+  'procedimento': 'Procedimento',
   'tipo_misura': 'Tipo di misura',
   'struttura_id': 'Struttura',
   'coinvolte': 'Strutture coinvolte',
@@ -539,9 +544,10 @@ class TabellaCampi extends StatelessWidget {
       'struttura_id' => dati.struttura(v) ?? '—',
       'coinvolte' => dati.coinvolte(v) ?? '—',
       'voce' => '${(v as Map)['codice']} - ${v['descrizione']}',
+      'procedimento' => '${(v as Map)['codice']} - ${v['denominazione']}',
       'tipo_voce' => const {'ATTIVITA': 'un\'attività', 'RISCHIO': 'un rischio', 'MISURA': 'una misura'}[v] ?? '$v',
       'tipo_misura' => const {'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
-      'tipo' => const {'PROCESSO': 'Processo', 'PROCEDIMENTO': 'Procedimento', 'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
+      'tipo' => const {'GENERALE': 'Generale', 'SPECIFICA': 'Specifica'}[v] ?? '$v',
       'valutazione' => '${(v as Map)['livello'] ?? 'Non valutato'} (P ${v['probabilita'] ?? v['probabilita_calcolata']} · '
           'I ${v['impatto'] ?? v['impatto_calcolato']})${v['motivazione_correzione'] != null ? ', corretta: ${v['motivazione_correzione']}' : ''}',
       _ => '$v',

@@ -11,10 +11,10 @@ import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
 /// Importazione dei procedimenti dal sito AT: si avvia la lettura, si attende il worker, si
-/// rivedono abbinamenti, uffici e dati; si salva aggiornando quello esistente (la denominazione
-/// della mappatura resta) e creando quello nuovo.
+/// rivedono abbinamenti, uffici e dati; si salva nel catalogo dei procedimenti aggiornando
+/// quello esistente (la denominazione del catalogo resta) e creando quello nuovo.
 void main() {
-  testWidgets('dal sito alla mappatura, con la revisione', (tester) async {
+  testWidgets('dal sito al catalogo dei procedimenti, con la revisione', (tester) async {
     tester.view.physicalSize = const Size(1400, 2600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -39,9 +39,9 @@ void main() {
           ],
         });
       }
-      if (r.method == 'GET' && p.endsWith('/processi')) {
+      if (r.method == 'GET' && p.endsWith('/anticorruzione/procedimenti')) {
         return json([
-          {'id': 'p1', 'codice': 'A.1', 'tipo': 'PROCEDIMENTO', 'area_id': 'a', 'denominazione': 'Assegnazione alloggi ERP',
+          {'id': 'p1', 'codice': 'P.1', 'denominazione': 'Assegnazione alloggi ERP',
            'descrizione': null, 'struttura_id': null, 'art35': {'modalita_info': 'Allo sportello'}},
         ]);
       }
@@ -54,13 +54,13 @@ void main() {
     final api = ApiClient('http://prova', client: client);
     final dati = DatiAnticorruzione(
       metodologia: const {'scala': <String>[], 'livelli': ['Basso', 'Alto']},
-      aree: const [{'id': 'a', 'codice': 'A', 'descrizione': 'Casa', 'descrizione_breve': null}],
+      aree: const [],
       strutture: const [{'id': 's1', 'codice': 'SETTORE 9', 'descrizione': 'Politiche abitative', 'attiva': true}],
       obblighi: const [],
     );
     await tester.pumpWidget(MultiProvider(
       providers: [Provider<ApiClient>.value(value: api), ChangeNotifierProvider(create: (_) => AuthState(api))],
-      child: MaterialApp(home: ImportaProcedimentiPage(strutture: dati.strutture, aree: dati.aree)),
+      child: MaterialApp(home: ImportaProcedimentiPage(strutture: dati.strutture)),
     ));
     await tester.enterText(find.byType(TextField), 'https://www.ente.it/at/tipologie-di-procedimento');
     await tester.pump();
@@ -70,23 +70,24 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
-    expect(find.text('Procedimenti trovati: 2. Per ciascuno scegli se aggiornarne uno della mappatura o crearne uno nuovo, '
+    expect(find.text('Procedimenti trovati: 2. Per ciascuno scegli se aggiornarne uno del catalogo o crearne uno nuovo, '
         'gli uffici e i dati da prendere.'), findsOneWidget);
     expect(find.text('• Orari non trovati'), findsOneWidget);
-    expect(find.text('Aggiorna A.1 - Assegnazione alloggi ERP'), findsOneWidget);
+    expect(find.text('Aggiorna P.1 - Assegnazione alloggi ERP'), findsOneWidget);
     expect(find.text('Nuovo procedimento'), findsWidgets);
     expect(find.text('Nella fonte: Concessioni'), findsOneWidget);
     expect(find.text('Ora: Allo sportello'), findsNothing); // la fonte non ha questo dato
 
     await tester.tap(find.text('Salva 2 procedimenti'));
     await tester.pumpAndSettle();
-    final aggiornato = scritti['PUT /api/v1/anticorruzione/processi/p1']!;
-    expect(aggiornato['denominazione'], 'Assegnazione alloggi ERP'); // resta quella della mappatura
+    final aggiornato = scritti['PUT /api/v1/anticorruzione/procedimenti/p1']!;
+    expect(aggiornato['denominazione'], 'Assegnazione alloggi ERP'); // resta quella del catalogo
     expect((aggiornato['art35'] as Map)['tipologia'], 'Concessioni');
     expect((aggiornato['art35'] as Map)['modalita_info'], 'Allo sportello'); // i dati presenti restano
     expect((aggiornato['art35'] as Map)['uff_resp_struttura_id'], 's1');
-    final creato = scritti['POST /api/v1/anticorruzione/processi']!;
-    expect((creato['denominazione'], creato['termine_conclusione'], creato['tipo']), ('Contributo morosità', '60 giorni', 'PROCEDIMENTO'));
+    final creato = scritti['POST /api/v1/anticorruzione/procedimenti']!;
+    expect((creato['denominazione'], creato['termine_conclusione']), ('Contributo morosità', '60 giorni'));
+    expect(creato.containsKey('tipo') || creato.containsKey('area_id'), isFalse);
     expect(find.text('Aggiornato'), findsOneWidget);
     expect(find.text('Creato'), findsOneWidget);
   });

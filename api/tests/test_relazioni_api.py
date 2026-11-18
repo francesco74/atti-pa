@@ -122,7 +122,7 @@ class RelazioniApi(unittest.TestCase):
         rel = self._ok(rpct.get(f"{API}/RPCT?anno=2026", base_url=ENTE))
         self.assertEqual([s["id"] for s in rel["sezioni"]], ["mappatura", "monitoraggio", "proposte", "trasparenza"])
         mappatura = rel["sezioni"][0]
-        self.assertEqual((mappatura["dati"]["processi_e_procedimenti"], mappatura["dati"]["rischi"],
+        self.assertEqual((mappatura["dati"]["processi"], mappatura["dati"]["rischi"],
                           mappatura["dati"]["rischi_non_valutati"]), (1, 2, 1))  # fmt: skip
         self.assertEqual(mappatura["dati"]["rischi_per_livello_dal_piu_grave"]["Rischio Critico"], 1)
         self.assertEqual(mappatura["tabelle"][0]["righe"][0][1], 2)

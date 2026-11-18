@@ -33,7 +33,7 @@ from common.anticorruzione.metodologia import chiave_naturale
 from common.documenti import DocumentiError
 from common.llm import LlmError, testo_prompt
 from common.models import (
-    AcAttivita, AcMisura, AcProcesso, AcProposta, AcRischio, Modulo, PfElemento, PfIndicatore, PfObiettivo, PfPiao, Ruolo,
+    AcAttivita, AcMisura, AcProcedimento, AcProcesso, AcProposta, AcRischio, Modulo, PfElemento, PfIndicatore, PfObiettivo, PfPiao, Ruolo,
     Struttura,
 )  # fmt: skip
 from common.performance import TOTALE, in_ritardo, media_pesata, raggiungimento, valore_indicatore
@@ -72,10 +72,10 @@ async def _mappatura() -> Sezione:
     r = await ac.riepilogo()
     t = r["totali"]
     livelli = [x for x in r["livelli"] if x != "None"]
-    processi = list(await db().scalars(select(AcProcesso.tipo).where(AcProcesso.ente_id == ente_id())))
+    procedimenti = set(await db().scalars(
+        select(AcAttivita.procedimento_id).where(AcAttivita.ente_id == ente_id(), AcAttivita.procedimento_id.is_not(None))))  # fmt: skip
     dati = {
-        "processi_e_procedimenti": t["processi"], "di_cui_procedimenti": sum(x == "PROCEDIMENTO" for x in processi),
-        "attivita": t["attivita"], "rischi": t["rischi"], "rischi_non_valutati": t["rischi_non_valutati"],
+        "processi": t["processi"], "attivita": t["attivita"], "procedimenti_presenti_nelle_attivita": len(procedimenti), "rischi": t["rischi"], "rischi_non_valutati": t["rischi_non_valutati"],
         "misure": t["misure"], "misure_generali": t["misure_generali"], "misure_specifiche": t["misure"] - t["misure_generali"],
         "rischi_per_livello_dal_piu_grave": {liv: r["per_livello"][liv] for liv in livelli},
         "aree_di_rischio": len(r["per_area"]),
@@ -113,7 +113,8 @@ async def _monitoraggio(anno: int) -> Sezione:
 
 _ESITI = {"APPROVATA": "approvate", "RESPINTA": "respinte", "RESTITUITA": "restituite", "INVIATA": "in_attesa"}
 _TIPI_PROPOSTA = {"CREA": "creazione", "MODIFICA": "modifica", "ELIMINA": "eliminazione"}
-_OGGETTI = {"AREA": "aree", "PROCESSO": "processi", "ATTIVITA": "attività", "RISCHIO": "rischi", "MISURA": "misure"}
+_OGGETTI = {"AREA": "aree", "PROCESSO": "processi", "ATTIVITA": "attività", "RISCHIO": "rischi", "MISURA": "misure",
+            "VOCE": "voci del catalogo", "PROCEDIMENTO": "procedimenti"}
 
 
 async def _proposte(anno: int) -> Sezione:
@@ -131,8 +132,7 @@ async def _proposte(anno: int) -> Sezione:
 async def _trasparenza() -> Sezione:
     sessione = db()
     e = ente()
-    procedimenti = list(await sessione.scalars(
-        select(AcProcesso).where(AcProcesso.ente_id == ente_id(), AcProcesso.tipo == "PROCEDIMENTO")))  # fmt: skip
+    procedimenti = list(await sessione.scalars(select(AcProcedimento).where(AcProcedimento.ente_id == ente_id())))
     strutture = {s.id: s for s in await sessione.scalars(select(Struttura).where(Struttura.ente_id == ente_id()))}
     completi = sum(not dati_art35.mancanti(dati_art35.scheda(p, strutture)) for p in procedimenti)
     misure = list(await sessione.scalars(select(AcMisura).where(AcMisura.ente_id == ente_id())))
@@ -141,7 +141,7 @@ async def _trasparenza() -> Sezione:
         "misure_di_trasparenza": len(trasparenza),
         "misure_collegate_a_un_obbligo_di_pubblicazione": sum(bool(m.obbligo_trasparenza) for m in trasparenza),
         "obblighi_di_pubblicazione_collegati": sorted({m.obbligo_trasparenza for m in trasparenza if m.obbligo_trasparenza}),
-        "procedimenti_mappati": len(procedimenti), "procedimenti_con_dati_art35_completi": completi,
+        "procedimenti_nel_catalogo": len(procedimenti), "procedimenti_con_dati_art35_completi": completi,
         "mappatura_pubblicata_sul_sito": bool(e.mappatura_pubblica),
         "procedimenti_pubblicati_sul_sito": bool(e.procedimenti_pubblici),
         "riferimento_normativo_procedimenti": "art. 35 d.lgs. 33/2013",

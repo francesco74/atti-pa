@@ -21,14 +21,10 @@ Map<String, dynamic> daAlbero(Map<String, dynamic> albero) {
   return {
     'processo': {
       for (final k in const [
-        'id', 'codice', 'tipo', 'area_id', 'denominazione', 'descrizione', 'tempi', 'attori_esterni',
-        'termine_conclusione', 'norma_riferimento', 'art35', 'struttura_id', 'coinvolte',
+        'id', 'codice', 'area_id', 'denominazione', 'descrizione', 'tempi', 'attori_esterni', 'struttura_id', 'coinvolte',
       ])
         k: albero[k],
     },
-    // procedimento: scheda art. 35 (formato dello schema della trasparenza) e dati mancanti
-    'scheda_art35': albero['scheda_art35'],
-    'art35_mancanti': albero['art35_mancanti'],
     'proponibile': albero['proponibile'] == true, // processo della struttura del referente
     // obiettivi della performance che usano il processo, una sua attività o una sua misura
     'obiettivi': (albero['obiettivi'] as List? ?? const []).cast<Map<String, dynamic>>(),
@@ -251,11 +247,10 @@ Future<Map<String, dynamic>?> modificaArea(BuildContext context, {Map<String, dy
       Campo('descrizione_breve', 'Descrizione breve', aiuto: 'Le aree si elencano in ordine alfabetico di questa'),
     ]);
 
-/// Processo o procedimento (il codice lo assegna il sistema dall'area, es. C.11). Termine di
-/// conclusione e norma di riferimento valgono per i procedimenti.
+/// Processo (il codice lo assegna il sistema dall'area, es. C.11; senza area X.n). I
+/// procedimenti non sono processi: un'attività del processo può essere un procedimento.
 Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? p, Future<void> Function(Map<String, dynamic>)? salva}) =>
-    modificaCampi(context, salva: salva, titolo: p?['codice'] == null ? 'Nuovo processo o procedimento' : '${etichettaTipo(p!['tipo'])} ${p['codice']}', valori: {'tipo': 'PROCESSO', ...?p}, campi: [
-      const Campo('tipo', 'Tipo', scelte: [('PROCESSO', 'Processo'), ('PROCEDIMENTO', 'Procedimento')]),
+    modificaCampi(context, salva: salva, titolo: p?['codice'] == null ? 'Nuovo processo' : 'Processo ${p!['codice']}', valori: p ?? const {}, campi: [
       Campo('area_id', 'Area di rischio', scelte: [
         (null, 'Nessuna'),
         for (final a in d.aree) (a['id'] as String, '${a['codice']} - ${a['descrizione_breve'] ?? a['descrizione']}'),
@@ -264,35 +259,53 @@ Future<Map<String, dynamic>?> modificaProcesso(BuildContext context, DatiAnticor
       const Campo('descrizione', 'Descrizione', righe: 4),
       const Campo('tempi', 'Tempi', righe: 2),
       const Campo('attori_esterni', 'Attori esterni', righe: 2),
-      const Campo('termine_conclusione', 'Termine di conclusione', aiuto: 'Solo per i procedimenti (es. 30 giorni)'),
-      const Campo('norma_riferimento', 'Norma di riferimento', righe: 2, aiuto: 'Solo per i procedimenti'),
       Campo('struttura_id', 'Struttura responsabile', scelte: _sceltaStrutture(d, 'Tutte (processo trasversale)')),
       Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, p?['coinvolte']),
           aiuto: 'Oltre alla responsabile: il processo si trova anche tra quelli di queste strutture (che non ne propongono modifiche)'),
     ]);
 
-String etichettaTipo(Object? tipo) => tipo == 'PROCEDIMENTO' ? 'Procedimento' : 'Processo';
-
-/// Spiegazione nella finestra dell'elemento: la voce del catalogo da cui viene.
+/// Spiegazione nella finestra dell'elemento: la voce del catalogo da cui viene (o, per
+/// un'attività, il procedimento che è).
 String? _notaVoce(Map? voce) => voce == null
     ? null
-    : 'Voce del catalogo ${voce['codice']}: «${voce['descrizione']}». Il testo si può ritoccare per questo processo; '
-        'la voce resta la stessa.';
+    : voce['procedimento'] == true
+        ? 'Procedimento ${voce['codice']}: «${voce['denominazione']}». Il testo si può ritoccare per questo processo; '
+            'il procedimento resta lo stesso.'
+        : 'Voce del catalogo ${voce['codice']}: «${voce['descrizione']}». Il testo si può ritoccare per questo processo; '
+            'la voce resta la stessa.';
 
 /// Elemento nuovo: si sceglie prima la voce dal catalogo (se manca, il RPCT la crea e il
 /// referente la propone); null se non si sceglie. Elemento esistente: la sua voce.
 Future<Map<String, dynamic>?> _voce(BuildContext context, DatiAnticorruzione d, String tipo, Map? el) async =>
     el == null ? await scegliVoce(context, tipo, dati: d) : (el['voce'] as Map?)?.cast<String, dynamic>();
 
+/// Il procedimento dell'attività ({id, codice, denominazione, procedimento: true}), se lo è.
+Map<String, dynamic>? procedimentoDi(Map a) {
+  final p = a['procedimento'] as Map?;
+  return p == null ? null : {...p.cast<String, dynamic>(), 'procedimento': true};
+}
+
+/// Attività: nuova, nasce da una voce del catalogo delle attività oppure è un procedimento del
+/// catalogo dei procedimenti (in alternativa); il testo si copia e si ritocca.
 Future<Map<String, dynamic>?> modificaAttivita(BuildContext context, DatiAnticorruzione d, {Map<String, dynamic>? a, Future<void> Function(Map<String, dynamic>)? salva}) async {
-  final voce = await _voce(context, d, 'ATTIVITA', a);
-  if (a == null && voce == null || !context.mounted) return null;
-  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {...v, if (a == null) 'voce_id': voce!['id'], if (a == null) 'voce': voce};
+  final origine = a == null
+      ? await scegliVoce(context, 'ATTIVITA', dati: d, procedimenti: true)
+      : procedimentoDi(a) ?? (a['voce'] as Map?)?.cast<String, dynamic>();
+  if (a == null && origine == null || !context.mounted) return null;
+  final procedimento = origine?['procedimento'] == true;
+  Map<String, dynamic> conVoce(Map<String, dynamic> v) => {
+        ...v,
+        if (a == null && procedimento) ...{
+          'procedimento_id': origine!['id'],
+          'procedimento': {for (final k in const ['id', 'codice', 'denominazione']) k: origine[k]},
+        },
+        if (a == null && !procedimento) ...{'voce_id': origine!['id'], 'voce': origine},
+      };
   final v = await modificaCampi(context,
       salva: salva == null ? null : (v) => salva(conVoce(v)),
-      titolo: a?['codice'] == null ? 'Nuova attività' : 'Attività ${a!['codice']}',
-      valori: a ?? {'descrizione': voce!['descrizione']},
-      nota: _notaVoce(voce),
+      titolo: a?['codice'] == null ? (procedimento ? 'Nuova attività: procedimento ${origine!['codice']}' : 'Nuova attività') : 'Attività ${a!['codice']}',
+      valori: a ?? {'descrizione': procedimento ? origine!['denominazione'] : origine!['descrizione']},
+      nota: _notaVoce(origine),
       campi: [
         const Campo('descrizione', 'Descrizione', righe: 4, obbligatorio: true),
         Campo('coinvolte', 'Strutture coinvolte', multipla: true, scelte: _scelteCoinvolte(d, a?['coinvolte'])),
@@ -649,6 +662,7 @@ class AlberoProcesso extends StatelessWidget {
             initiallyExpanded: attivita.length <= 3,
             title: Text('${a['codice'] ?? 'Nuova'} - ${a['descrizione']}'),
             subtitle: Text([
+              if (a['procedimento'] != null) 'Procedimento ${(a['procedimento'] as Map)['codice']} - ${(a['procedimento'] as Map)['denominazione']}',
               ?voceRitoccata(a, a['descrizione'] as String?),
               '${_lista(a['rischi']).length} rischi',
               ?dati.coinvolte(a['coinvolte']),
@@ -816,8 +830,8 @@ class SchedaRischio extends StatelessWidget {
   }
 }
 
-/// Intestazione del processo o procedimento: area, struttura, tempi, attori esterni e, per
-/// il procedimento, termine di conclusione e norma di riferimento.
+/// Intestazione del processo: area, struttura, strutture coinvolte, descrizione, tempi e
+/// attori esterni.
 class IntestazioneProcesso extends StatelessWidget {
   const IntestazioneProcesso({super.key, required this.dati, required this.processo, this.azioni});
 
@@ -834,13 +848,9 @@ class IntestazioneProcesso extends StatelessWidget {
       ('Descrizione', processo['descrizione']),
       ('Tempi', processo['tempi']),
       ('Attori esterni', processo['attori_esterni']),
-      if (processo['tipo'] == 'PROCEDIMENTO') ...[
-        ('Termine di conclusione', processo['termine_conclusione']),
-        ('Norma di riferimento', processo['norma_riferimento']),
-      ],
     ];
     return Sezione(
-      titolo: '${etichettaTipo(processo['tipo'])} ${processo['codice'] ?? '(nuovo)'} - ${processo['denominazione'] ?? ''}',
+      titolo: 'Processo ${processo['codice'] ?? '(nuovo)'} - ${processo['denominazione'] ?? ''}',
       azioni: azioni,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         for (final (etichetta, valore) in righe)

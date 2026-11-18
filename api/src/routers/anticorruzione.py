@@ -1,8 +1,8 @@
 """Modulo anticorruzione (ripreso da Si.Ge.Ri.Co.): metodologia di valutazione del rischio,
-mappatura (area -> processo o procedimento -> attività -> rischio con la valutazione ->
-misura, ciascuno uno a molti), proposte dei referenti, monitoraggio annuale delle misure,
-riepilogo ed esportazione degli allegati al PTPCT. I codici degli elementi li assegna il
-sistema e non si riusano.
+mappatura (area -> processo -> attività -> rischio con la valutazione -> misura, ciascuno uno
+a molti), catalogo dei procedimenti (un'attività può essere un procedimento), proposte dei
+referenti, monitoraggio annuale delle misure, riepilogo ed esportazione degli allegati al
+PTPCT. I codici degli elementi li assegna il sistema e non si riusano.
 
 Tutti gli utenti del modulo leggono; il RPCT (e il suo staff) modifica direttamente. I
 referenti (uno per dirigente) propongono la creazione, la modifica o l'eliminazione di un
@@ -20,11 +20,11 @@ from typing import Literal
 
 from flask import Blueprint, g
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import undefer
 
 import ricerca as servizio_ricerca
-from deps import audit, autenticato, db, ente, ente_id, risorse, utente
+from deps import audit, autenticato, db, ente, ente_id, impostazioni, risorse, utente
 from web import ErroreApi, allegato, corpo, nessun_contenuto, parametri
 from common import posta
 from common.ricerca import Documento
@@ -35,7 +35,8 @@ from common.anticorruzione.controlli import Contesto as ContestoControlli
 from common.anticorruzione.controlli import controlli_proposta
 from common.anticorruzione.metodologia import Metodologia, chiave_area, chiave_naturale, standard, valuta
 from common.models import (
-    AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcesso, AcProposta, AcRischio, AcVoce,
+    AcArea, AcAttivita, AcContatore, AcMetodologia, AcMisura, AcMonitoraggio, AcProcedimento, AcProcesso, AcProposta,
+    AcRischio, AcVoce,
     Ente, Modulo, PfElemento, PfObiettivo, PfPiao, Ruolo, StatoVerifica, Struttura, TrasparenzaLavoro, User, nuovo_id,
 )  # fmt: skip
 from common.performance import media_pesata
@@ -127,7 +128,7 @@ async def importa_procedimenti():
 @rpct
 async def importazione_procedimenti(lavoro_id: str):
     """Stato della lettura e, a lettura completata, i procedimenti trovati con gli abbinamenti
-    proposti (procedimento della mappatura, strutture per gli uffici) e gli avvisi."""
+    proposti (procedimento del catalogo, strutture per gli uffici) e gli avvisi."""
     return await stato_importazione_procedimenti(lavoro_id)
 
 
@@ -155,8 +156,7 @@ async def stato_importazione_procedimenti(lavoro_id: str) -> dict:
     risposta = _lavoro(lavoro)
     if lavoro.stato == StatoVerifica.COMPLETATA and lavoro.risultato:
         righe = ((lavoro.risultato or {}).get("dati") or {}).get("righe") or []
-        procedimenti = list(await sessione.scalars(
-            select(AcProcesso).where(AcProcesso.ente_id == ente_id(), AcProcesso.tipo == "PROCEDIMENTO")))  # fmt: skip
+        procedimenti = list(await sessione.scalars(select(AcProcedimento).where(AcProcedimento.ente_id == ente_id())))
         risposta |= {
             "procedimenti": dati_art35.abbina(righe, procedimenti, await _strutture_ente(sessione)),
             "avvisi": (lavoro.risultato or {}).get("avvisi") or [],
@@ -358,10 +358,9 @@ def _sottostanti(strutture: dict[str, Struttura], radice: str) -> set[str]:
 
 def _processo(p: AcProcesso) -> dict:
     return {
-        "id": p.id, "codice": p.codice, "tipo": p.tipo or "PROCESSO", "area_id": p.area_id,
+        "id": p.id, "codice": p.codice, "area_id": p.area_id,
         "denominazione": p.denominazione, "descrizione": p.descrizione, "tempi": p.tempi,
-        "attori_esterni": p.attori_esterni, "termine_conclusione": p.termine_conclusione,
-        "norma_riferimento": p.norma_riferimento, "art35": p.art35, "struttura_id": p.struttura_id,
+        "attori_esterni": p.attori_esterni, "struttura_id": p.struttura_id,
         "coinvolte": p.coinvolte or [], "pacchetto": p.pacchetto,
         "updated_at": p.updated_at.isoformat() if p.updated_at else None,
     }  # fmt: skip
@@ -369,7 +368,8 @@ def _processo(p: AcProcesso) -> dict:
 
 def _attivita(a: AcAttivita) -> dict:
     return {"id": a.id, "processo_id": a.processo_id, "codice": a.codice, "descrizione": a.descrizione,
-            "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or [], "voce_id": a.voce_id}  # fmt: skip
+            "strutture_coinvolte": a.strutture_coinvolte, "coinvolte": a.coinvolte or [], "voce_id": a.voce_id,
+            "procedimento_id": a.procedimento_id}  # fmt: skip
 
 
 def strutture_del_processo(p: AcProcesso, attivita: list[AcAttivita] = ()) -> set[str]:
@@ -407,14 +407,13 @@ class FiltriProcessi(BaseModel):
     area: str | None = None  # id dell'area
     struttura: str | None = None  # id: la struttura e le sottostanti (responsabili o coinvolte), più i trasversali
     livello: str | None = None  # livello massimo di rischio del processo
-    tipo: Literal["PROCESSO", "PROCEDIMENTO"] | None = None
     testo: str | None = Field(default=None, max_length=200)
 
 
 @bp.get("/processi")
 @lettore
 async def processi():
-    """Processi e procedimenti con i conteggi e il livello di rischio più alto tra i loro rischi."""
+    """Processi con i conteggi e il livello di rischio più alto tra i loro rischi."""
     return await elenco_processi(db(), parametri(FiltriProcessi))
 
 
@@ -425,8 +424,6 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
     q = select(AcProcesso).where(AcProcesso.ente_id == ente_id())
     if f.area:
         q = q.where(AcProcesso.area_id == f.area)
-    if f.tipo:
-        q = q.where(AcProcesso.tipo == f.tipo)
     elenco = list(await sessione.scalars(q))
     attivita = list(await sessione.scalars(select(AcAttivita).where(AcAttivita.ente_id == ente_id())))
     if f.struttura:
@@ -454,7 +451,6 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
         if c is not None:
             c["misure"] += 1
     testo = (f.testo or "").strip().lower()
-    strutture = await _strutture_ente(sessione) if any(p.tipo == "PROCEDIMENTO" for p in elenco) else {}
     risultato = []
     for p in _per_codice(elenco):
         c = conteggi.get(p.id, {"attivita": 0, "rischi": 0, "misure": 0, "livelli": []})
@@ -467,24 +463,17 @@ async def elenco_processi(sessione, f: FiltriProcessi) -> list[dict]:
             continue
         risultato.append({**_processo(p), "attivita": c["attivita"], "rischi": c["rischi"],
                           "misure": c["misure"], "livello_massimo": livello})  # fmt: skip
-        if p.tipo == "PROCEDIMENTO":  # quanti dati dell'art. 35 mancano (0: completi)
-            risultato[-1]["art35_mancanti"] = len(dati_art35.mancanti(dati_art35.scheda(p, strutture)))
     return risultato
 
 
 class RicercaIn(BaseModel):
     testo: str = Field(min_length=1, max_length=300)
-    tipo: Literal["PROCESSO", "PROCEDIMENTO"] | None = None
 
 
-async def documenti_ricerca(sessione, tipo: str | None = None) -> list[Documento]:
-    """Processi (o solo procedimenti) dell'ente come documenti da cercare: codice e
-    denominazione, poi descrizione, area, struttura, riferimenti normativi, termine, dati
-    dell'art. 35 descrittivi e descrizioni delle attività. Solo dati pubblicabili."""
-    q = select(AcProcesso).where(AcProcesso.ente_id == ente_id())
-    if tipo:
-        q = q.where(AcProcesso.tipo == tipo)
-    processi = list(await sessione.scalars(q))
+async def documenti_ricerca(sessione) -> list[Documento]:
+    """Processi dell'ente come documenti da cercare: codice e denominazione, poi descrizione,
+    area, struttura e descrizioni delle attività. Solo dati pubblicabili."""
+    processi = list(await sessione.scalars(select(AcProcesso).where(AcProcesso.ente_id == ente_id())))
     aree = {a.id: a for a in await sessione.scalars(select(AcArea).where(AcArea.ente_id == ente_id()))}
     strutture = await _strutture_ente(sessione)
     attivita: dict[str, list[str]] = {}
@@ -492,13 +481,9 @@ async def documenti_ricerca(sessione, tipo: str | None = None) -> list[Documento
         attivita.setdefault(a.processo_id, []).append(a.descrizione or "")
     documenti = []
     for p in processi:
-        area, struttura, d = aree.get(p.area_id), strutture.get(p.struttura_id), p.art35 or {}
-        parti = [
-            p.descrizione, area.descrizione if area else None, struttura.descrizione if struttura else None,
-            p.norma_riferimento, p.termine_conclusione,
-            d.get("tipologia"), d.get("modalita_info"), d.get("strumenti_tutela"),
-            *attivita.get(p.id, []),
-        ]  # fmt: skip
+        area, struttura = aree.get(p.area_id), strutture.get(p.struttura_id)
+        parti = [p.descrizione, area.descrizione if area else None, struttura.descrizione if struttura else None,
+                 *attivita.get(p.id, [])]  # fmt: skip
         documenti.append(Documento(p.id, f"{p.codice} {p.denominazione}", "\n".join(x for x in parti if x)))
     return documenti
 
@@ -506,13 +491,22 @@ async def documenti_ricerca(sessione, tipo: str | None = None) -> list[Documento
 @bp.get("/ricerca")
 @lettore
 async def ricerca_processi():
-    """Ricerca in linguaggio naturale nei processi e procedimenti: id in ordine di pertinenza
-    (vedi api/src/ricerca.py)."""
+    """Ricerca in linguaggio naturale nei processi: id in ordine di pertinenza (vedi
+    api/src/ricerca.py)."""
     f = parametri(RicercaIn)
-    return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db(), f.tipo), ente_id=ente_id())
+    return await servizio_ricerca.cerca(f.testo, await documenti_ricerca(db()), ente_id=ente_id())
 
 
 # --- elenco piatto della mappatura ------------------------------------------------------------
+
+
+async def vettori_validi(sessione, m: dict[str, list] | None = None) -> set[str]:
+    """I record dell'ente che possono avere un vettore di ricerca: la mappatura, le voci del
+    catalogo e i procedimenti (gli altri vettori sono orfani e si eliminano)."""
+    m = m if m is not None else await _mappatura_completa(sessione)
+    return ({x.id for v in m.values() for x in v}
+            | set(await sessione.scalars(select(AcVoce.id).where(AcVoce.ente_id == ente_id())))
+            | set(await sessione.scalars(select(AcProcedimento.id).where(AcProcedimento.ente_id == ente_id()))))  # fmt: skip
 
 
 async def _mappatura_completa(sessione) -> dict[str, list]:
@@ -532,23 +526,17 @@ async def _mappatura_completa(sessione) -> dict[str, list]:
 @bp.get("/elenco")
 @lettore
 async def elenco():
-    """Tutta la mappatura in forma piatta per la scheda Elenco: aree, processi e procedimenti,
-    attività, rischi e misure, ciascuno con l'id del padre; i procedimenti con la scheda art. 35
-    e i dati mancanti. Il client compone le righe con il percorso e applica i filtri (anche per
-    struttura, con le sottostrutture)."""
+    """Tutta la mappatura in forma piatta per la scheda Elenco: aree, processi, attività, rischi
+    e misure, ciascuno con l'id del padre, e i procedimenti del catalogo (codice e denominazione)
+    per le attività che lo sono. Il client compone le righe con il percorso e applica i filtri
+    (anche per struttura, con le sottostrutture)."""
     sessione = db()
     m = await _mappatura_completa(sessione)
-    strutture = await _strutture_ente(sessione) if any(p.tipo == "PROCEDIMENTO" for p in m["processi"]) else {}
-
-    def processo(p: AcProcesso) -> dict:
-        if p.tipo != "PROCEDIMENTO":
-            return _processo(p)
-        scheda = dati_art35.scheda(p, strutture)
-        return {**_processo(p), "scheda_art35": scheda, "art35_mancanti": dati_art35.mancanti(scheda)}
-
+    procedimenti = _per_codice(await sessione.scalars(select(AcProcedimento).where(AcProcedimento.ente_id == ente_id())))
     return {
+        "procedimenti": [{"id": p.id, "codice": p.codice, "denominazione": p.denominazione} for p in procedimenti],
         "aree": [_area(a) for a in m["aree"]],
-        "processi": [processo(p) for p in m["processi"]],
+        "processi": [_processo(p) for p in m["processi"]],
         "attivita": [_attivita(a) for a in m["attivita"]],
         "rischi": [_rischio(r) for r in m["rischi"]],
         "misure": [_misura(x) for x in m["misure"]],
@@ -574,8 +562,7 @@ async def ricerca_elenco():
     f = parametri(RicercaElencoIn)
     sessione = db()
     m = await _mappatura_completa(sessione)
-    # i record dell'ente che possono avere un vettore: la mappatura e le voci del catalogo
-    validi = {x.id for v in m.values() for x in v} | set(await sessione.scalars(select(AcVoce.id).where(AcVoce.ente_id == ente_id())))
+    validi = await vettori_validi(sessione, m)
     if f.livello == "PROCESSO":  # gli stessi documenti della ricerca nella mappatura (vettori in comune)
         documenti = await documenti_ricerca(sessione)
         return await servizio_ricerca.cerca(f.testo, documenti, ente_id=ente_id(), validi=validi)
@@ -646,12 +633,8 @@ async def processo(processo_id: str):
     sessione = db()
     p = await processo_dell_ente(sessione, processo_id)
     albero = await albero_processo(sessione, p)
-    risultato = {**albero, "proponibile": _proponibile(p, await _strutture_dell_utente(sessione)),
-                 "obiettivi": await _obiettivi_collegati(sessione, p, albero)}  # fmt: skip
-    if p.tipo == "PROCEDIMENTO":
-        elemento = dati_art35.scheda(p, await _strutture_ente(sessione))
-        risultato |= {"scheda_art35": elemento, "art35_mancanti": dati_art35.mancanti(elemento)}
-    return risultato
+    return {**albero, "proponibile": _proponibile(p, await _strutture_dell_utente(sessione)),
+            "obiettivi": await _obiettivi_collegati(sessione, p, albero)}  # fmt: skip
 
 
 async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[dict]:
@@ -697,6 +680,15 @@ async def _obiettivi_collegati(sessione, p: AcProcesso, albero: dict) -> list[di
     return sorted(per_obiettivo.values(), key=lambda v: (-v["anno"], chiave_naturale(v["codice"] or ""), v["titolo"]))
 
 
+async def procedimenti_delle_attivita(sessione, attivita) -> dict[str, dict]:
+    """Il procedimento del catalogo delle attività che lo sono: {id: {id, codice, denominazione}}."""
+    ids = {a.procedimento_id for a in attivita if a.procedimento_id}
+    if not ids:
+        return {}
+    righe = await sessione.scalars(select(AcProcedimento).where(AcProcedimento.id.in_(ids)))
+    return {p.id: {"id": p.id, "codice": p.codice, "denominazione": p.denominazione} for p in righe}
+
+
 async def albero_processo(sessione, p: AcProcesso) -> dict:
     attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.processo_id == p.id)))
     ids_attivita = [a.id for a in attivita]
@@ -704,6 +696,7 @@ async def albero_processo(sessione, p: AcProcesso) -> dict:
     misure = _per_codice(await sessione.scalars(select(AcMisura).where(AcMisura.rischio_id.in_([r.id for r in rischi]))))
     ids_voci = {x.voce_id for x in [*attivita, *rischi, *misure] if x.voce_id}
     voci = {v.id: v for v in await sessione.scalars(select(AcVoce).where(AcVoce.id.in_(ids_voci)))} if ids_voci else {}
+    procedimenti = await procedimenti_delle_attivita(sessione, attivita)
 
     def voce(el) -> dict:
         """La voce del catalogo dell'elemento, con il testo originale (si mostra se diverso)."""
@@ -713,7 +706,7 @@ async def albero_processo(sessione, p: AcProcesso) -> dict:
     return {
         **_processo(p),
         "attivita": [
-            {**_attivita(a), **voce(a), "rischi": [
+            {**_attivita(a), **voce(a), "procedimento": procedimenti.get(a.procedimento_id), "rischi": [
                 {**_rischio(r), **voce(r), "misure": [{**_misura(x), **voce(x)} for x in misure if x.rischio_id == r.id]}
                 for r in rischi if r.attivita_id == a.id
             ]}
@@ -742,23 +735,23 @@ async def _tocca(sessione, processo_id: str) -> None:
 
 
 class ProcessoIn(BaseModel):
-    tipo: Literal["PROCESSO", "PROCEDIMENTO"] = "PROCESSO"
     area_id: str | None = None
     denominazione: str = Field(min_length=1, max_length=500)
     descrizione: str | None = None
     tempi: str | None = None
     attori_esterni: str | None = None
-    termine_conclusione: str | None = Field(default=None, max_length=255)  # procedimento
-    norma_riferimento: str | None = None  # procedimento
-    art35: dati_art35.DatiArt35 | None = None  # procedimento: dati propri dell'art. 35
     struttura_id: str | None = None  # vuota: processo trasversale
     # strutture coinvolte oltre alla responsabile; None (assenti): restano come sono
     coinvolte: list[str] | None = Field(default=None, max_length=200)
 
 
 class AttivitaIn(BaseModel):
+    """L'attività nasce da una voce del catalogo delle attività oppure è un procedimento del
+    catalogo dei procedimenti: in alternativa. Nella modifica, assenti: restano come sono."""
+
     descrizione: str = Field(min_length=1)
-    voce_id: str | None = None  # voce del catalogo (radice); nella modifica, assente: resta
+    voce_id: str | None = None  # voce del catalogo (radice)
+    procedimento_id: str | None = None  # procedimento del catalogo
     strutture_coinvolte: str | None = None  # note libere
     coinvolte: list[str] | None = Field(default=None, max_length=200)  # None (assenti): restano come sono
 
@@ -826,30 +819,26 @@ def _coinvolte(ids: list[str], *escluse: str | None) -> list[str] | None:
 async def _verifica_processo(sessione, dati: ProcessoIn) -> AcArea | None:
     await _struttura_valida(sessione, dati.struttura_id)
     await _strutture_valide(sessione, dati.coinvolte)
-    if dati.art35 is not None:
-        for campo in dati_art35.STRUTTURE:
-            await _struttura_valida(sessione, getattr(dati.art35, campo))
     return await _area_dell_ente(sessione, dati.area_id) if dati.area_id else None
 
 
 def _imposta_processo(p: AcProcesso, dati: ProcessoIn) -> None:
-    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields) - {"art35", "coinvolte"}).items():
+    for campo, valore in dati.model_dump(include=set(ProcessoIn.model_fields) - {"coinvolte"}).items():
         setattr(p, campo, valore)
     if dati.coinvolte is not None:
         p.coinvolte = _coinvolte(dati.coinvolte, p.struttura_id)
     elif p.coinvolte and p.struttura_id in p.coinvolte:  # la nuova responsabile non è anche coinvolta
         p.coinvolte = _coinvolte(p.coinvolte, p.struttura_id)
-    # dati dell'art. 35: un oggetto li sostituisce, null o assenti li lasciano come sono
-    if dati.art35 is not None:
-        p.art35 = dati.art35.model_dump(exclude_none=True) or None
-    if p.tipo == "PROCESSO":
-        p.termine_conclusione = p.norma_riferimento = p.art35 = None
     p.updated_at = datetime.now()
+
+
+# processi senza area: X.1, X.2... (P.n sono i procedimenti del catalogo)
+PREFISSO_SENZA_AREA = "X"
 
 
 async def _crea_processo(sessione, dati: ProcessoIn) -> AcProcesso:
     area = await _verifica_processo(sessione, dati)
-    codice = await _nuovo_codice(sessione, AcProcesso, f"{area.codice if area else 'P'}.")
+    codice = await _nuovo_codice(sessione, AcProcesso, f"{area.codice if area else PREFISSO_SENZA_AREA}.")
     p = AcProcesso(id=nuovo_id(), ente_id=ente_id(), codice=codice)
     _imposta_processo(p, dati)
     sessione.add(p)
@@ -904,22 +893,39 @@ async def _cambia_voce(sessione, tipo: str, el, voce_id: str | None) -> None:
         el.voce_id = (await _voce_valida(sessione, tipo, voce_id)).id
 
 
+def _voce_o_procedimento(dati: AttivitaIn) -> None:
+    if dati.voce_id and dati.procedimento_id:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY,
+                        "L'attività viene da una voce del catalogo oppure è un procedimento: non entrambi")  # fmt: skip
+
+
 async def _crea_attivita(sessione, p: AcProcesso, dati: AttivitaIn) -> AcAttivita:
+    _voce_o_procedimento(dati)
     await _strutture_valide(sessione, dati.coinvolte)
     a = AcAttivita(id=nuovo_id(), ente_id=ente_id(), processo_id=p.id,
                    codice=await _nuovo_codice(sessione, AcAttivita, f"{p.codice}."),
                    descrizione=dati.descrizione, strutture_coinvolte=dati.strutture_coinvolte,
                    coinvolte=_coinvolte(dati.coinvolte or []))  # fmt: skip
-    await _collega_al_catalogo(sessione, "ATTIVITA", a, dati.voce_id)
+    if dati.procedimento_id:
+        a.procedimento_id = (await procedimento_dell_ente(sessione, dati.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)).id
+    else:
+        await _collega_al_catalogo(sessione, "ATTIVITA", a, dati.voce_id)
     sessione.add(a)
     await _tocca(sessione, p.id)
     return a
 
 
 async def _modifica_attivita(sessione, a: AcAttivita, dati: AttivitaIn) -> None:
+    """La voce o il procedimento cambiano solo se indicati; uno toglie l'altro."""
+    _voce_o_procedimento(dati)
     await _strutture_valide(sessione, dati.coinvolte)
     a.descrizione, a.strutture_coinvolte = dati.descrizione, dati.strutture_coinvolte
-    await _cambia_voce(sessione, "ATTIVITA", a, dati.voce_id)
+    if dati.procedimento_id and dati.procedimento_id != a.procedimento_id:
+        a.procedimento_id = (await procedimento_dell_ente(sessione, dati.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)).id
+        a.voce_id = None
+    elif dati.voce_id and dati.voce_id != a.voce_id:
+        await _cambia_voce(sessione, "ATTIVITA", a, dati.voce_id)
+        a.procedimento_id = None
     if dati.coinvolte is not None:
         a.coinvolte = _coinvolte(dati.coinvolte)
     await _tocca(sessione, a.processo_id)
@@ -1038,6 +1044,229 @@ async def _crea_processo_completo(sessione, dati: ProcessoNuovo, m: Metodologia)
     for a in dati.attivita:
         await _crea_attivita_completa(sessione, p, a, m)
     return p
+
+
+# --- catalogo dei procedimenti ----------------------------------------------------------------
+# I procedimenti (art. 35 d.lgs. 33/2013) sono un catalogo dell'ente, condiviso con la
+# trasparenza (common/procedimenti.py): con l'anticorruzione il RPCT li gestisce qui e il
+# referente propone (proposte di tipo PROCEDIMENTO); con la sola trasparenza l'operatore li
+# gestisce dalla trasparenza con le stesse funzioni. Nella mappatura un'attività può essere un
+# procedimento; uno usato in qualche attività non si elimina.
+
+
+class ProcedimentoIn(BaseModel):
+    denominazione: str = Field(min_length=1, max_length=500)
+    descrizione: str | None = None
+    termine_conclusione: str | None = Field(default=None, max_length=255)
+    norma_riferimento: str | None = None  # riferimenti normativi (art. 35, c. 1, lett. a)
+    struttura_id: str | None = None  # unità responsabile dell'istruttoria
+    art35: dati_art35.DatiArt35 | None = None  # null o assenti: restano come sono
+
+
+def procedimento_base(p: AcProcedimento) -> dict:
+    return {
+        "id": p.id, "codice": p.codice, "denominazione": p.denominazione, "descrizione": p.descrizione,
+        "termine_conclusione": p.termine_conclusione, "norma_riferimento": p.norma_riferimento,
+        "struttura_id": p.struttura_id, "art35": p.art35,
+        "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+    }  # fmt: skip
+
+
+def procedimento_completo(p: AcProcedimento, strutture: dict, usi: int | None = None) -> dict:
+    """Il procedimento con la scheda art. 35 (formato dello schema della trasparenza) e i dati
+    mancanti; con [usi] quante attività della mappatura lo sono."""
+    scheda = dati_art35.scheda(p, strutture)
+    return {**procedimento_base(p), "scheda_art35": scheda, "art35_mancanti": dati_art35.mancanti(scheda),
+            **({} if usi is None else {"usi": usi})}  # fmt: skip
+
+
+async def procedimento_dell_ente(sessione, procedimento_id: str, *, errore: HTTPStatus = HTTPStatus.NOT_FOUND) -> AcProcedimento:
+    p = await sessione.get(AcProcedimento, procedimento_id)
+    if p is None or p.ente_id != ente_id():
+        raise ErroreApi(errore, "Procedimento non trovato")
+    return p
+
+
+async def procedimenti_ente(sessione) -> list[AcProcedimento]:
+    return _per_codice(await sessione.scalars(select(AcProcedimento).where(AcProcedimento.ente_id == ente_id())))
+
+
+async def usi_procedimenti(sessione) -> dict[str, int]:
+    """Quante attività della mappatura sono ciascun procedimento."""
+    righe = await sessione.execute(select(AcAttivita.procedimento_id, func.count()).where(
+        AcAttivita.ente_id == ente_id(), AcAttivita.procedimento_id.is_not(None)).group_by(AcAttivita.procedimento_id))  # fmt: skip
+    return dict(righe.all())
+
+
+async def _verifica_procedimento(sessione, dati: ProcedimentoIn) -> None:
+    await _struttura_valida(sessione, dati.struttura_id)
+    if dati.art35 is not None:
+        for campo in dati_art35.STRUTTURE:
+            await _struttura_valida(sessione, getattr(dati.art35, campo))
+
+
+def _imposta_procedimento(p: AcProcedimento, dati: ProcedimentoIn) -> None:
+    for campo, valore in dati.model_dump(exclude={"art35"}).items():
+        setattr(p, campo, valore)
+    # dati dell'art. 35: un oggetto li sostituisce, null o assenti li lasciano come sono
+    if dati.art35 is not None:
+        p.art35 = dati.art35.model_dump(exclude_none=True) or None
+    p.updated_at = datetime.now()
+
+
+async def crea_procedimento_ente(sessione, dati: ProcedimentoIn) -> AcProcedimento:
+    await _verifica_procedimento(sessione, dati)
+    p = AcProcedimento(id=nuovo_id(), ente_id=ente_id(), codice=await _nuovo_codice(sessione, AcProcedimento, "P."))
+    _imposta_procedimento(p, dati)
+    sessione.add(p)
+    return p
+
+
+async def modifica_procedimento_ente(sessione, p: AcProcedimento, dati: ProcedimentoIn) -> None:
+    await _verifica_procedimento(sessione, dati)
+    _imposta_procedimento(p, dati)
+
+
+async def attivita_del_procedimento(sessione, p: AcProcedimento) -> list[dict]:
+    """Le attività della mappatura che sono il procedimento, con il loro processo."""
+    attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.procedimento_id == p.id)))
+    if not attivita:
+        return []
+    processi = {x.id: x for x in await sessione.scalars(select(AcProcesso).where(AcProcesso.id.in_({a.processo_id for a in attivita})))}
+    return [{"id": a.id, "codice": a.codice, "descrizione": a.descrizione,
+             "processo": {"id": a.processo_id, "codice": processi[a.processo_id].codice,
+                          "denominazione": processi[a.processo_id].denominazione}} for a in attivita]  # fmt: skip
+
+
+async def _controlla_procedimento_libero(sessione, p: AcProcedimento) -> None:
+    if await sessione.scalar(select(AcAttivita.id).where(AcAttivita.procedimento_id == p.id).limit(1)):
+        raise ErroreApi(HTTPStatus.CONFLICT, f"Il procedimento {p.codice} è un'attività della mappatura: "
+                                             "toglilo prima dai processi che lo usano")  # fmt: skip
+
+
+async def elimina_procedimento_ente(sessione, p: AcProcedimento) -> None:
+    """Solo se nessuna attività della mappatura lo è."""
+    await _controlla_procedimento_libero(sessione, p)
+    await sessione.delete(p)
+
+
+def documenti_procedimenti(procedimenti: list[AcProcedimento], strutture: dict) -> list[Documento]:
+    """I procedimenti come documenti da cercare (catalogo, scelta nell'attività, pagina
+    pubblica: stesso testo, stesso vettore): codice e denominazione, poi descrizione, struttura,
+    riferimenti normativi, termine e dati dell'art. 35 descrittivi. Solo dati pubblicabili."""
+    documenti = []
+    for p in procedimenti:
+        s, d = strutture.get(p.struttura_id), p.art35 or {}
+        parti = [p.descrizione, s.descrizione if s else None, p.norma_riferimento, p.termine_conclusione,
+                 d.get("tipologia"), d.get("modalita_info"), d.get("strumenti_tutela")]  # fmt: skip
+        documenti.append(Documento(p.id, f"{p.codice} {p.denominazione}", "\n".join(x for x in parti if x)))
+    return documenti
+
+
+class FiltriProcedimenti(BaseModel):
+    testo: str | None = Field(default=None, max_length=200)
+
+
+async def elenco_procedimenti(sessione, testo: str | None = None) -> list[dict]:
+    """I procedimenti per codice con i dati art. 35 mancanti e quante attività li usano; con un
+    [testo] prima quelli con quel codice, poi per pertinenza (anche per significato), infine
+    quelli che lo contengono."""
+    elenco = await procedimenti_ente(sessione)
+    strutture = await _strutture_ente(sessione)
+    usi = await usi_procedimenti(sessione)
+    if not (cerca := (testo or "").strip().lower()):
+        return [procedimento_completo(p, strutture, usi.get(p.id, 0)) for p in elenco]
+    per_codice = [p for p in elenco if cerca == p.codice.lower() or p.codice.lower().startswith(cerca + ".")]
+    trovati = await servizio_ricerca.cerca(testo or "", documenti_procedimenti(elenco, strutture), ente_id=ente_id())
+    per_id = {p.id: p for p in elenco}
+    esito = [procedimento_completo(p, strutture, usi.get(p.id, 0)) for p in per_codice]
+    gia = {p.id for p in per_codice}
+    for r in trovati["risultati"]:
+        if r["id"] not in gia and (p := per_id.get(r["id"])) is not None:
+            esito.append({**procedimento_completo(p, strutture, usi.get(p.id, 0)), "per_significato": r["semantica"]})
+            gia.add(p.id)
+    esito += [procedimento_completo(p, strutture, usi.get(p.id, 0)) for p in elenco
+              if p.id not in gia and cerca in f"{p.codice} {p.denominazione}".lower()]  # fmt: skip
+    return esito
+
+
+@bp.get("/procedimenti")
+@lettore
+async def procedimenti():
+    """Il catalogo dei procedimenti (con la ricerca)."""
+    return await elenco_procedimenti(db(), parametri(FiltriProcedimenti).testo)
+
+
+class FiltriSimiliProcedimenti(BaseModel):
+    testo: str = Field(min_length=1, max_length=2000)
+    escluso: str | None = None  # il procedimento che si sta modificando
+
+
+@bp.get("/procedimenti/simili")
+@lettore
+async def procedimenti_simili():
+    """I procedimenti simili alla denominazione di uno nuovo (o modificato), il più simile prima,
+    con la somiglianza da 0 a 1: prima di crearne o proporne uno si vede se c'è già. Stessi
+    documenti della ricerca (stessi vettori)."""
+    f = parametri(FiltriSimiliProcedimenti)
+    sessione = db()
+    elenco = [p for p in await procedimenti_ente(sessione) if p.id != f.escluso]
+    strutture = await _strutture_ente(sessione)
+    documenti = documenti_procedimenti(elenco, strutture)
+    trovati = await servizio_ricerca.simili(f.testo, documenti, ente_id=ente_id(), soglia=impostazioni().catalogo_soglia_simili)
+    per_id = {p.id: p for p in elenco}
+    usi = await usi_procedimenti(sessione)
+    return [{**procedimento_completo(per_id[i], strutture, usi.get(i, 0)), "somiglianza": round(v, 2)} for i, v in trovati]
+
+
+@bp.get("/procedimenti/<procedimento_id>")
+@lettore
+async def procedimento(procedimento_id: str):
+    """Il procedimento con la scheda art. 35 e le attività della mappatura che lo sono; per il
+    referente anche se può proporne modifiche (della sua struttura o senza struttura)."""
+    sessione = db()
+    p = await procedimento_dell_ente(sessione, procedimento_id)
+    attivita = await attivita_del_procedimento(sessione, p)
+    ammesse = await _strutture_dell_utente(sessione)
+    return {**procedimento_completo(p, await _strutture_ente(sessione), len(attivita)), "attivita": attivita,
+            "proponibile": ammesse is None or bool(ammesse) and (p.struttura_id is None or p.struttura_id in ammesse)}  # fmt: skip
+
+
+@bp.post("/procedimenti")
+@rpct
+async def crea_procedimento():
+    dati = corpo(ProcedimentoIn)
+    sessione = db()
+    p = await crea_procedimento_ente(sessione, dati)
+    await sessione.flush()
+    audit(sessione, utente(), "ac_procedimento", p.id, "CREATO", {"codice": p.codice})
+    await sessione.commit()
+    await sessione.refresh(p)
+    return procedimento_completo(p, await _strutture_ente(sessione), 0), HTTPStatus.CREATED
+
+
+@bp.put("/procedimenti/<procedimento_id>")
+@rpct
+async def aggiorna_procedimento(procedimento_id: str):
+    dati = corpo(ProcedimentoIn)
+    sessione = db()
+    p = await procedimento_dell_ente(sessione, procedimento_id)
+    await modifica_procedimento_ente(sessione, p, dati)
+    audit(sessione, utente(), "ac_procedimento", p.id, "AGGIORNATO", {"codice": p.codice})
+    await sessione.commit()
+    await sessione.refresh(p)
+    return procedimento_completo(p, await _strutture_ente(sessione))
+
+
+@bp.delete("/procedimenti/<procedimento_id>")
+@rpct
+async def elimina_procedimento(procedimento_id: str):
+    sessione = db()
+    p = await procedimento_dell_ente(sessione, procedimento_id)
+    await elimina_procedimento_ente(sessione, p)
+    audit(sessione, utente(), "ac_procedimento", p.id, "ELIMINATO", {"codice": p.codice})
+    await sessione.commit()
+    return nessun_contenuto()
 
 
 # --- mappatura: modifiche dirette (RPCT) --------------------------------------------------
@@ -1272,7 +1501,7 @@ async def elimina_misura(misura_id: str):
 # sottostanti). Il RPCT decide ogni proposta; approvandola la applica con le stesse operazioni
 # delle modifiche dirette, quindi i codici li assegna il sistema in quel momento.
 
-Oggetto = Literal["AREA", "PROCESSO", "ATTIVITA", "RISCHIO", "MISURA", "VOCE"]
+Oggetto = Literal["AREA", "PROCESSO", "ATTIVITA", "RISCHIO", "MISURA", "VOCE", "PROCEDIMENTO"]
 
 
 class VoceProposta(BaseModel):
@@ -1294,6 +1523,7 @@ DATI_PROPOSTA: dict[tuple[str, str], type[BaseModel]] = {
     ("RISCHIO", "CREA"): RischioNuovo, ("RISCHIO", "MODIFICA"): RischioModificato,
     ("MISURA", "CREA"): MisuraIn, ("MISURA", "MODIFICA"): MisuraIn,
     ("VOCE", "CREA"): VoceProposta,
+    ("PROCEDIMENTO", "CREA"): ProcedimentoIn, ("PROCEDIMENTO", "MODIFICA"): ProcedimentoIn,
 }  # fmt: skip
 
 
@@ -1312,7 +1542,7 @@ async def _elemento(sessione, oggetto: str, elemento_id: str | None):
     if not elemento_id:
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Indica l'elemento della mappatura")
     carica = {"AREA": _area_dell_ente, "PROCESSO": processo_dell_ente, "ATTIVITA": _attivita_dell_ente,
-              "RISCHIO": _rischio_dell_ente, "MISURA": _misura_dell_ente}[oggetto]  # fmt: skip
+              "RISCHIO": _rischio_dell_ente, "MISURA": _misura_dell_ente, "PROCEDIMENTO": procedimento_dell_ente}[oggetto]  # fmt: skip
     return await carica(sessione, elemento_id)
 
 
@@ -1330,6 +1560,9 @@ async def _padre(sessione, oggetto: str, el) -> tuple[str, object] | None:
 
 
 async def _processo_di(sessione, oggetto: str, el) -> AcProcesso | None:
+    """Il processo dell'elemento (nessuno per aree, voci e procedimenti del catalogo)."""
+    if oggetto in ("VOCE", "PROCEDIMENTO"):
+        return None
     while el is not None and oggetto not in ("PROCESSO", "AREA"):
         oggetto, el = await _padre(sessione, oggetto, el)
     return el if oggetto == "PROCESSO" else None
@@ -1337,7 +1570,8 @@ async def _processo_di(sessione, oggetto: str, el) -> AcProcesso | None:
 
 def _titolo(oggetto: str, dati: dict) -> str:
     campo = {"AREA": "descrizione_breve", "PROCESSO": "denominazione", "ATTIVITA": "descrizione",
-             "RISCHIO": "evento", "MISURA": "descrizione", "VOCE": "descrizione"}[oggetto]  # fmt: skip
+             "RISCHIO": "evento", "MISURA": "descrizione", "VOCE": "descrizione",
+             "PROCEDIMENTO": "denominazione"}[oggetto]  # fmt: skip
     testo = (dati.get(campo) or dati.get("descrizione") or "").strip()
     return testo if len(testo) <= 80 else testo[:79] + "…"
 
@@ -1361,11 +1595,12 @@ def _valutazione_di(r: AcRischio) -> dict | None:
 
 
 def _senza_coinvolte_vuote(dati: dict) -> dict:
-    """Le strutture coinvolte solo se ci sono, e senza la voce del catalogo (nella modifica,
-    assente, resta): le proposte nate prima restano uguali all'elemento com'è."""
+    """Le strutture coinvolte solo se ci sono, e senza la voce del catalogo né il procedimento
+    (nella modifica, assenti, restano): le proposte nate prima restano uguali all'elemento com'è."""
     if not dati.get("coinvolte"):
         dati.pop("coinvolte", None)
     dati.pop("voce_id", None)
+    dati.pop("procedimento_id", None)
     return dati
 
 
@@ -1374,6 +1609,8 @@ async def _istantanea(sessione, oggetto: str, el, *, figli: bool = False) -> dic
     anche gli elementi sottostanti (eliminazione)."""
     if oggetto == "AREA":
         return {"codice": el.codice, **{k: getattr(el, k) for k in AreaIn.model_fields}}
+    if oggetto == "PROCEDIMENTO":
+        return {"codice": el.codice, **{k: getattr(el, k) for k in ProcedimentoIn.model_fields}}
     if oggetto == "MISURA":
         return {"codice": el.codice, **{k: getattr(el, k) for k in MisuraIn.model_fields if k != "voce_id"}}
     if oggetto == "RISCHIO":
@@ -1390,7 +1627,6 @@ async def _istantanea(sessione, oggetto: str, el, *, figli: bool = False) -> dic
             dati["rischi"] = [await _istantanea(sessione, "RISCHIO", r, figli=True) for r in rischi]
         return dati
     dati = _senza_coinvolte_vuote({"codice": el.codice, **{k: getattr(el, k) for k in ProcessoIn.model_fields}})
-    dati["tipo"] = dati["tipo"] or "PROCESSO"
     if figli:
         attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.processo_id == el.id)))
         dati["attivita"] = [await _istantanea(sessione, "ATTIVITA", a, figli=True) for a in attivita]
@@ -1410,6 +1646,13 @@ async def _verifica_dati(sessione, d: BaseModel, m: Metodologia) -> dict:
     if tipo_voce and d.voce_id:
         v = await _voce_valida(sessione, tipo_voce, d.voce_id)
         risultato["voce"] = {"codice": v.codice, "descrizione": v.descrizione}  # per mostrarla nella proposta
+    if isinstance(d, AttivitaIn):
+        _voce_o_procedimento(d)
+        if d.procedimento_id:
+            p = await procedimento_dell_ente(sessione, d.procedimento_id, errore=HTTPStatus.UNPROCESSABLE_ENTITY)
+            risultato["procedimento"] = {"codice": p.codice, "denominazione": p.denominazione}
+    if isinstance(d, ProcedimentoIn):
+        await _verifica_procedimento(sessione, d)
     if isinstance(d, ProcessoIn):
         await _verifica_processo(sessione, d)
     if isinstance(d, MisuraIn):
@@ -1430,20 +1673,24 @@ def _proponibile(processo: AcProcesso, ammesse: set[str] | None) -> bool:
     return bool(ammesse) and (processo.struttura_id is None or processo.struttura_id in ammesse)
 
 
-async def _controlla_permesso(sessione, processo: AcProcesso | None, strutture: list[str | None]) -> None:
+async def _controlla_permesso(sessione, processo: AcProcesso | AcProcedimento | None, strutture: list[str | None],
+                              *, procedimento: bool = False) -> None:  # fmt: skip
     """Il referente propone solo per i processi della sua struttura e delle sottostanti e per
     quelli trasversali; le aree non hanno struttura. Un processo si assegna alla sua struttura,
-    o resta trasversale se lo è già: renderlo trasversale spetta al RPCT, che non ha limiti."""
+    o resta trasversale se lo è già: renderlo trasversale spetta al RPCT, che non ha limiti.
+    Per i procedimenti del catalogo ([procedimento]) vale lo stesso con la loro struttura."""
     ammesse = await _strutture_dell_utente(sessione)
     if ammesse is None:
         return
     if not ammesse:
         raise ErroreApi(HTTPStatus.FORBIDDEN, "Per fare proposte serve la tua struttura nel profilo: chiedila all'amministratore")
+    cosa = "procedimenti" if procedimento else "processi"
     if processo is not None and not _proponibile(processo, ammesse):
-        raise ErroreApi(HTTPStatus.FORBIDDEN, "Puoi fare proposte solo sui processi della tua struttura e su quelli trasversali")
+        raise ErroreApi(HTTPStatus.FORBIDDEN, f"Puoi fare proposte solo sui {cosa} della tua struttura e su quelli senza struttura")
     resta_trasversale = processo is not None and processo.struttura_id is None
     if any(s not in ammesse and not (s is None and resta_trasversale) for s in strutture):
-        raise ErroreApi(HTTPStatus.FORBIDDEN, "Il processo va assegnato alla tua struttura (o a una sottostante)")
+        cosa = "Il procedimento" if procedimento else "Il processo"
+        raise ErroreApi(HTTPStatus.FORBIDDEN, f"{cosa} va assegnato alla tua struttura (o a una sottostante)")
 
 
 def _proposta(pr: AcProposta, autore: User | None, *, dati: bool = False) -> dict:
@@ -1551,6 +1798,9 @@ async def _contesto_controlli(sessione, pr: AcProposta) -> ContestoControlli:
             attivita_id = r.attivita_id
         righe = await sessione.execute(select(AcRischio.id, AcRischio.evento).where(AcRischio.attivita_id == attivita_id))
         ctx.fratelli = [e for i, e in righe if i != pr.elemento_id]
+    elif pr.oggetto == "PROCEDIMENTO":
+        righe = await sessione.execute(select(AcProcedimento.id, AcProcedimento.denominazione).where(AcProcedimento.ente_id == ente_id()))
+        ctx.procedimenti = {i: d for i, d in righe}
     elif pr.oggetto == "MISURA" and pr.tipo == "ELIMINA" and (m := await sessione.get(AcMisura, pr.elemento_id)) is not None:
         ctx.misure_del_rischio = len(list(await sessione.scalars(select(AcMisura.id).where(AcMisura.rischio_id == m.rischio_id))))
     return ctx
@@ -1567,9 +1817,13 @@ class PropostaNuova(BaseModel):
 
 def _scelti_dal_catalogo(d: BaseModel) -> None:
     """Il referente crea attività, rischi e misure scegliendo la voce dal catalogo (anche quelli
-    dentro un processo o un'attività nuovi); se manca, propone prima la voce."""
-    if isinstance(d, AttivitaIn | RischioIn | MisuraIn) and not d.voce_id:
-        cosa = "l'attività" if isinstance(d, AttivitaIn) else "il rischio" if isinstance(d, RischioIn) else "la misura"
+    dentro un processo o un'attività nuovi), o per l'attività il procedimento; se manca,
+    propone prima la voce (o il procedimento)."""
+    if isinstance(d, AttivitaIn) and not d.voce_id and not d.procedimento_id:
+        raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY, "Scegli l'attività dal catalogo, o il procedimento che è: "
+                                                         "se manca, proponi prima la voce (o il procedimento) nuova")  # fmt: skip
+    if isinstance(d, RischioIn | MisuraIn) and not d.voce_id:
+        cosa = "il rischio" if isinstance(d, RischioIn) else "la misura"
         raise ErroreApi(HTTPStatus.UNPROCESSABLE_ENTITY,
                         f"Scegli {cosa} dal catalogo: se manca, proponi prima la voce nuova")  # fmt: skip
     for campo in ("attivita", "rischi", "misure"):
@@ -1588,7 +1842,8 @@ async def _prepara(sessione, pr: AcProposta, dati: dict | None) -> None:
         padre = await _elemento(sessione, PADRE[pr.oggetto], pr.padre_id) if pr.oggetto in PADRE else None
         d = _dati_proposta(pr.oggetto, "CREA", dati)
         processo = await _processo_di(sessione, PADRE[pr.oggetto], padre) if padre else None
-        await _controlla_permesso(sessione, processo, [d.struttura_id] if pr.oggetto == "PROCESSO" else [])
+        await _controlla_permesso(sessione, processo, [d.struttura_id] if pr.oggetto in ("PROCESSO", "PROCEDIMENTO") else [],
+                                  procedimento=pr.oggetto == "PROCEDIMENTO")  # fmt: skip
         if not _e_rpct():
             _scelti_dal_catalogo(d)
         if pr.oggetto == "VOCE":
@@ -1604,21 +1859,25 @@ async def _prepara(sessione, pr: AcProposta, dati: dict | None) -> None:
         pr.contesto = {"percorso": percorso, "codice": None, "titolo": _titolo(pr.oggetto, pr.dati)}
     else:
         el = await _elemento(sessione, pr.oggetto, pr.elemento_id)
-        processo = await _processo_di(sessione, pr.oggetto, el)
+        del_procedimento = pr.oggetto == "PROCEDIMENTO"
+        processo = el if del_procedimento else await _processo_di(sessione, pr.oggetto, el)
         attuale = _json(await _istantanea(sessione, pr.oggetto, el, figli=pr.tipo == "ELIMINA"))
         if pr.tipo == "MODIFICA":
             d = _dati_proposta(pr.oggetto, "MODIFICA", dati if dati is not None else attuale)
-            await _controlla_permesso(sessione, processo, [d.struttura_id] if pr.oggetto == "PROCESSO" else [])
+            await _controlla_permesso(sessione, processo, [d.struttura_id] if pr.oggetto in ("PROCESSO", "PROCEDIMENTO") else [],
+                                      procedimento=del_procedimento)  # fmt: skip
             pr.dati, pr.prima = await _verifica_dati(sessione, d, m), _json(await _istantanea(sessione, pr.oggetto, el))
         else:
-            await _controlla_permesso(sessione, processo, [])
+            await _controlla_permesso(sessione, processo, [], procedimento=del_procedimento)
             if pr.oggetto == "AREA":
                 await _controlla_area_vuota(sessione, el)
+            if del_procedimento:
+                await _controlla_procedimento_libero(sessione, el)
             pr.dati = attuale
         padre = await _padre(sessione, pr.oggetto, el)
         pr.contesto = {"percorso": await _percorso(sessione, *padre) if padre else [], "codice": el.codice,
                        "titolo": _titolo(pr.oggetto, attuale)}  # fmt: skip
-    pr.processo_id = processo.id if processo else None
+    pr.processo_id = processo.id if isinstance(processo, AcProcesso) else None
 
 
 # --- notifiche email delle proposte ----------------------------------------------------------
@@ -1626,8 +1885,9 @@ async def _prepara(sessione, pr: AcProposta, dati: dict | None) -> None:
 # Si mettono in coda nella stessa transazione (common/posta.py); le invia il worker.
 
 _TIPI_PROPOSTA = {"CREA": "Creazione", "MODIFICA": "Modifica", "ELIMINA": "Eliminazione"}
-_OGGETTI_PROPOSTA = {"AREA": "area di rischio", "PROCESSO": "processo o procedimento", "ATTIVITA": "attività",
-                     "RISCHIO": "rischio", "MISURA": "misura"}  # fmt: skip
+_OGGETTI_PROPOSTA = {"AREA": "area di rischio", "PROCESSO": "processo", "ATTIVITA": "attività",
+                     "RISCHIO": "rischio", "MISURA": "misura", "VOCE": "voce del catalogo",
+                     "PROCEDIMENTO": "procedimento"}  # fmt: skip
 _ESITI = {"APPROVATA": "approvata", "RESPINTA": "respinta", "RESTITUITA": "restituita per una correzione"}
 
 
@@ -1771,6 +2031,8 @@ async def _applica(sessione, pr: AcProposta, forza: bool):
                 raise ErroreApi(HTTPStatus.CONFLICT, f"{e}: la proposta non serve più") from e
         if pr.oggetto == "PROCESSO":
             return await _crea_processo_completo(sessione, d, m)
+        if pr.oggetto == "PROCEDIMENTO":
+            return await crea_procedimento_ente(sessione, d)
         try:
             padre = await _elemento(sessione, PADRE[pr.oggetto], pr.padre_id)
         except ErroreApi as e:
@@ -1783,7 +2045,8 @@ async def _applica(sessione, pr: AcProposta, forza: bool):
         raise ErroreApi(HTTPStatus.CONFLICT, "L'elemento della proposta non esiste più") from e
     if pr.tipo == "ELIMINA":
         elimina = {"AREA": None, "PROCESSO": _elimina_processo, "ATTIVITA": _elimina_attivita,
-                   "RISCHIO": _elimina_rischio, "MISURA": _elimina_misura}[pr.oggetto]  # fmt: skip
+                   "RISCHIO": _elimina_rischio, "MISURA": _elimina_misura,
+                   "PROCEDIMENTO": elimina_procedimento_ente}[pr.oggetto]  # fmt: skip
         if elimina is None:
             await _controlla_area_vuota(sessione, el)
             await sessione.delete(el)
@@ -1797,6 +2060,8 @@ async def _applica(sessione, pr: AcProposta, forza: bool):
         _modifica_area(el, d)
     elif pr.oggetto == "PROCESSO":
         await _modifica_processo(sessione, el, d)
+    elif pr.oggetto == "PROCEDIMENTO":
+        await modifica_procedimento_ente(sessione, el, d)
     elif pr.oggetto == "ATTIVITA":
         await _modifica_attivita(sessione, el, d)
     elif pr.oggetto == "RISCHIO":
@@ -2219,8 +2484,9 @@ async def riepilogo():
 @lettore
 async def esporta_ptpct():
     """Allegati al PTPCT in Excel: "Processi, rischi, valutazione e misure" (una riga per
-    misura, come Si.Ge.Ri.Co., con le colonne nuove in fondo) e "Attuazione delle misure"
-    (misure con fasi, tempi o struttura responsabile)."""
+    misura, come Si.Ge.Ri.Co., con le colonne nuove in fondo: per l'attività che è un
+    procedimento, il procedimento con termine e norma) e "Attuazione delle misure" (misure con
+    fasi, tempi o struttura responsabile)."""
     sessione = db()
     aree = {a.id: a for a in await sessione.scalars(select(AcArea).where(AcArea.ente_id == ente_id()))}
     strutture = await _strutture_ente(sessione)
@@ -2228,6 +2494,7 @@ async def esporta_ptpct():
     attivita = _per_codice(await sessione.scalars(select(AcAttivita).where(AcAttivita.ente_id == ente_id())))
     rischi = _per_codice(await sessione.scalars(select(AcRischio).where(AcRischio.ente_id == ente_id())))
     misure = _per_codice(await sessione.scalars(select(AcMisura).where(AcMisura.ente_id == ente_id())))
+    procedimenti = {x.id: x for x in await procedimenti_ente(sessione)}
 
     def area(p: AcProcesso) -> str:
         a = aree.get(p.area_id)
@@ -2240,12 +2507,13 @@ async def esporta_ptpct():
     ordine_aree = {a.id: (0, chiave_area(a)) for a in aree.values()}  # senza area in fondo
     for p in sorted(processi, key=lambda p: (ordine_aree.get(p.area_id, (1, ())), chiave_naturale(p.codice))):
         base_p = [area(p), p.codice, p.denominazione]
-        procedimento = ["Procedimento" if p.tipo == "PROCEDIMENTO" else "Processo", p.termine_conclusione,
-                        p.norma_riferimento]  # fmt: skip
         responsabilita = struttura(p.struttura_id, "Tutti i servizi/settori")
         attivita_p = [a for a in attivita if a.processo_id == p.id] or [None]
         for a in attivita_p:
             base_a = [a.codice, a.descrizione] if a else ["", ""]
+            # l'attività che è un procedimento del catalogo: codice, termine e norma
+            pr = procedimenti.get(a.procedimento_id) if a else None
+            procedimento = [f"{pr.codice} {pr.denominazione}", pr.termine_conclusione, pr.norma_riferimento] if pr else ["", "", ""]
             rischi_a = [r for r in rischi if a and r.attivita_id == a.id] or [None]
             for r in rischi_a:
                 base_r = [r.codice, r.evento, r.probabilita, r.impatto, r.livello] if r else ["", "", "", "", ""]
@@ -2262,7 +2530,7 @@ async def esporta_ptpct():
         ("PTPC", ["AREA DI RISCHIO", "ID PROCESSO", "PROCESSI", "ID ATTIVITA'", "ATTIVITA'", "ID RISCHIO",
                   "EVENTO RISCHIOSO", "Valore moda indice probabilità", "Valore moda indice impatto",
                   "Valore complessivo del rischio", "ID MISURA", "MISURA", "RESPONSABILITA'", "TIPO DI MISURA",
-                  "CATEGORIA", "OBBLIGO DI PUBBLICAZIONE", "FATTORE ABILITANTE", "TIPO", "TERMINE DI CONCLUSIONE",
+                  "CATEGORIA", "OBBLIGO DI PUBBLICAZIONE", "FATTORE ABILITANTE", "PROCEDIMENTO", "TERMINE DI CONCLUSIONE",
                   "NORMA DI RIFERIMENTO"], righe),
         ("Attuazione misure", ["ID MISURA", "MISURA", "FASI DI ATTUAZIONE", "TEMPI", "UFFICIO RESPONSABILE",
                                "INDICATORE", "TARGET"], attuazione),

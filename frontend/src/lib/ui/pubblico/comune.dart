@@ -46,6 +46,9 @@ class PaginaPubblica extends StatefulWidget {
   State<PaginaPubblica> createState() => _PaginaPubblicaState();
 }
 
+/// Altezza sotto la quale il corpo della pagina pubblica scorre (elenco e piè di pagina).
+const _altezzaMinimaCorpo = 360.0;
+
 class _PaginaPubblicaState extends State<PaginaPubblica> {
   final _contenuto = FocusNode(debugLabel: 'contenuto');
 
@@ -120,22 +123,32 @@ class _PaginaPubblicaState extends State<PaginaPubblica> {
                   ),
                 ),
               ],
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Focus(focusNode: _contenuto, child: widget.child),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: PiePaginaPubblico(
-                      dichiarazione:
-                          widget.ente['dichiarazione_accessibilita'] as String?,
-                      registro: widget.registro,
-                      pagina: '${widget.titolo} – $nome',
-                    ),
-                  ),
-                ],
+              // il corpo riceve lo spazio che l'intestazione lascia libero: se è quasi tutto
+              // occupato (320 px con il testo ingrandito) il corpo scorre invece di schiacciarsi
+              body: LayoutBuilder(
+                builder: (context, vincoli) {
+                  final corpo = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Focus(focusNode: _contenuto, child: widget.child),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: PiePaginaPubblico(
+                          dichiarazione:
+                              widget.ente['dichiarazione_accessibilita'] as String?,
+                          registro: widget.registro,
+                          pagina: '${widget.titolo} – $nome',
+                        ),
+                      ),
+                    ],
+                  );
+                  if (vincoli.maxHeight >= _altezzaMinimaCorpo) return corpo;
+                  return SingleChildScrollView(
+                    child: SizedBox(height: _altezzaMinimaCorpo, child: corpo),
+                  );
+                },
               ),
             ),
           ),

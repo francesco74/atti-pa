@@ -93,18 +93,23 @@ class RicercaApi(unittest.TestCase):
 
         rpct = cls._client(cls, "rpct")
         area = rpct.post(f"{API}/aree", base_url=ENTE, json={"descrizione": "Servizi alla persona"}).get_json()
-        cls.processi = {}
-        for chiave, tipo, denominazione, descrizione in [
-            ("affitto", "PROCEDIMENTO", "Contributi per il sostegno alla locazione", "Contributo per il pagamento del canone"),
-            ("rifiuti", "PROCEDIMENTO", "Servizio di igiene urbana", "Segnalazioni sul servizio"),
-            ("concorsi", "PROCESSO", "Reclutamento del personale", "Concorsi pubblici"),
-            ("sport", "PROCEDIMENTO", "Contributi alle associazioni sportive", "Sostegno alle attività sportive"),
+        cls.processi, cls.procedimenti = {}, {}
+        for chiave, procedimento, denominazione, descrizione in [
+            ("affitto", True, "Contributi per il sostegno alla locazione", "Contributo per il pagamento del canone"),
+            ("rifiuti", True, "Servizio di igiene urbana", "Segnalazioni sul servizio"),
+            ("concorsi", False, "Reclutamento del personale", "Concorsi pubblici"),
+            ("sport", True, "Contributi alle associazioni sportive", "Sostegno alle attività sportive"),
         ]:
             r = rpct.post(f"{API}/processi", base_url=ENTE, json={
-                "area_id": area["id"], "tipo": tipo, "denominazione": denominazione, "descrizione": descrizione,
+                "area_id": area["id"], "denominazione": denominazione, "descrizione": descrizione,
                 "struttura_id": cls.uo})  # fmt: skip
             assert r.status_code == 201, r.get_data(as_text=True)
             cls.processi[chiave] = r.get_json()["id"]
+            if procedimento:  # anche nel catalogo dei procedimenti (pagina pubblica)
+                r = rpct.post(f"{API}/procedimenti", base_url=ENTE, json={
+                    "denominazione": denominazione, "descrizione": descrizione, "struttura_id": cls.uo})  # fmt: skip
+                assert r.status_code == 201, r.get_data(as_text=True)
+                cls.procedimenti[chiave] = r.get_json()["id"]
 
     @classmethod
     def tearDownClass(cls):
@@ -207,9 +212,10 @@ class RicercaApi(unittest.TestCase):
         r = self._ok(referente.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "pattume"}))
         self.assertEqual(r["risultati"], [{"id": self.processi["rifiuti"], "parole": [], "semantica": True}])
 
-        # filtro per tipo; il codice trova il processo
-        r = self._ok(referente.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "concorsi", "tipo": "PROCEDIMENTO"}))
-        self.assertEqual(r["risultati"], [])
+        # nel catalogo dei procedimenti: per significato, segnalato
+        trovati = self._ok(referente.get(f"{API}/procedimenti", base_url=ENTE, query_string={"testo": "pattume"}))
+        self.assertEqual([(x["id"], x["per_significato"]) for x in trovati], [(self.procedimenti["rifiuti"], True)])
+        self.assertEqual(self._ok(referente.get(f"{API}/procedimenti", base_url=ENTE, query_string={"testo": "concorsi"})), [])
         self.assertEqual(self._ok(referente.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "a"}))["risultati"], [])
         self.assertEqual(referente.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": ""}).status_code, 422)
         self.assertEqual(self.app.test_client().get(f"{API}/ricerca?testo=x", base_url=ENTE).status_code, 401)
@@ -225,7 +231,7 @@ class RicercaApi(unittest.TestCase):
         # cambia una denominazione: si ricalcola solo quel processo
         p = self.processi["sport"]
         self._ok(rpct.put(f"{API}/processi/{p}", base_url=ENTE, json={
-            "denominazione": "Contributi alle società sportive", "tipo": "PROCEDIMENTO",
+            "denominazione": "Contributi alle società sportive",
             "descrizione": "Sostegno alle attività sportive", "struttura_id": self.uo}))  # fmt: skip
         self._ok(rpct.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "palestra"}))
         self.assertEqual(len(self.embedding.testi), calcolati + 1)
@@ -243,7 +249,8 @@ class RicercaApi(unittest.TestCase):
             "descrizione": "Rotazione dei componenti", "struttura_id": self.uo}), 201)  # fmt: skip
 
         elenco = self._ok(referente.get(f"{API}/elenco", base_url=ENTE))
-        self.assertEqual({k: len(v) for k, v in elenco.items()}, {"aree": 1, "processi": 4, "attivita": 1, "rischi": 1, "misure": 1})
+        self.assertEqual({k: len(v) for k, v in elenco.items()},
+                         {"procedimenti": 3, "aree": 1, "processi": 4, "attivita": 1, "rischi": 1, "misure": 1})  # fmt: skip
         self.assertEqual((elenco["misure"][0]["rischio_id"], elenco["rischi"][0]["attivita_id"], elenco["attivita"][0]["processo_id"]),
                          (r["id"], a["id"], p))  # fmt: skip
 
@@ -270,15 +277,17 @@ class RicercaApi(unittest.TestCase):
         self.assertIn("elenco_misure.xlsx", r.headers["Content-Disposition"])
         self.assertTrue(r.data.startswith(b"PK"))
 
-        # la ricerca nei procedimenti non cancella i vettori degli altri livelli
+        # la ricerca nel catalogo dei procedimenti non cancella i vettori degli altri livelli
+        self._ok(rpct.get(f"{API}/procedimenti", base_url=ENTE, query_string={"testo": "concorso"}))
         vettori = self._vettori(solo_processi=False)
-        self.assertEqual(vettori, len(self.processi) + 4)  # area, attività, rischio, misura
-        self._ok(rpct.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "concorso", "tipo": "PROCEDIMENTO"}))
+        self.assertEqual(vettori, len(self.processi) + 4 + len(self.procedimenti))  # area, attività, rischio, misura
+        self._ok(rpct.get(f"{API}/ricerca", base_url=ENTE, query_string={"testo": "concorso"}))
         self.assertEqual(self._vettori(solo_processi=False), vettori)
-        # eliminati attività, rischio e misura, la ricerca nell'elenco toglie i loro vettori
+        # eliminati attività, rischio e misura, la ricerca nell'elenco toglie i loro vettori (non
+        # quelli dei procedimenti)
         self._ok(rpct.delete(f"{API}/attivita/{a['id']}", base_url=ENTE), 204)
         cerca("concorso", "PROCESSO")
-        self.assertEqual(self._vettori(solo_processi=False), len(self.processi) + 1)  # resta l'area
+        self.assertEqual(self._vettori(solo_processi=False), len(self.processi) + 1 + len(self.procedimenti))  # resta l'area
 
     def test_modello_non_disponibile(self):
         self.embedding.guasto = True
@@ -293,7 +302,7 @@ class RicercaApi(unittest.TestCase):
             self.assertEqual(cittadino.get(f"{PUBBLICO}{percorso}?testo=affitto", base_url=ENTE).status_code, 404)
         self._ok(rpct.put(f"{API}/pubblicazione", base_url=ENTE, json={"attiva": True, "procedimenti_attiva": True}))
         try:
-            # solo procedimenti: il processo dei concorsi non c'è
+            # solo procedimenti del catalogo: il processo dei concorsi non c'è
             r = self._ok(cittadino.get(f"{PUBBLICO}/procedimenti/ricerca", base_url=ENTE, query_string={"testo": "concorso"}))
             self.assertEqual(r["risultati"], [])
             r = self._ok(cittadino.get(f"{PUBBLICO}/mappatura/ricerca", base_url=ENTE, query_string={"testo": "concorso"}))
@@ -303,7 +312,7 @@ class RicercaApi(unittest.TestCase):
             self.assertFalse(r["semantica"])
             self.assertEqual(r["risultati"], [])
             r = self._ok(cittadino.get(f"{PUBBLICO}/procedimenti/ricerca", base_url=ENTE, query_string={"testo": "affitto"}))
-            self.assertEqual([x["id"] for x in r["risultati"]], [self.processi["affitto"]])
+            self.assertEqual([x["id"] for x in r["risultati"]], [self.procedimenti["affitto"]])
         finally:
             self._ok(rpct.put(f"{API}/pubblicazione", base_url=ENTE, json={"attiva": False, "procedimenti_attiva": False}))
 

@@ -15,7 +15,9 @@ const percorsoProcedimentiPubblici = '/pubblico/procedimenti';
 /// Procedimenti dell'ente consultabili dai cittadini, senza accesso: strutture, procedimenti
 /// della struttura, scheda con tutti i dati dell'art. 35 d.lgs. 33/2013 (allegato 11 alla
 /// delibera ANAC 495/2024). La ricerca trova i procedimenti di tutte le strutture. I dati
-/// vengono dalla mappatura dell'anticorruzione; la pagina la pubblica il RPCT.
+/// vengono dal catalogo dei procedimenti (anticorruzione o trasparenza); la pagina la pubblica
+/// il RPCT o l'operatore della trasparenza. Con `?procedimento=<id>` (link dalla mappatura
+/// pubblica) si apre subito quel procedimento.
 class ProcedimentiPubbliciPage extends StatefulWidget {
   const ProcedimentiPubbliciPage({super.key});
 
@@ -62,6 +64,12 @@ class _ProcedimentiPubbliciPageState extends State<ProcedimentiPubbliciPage> {
     try {
       final d = await apiDi(context).get('$apiPubblico/procedimenti') as Map<String, dynamic>;
       if (mounted) caricaLogoPubblico(context, d['ente'] as Map<String, dynamic>);
+      final iniziale = Uri.base.queryParameters['procedimento'];
+      final p = (d['procedimenti'] as List).cast<Map<String, dynamic>>().where((p) => p['id'] == iniziale).firstOrNull;
+      if (p != null && mounted && _procedimentoId == null) {
+        _struttura = p['struttura_id'] as String? ?? _senzaStruttura;
+        _apri(p);
+      }
       return d;
     } on ApiException catch (e) {
       if (e.status == 404) throw ApiException(404, 'I procedimenti di questo ente non sono pubblicati.');
