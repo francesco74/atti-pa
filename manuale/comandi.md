@@ -427,6 +427,17 @@ riusano. Due voci che sono la stessa si uniscono togliendo quella in più e scri
 
 ## 8. Manutenzione (`deploy/manutenzione/`)
 
+Gli script sono anche nell'immagine dell'API, in `/app/deploy/manutenzione/`: sul server Docker
+e nel cluster si lanciano con il prefisso della tabella iniziale, con lo stesso percorso:
+
+```bash
+docker compose exec api python deploy/manutenzione/azzera_mappatura.py --ente CODICE --dry-run
+kubectl -n attipa exec -it deploy/api -- python deploy/manutenzione/azzera_mappatura.py --ente CODICE --dry-run
+```
+
+Fa eccezione `catalogo_mappatura.py`, che legge il catalogo da `pacchetto/` (non incluso
+nell'immagine) e va lanciato da una copia del repository collegata al database.
+
 ### Norme (`riprocessa_norme.py`)
 
 Dopo una correzione del parser di Normattiva (`common/normattiva/parser.py`): ricalcola

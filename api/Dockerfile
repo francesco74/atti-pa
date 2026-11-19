@@ -26,6 +26,8 @@ COPY common/ /app/common/
 COPY api/src/ /app/
 # creazione di enti e amministratori: kubectl exec deploy/api -- python enti.py ...
 COPY deploy/enti.py /app/enti.py
+# script di manutenzione: kubectl exec deploy/api -- python deploy/manutenzione/azzera_mappatura.py ...
+COPY deploy/manutenzione/ /app/deploy/manutenzione/
 ENV PYTHONPATH=/app
 
 RUN useradd --system --uid 10001 app \

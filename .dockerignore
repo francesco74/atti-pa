@@ -14,6 +14,8 @@ frontend/src/.dart_tool
 deploy
 # script degli enti: incluso nell'immagine dell'API (kubectl exec ... python enti.py)
 !deploy/enti.py
+# script di manutenzione: inclusi nell'immagine dell'API (kubectl exec ... python deploy/manutenzione/...)
+!deploy/manutenzione/*.py
 # pacchetto standard: si distribuisce come zip e si carica dall'app
 pacchetto
 manuale
