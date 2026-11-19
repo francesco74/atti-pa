@@ -295,6 +295,11 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             att2 = min((await db.scalars(select(AcAttivita).where(AcAttivita.processo_id == c4.id))).all(),
                        key=lambda a: a.codice)  # fmt: skip
             id_att2 = att2.id
+            # procedimenti già presenti: uno con la descrizione vuota, uno scritto dall'ente
+            p1, p2 = sorted(procedimenti, key=lambda p: p.standard)[:2]
+            p1.descrizione, p1.norma_riferimento = None, " "
+            p2.descrizione = "Descrizione dell'ente"
+            id_p1, id_p2 = p1.id, p2.id
             await db.commit()
         file = self._processo_cambiato("C.1", "Nuovo standard")
         dati = yaml.safe_load(file["anticorruzione/processi/c.yaml"])
@@ -311,6 +316,13 @@ class AnticorruzioneNeiPacchetti(unittest.IsolatedAsyncioTestCase):
             c4 = await db.scalar(select(AcProcesso).where(AcProcesso.codice == "C.4"))
             self.assertTrue(c4.denominazione.endswith("(aggiornato)"))
             self.assertIsNotNone(await db.get(AcAttivita, id_att2))  # stesso codice, stesso id
+            # nei procedimenti già presenti si riempiono solo i campi vuoti
+            std = {p.codice: p for p in nuovo.procedimenti}
+            p1, p2 = await db.get(AcProcedimento, id_p1), await db.get(AcProcedimento, id_p2)
+            self.assertEqual(p1.descrizione, std[p1.standard].descrizione)
+            self.assertEqual(p1.norma_riferimento, std[p1.standard].norma_riferimento)
+            self.assertEqual(p2.descrizione, "Descrizione dell'ente")
+            self.assertEqual(len((await db.scalars(select(AcProcedimento))).all()), len(nuovo.procedimenti))
             # dopo "mantieni" il nuovo standard è il riferimento: C.1 non è più in conflitto
             stati = {v.codice: v.stato for v in await analizza(db, ENTE, nuovo) if v.tipo == "processo"}
             self.assertEqual(stati["C.1"], "INVARIATO")

@@ -409,6 +409,10 @@ procedimenti `PRC-`) restano stabili da una versione all'altra: un ente aggiorna
 zip nuovo, senza svuotare la mappatura. Per ricominciare da zero vedi `azzera_mappatura.py`
 (§ 8).
 
+I procedimenti standard che l'ente non ha vengono creati; in quelli che ha già si riempiono
+solo descrizione, norma di riferimento e termine se sono vuoti: quello che l'ente ha scritto
+non viene toccato.
+
 Per una nuova versione: si modificano i file in `pacchetto/`, si aumenta `versione` in
 `pacchetto/pacchetto.yaml`, si controlla con `prova` e si crea lo zip con `crea`; lo zip si
 importa poi dall'app in ogni ente (Amministrazione → Pacchetti).

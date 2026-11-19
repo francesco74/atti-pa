@@ -142,11 +142,18 @@ def leggi_procedimenti(sorgente: str) -> list[ProcedimentoStd]:
 
 async def crea_procedimenti(db: AsyncSession, ente_id: str, procedimenti: list[ProcedimentoStd], pacchetto: str) -> list[str]:
     """I procedimenti standard che l'ente non ha (per codice standard), con il codice P.n
-    successivo; quelli che ha restano com'è (li ha potuti adattare)."""
-    presenti = set(await db.scalars(select(AcProcedimento.standard).where(
-        AcProcedimento.ente_id == ente_id, AcProcedimento.standard.is_not(None))))  # fmt: skip
+    successivo. In quelli che ha (li ha potuti adattare) si riempiono solo descrizione, norma e
+    termine rimasti vuoti, con il testo dello standard: quello che l'ente ha scritto resta."""
+    presenti = {p.standard: p for p in await db.scalars(select(AcProcedimento).where(
+        AcProcedimento.ente_id == ente_id, AcProcedimento.standard.is_not(None)))}  # fmt: skip
+    for p in procedimenti:
+        if (esistente := presenti.get(p.codice)) is not None:
+            for campo in ("descrizione", "norma_riferimento", "termine_conclusione"):
+                if not (getattr(esistente, campo) or "").strip() and getattr(p, campo):
+                    setattr(esistente, campo, getattr(p, campo))
     nuovi = [p for p in procedimenti if p.codice not in presenti]
     if not nuovi:
+        await db.flush()
         return []
     contatore = await db.get(AcContatore, (ente_id, "P."))
     usati = [int(m.group(1)) for c in await db.scalars(select(AcProcedimento.codice).where(AcProcedimento.ente_id == ente_id))
