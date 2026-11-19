@@ -244,34 +244,6 @@ processi:
         tempi: A ogni pratica
         indicatore: Pratiche con la lista di controllo compilata
         target: 100%
-  - codice: D.2.4
-    descrizione: Concessione, liquidazione e pubblicazione
-    rischi:
-    - codice: D.2.4_R.1
-      evento: Liquidazione del beneficio senza la pubblicazione dell'atto di concessione o oltre l'importo spettante
-      fattore_abilitante: Mancanza di trasparenza
-      valutazione:
-        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
-          '9': Medio, '10': Medio}
-        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
-      misure:
-      - codice: D.2.4_R.1_M.1
-        descrizione: Pubblicazione degli atti di concessione di sovvenzioni, contributi e vantaggi economici prima
-          della liquidazione (artt. 26-27 d.lgs. 33/2013)
-        tipo: GENERALE
-        categoria: Trasparenza
-        obbligo_trasparenza: ART_26_27
-        tempi: Prima della liquidazione
-        indicatore: Atti di concessione pubblicati prima della liquidazione
-        target: 100%
-      - codice: D.2.4_R.1_M.2
-        descrizione: Controllo successivo di regolarità amministrativa a campione sugli atti del processo (art.
-          147-bis TUEL), con esiti al RPCT
-        tipo: GENERALE
-        categoria: Controllo
-        tempi: Semestrale
-        indicatore: Atti controllati sul totale
-        target: Almeno 5% degli atti
   - codice: D.2.5
     descrizione: Proposta dell'alloggio all'avente diritto
     rischi:
@@ -294,6 +266,7 @@ processi:
         target: 100%
   - codice: D.2.6
     descrizione: Verifica del mantenimento dei requisiti e decadenze
+    procedimento: PRC-0091
     rischi:
     - codice: D.2.6_R.1
       evento: Mancata verifica della permanenza dei requisiti e tolleranza delle occupazioni senza titolo
@@ -310,6 +283,68 @@ processi:
         tempi: Biennale
         indicatore: Assegnatari verificati
         target: Biennale
+  - codice: D.2.7
+    descrizione: Subentro nell'assegnazione
+    procedimento: PRC-0090
+    rischi:
+    - codice: D.2.7_R.1
+      evento: Subentro concesso a occupanti senza i requisiti o senza titolo
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: D.2.7_R.1_M.1
+        descrizione: Controllo a campione delle dichiarazioni sostitutive (artt. 71-72 d.P.R. 445/2000), con criteri
+          di estrazione predeterminati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Dichiarazioni controllate sul totale
+        target: Almeno 10%
+      - codice: D.2.7_R.1_M.2
+        descrizione: Separazione tra chi istruisce e chi adotta il provvedimento, con doppia sottoscrizione
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con doppia sottoscrizione
+        target: 100%
+  - codice: D.2.8
+    descrizione: Assegnazioni per l'emergenza abitativa
+    procedimento: PRC-0092
+    rischi:
+    - codice: D.2.8_R.1
+      evento: Assegnazioni fuori graduatoria o senza i presupposti dell'urgenza, per favorire determinati nuclei
+      fattore_abilitante: Mancata attuazione del principio di distinzione tra politica e amministrazione
+      valutazione:
+        probabilita: {'1': Alto, '2': Alto, '3': Alto, '4': Alto, '5': Alto, '6': Alto, '7': Alto, '8': Alto, '9': Alto,
+          '10': Alto}
+        impatto: {'1': Alto, '2': Alto, '3': Alto, '4': Alto}
+      misure:
+      - codice: D.2.8_R.1_M.1
+        descrizione: Criteri predeterminati per l'emergenza abitativa e relazione del servizio sociale per ogni
+          assegnazione, con verbale
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: A ogni assegnazione
+        indicatore: Assegnazioni in emergenza motivate
+        target: 100%
+      - codice: D.2.8_R.1_M.2
+        descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: A ogni provvedimento
+        indicatore: Provvedimenti con motivazione completa ai controlli successivi
+        target: 100%
+      - codice: D.2.8_R.1_M.3
+        descrizione: Report periodico al RPCT con i dati del processo (numero, importi, scostamenti) per l'analisi
+          delle anomalie
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Report trasmessi
+        target: 2 all'anno
 - codice: D.3
   ambito: COMUNE
   denominazione: Contributi per l'affitto e per la morosità incolpevole

@@ -13,7 +13,7 @@
 # A ogni rilascio che cambia i contenuti si aumenta la versione.
 
 nome: Modelli standard Atti PA
-versione: "2026.5"
+versione: "2026.6"
 descrizione: >-
   Determine di affidamento diretto di servizi e forniture e di lavori, incarico di
   patrocinio legale, concessione di contributi; specificità cloud ICT, CAM, alta intensità
@@ -22,7 +22,7 @@ descrizione: >-
   specificità. Modulo anticorruzione per gli enti locali (comuni e province): metodologia
   di valutazione del rischio (PNA 2019, richiamata dal PNA 2025), 12 aree di rischio, 140
   processi standard con attività, rischi (con valutazione proposta) e misure, di cui 46 dei
-  soli comuni e 14 delle sole province; catalogo di 59 procedimenti amministrativi (art. 35
+  soli comuni e 14 delle sole province; catalogo di 102 procedimenti amministrativi (art. 35
   d.lgs. 33/2013); contratti pubblici secondo la parte speciale del PNA 2025.
 
 # tipologie di atto usate dai contenuti: create se mancano, mai cancellate

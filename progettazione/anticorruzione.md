@@ -452,3 +452,11 @@ Decisioni del 04/11/2026:
     prende il decimo indicatore di probabilità del Box 9 (collaborazione del responsabile del
     processo); si resta su probabilità × impatto. I codici del pacchetto restano stabili tra le
     versioni, quindi l'aggiornamento non richiede di azzerare la mappatura.
+34. **Procedimenti 2026.6** (19/11/2026): tutti i procedimenti standard hanno la breve
+    descrizione (obbligatoria nello schema ANAC dell'art. 35); se ne aggiungono 43, quasi tutti
+    dei comuni, ricavati dall'elenco art. 35 di un comune capoluogo e resi generici. Restano nel
+    catalogo per la trasparenza; diventano attività dei processi solo dove portano un rischio
+    (irreperibilità, certificati e autentiche, trascrizione degli atti esteri, pagamento delle
+    fatture, part-time, decadenza, subentro ed emergenza abitativa ERP). Dal processo ERP esce
+    l'attività di liquidazione, che non vi si applica. Niente campi nuovi per documenti da
+    allegare e costi: lo schema ANAC li riduce al link alla modulistica.

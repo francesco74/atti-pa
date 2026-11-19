@@ -239,6 +239,7 @@ processi:
         target: 100%
   - codice: E.5.2
     descrizione: Liquidazione ed emissione dei mandati
+    procedimento: PRC-0102
     rischi:
     - codice: E.5.2_R.1
       evento: Pagamenti senza verifica della regolarità contributiva e fiscale o fuori dall'ordine cronologico,

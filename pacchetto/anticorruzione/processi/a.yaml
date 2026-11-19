@@ -523,6 +523,34 @@ processi:
         tempi: Nei termini di legge
         indicatore: Atti pubblicati nei termini sul totale
         target: 100%
+  - codice: A.10.3
+    descrizione: Trasformazione del rapporto in part-time per svolgere attività esterne
+    procedimento: PRC-0080
+    rischi:
+    - codice: A.10.3_R.1
+      evento: Part-time concesso per svolgere attività esterne in conflitto di interessi con l'ufficio, senza verificarne
+        la compatibilità
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: A.10.3_R.1_M.1
+        descrizione: Dichiarazione di assenza di conflitto di interessi da parte di chi istruisce e decide, con
+          obbligo di astensione (art. 6-bis l. 241/1990, d.P.R. 62/2013)
+        tipo: GENERALE
+        categoria: Disciplina del conflitto di interessi
+        tempi: A ogni procedimento
+        indicatore: Dichiarazioni acquisite sul totale dei procedimenti
+        target: 100%
+      - codice: A.10.3_R.1_M.2
+        descrizione: Regolamento o disciplinare dell'ente con criteri e requisiti predeterminati e pubblicati
+        tipo: SPECIFICA
+        categoria: Regolamentazione
+        tempi: Revisione triennale
+        indicatore: Regolamento adottato e aggiornato
+        target: Entro l'anno
 - codice: A.11
   denominazione: Gestione delle presenze, delle assenze e del lavoro straordinario
   descrizione: Rilevazione delle presenze, permessi, congedi, lavoro agile e straordinario

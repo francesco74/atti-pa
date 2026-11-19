@@ -1,6 +1,6 @@
 # Processi standard del modulo anticorruzione
 
-Pacchetto standard 2026.5 (18/11/2026), pensato per gli **enti locali**: la 2026.4 ha sostituito il
+Pacchetto standard 2026.6 (19/11/2026), pensato per gli **enti locali**: la 2026.4 ha sostituito il
 pacchetto precedente, ricavato dalla mappatura del Comune di Lucca. I sorgenti stanno in
 `pacchetto/anticorruzione/` (aree, catalogo delle voci, procedimenti, processi per area);
 lo zip si crea con `python deploy/pacchetto.py crea`.
@@ -23,6 +23,10 @@ lo zip si crea con `python deploy/pacchetto.py crea`.
   del PNA 2019) e il pacchetto precedente, riletti e resi generici. Dal piano provinciale
   vengono, nella 2026.5, l'area N e i processi su contrattazione integrativa, stipendi,
   trasporto privato e diritto allo studio delle superiori.
+- Elenco dei procedimenti pubblicato da un comune capoluogo (art. 35, 2025), senza i dati
+  dell'ente: spunto per descrizioni e per 43 procedimenti della 2026.6 (anagrafe, stato civile,
+  elettorale, personale, casa, scuola e famiglia). Norme e termini vengono dalla normativa
+  nazionale, non dalla scheda del comune; restano fuori le norme di una sola regione.
 
 ## Contenuto
 
@@ -35,8 +39,8 @@ lo zip si crea con `python deploy/pacchetto.py crea`.
 - **140 processi**: 46 dei soli comuni e 14 delle sole province e città metropolitane
   (`ambito`); all'importazione l'amministratore indica il tipo di ente e quelli dell'altro
   tipo non si importano.
-- **59 procedimenti** (`procedimenti.yaml`, codici PRC-0001...): solo i dati che vengono
-  dalla norma (riferimenti normativi, termine, tipologia, istanza di parte, silenzio assenso,
+- **102 procedimenti** (`procedimenti.yaml`, codici PRC-0001...): solo i dati che vengono
+  dalla norma (breve descrizione, riferimenti normativi, termine, tipologia, istanza di parte, silenzio assenso,
   dichiarazione sostitutiva, tutele); uffici, recapiti e modulistica li mette l'ente. Le
   attività che sono un procedimento lo indicano (`procedimento: PRC-0012`).
 - Ogni rischio ha il fattore abilitante, una **valutazione proposta** (l'ente la rivede) e
@@ -48,8 +52,9 @@ lo zip si crea con `python deploy/pacchetto.py crea`.
 ## Codici stabili tra le versioni
 
 I codici di aree, processi (A.1...), voci del catalogo (ATT-, RIS-, MIS-) e procedimenti
-(PRC-) non cambiano da una versione all'altra: i processi nuovi si aggiungono in fondo
-all'area, le voci e i procedimenti nuovi prendono il numero successivo. Così un ente che ha
+(PRC-) non cambiano da una versione all'altra: i processi e le attività nuove si aggiungono
+in fondo, le voci e i procedimenti nuovi prendono il numero successivo; un'attività tolta
+lascia libero il suo numero (`RIMOSSA` nel generatore), che non si riusa. Così un ente che ha
 importato la 2026.4 importa la 2026.5 senza azzerare: i processi nuovi arrivano come nuovi,
 quelli già presenti risultano invariati (la valutazione proposta non entra nell'impronta) e la
 metodologia come aggiornata, per il decimo indicatore. Se l'ente non la aggiorna, i rischi
@@ -63,7 +68,7 @@ contenuti diversi). Per ogni ente, dopo il backup e la migrazione `0014_procedim
     python deploy/manutenzione/azzera_mappatura.py --ente CODICE --dry-run
     python deploy/manutenzione/azzera_mappatura.py --ente CODICE
 
-poi si importa lo zip 2026.5 da Amministrazione → Pacchetti, indicando il tipo di ente.
+poi si importa lo zip 2026.6 da Amministrazione → Pacchetti, indicando il tipo di ente.
 Restano metodologia, strutture e procedimenti dell'ente.
 
 ## Da rivedere prima del rilascio

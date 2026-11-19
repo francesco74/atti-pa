@@ -511,6 +511,8 @@ attivita:
   descrizione: Gestione degli accessi e della sicurezza dei dati
 - codice: ATT-0254
   descrizione: Gestione del sito istituzionale
+- codice: ATT-0255
+  descrizione: Verifica dell'assenza di cause di inconferibilità prima della nomina
 rischi:
 - codice: RIS-0001
   descrizione: Programmazione dei profili e dei requisiti orientata a favorire candidati determinati
@@ -1035,6 +1037,16 @@ rischi:
     revocate
 - codice: RIS-0238
   descrizione: Pubblicazione o rimozione di contenuti senza autorizzazione, alterazione delle informazioni pubblicate
+- codice: RIS-0239
+  descrizione: Part-time concesso per svolgere attività esterne in conflitto di interessi con l'ufficio, senza verificarne
+    la compatibilità
+- codice: RIS-0240
+  descrizione: 'Cancellazioni omesse o pilotate: residenze fittizie mantenute per ottenere benefici, agevolazioni
+    o iscrizioni scolastiche, o cancellazioni strumentali'
+- codice: RIS-0241
+  descrizione: Subentro concesso a occupanti senza i requisiti o senza titolo
+- codice: RIS-0242
+  descrizione: Assegnazioni fuori graduatoria o senza i presupposti dell'urgenza, per favorire determinati nuclei
 misure:
 - codice: MIS-0001
   descrizione: Motivazione puntuale del provvedimento, con richiamo dei presupposti e dei criteri applicati
@@ -2258,4 +2270,17 @@ misure:
   tipo_misura: SPECIFICA
   categoria: Controllo
   indicatore: Contenuti pubblicati da utenti autorizzati
+  target: 100%
+- codice: MIS-0193
+  descrizione: Accertamenti ripetuti e documentati e verifica periodica delle posizioni con esito negativo
+  tipo_misura: SPECIFICA
+  categoria: Controllo
+  indicatore: Posizioni verificate
+  target: 100% delle segnalazioni
+- codice: MIS-0194
+  descrizione: Criteri predeterminati per l'emergenza abitativa e relazione del servizio sociale per ogni assegnazione,
+    con verbale
+  tipo_misura: SPECIFICA
+  categoria: Regolamentazione
+  indicatore: Assegnazioni in emergenza motivate
   target: 100%

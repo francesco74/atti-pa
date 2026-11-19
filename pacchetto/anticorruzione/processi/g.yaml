@@ -118,7 +118,7 @@ processi:
         indicatore: Nomine con avviso
         target: 100%
   - codice: G.2.2
-    descrizione: Verifica delle cause di inconferibilità e incompatibilità
+    descrizione: Verifica dell'assenza di cause di inconferibilità prima della nomina
     rischi:
     - codice: G.2.2_R.1
       evento: Nomina in presenza di cause di inconferibilità o incompatibilità

@@ -4,6 +4,9 @@
 procedimenti:
 - codice: PRC-0001
   denominazione: Selezione pubblica per l'assunzione di personale
+  descrizione: Selezione pubblica per titoli e/o esami per l'assunzione di personale a tempo indeterminato o determinato.
+    Il bando, pubblicato sul portale InPA, indica requisiti, prove e criteri di valutazione; la commissione esaminatrice
+    svolge le prove e forma la graduatoria, approvata con provvedimento del responsabile.
   norma_riferimento: D.lgs. 165/2001, art. 35; d.P.R. 487/1994; regolamento dell'ente sull'accesso agli impieghi
   termine_conclusione: 180 giorni dalla prima prova (art. 11 d.P.R. 487/1994)
   art35:
@@ -16,6 +19,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0002
   denominazione: Mobilità volontaria esterna tra enti
+  descrizione: Passaggio diretto di dipendenti di altre pubbliche amministrazioni nei posti vacanti dell'ente, tramite
+    avviso pubblico con i profili richiesti e i criteri di scelta; segue il colloquio e, se previsto, il nulla osta
+    dell'amministrazione di appartenenza.
   norma_riferimento: D.lgs. 165/2001, art. 30
   termine_conclusione: Termine fissato dall'avviso
   art35:
@@ -28,6 +34,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0003
   denominazione: Autorizzazione allo svolgimento di incarichi extraistituzionali dei dipendenti
+  descrizione: Il dipendente chiede l'autorizzazione a svolgere un incarico retribuito presso altri soggetti. L'ente
+    verifica l'assenza di incompatibilità e di conflitto di interessi e la compatibilità con l'orario e i compiti
+    d'ufficio, poi autorizza o nega; gli incarichi autorizzati si comunicano tramite PerlaPA.
   norma_riferimento: D.lgs. 165/2001, art. 53
   termine_conclusione: 30 giorni (art. 53, c. 10, d.lgs. 165/2001)
   art35:
@@ -40,6 +49,9 @@ procedimenti:
 - codice: PRC-0004
   ambito: COMUNE
   denominazione: Concessione di occupazione temporanea o permanente di suolo pubblico
+  descrizione: Concessione per occupare temporaneamente o in modo permanente spazi e aree pubbliche (dehors, ponteggi,
+    banchi, cantieri, manifestazioni). L'istanza indica superficie, durata e uso; la concessione fissa le prescrizioni
+    e il canone unico patrimoniale dovuto.
   norma_riferimento: L. 160/2019, art. 1, cc. 816-847 (canone unico); regolamento comunale del canone
   termine_conclusione: 30 giorni
   art35:
@@ -53,6 +65,9 @@ procedimenti:
 - codice: PRC-0005
   ambito: COMUNE
   denominazione: Autorizzazione all'apertura di passo carrabile
+  descrizione: Autorizzazione all'accesso dei veicoli da un'area privata alla strada comunale, con il rilascio del
+    cartello di passo carrabile. Si verificano la sicurezza della circolazione e la conformità al codice della strada;
+    il passo è soggetto al canone unico.
   norma_riferimento: D.lgs. 285/1992, art. 22; d.P.R. 495/1992, art. 46
   termine_conclusione: 30 giorni
   art35:
@@ -66,6 +81,9 @@ procedimenti:
 - codice: PRC-0006
   ambito: COMUNE
   denominazione: Autorizzazione all'installazione di mezzi e impianti pubblicitari
+  descrizione: Autorizzazione a installare insegne, cartelli, preinsegne e altri mezzi pubblicitari visibili dalla
+    strada, verificandone dimensioni, collocazione e sicurezza secondo il codice della strada e il regolamento comunale;
+    l'esposizione è soggetta al canone unico.
   norma_riferimento: D.lgs. 285/1992, art. 23; d.P.R. 495/1992, artt. 47-59; regolamento comunale
   termine_conclusione: 60 giorni
   art35:
@@ -79,6 +97,9 @@ procedimenti:
 - codice: PRC-0007
   ambito: COMUNE
   denominazione: Autorizzazione per attività produttive e commerciali (SUAP, procedimento ordinario)
+  descrizione: 'Procedimento ordinario dello sportello unico per le attività produttive, per le attività che richiedono
+    un provvedimento espresso: la domanda si presenta online, il SUAP acquisisce i pareri degli enti coinvolti,
+    anche in conferenza di servizi, e rilascia il titolo unico.'
   norma_riferimento: D.P.R. 160/2010, art. 7; d.lgs. 114/1998; d.lgs. 222/2016
   termine_conclusione: 30 giorni dalla ricezione (procedimento ordinario SUAP)
   art35:
@@ -92,6 +113,9 @@ procedimenti:
 - codice: PRC-0008
   ambito: COMUNE
   denominazione: Segnalazione certificata di inizio attività per attività produttive e commerciali (SCIA)
+  descrizione: Segnalazione certificata per avviare, modificare, trasferire o cessare un'attività produttiva o commerciale
+    (esercizi di vicinato, pubblici esercizi, acconciatori ed estetisti, artigiani). L'attività può iniziare dalla
+    presentazione; il SUAP controlla i requisiti nei 60 giorni successivi e può vietarne la prosecuzione.
   norma_riferimento: L. 241/1990, art. 19; d.P.R. 160/2010, art. 5; d.lgs. 222/2016
   termine_conclusione: 60 giorni per i controlli (art. 19 l. 241/1990)
   art35:
@@ -105,6 +129,9 @@ procedimenti:
 - codice: PRC-0009
   ambito: COMUNE
   denominazione: Autorizzazione all'apertura di medie e grandi strutture di vendita
+  descrizione: Autorizzazione all'apertura, al trasferimento o all'ampliamento di esercizi commerciali con superficie
+    di vendita superiore a quella degli esercizi di vicinato, nel rispetto della programmazione commerciale e urbanistica;
+    per le grandi strutture decide la conferenza di servizi prevista dalla legge regionale.
   norma_riferimento: D.lgs. 114/1998, artt. 8-9; normativa regionale sul commercio
   termine_conclusione: 90 giorni (medie) o termine regionale (grandi)
   art35:
@@ -118,6 +145,9 @@ procedimenti:
 - codice: PRC-0010
   ambito: COMUNE
   denominazione: Licenza per manifestazioni e spettacoli temporanei e agibilità dei locali di pubblico spettacolo
+  descrizione: Licenza per spettacoli, intrattenimenti e manifestazioni aperte al pubblico e verifica dell'agibilità
+    dei locali e degli impianti, con il parere della commissione di vigilanza sui locali di pubblico spettacolo
+    quando richiesto.
   norma_riferimento: R.d. 773/1931 (TULPS), artt. 68, 69 e 80; d.P.R. 311/2001
   termine_conclusione: 30 giorni
   art35:
@@ -131,6 +161,9 @@ procedimenti:
 - codice: PRC-0011
   ambito: COMUNE
   denominazione: Rilascio delle licenze taxi e delle autorizzazioni di noleggio con conducente
+  descrizione: Assegnazione, tramite bando pubblico, delle licenze per il servizio taxi e delle autorizzazioni per
+    il noleggio con conducente, e gestione dei trasferimenti, delle sostituzioni alla guida e delle verifiche sui
+    requisiti.
   norma_riferimento: L. 21/1992; regolamento comunale
   termine_conclusione: Termine fissato dal bando
   art35:
@@ -144,6 +177,9 @@ procedimenti:
 - codice: PRC-0012
   ambito: COMUNE
   denominazione: Rilascio del contrassegno di parcheggio per persone con disabilità
+  descrizione: Rilascio del contrassegno europeo che consente ai veicoli al servizio di persone con capacità di
+    deambulazione ridotta di sostare negli spazi riservati e di circolare nelle zone a traffico limitato; si rilascia
+    sulla base della certificazione medica e si rinnova alla scadenza.
   norma_riferimento: D.P.R. 495/1992, art. 381; d.P.R. 151/2012
   termine_conclusione: 30 giorni
   art35:
@@ -157,6 +193,9 @@ procedimenti:
 - codice: PRC-0013
   ambito: COMUNE
   denominazione: Rilascio di permessi di transito e sosta in zone a traffico limitato
+  descrizione: Rilascio di permessi per transitare e sostare nelle zone a traffico limitato e nelle aree a sosta
+    regolamentata alle categorie previste dall'ordinanza comunale (residenti, attività, servizi), con la verifica
+    dei requisiti.
   norma_riferimento: D.lgs. 285/1992, art. 7; ordinanze e disciplinare comunale
   termine_conclusione: 30 giorni
   art35:
@@ -170,6 +209,8 @@ procedimenti:
 - codice: PRC-0014
   ambito: COMUNE
   denominazione: Concessione di sepolture private (loculi, ossari, aree e cappelle)
+  descrizione: Concessione d'uso a tempo determinato di loculi, ossari, cinerari, aree e cappelle nei cimiteri comunali,
+    secondo le tariffe e i criteri del regolamento di polizia mortuaria; comprende rinnovi, retrocessioni e subentri.
   norma_riferimento: D.P.R. 285/1990, artt. 90-95; regolamento comunale di polizia mortuaria
   termine_conclusione: 30 giorni
   art35:
@@ -183,6 +224,8 @@ procedimenti:
 - codice: PRC-0015
   ambito: COMUNE
   denominazione: Autorizzazione alla cremazione, all'affidamento e alla dispersione delle ceneri
+  descrizione: Autorizzazione alla cremazione della salma, secondo la volontà espressa dal defunto o dai familiari,
+    e all'affidamento o alla dispersione delle ceneri nei luoghi consentiti dalla legge.
   norma_riferimento: L. 130/2001; d.P.R. 285/1990; legge regionale
   termine_conclusione: 2 giorni
   art35:
@@ -196,6 +239,10 @@ procedimenti:
 - codice: PRC-0016
   ambito: COMUNE
   denominazione: Iscrizione anagrafica e cambio di residenza
+  descrizione: Dichiarazione di residenza per chi trasferisce la dimora abituale nel comune da un altro comune o
+    dall'estero, o cambia abitazione all'interno del comune. L'ufficio registra la dichiarazione entro 2 giorni
+    lavorativi; la polizia locale accerta la dimora abituale e, se nei 45 giorni non è comunicato l'esito negativo,
+    l'iscrizione si intende confermata.
   norma_riferimento: L. 1228/1954; d.P.R. 223/1989; d.l. 5/2012, art. 5
   termine_conclusione: 2 giorni lavorativi per la registrazione, 45 giorni per gli accertamenti (silenzio assenso)
   art35:
@@ -207,6 +254,9 @@ procedimenti:
 - codice: PRC-0017
   ambito: COMUNE
   denominazione: Riconoscimento della cittadinanza italiana (iure sanguinis) e giuramento
+  descrizione: Riconoscimento della cittadinanza italiana per discendenza e altri procedimenti di competenza dell'ufficiale
+    di stato civile (giuramento, elezione di cittadinanza al diciottesimo anno), con la trascrizione degli atti
+    e la comunicazione all'anagrafe.
   norma_riferimento: L. 91/1992; d.P.R. 572/1993; d.l. 36/2025
   termine_conclusione: 180 giorni
   art35:
@@ -220,6 +270,9 @@ procedimenti:
 - codice: PRC-0018
   ambito: COMUNE
   denominazione: Rilascio della carta d'identità elettronica
+  descrizione: Richiesta della carta d'identità elettronica, anche con l'eventuale consenso o diniego alla donazione
+    di organi. L'ufficio acquisisce dati, fotografia e impronte; la carta è prodotta dal Poligrafico e consegnata
+    all'indirizzo indicato o presso il comune.
   norma_riferimento: D.l. 78/2015, art. 10; d.m. 23/12/2015
   termine_conclusione: Immediato (richiesta), consegna entro 6 giorni lavorativi
   art35:
@@ -232,6 +285,8 @@ procedimenti:
 - codice: PRC-0019
   ambito: COMUNE
   denominazione: Attribuzione della numerazione civica
+  descrizione: Attribuzione del numero civico agli accessi di nuovi fabbricati o di nuove unità e revisione della
+    numerazione e della denominazione delle aree di circolazione, con l'aggiornamento dello stradario.
   norma_riferimento: L. 1228/1954; d.P.R. 223/1989, artt. 42-43
   termine_conclusione: 30 giorni
   art35:
@@ -245,6 +300,9 @@ procedimenti:
 - codice: PRC-0020
   ambito: COMUNE
   denominazione: Iscrizione all'albo degli scrutatori e dei presidenti di seggio
+  descrizione: Iscrizione, su domanda, all'albo delle persone idonee a svolgere le funzioni di scrutatore (domande
+    entro il 30 novembre) e di presidente di seggio elettorale (entro il 31 ottobre), con la verifica dei requisiti
+    e le cancellazioni previste dalla legge.
   norma_riferimento: L. 95/1989; l. 53/1990
   termine_conclusione: Gennaio di ogni anno (scrutatori), ottobre (presidenti)
   art35:
@@ -257,6 +315,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0021
   denominazione: Accesso ai documenti amministrativi
+  descrizione: Diritto di chi ha un interesse diretto, concreto e attuale di prendere visione o estrarre copia di
+    documenti amministrativi. La richiesta va motivata; l'ente la accoglie, la limita o la differisce, informando
+    gli eventuali controinteressati.
   norma_riferimento: L. 241/1990, artt. 22-28; d.P.R. 184/2006
   termine_conclusione: 30 giorni (silenzio rigetto)
   art35:
@@ -268,6 +329,9 @@ procedimenti:
       241/1990)
 - codice: PRC-0022
   denominazione: Accesso civico semplice e generalizzato
+  descrizione: Diritto di chiunque di richiedere documenti, dati e informazioni che l'ente doveva pubblicare (accesso
+    civico semplice) o di accedere a quelli ulteriori, nei limiti di legge (accesso generalizzato). La richiesta
+    non va motivata ed è gratuita, salvo il costo di riproduzione.
   norma_riferimento: D.lgs. 33/2013, artt. 5 e 5-bis
   termine_conclusione: 30 giorni
   art35:
@@ -280,6 +344,9 @@ procedimenti:
 - codice: PRC-0023
   ambito: COMUNE
   denominazione: Iscrizione ai servizi educativi per la prima infanzia (asilo nido) e graduatoria
+  descrizione: 'Iscrizione ai nidi d''infanzia e agli altri servizi educativi comunali per i bambini da 3 a 36 mesi,
+    sulla base dell''avviso annuale: formazione della graduatoria secondo i criteri del regolamento e determinazione
+    della retta in base all''ISEE.'
   norma_riferimento: D.lgs. 65/2017; normativa regionale; regolamento comunale
   termine_conclusione: Termine fissato dal bando
   art35:
@@ -293,6 +360,8 @@ procedimenti:
 - codice: PRC-0024
   ambito: COMUNE
   denominazione: Iscrizione ai servizi di ristorazione e trasporto scolastico, con tariffa agevolata ISEE
+  descrizione: Iscrizione degli alunni ai servizi di ristorazione e di trasporto scolastico, con la determinazione
+    della tariffa, anche agevolata in base all'ISEE, e la gestione di diete speciali, rinunce e pagamenti.
   norma_riferimento: D.lgs. 63/2017; d.P.C.M. 159/2013; regolamento comunale
   termine_conclusione: 30 giorni
   art35:
@@ -306,6 +375,9 @@ procedimenti:
 - codice: PRC-0025
   ambito: COMUNE
   denominazione: Contributo economico di assistenza a persone e nuclei in condizione di bisogno
+  descrizione: Contributo economico, ordinario o straordinario, a persone e nuclei familiari in condizione di bisogno,
+    sulla base della valutazione del servizio sociale professionale, dell'ISEE e del progetto individualizzato previsti
+    dal regolamento.
   norma_riferimento: L. 328/2000; d.P.C.M. 159/2013; regolamento comunale dei servizi sociali
   termine_conclusione: 30 giorni
   art35:
@@ -319,6 +391,8 @@ procedimenti:
 - codice: PRC-0026
   ambito: COMUNE
   denominazione: Assegnazione di alloggi di edilizia residenziale pubblica
+  descrizione: 'Assegnazione degli alloggi di edilizia residenziale pubblica tramite bando: le domande sono valutate
+    secondo i requisiti e i punteggi della legge regionale e l''alloggio è assegnato secondo l''ordine della graduatoria.'
   norma_riferimento: Legge regionale ERP; regolamento comunale
   termine_conclusione: Termini del bando e della graduatoria
   art35:
@@ -332,6 +406,9 @@ procedimenti:
 - codice: PRC-0027
   ambito: COMUNE
   denominazione: Contributo per il sostegno alla locazione e per la morosità incolpevole
+  descrizione: Contributo ai conduttori in difficoltà per il pagamento del canone di locazione e, per i casi di
+    morosità incolpevole, per evitare lo sfratto, sulla base dei bandi che ripartiscono i fondi statali, regionali
+    e comunali.
   norma_riferimento: L. 431/1998, art. 11; d.l. 102/2013, art. 6; bando comunale
   termine_conclusione: Termine fissato dal bando
   art35:
@@ -344,6 +421,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0028
   denominazione: Concessione di contributi e vantaggi economici ad associazioni ed enti
+  descrizione: Concessione di contributi, sovvenzioni e altri vantaggi economici ad associazioni ed enti per attività
+    e iniziative di interesse pubblico, secondo i criteri predeterminati dal regolamento, con la rendicontazione
+    finale delle spese.
   norma_riferimento: L. 241/1990, art. 12; regolamento comunale dei contributi
   termine_conclusione: 60 giorni
   art35:
@@ -356,6 +436,8 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0029
   denominazione: Concessione di patrocinio e di uso gratuito di sale e spazi
+  descrizione: Concessione del patrocinio dell'ente, con l'uso del logo, a iniziative di interesse pubblico e, se
+    richiesto, dell'uso gratuito o agevolato di sale, spazi e attrezzature comunali, secondo il regolamento.
   norma_riferimento: Regolamento comunale dei contributi e del patrocinio
   termine_conclusione: 30 giorni
   art35:
@@ -369,6 +451,9 @@ procedimenti:
 - codice: PRC-0030
   ambito: COMUNE
   denominazione: Integrazione della retta per l'inserimento in strutture residenziali
+  descrizione: Integrazione, da parte del comune, della retta di ricovero in strutture residenziali per anziani
+    o persone con disabilità che non possono sostenerla, sulla base della valutazione del bisogno e della situazione
+    economica.
   norma_riferimento: L. 328/2000; d.P.C.M. 159/2013; normativa regionale
   termine_conclusione: 60 giorni
   art35:
@@ -382,6 +467,9 @@ procedimenti:
 - codice: PRC-0031
   ambito: COMUNE
   denominazione: Accesso al servizio di assistenza domiciliare
+  descrizione: Accesso al servizio di assistenza domiciliare per persone anziane, con disabilità o in condizione
+    di fragilità, sulla base della valutazione del servizio sociale e del piano assistenziale, con la compartecipazione
+    al costo in base all'ISEE.
   norma_riferimento: L. 328/2000; regolamento comunale
   termine_conclusione: 30 giorni
   art35:
@@ -395,6 +483,9 @@ procedimenti:
 - codice: PRC-0032
   ambito: COMUNE
   denominazione: Contributi per libri di testo e borse di studio
+  descrizione: Contributi alle famiglie per l'acquisto dei libri di testo e borse di studio per gli studenti, sulla
+    base dei bandi annuali e dell'ISEE; per la scuola primaria i libri sono forniti gratuitamente tramite cedole
+    librarie.
   norma_riferimento: L. 448/1998, art. 27; d.lgs. 63/2017; bando
   termine_conclusione: Termine fissato dal bando
   art35:
@@ -408,6 +499,9 @@ procedimenti:
 - codice: PRC-0033
   ambito: COMUNE
   denominazione: Contributi per l'eliminazione delle barriere architettoniche negli edifici privati
+  descrizione: 'Contributi ai privati per opere di eliminazione delle barriere architettoniche negli edifici esistenti
+    dove risiedono persone con disabilità: la domanda si presenta al comune prima dei lavori e il contributo è erogato
+    secondo il fabbisogno e i fondi disponibili.'
   norma_riferimento: L. 13/1989, artt. 9-11
   termine_conclusione: Termine fissato dalla legge regionale
   art35:
@@ -420,6 +514,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0034
   denominazione: Rimborso di tributi locali versati e non dovuti
+  descrizione: Il contribuente chiede il rimborso delle somme versate e non dovute a titolo di tributi locali, entro
+    cinque anni dal pagamento o dal giorno in cui è stato accertato il diritto alla restituzione; l'ente può compensarle
+    con altre somme dovute.
   norma_riferimento: L. 296/2006, art. 1, c. 164; regolamento generale delle entrate
   termine_conclusione: 180 giorni
   art35:
@@ -431,6 +528,8 @@ procedimenti:
       istanza di riesame in autotutela
 - codice: PRC-0035
   denominazione: Rateizzazione di debiti tributari e patrimoniali
+  descrizione: Il debitore in temporanea difficoltà chiede di pagare a rate le somme dovute all'ente per tributi
+    o entrate patrimoniali, secondo le soglie, il numero di rate e le garanzie previsti dal regolamento delle entrate.
   norma_riferimento: L. 160/2019, art. 1, cc. 796-802; regolamento generale delle entrate
   termine_conclusione: 30 giorni
   art35:
@@ -442,6 +541,8 @@ procedimenti:
       istanza di riesame in autotutela
 - codice: PRC-0036
   denominazione: Accertamento con adesione e autotutela tributaria
+  descrizione: Definizione concordata dell'accertamento tributario tra ente e contribuente, con riduzione delle
+    sanzioni, e annullamento o rettifica in autotutela degli atti illegittimi o infondati, su istanza o d'ufficio.
   norma_riferimento: D.lgs. 218/1997; l. 212/2000, art. 10-quater; regolamento dell'ente
   termine_conclusione: 90 giorni
   art35:
@@ -454,6 +555,8 @@ procedimenti:
 - codice: PRC-0037
   ambito: COMUNE
   denominazione: Riduzioni e agevolazioni della tassa sui rifiuti (TARI)
+  descrizione: Riduzioni ed esenzioni della tassa sui rifiuti previste dal regolamento comunale e dalla regolazione
+    ARERA, tra cui il bonus sociale per i nuclei in condizione di disagio economico.
   norma_riferimento: L. 147/2013, art. 1, cc. 659-660; regolamento TARI
   termine_conclusione: 60 giorni
   art35:
@@ -466,6 +569,9 @@ procedimenti:
 - codice: PRC-0038
   ambito: COMUNE
   denominazione: Permesso di costruire
+  descrizione: Titolo edilizio per gli interventi di nuova costruzione, ristrutturazione urbanistica e ristrutturazione
+    edilizia pesante. La domanda si presenta allo sportello unico per l'edilizia; il responsabile cura l'istruttoria
+    e acquisisce i pareri, e il permesso è rilasciato previo pagamento del contributo di costruzione.
   norma_riferimento: D.P.R. 380/2001, art. 20
   termine_conclusione: 60 giorni per l'istruttoria, 30 per il provvedimento (silenzio assenso salvo vincoli)
   art35:
@@ -479,6 +585,9 @@ procedimenti:
 - codice: PRC-0039
   ambito: COMUNE
   denominazione: SCIA e CILA edilizia
+  descrizione: Segnalazione certificata di inizio attività e comunicazione di inizio lavori asseverata per gli interventi
+    edilizi che non richiedono il permesso di costruire. I lavori possono iniziare dalla presentazione; l'ufficio
+    controlla la conformità e può vietare la prosecuzione.
   norma_riferimento: D.P.R. 380/2001, artt. 6-bis, 22-23; l. 241/1990, art. 19
   termine_conclusione: 30 giorni per il controllo della SCIA edilizia
   art35:
@@ -492,6 +601,9 @@ procedimenti:
 - codice: PRC-0040
   ambito: COMUNE
   denominazione: Permesso di costruire e SCIA in sanatoria (accertamento di conformità)
+  descrizione: Regolarizzazione degli interventi realizzati senza titolo o in difformità, quando sono conformi alla
+    disciplina urbanistica ed edilizia, con il pagamento dell'oblazione; comprende le tolleranze costruttive e le
+    difformità parziali.
   norma_riferimento: D.P.R. 380/2001, artt. 36 e 36-bis
   termine_conclusione: 45 giorni (silenzio assenso per la SCIA in sanatoria)
   art35:
@@ -505,6 +617,9 @@ procedimenti:
 - codice: PRC-0041
   ambito: COMUNE
   denominazione: Segnalazione certificata per l'agibilità
+  descrizione: Segnalazione con cui si attestano sicurezza, igiene, salubrità, risparmio energetico e conformità
+    al progetto dell'edificio o dell'unità, al termine dei lavori. Produce effetti dalla presentazione; l'ufficio
+    la controlla anche con sopralluoghi.
   norma_riferimento: D.P.R. 380/2001, art. 24
   termine_conclusione: Controllo entro 60 giorni
   art35:
@@ -518,6 +633,9 @@ procedimenti:
 - codice: PRC-0042
   ambito: COMUNE
   denominazione: Autorizzazione paesaggistica ordinaria e semplificata
+  descrizione: Autorizzazione per gli interventi su immobili e aree soggetti a vincolo paesaggistico, con il parere
+    della commissione per il paesaggio e il parere vincolante della soprintendenza; per gli interventi di lieve
+    entità si segue il procedimento semplificato.
   norma_riferimento: D.lgs. 42/2004, art. 146; d.P.R. 31/2017
   termine_conclusione: 120 giorni (ordinaria), 60 giorni (semplificata)
   art35:
@@ -531,6 +649,8 @@ procedimenti:
 - codice: PRC-0043
   ambito: COMUNE
   denominazione: Certificato di destinazione urbanistica
+  descrizione: Certificato che attesta le prescrizioni urbanistiche riguardanti un'area (destinazione, indici, vincoli),
+    richiesto in particolare per gli atti di trasferimento dei terreni.
   norma_riferimento: D.P.R. 380/2001, art. 30, c. 3
   termine_conclusione: 30 giorni
   art35:
@@ -543,6 +663,8 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0044
   denominazione: Autorizzazione per interventi in aree con vincolo idrogeologico
+  descrizione: Autorizzazione per i movimenti di terreno, gli scavi e le trasformazioni d'uso nelle aree sottoposte
+    a vincolo idrogeologico, per prevenire dissesti e danni al regime delle acque.
   norma_riferimento: R.d.l. 3267/1923; legge regionale forestale
   termine_conclusione: 60 giorni
   art35:
@@ -556,6 +678,8 @@ procedimenti:
 - codice: PRC-0045
   ambito: COMUNE
   denominazione: Approvazione di piani attuativi di iniziativa privata
+  descrizione: Approvazione dei piani attuativi e dei piani di lottizzazione proposti dai privati in attuazione
+    del piano urbanistico generale, con la convenzione che regola opere di urbanizzazione, cessioni e garanzie.
   norma_riferimento: Legge urbanistica regionale; l. 1150/1942, art. 28
   termine_conclusione: Termini della legge regionale
   art35:
@@ -568,6 +692,9 @@ procedimenti:
       l. 241/1990)
 - codice: PRC-0046
   denominazione: Autorizzazione unica ambientale
+  descrizione: Autorizzazione unica che sostituisce per le piccole e medie imprese i diversi titoli ambientali (scarichi,
+    emissioni in atmosfera, impatto acustico, utilizzo agronomico dei reflui). La domanda si presenta al SUAP; l'autorità
+    competente la adotta e il SUAP rilascia il titolo.
   norma_riferimento: D.P.R. 59/2013
   termine_conclusione: 90 o 150 giorni (art. 4 d.P.R. 59/2013)
   art35:
@@ -581,6 +708,8 @@ procedimenti:
 - codice: PRC-0047
   ambito: COMUNE
   denominazione: Autorizzazione allo scarico di acque reflue domestiche non in pubblica fognatura
+  descrizione: Autorizzazione allo scarico delle acque reflue domestiche di edifici non serviti dalla pubblica fognatura,
+    con la verifica dell'impianto di trattamento e del recapito finale.
   norma_riferimento: D.lgs. 152/2006, art. 124; legge regionale
   termine_conclusione: 90 giorni
   art35:
@@ -594,6 +723,8 @@ procedimenti:
 - codice: PRC-0048
   ambito: PROVINCIA
   denominazione: Iscrizione nel registro delle imprese che recuperano rifiuti in procedura semplificata
+  descrizione: Iscrizione nel registro provinciale delle imprese che svolgono operazioni di recupero dei rifiuti
+    in procedura semplificata, sulla base della comunicazione di inizio attività e del rispetto delle norme tecniche.
   norma_riferimento: D.lgs. 152/2006, artt. 214-216
   termine_conclusione: 90 giorni dalla comunicazione
   art35:
@@ -607,6 +738,8 @@ procedimenti:
 - codice: PRC-0049
   ambito: PROVINCIA
   denominazione: Autorizzazione unica per impianti di smaltimento e recupero dei rifiuti (ove delegata)
+  descrizione: Autorizzazione unica alla realizzazione e all'esercizio degli impianti di smaltimento e recupero
+    dei rifiuti, rilasciata dopo la conferenza di servizi, con le prescrizioni e le garanzie finanziarie.
   norma_riferimento: D.lgs. 152/2006, art. 208; legge regionale
   termine_conclusione: 150 giorni
   art35:
@@ -620,6 +753,8 @@ procedimenti:
 - codice: PRC-0050
   ambito: PROVINCIA
   denominazione: Autorizzazione al transito di trasporti e veicoli eccezionali su strade provinciali
+  descrizione: Autorizzazione al transito sulle strade provinciali di veicoli e trasporti eccezionali per sagoma
+    o massa, singola o periodica, con la verifica del percorso, delle opere d'arte e delle prescrizioni di scorta.
   norma_riferimento: D.lgs. 285/1992, art. 10; d.P.R. 495/1992, artt. 13-20
   termine_conclusione: 15 giorni (singola), 30 giorni (periodica)
   art35:
@@ -633,6 +768,8 @@ procedimenti:
 - codice: PRC-0051
   ambito: PROVINCIA
   denominazione: Concessioni e autorizzazioni per accessi, attraversamenti e occupazioni di strade provinciali
+  descrizione: Concessioni e autorizzazioni per accessi, attraversamenti e uso della sede delle strade provinciali
+    (accessi carrai, sottoservizi, occupazioni), con il canone, la cauzione e il controllo del ripristino.
   norma_riferimento: D.lgs. 285/1992, artt. 21-27; regolamento provinciale
   termine_conclusione: 60 giorni
   art35:
@@ -646,6 +783,8 @@ procedimenti:
 - codice: PRC-0052
   ambito: PROVINCIA
   denominazione: Controllo dell'efficienza energetica degli impianti termici
+  descrizione: Accertamenti e ispezioni sull'efficienza energetica e sulla manutenzione degli impianti termici degli
+    edifici, con la verifica dei rapporti di controllo trasmessi al catasto regionale degli impianti.
   norma_riferimento: D.lgs. 192/2005; d.P.R. 74/2013
   termine_conclusione: Programma annuale di ispezioni
   art35:
@@ -659,6 +798,8 @@ procedimenti:
 - codice: PRC-0053
   ambito: PROVINCIA
   denominazione: Rilascio di tesserini e autorizzazioni per caccia e pesca (ove delegati)
+  descrizione: Rilascio dei tesserini venatori e delle licenze e autorizzazioni per la pesca nelle acque interne,
+    nei casi in cui la funzione è stata delegata dalla regione.
   norma_riferimento: L. 157/1992; legge regionale
   termine_conclusione: 30 giorni
   art35:
@@ -672,6 +813,8 @@ procedimenti:
 - codice: PRC-0054
   ambito: PROVINCIA
   denominazione: Segnalazione certificata per l'esercizio dell'attività di autoscuola
+  descrizione: Segnalazione certificata per aprire un'autoscuola o modificarne l'attività, con la verifica dei requisiti
+    del titolare, del personale insegnante e istruttore, dei locali e dei veicoli.
   norma_riferimento: D.lgs. 285/1992, art. 123; d.m. 317/1995; d.l. 7/2007, art. 10
   termine_conclusione: 60 giorni per i controlli (art. 19 l. 241/1990)
   art35:
@@ -685,6 +828,8 @@ procedimenti:
 - codice: PRC-0055
   ambito: PROVINCIA
   denominazione: Autorizzazione all'attività di consulenza per la circolazione dei mezzi di trasporto
+  descrizione: Autorizzazione all'attività di consulenza per la circolazione dei mezzi di trasporto (agenzie di
+    pratiche auto), con la verifica dei requisiti professionali, morali e dei locali.
   norma_riferimento: L. 264/1991; regolamento provinciale
   termine_conclusione: Termine fissato dal regolamento provinciale
   art35:
@@ -698,6 +843,8 @@ procedimenti:
 - codice: PRC-0056
   ambito: PROVINCIA
   denominazione: Autorizzazione alle imprese di autoriparazione per la revisione periodica dei veicoli
+  descrizione: Autorizzazione alle imprese di autoriparazione a effettuare la revisione periodica dei veicoli, con
+    la verifica delle attrezzature, dei locali e dei responsabili tecnici.
   norma_riferimento: D.lgs. 285/1992, art. 80, c. 8; d.P.R. 495/1992, artt. 239-241
   termine_conclusione: Termine fissato dal regolamento provinciale
   art35:
@@ -711,6 +858,8 @@ procedimenti:
 - codice: PRC-0057
   ambito: PROVINCIA
   denominazione: Licenza per l'autotrasporto di cose in conto proprio
+  descrizione: Licenza per trasportare con veicoli propri merci della propria impresa, con la verifica che il trasporto
+    sia complementare all'attività principale.
   norma_riferimento: L. 298/1974, artt. 31-32; regolamento provinciale
   termine_conclusione: Termine fissato dal regolamento provinciale
   art35:
@@ -724,6 +873,8 @@ procedimenti:
 - codice: PRC-0058
   ambito: PROVINCIA
   denominazione: Esami di idoneità per insegnanti e istruttori di autoscuola e per consulenti della circolazione
+  descrizione: Esami per l'abilitazione degli insegnanti e degli istruttori di autoscuola e per l'idoneità professionale
+    dei consulenti della circolazione, nelle sessioni previste dal bando.
   norma_riferimento: D.lgs. 285/1992, art. 123; l. 264/1991, art. 5
   termine_conclusione: Sessioni fissate dal bando
   art35:
@@ -738,6 +889,8 @@ procedimenti:
   ambito: PROVINCIA
   denominazione: Trasporto e assistenza per l'autonomia e la comunicazione degli studenti con disabilità delle scuole
     superiori
+  descrizione: 'Servizi per gli studenti con disabilità delle scuole secondarie di secondo grado: trasporto casa-scuola
+    e assistenza per l''autonomia e la comunicazione, sulla base delle richieste delle scuole e delle famiglie.'
   norma_riferimento: L. 104/1992, art. 13; d.lgs. 66/2017; legge regionale
   termine_conclusione: Termine fissato dall'avviso annuale
   art35:
@@ -748,3 +901,631 @@ procedimenti:
     strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
       120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
       l. 241/1990)
+- codice: PRC-0060
+  ambito: COMUNE
+  denominazione: Iscrizione all'AIRE e trasferimento della residenza all'estero
+  descrizione: I cittadini italiani che trasferiscono la residenza all'estero per più di 12 mesi lo dichiarano al
+    consolato entro 90 giorni dall'espatrio (o al comune prima della partenza); il comune li cancella dall'anagrafe
+    e li iscrive nell'anagrafe degli italiani residenti all'estero, che consente di votare e di ottenere i certificati.
+  norma_riferimento: L. 470/1988; d.P.R. 323/1989; d.P.R. 223/1989
+  termine_conclusione: Termini del d.P.R. 323/1989, dalla ricezione della comunicazione consolare
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0061
+  ambito: COMUNE
+  denominazione: Iscrizione nello schedario della popolazione temporanea
+  descrizione: Chi dimora nel comune da almeno quattro mesi per lavoro, studio o cura, senza potervi stabilire la
+    residenza, chiede l'iscrizione nello schedario della popolazione temporanea; l'iscrizione non dà luogo a certificati
+    anagrafici ma a un'attestazione.
+  norma_riferimento: L. 1228/1954; d.P.R. 223/1989, art. 32
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0062
+  ambito: COMUNE
+  denominazione: Dichiarazione di costituzione e di cessazione della convivenza di fatto
+  descrizione: Due persone maggiorenni, unite stabilmente da legami affettivi e di reciproca assistenza, coabitanti
+    e iscritte nello stesso stato di famiglia, dichiarano la convivenza di fatto, che viene registrata in anagrafe;
+    con la stessa procedura se ne dichiara la cessazione.
+  norma_riferimento: L. 76/2016, art. 1, cc. 36-65; d.P.R. 223/1989, art. 13
+  termine_conclusione: 2 giorni lavorativi per la registrazione, 45 giorni per gli accertamenti
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: SI
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0063
+  ambito: COMUNE
+  denominazione: Cancellazione anagrafica per irreperibilità
+  descrizione: Il cittadino che non ha più dimora abituale nel comune, senza aver dichiarato il trasferimento, è
+    cancellato dall'anagrafe dopo ripetuti accertamenti negativi; il procedimento si avvia d'ufficio o su segnalazione
+    di chiunque vi abbia interesse.
+  norma_riferimento: D.P.R. 223/1989, artt. 7 e 11
+  termine_conclusione: Dopo almeno un anno dal primo accertamento negativo (art. 11 d.P.R. 223/1989)
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0064
+  ambito: COMUNE
+  denominazione: Attestazione di regolarità del soggiorno e di soggiorno permanente per i cittadini dell'Unione
+    europea
+  descrizione: Al cittadino dell'Unione iscritto in anagrafe si rilascia l'attestazione di regolarità del soggiorno;
+    dopo cinque anni di soggiorno legale e continuativo, l'attestazione di soggiorno permanente. Le stesse attestazioni
+    spettano ai familiari aventi diritto.
+  norma_riferimento: D.lgs. 30/2007, artt. 9, 14 e 16
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0065
+  ambito: COMUNE
+  denominazione: Rinnovo della dichiarazione di dimora abituale dei cittadini stranieri
+  descrizione: Il cittadino straniero non comunitario iscritto in anagrafe rinnova la dichiarazione di dimora abituale
+    entro 60 giorni dal rinnovo del permesso di soggiorno, presentandone copia; senza rinnovo può essere cancellato
+    dall'anagrafe.
+  norma_riferimento: D.P.R. 223/1989, art. 7, c. 3
+  termine_conclusione: Immediato
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0066
+  ambito: COMUNE
+  denominazione: Rilascio di certificati anagrafici, anche storici
+  descrizione: Rilascio di certificati di residenza, stato di famiglia e altri certificati anagrafici, anche storici,
+    da usare con i privati (con le pubbliche amministrazioni vale l'autocertificazione); si ottengono allo sportello
+    o online tramite l'ANPR.
+  norma_riferimento: D.P.R. 223/1989, artt. 33-35; l. 183/2011, art. 15; d.P.R. 642/1972
+  termine_conclusione: Immediato; certificati storici 30 giorni
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al Prefetto entro 30 giorni (art. 36 d.P.R. 223/1989)
+- codice: PRC-0067
+  ambito: COMUNE
+  denominazione: Autenticazione di firme e di copie e legalizzazione di fotografie
+  descrizione: Il pubblico ufficiale attesta che una firma è stata apposta in sua presenza, che una copia è conforme
+    all'originale o che una fotografia ritrae la persona identificata; per l'uso con le pubbliche amministrazioni
+    bastano le dichiarazioni sostitutive.
+  norma_riferimento: D.P.R. 445/2000, artt. 18, 21 e 34; d.P.R. 642/1972
+  termine_conclusione: Immediato
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0068
+  ambito: COMUNE
+  denominazione: Certificato di idoneità alloggiativa per cittadini stranieri
+  descrizione: Il cittadino straniero dimostra, per il ricongiungimento familiare, il permesso di soggiorno UE per
+    soggiornanti di lungo periodo o il contratto di soggiorno, di disporre di un alloggio conforme ai requisiti
+    igienico-sanitari e di idoneità abitativa.
+  norma_riferimento: D.lgs. 286/1998, artt. 5-bis e 29; d.P.R. 394/1999; d.m. 5 luglio 1975
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Servizi demografici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0069
+  ambito: COMUNE
+  denominazione: Formazione dell'atto di nascita e riconoscimento dei figli
+  descrizione: La nascita si dichiara all'ufficiale di stato civile del comune di nascita o di residenza (o alla
+    direzione sanitaria entro 3 giorni), che forma l'atto; con la stessa dichiarazione o con atto successivo si
+    può riconoscere il figlio nato fuori del matrimonio.
+  norma_riferimento: D.P.R. 396/2000, artt. 29-44; codice civile, artt. 250-254
+  termine_conclusione: Dichiarazione entro 10 giorni dalla nascita; atto formato contestualmente
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0070
+  ambito: COMUNE
+  denominazione: Pubblicazioni e celebrazione del matrimonio civile e costituzione delle unioni civili
+  descrizione: I futuri sposi chiedono le pubblicazioni, che restano all'albo online per otto giorni; il matrimonio
+    si celebra entro i 180 giorni successivi. Le parti di un'unione civile la costituiscono con dichiarazione davanti
+    all'ufficiale di stato civile.
+  norma_riferimento: Codice civile, artt. 93-116; d.P.R. 396/2000, artt. 50-70; l. 76/2016
+  termine_conclusione: Pubblicazione per 8 giorni; matrimonio entro 180 giorni dalla pubblicazione
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0071
+  ambito: COMUNE
+  denominazione: Formazione e trascrizione degli atti di morte
+  descrizione: Il decesso si dichiara entro 24 ore all'ufficiale di stato civile, che forma l'atto di morte e rilascia
+    i permessi di seppellimento; gli atti di morte formati altrove o all'estero si trascrivono nel comune di residenza.
+  norma_riferimento: D.P.R. 396/2000, artt. 71-80; d.P.R. 285/1990
+  termine_conclusione: Atto formato contestualmente alla dichiarazione, entro 24 ore dal decesso
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0072
+  ambito: COMUNE
+  denominazione: Accordi di separazione, divorzio e modifica delle condizioni davanti all'ufficiale di stato civile
+  descrizione: I coniugi senza figli minori o non autosufficienti possono concludere direttamente davanti all'ufficiale
+    di stato civile un accordo di separazione, di divorzio o di modifica delle condizioni, senza trasferimenti patrimoniali;
+    l'accordo è confermato in un secondo incontro.
+  norma_riferimento: D.l. 132/2014, art. 12 (l. 162/2014)
+  termine_conclusione: Conferma dell'accordo non prima di 30 giorni dalla dichiarazione
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0073
+  ambito: COMUNE
+  denominazione: Rilascio di certificati, estratti e copie integrali degli atti di stato civile, anche plurilingue
+  descrizione: Rilascio di certificati ed estratti di nascita, matrimonio e morte, anche plurilingue o con il modulo
+    standard europeo, e di copie integrali degli atti a chi vi ha interesse.
+  norma_riferimento: D.P.R. 396/2000, artt. 106-110; regolamento (UE) 2016/1191
+  termine_conclusione: Immediato; copie integrali di atti remoti 30 giorni
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0074
+  ambito: COMUNE
+  denominazione: Trascrizione dei provvedimenti di adozione e degli atti di stato civile formati all'estero
+  descrizione: L'ufficiale di stato civile trascrive i provvedimenti di adozione trasmessi dal tribunale e gli atti
+    di nascita, matrimonio e morte dei cittadini formati all'estero, inviati dai consolati o presentati dagli interessati.
+  norma_riferimento: L. 184/1983; d.P.R. 396/2000, artt. 17-19 e 28
+  termine_conclusione: 30 giorni dalla ricezione
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0075
+  ambito: COMUNE
+  denominazione: Annotazione e correzione degli atti di stato civile
+  descrizione: Correzione degli errori materiali negli atti di stato civile, d'ufficio o su richiesta, e annotazione
+    delle sentenze e degli altri atti che modificano lo stato delle persone.
+  norma_riferimento: D.P.R. 396/2000, artt. 98-102
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0076
+  ambito: COMUNE
+  denominazione: Formazione e aggiornamento delle liste di leva
+  descrizione: Il comune forma ogni anno la lista di leva dei giovani residenti che compiono 17 anni e la trasmette
+    al ministero della difesa, con gli aggiornamenti per iscrizioni e cancellazioni.
+  norma_riferimento: D.lgs. 66/2010 (codice dell'ordinamento militare)
+  termine_conclusione: Entro il 10 aprile di ogni anno
+  art35:
+    tipologia: Stato civile
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0077
+  ambito: COMUNE
+  denominazione: Iscrizione agli albi dei giudici popolari di corte d'assise e di corte d'assise d'appello
+  descrizione: I cittadini con i requisiti di età e di titolo di studio chiedono l'iscrizione negli albi dei giudici
+    popolari; la commissione comunale forma gli elenchi e li trasmette al tribunale.
+  norma_riferimento: L. 287/1951, artt. 9-21
+  termine_conclusione: Aggiornamento biennale; domande entro il 31 luglio degli anni dispari
+  art35:
+    tipologia: Servizi elettorali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0078
+  ambito: COMUNE
+  denominazione: Rilascio della tessera elettorale e dei duplicati
+  descrizione: La tessera elettorale si consegna d'ufficio ai nuovi elettori; in caso di smarrimento, furto o esaurimento
+    degli spazi l'elettore ne chiede il duplicato, che si rilascia subito, anche nei giorni delle votazioni.
+  norma_riferimento: D.P.R. 299/2000
+  termine_conclusione: Consegna d'ufficio; duplicato immediato
+  art35:
+    tipologia: Servizi elettorali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0079
+  ambito: COMUNE
+  denominazione: Rilascio dei certificati di iscrizione nelle liste elettorali per la presentazione di liste, candidature
+    e referendum
+  descrizione: Rilascio dei certificati che attestano l'iscrizione nelle liste elettorali dei sottoscrittori e dei
+    candidati, necessari per presentare liste, candidature, proposte di legge e richieste di referendum.
+  norma_riferimento: D.P.R. 223/1967; l. 53/1990, art. 3
+  termine_conclusione: 24 ore dalla richiesta
+  art35:
+    tipologia: Servizi elettorali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0080
+  denominazione: Trasformazione del rapporto di lavoro da tempo pieno a tempo parziale e viceversa
+  descrizione: Il dipendente chiede di passare al tempo parziale, indicando orario e articolazione, o di rientrare
+    al tempo pieno; l'ente può differire o negare la trasformazione per grave pregiudizio alla funzionalità o se
+    l'attività esterna è in conflitto di interessi.
+  norma_riferimento: D.lgs. 81/2015, artt. 4-12; l. 662/1996, art. 1, c. 58; CCNL Funzioni locali
+  termine_conclusione: 60 giorni dalla domanda
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0081
+  denominazione: Collocamento in aspettativa e congedi dei dipendenti
+  descrizione: Il dipendente chiede l'aspettativa per motivi personali, familiari, di studio o per altri incarichi,
+    o i congedi previsti dalla legge e dal contratto; l'ente ne verifica i presupposti e la compatibilità con le
+    esigenze di servizio.
+  norma_riferimento: CCNL Funzioni locali; d.lgs. 151/2001; l. 53/2000
+  termine_conclusione: 30 giorni dalla domanda
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0082
+  denominazione: Permessi retribuiti per il diritto allo studio
+  descrizione: Concessione ai dipendenti di permessi retribuiti, fino a 150 ore annue, per la frequenza di corsi
+    di studio, entro il limite di personale fissato dal contratto e con i criteri di precedenza previsti.
+  norma_riferimento: L. 300/1970, art. 10; CCNL Funzioni locali
+  termine_conclusione: 30 giorni dal termine annuale delle domande
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0083
+  denominazione: Certificazione per la cessione del quinto dello stipendio e le delegazioni di pagamento
+  descrizione: Su domanda del dipendente l'ente rilascia il certificato di stipendio e gli atti necessari per la
+    cessione del quinto o la delegazione di pagamento, e poi trattiene le rate in busta paga.
+  norma_riferimento: D.P.R. 180/1950; d.P.R. 895/1950
+  termine_conclusione: 30 giorni dalla domanda
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0084
+  denominazione: Rilascio dei certificati di servizio
+  descrizione: Su domanda del dipendente in servizio o cessato l'ente certifica i periodi di servizio, il profilo
+    e l'inquadramento; con le pubbliche amministrazioni valgono le dichiarazioni sostitutive.
+  norma_riferimento: D.P.R. 445/2000; l. 183/2011, art. 15
+  termine_conclusione: 30 giorni dalla domanda
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0085
+  denominazione: Collocamento a riposo, dimissioni e risoluzione del rapporto di lavoro
+  descrizione: L'ente adotta i provvedimenti di cessazione per dimissioni volontarie, limiti di età o requisiti
+    pensionistici, verificando i servizi utili e curando gli adempimenti verso l'INPS.
+  norma_riferimento: D.l. 201/2011, art. 24; d.lgs. 165/2001; CCNL Funzioni locali
+  termine_conclusione: 30 giorni dalle dimissioni; collocamento d'ufficio almeno 3 mesi prima della cessazione
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0086
+  denominazione: Dispensa dal servizio per inabilità
+  descrizione: Il dipendente riconosciuto inabile in modo assoluto e permanente a qualsiasi attività lavorativa,
+    o alle mansioni senza possibilità di ricollocazione, è dispensato dal servizio dopo il verbale della commissione
+    medica.
+  norma_riferimento: L. 335/1995, art. 2, c. 12; d.P.R. 171/2011
+  termine_conclusione: 30 giorni dal verbale della commissione medica
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0087
+  denominazione: Accertamento dell'idoneità alle mansioni del dipendente
+  descrizione: Su domanda del dipendente o d'ufficio si chiede alla commissione medica l'accertamento dell'idoneità
+    alle mansioni del profilo; in caso di inidoneità l'ente valuta il cambio di mansioni o la risoluzione del rapporto.
+  norma_riferimento: D.lgs. 165/2001, art. 55-octies; d.P.R. 171/2011; d.lgs. 81/2008
+  termine_conclusione: 30 giorni dal verbale della commissione medica
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0088
+  denominazione: Comandi, distacchi e utilizzo condiviso del personale con altri enti
+  descrizione: Il dipendente presta servizio, a tempo pieno o parziale, presso un'altra amministrazione per un periodo
+    determinato, su richiesta di questa e con l'assenso dell'interessato; si disciplina con provvedimento o convenzione
+    tra gli enti.
+  norma_riferimento: D.P.R. 3/1957, art. 56; d.lgs. 165/2001, art. 30; CCNL Funzioni locali
+  termine_conclusione: 30 giorni dal nulla osta
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0089
+  denominazione: Rimborso delle spese legali ai dipendenti
+  descrizione: Il dipendente coinvolto in un procedimento giudiziario per fatti connessi al servizio, concluso senza
+    responsabilità e in assenza di conflitto di interessi con l'ente, chiede il rimborso delle spese legali sostenute.
+  norma_riferimento: CCNL Funzioni locali (patrocinio legale); d.l. 67/1997, art. 18
+  termine_conclusione: 30 giorni dalla domanda
+  art35:
+    tipologia: Personale - gestione
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0090
+  ambito: COMUNE
+  denominazione: Subentro e voltura nell'assegnazione di alloggi di edilizia residenziale pubblica
+  descrizione: In caso di decesso o di uscita dell'assegnatario, i componenti del nucleo con i requisiti chiedono
+    di subentrare nell'assegnazione; si verificano i requisiti e la regolarità dei pagamenti.
+  norma_riferimento: Legge regionale ERP; regolamento comunale
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Politiche abitative
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0091
+  ambito: COMUNE
+  denominazione: Decadenza, revoca e annullamento dell'assegnazione di alloggi di edilizia residenziale pubblica
+  descrizione: Il comune dichiara la decadenza o la revoca dell'assegnazione per perdita dei requisiti, morosità,
+    mancata occupazione o uso improprio dell'alloggio, dopo la contestazione e l'esame delle controdeduzioni.
+  norma_riferimento: Legge regionale ERP
+  termine_conclusione: Termini della legge regionale
+  art35:
+    tipologia: Politiche abitative
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0092
+  ambito: COMUNE
+  denominazione: Assegnazione di alloggi per l'emergenza abitativa
+  descrizione: Assegnazione temporanea di alloggi a nuclei in situazione di emergenza abitativa (sfratti, calamità,
+    sgomberi), secondo la graduatoria o i criteri del regolamento.
+  norma_riferimento: Legge regionale ERP; regolamento comunale
+  termine_conclusione: Termine fissato dall'avviso
+  art35:
+    tipologia: Politiche abitative
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0093
+  ambito: COMUNE
+  denominazione: Assistenza per l'autonomia e la comunicazione degli alunni con disabilità
+  descrizione: Il comune assicura agli alunni con disabilità delle scuole dell'infanzia, primarie e secondarie di
+    primo grado l'assistenza per l'autonomia e la comunicazione e il trasporto, sulla base delle richieste delle
+    scuole e del piano educativo individualizzato.
+  norma_riferimento: L. 104/1992, art. 13; d.lgs. 66/2017, art. 3
+  termine_conclusione: Prima dell'inizio dell'anno scolastico, sulle richieste delle scuole
+  art35:
+    tipologia: Servizi scolastici
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0094
+  ambito: COMUNE
+  denominazione: Vigilanza sull'adempimento dell'obbligo di istruzione
+  descrizione: Sulle segnalazioni delle scuole relative agli alunni con assenze ingiustificate rilevanti, il sindaco
+    ammonisce i genitori ad adempiere l'obbligo di istruzione e, se l'inadempienza continua, informa l'autorità
+    giudiziaria.
+  norma_riferimento: D.lgs. 297/1994, art. 114; d.l. 123/2023, art. 12
+  termine_conclusione: 30 giorni dalla segnalazione della scuola
+  art35:
+    tipologia: Servizi scolastici
+    istanza_di_parte: 'NO'
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0095
+  ambito: COMUNE
+  denominazione: Iscrizione alla scuola dell'infanzia comunale
+  descrizione: Iscrizione dei bambini da 3 a 6 anni alle scuole dell'infanzia comunali, sulla base dell'avviso annuale
+    e dei criteri di precedenza del regolamento.
+  norma_riferimento: D.lgs. 65/2017; regolamento comunale
+  termine_conclusione: Termine fissato dall'avviso
+  art35:
+    tipologia: Servizi educativi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0096
+  ambito: COMUNE
+  denominazione: Buoni servizio per la frequenza di nidi e servizi educativi convenzionati
+  descrizione: Le famiglie chiedono un buono per la frequenza di nidi e servizi educativi privati convenzionati;
+    il comune forma l'elenco dei servizi e assegna i buoni secondo l'ISEE e i fondi disponibili.
+  norma_riferimento: D.lgs. 65/2017; avviso comunale
+  termine_conclusione: Termine fissato dall'avviso
+  art35:
+    tipologia: Servizi educativi
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0097
+  ambito: COMUNE
+  denominazione: Assegno di maternità dei comuni
+  descrizione: La madre senza indennità di maternità, o con un'indennità inferiore, chiede al comune l'assegno per
+    la nascita, l'adozione o l'affidamento preadottivo, se l'ISEE è entro la soglia annuale; il comune concede l'assegno
+    e l'INPS lo paga.
+  norma_riferimento: D.lgs. 151/2001, art. 74; d.P.C.M. 452/2000
+  termine_conclusione: 30 giorni dalla domanda, da presentare entro 6 mesi dalla nascita o dall'ingresso del minore
+  art35:
+    tipologia: Servizi sociali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo
+- codice: PRC-0098
+  ambito: COMUNE
+  denominazione: Bonus sociale elettrico per disagio fisico
+  descrizione: Chi usa in casa apparecchiature elettromedicali salvavita chiede al comune lo sconto sulla bolletta
+    elettrica, con la certificazione dell'azienda sanitaria; il comune verifica la domanda e la inserisce nel sistema
+    delle agevolazioni.
+  norma_riferimento: D.m. 28 dicembre 2007; deliberazioni ARERA
+  termine_conclusione: 30 giorni dalla domanda
+  art35:
+    tipologia: Servizi sociali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0099
+  ambito: COMUNE
+  denominazione: Segnalazioni di inconvenienti igienico-sanitari e provvedimenti conseguenti
+  descrizione: Sulle segnalazioni di inconvenienti igienici, acustici o di scarichi, il comune chiede il sopralluogo
+    agli enti competenti, diffida il responsabile a eliminare l'inconveniente e, se necessario, adotta un'ordinanza.
+  norma_riferimento: R.d. 1265/1934; d.lgs. 267/2000, art. 50; regolamento d'igiene
+  termine_conclusione: 30 giorni dalla segnalazione
+  art35:
+    tipologia: Igiene e sanità
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0100
+  ambito: COMUNE
+  denominazione: Affidamento e adozione di cani e gatti ospitati nel canile
+  descrizione: Chi vuole adottare un cane o un gatto ospitato nel canile o nel gattile comunale presenta la domanda
+    e sottoscrive l'impegno a custodirlo; l'animale è affidato già identificato e iscritto all'anagrafe.
+  norma_riferimento: L. 281/1991; legge regionale sulla tutela degli animali
+  termine_conclusione: 30 giorni
+  art35:
+    tipologia: Tutela degli animali
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0101
+  denominazione: Autorizzazione alla raccolta dei funghi epigei spontanei
+  descrizione: Rilascio del tesserino per la raccolta dei funghi spontanei, dopo il corso o l'esame previsti dalla
+    legge regionale e il pagamento del contributo, nei casi in cui la funzione spetta all'ente.
+  norma_riferimento: L. 352/1993; legge regionale
+  termine_conclusione: Termine della legge regionale
+  art35:
+    tipologia: Ambiente e territorio
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: SI
+    strumenti_tutela: Ricorso al TAR entro 60 giorni o ricorso straordinario al Presidente della Repubblica entro
+      120 giorni; in caso di inerzia, richiesta di intervento del titolare del potere sostitutivo (art. 2, c. 9-bis,
+      l. 241/1990)
+- codice: PRC-0102
+  denominazione: Pagamento delle fatture dei fornitori
+  descrizione: Dopo la ricezione della fattura elettronica, l'ente verifica la regolarità della prestazione, del
+    DURC e degli altri adempimenti, liquida la spesa ed emette il mandato di pagamento entro i termini di legge.
+  norma_riferimento: D.lgs. 231/2002, art. 4; d.lgs. 267/2000, artt. 184-185
+  termine_conclusione: 30 giorni dalla ricezione della fattura (60 se pattuito)
+  art35:
+    tipologia: Contabilità
+    istanza_di_parte: SI
+    silenzio_assenso: 'NO'
+    dichiarazione_sostitutiva: 'NO'
+    strumenti_tutela: Ricorso al giudice ordinario nei termini di legge; in caso di inerzia, intervento del titolare
+      del potere sostitutivo

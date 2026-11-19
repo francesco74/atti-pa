@@ -764,6 +764,34 @@ processi:
         tempi: Semestrale
         indicatore: Procedimenti conclusi nei termini
         target: Almeno 95%
+  - codice: C.11.3
+    descrizione: Cancellazione per irreperibilità
+    procedimento: PRC-0063
+    rischi:
+    - codice: C.11.3_R.1
+      evento: 'Cancellazioni omesse o pilotate: residenze fittizie mantenute per ottenere benefici, agevolazioni
+        o iscrizioni scolastiche, o cancellazioni strumentali'
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Medio, '2': Medio, '3': Medio, '4': Medio, '5': Medio, '6': Medio, '7': Medio, '8': Medio,
+          '9': Medio, '10': Medio}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: C.11.3_R.1_M.1
+        descrizione: Accertamenti ripetuti e documentati e verifica periodica delle posizioni con esito negativo
+        tipo: SPECIFICA
+        categoria: Controllo
+        tempi: Semestrale
+        indicatore: Posizioni verificate
+        target: 100% delle segnalazioni
+      - codice: C.11.3_R.1_M.2
+        descrizione: Gestione informatizzata del procedimento (protocollo e gestionale) con tracciabilità di fasi,
+          tempi e responsabili
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: Continuativa
+        indicatore: Pratiche gestite sul gestionale
+        target: 100%
 - codice: C.12
   ambito: COMUNE
   denominazione: Rilascio di documenti e certificazioni anagrafiche
@@ -774,7 +802,8 @@ processi:
     descrizione: Rilascio della carta d'identità elettronica
     procedimento: PRC-0018
   - codice: C.12.2
-    descrizione: Rilascio di certificati e autenticazioni
+    descrizione: Rilascio di certificati anagrafici
+    procedimento: PRC-0066
     rischi:
     - codice: C.12.2_R.1
       evento: Rilascio di documenti in assenza dei presupposti o a persona diversa dall'interessato
@@ -800,6 +829,34 @@ processi:
         tempi: Continuativa
         indicatore: Pratiche gestite sul gestionale
         target: 100%
+  - codice: C.12.3
+    descrizione: Autenticazione di firme e copie e legalizzazione di fotografie
+    procedimento: PRC-0067
+    rischi:
+    - codice: C.12.3_R.1
+      evento: Rilascio di documenti in assenza dei presupposti o a persona diversa dall'interessato
+      fattore_abilitante: Mancanza di misure di trattamento del rischio e/o controlli
+      valutazione:
+        probabilita: {'1': Basso, '2': Basso, '3': Basso, '4': Basso, '5': Basso, '6': Basso, '7': Basso, '8': Basso,
+          '9': Basso, '10': Basso}
+        impatto: {'1': Medio, '2': Medio, '3': Medio, '4': Medio}
+      misure:
+      - codice: C.12.3_R.1_M.1
+        descrizione: Rispetto del codice di comportamento dell'ente, con le regole specifiche per chi opera nel
+          processo
+        tipo: GENERALE
+        categoria: Definizione e promozione dell'etica e di standard di comportamento
+        tempi: Annuale
+        indicatore: Violazioni accertate e procedimenti disciplinari avviati
+        target: Monitoraggio annuale
+      - codice: C.12.3_R.1_M.2
+        descrizione: Gestione informatizzata del procedimento (protocollo e gestionale) con tracciabilità di fasi,
+          tempi e responsabili
+        tipo: SPECIFICA
+        categoria: Semplificazione
+        tempi: Continuativa
+        indicatore: Pratiche gestite sul gestionale
+        target: 100%
 - codice: C.13
   ambito: COMUNE
   denominazione: Riconoscimento della cittadinanza e atti di stato civile
@@ -811,6 +868,7 @@ processi:
     procedimento: PRC-0017
   - codice: C.13.2
     descrizione: Verifica della documentazione straniera e trascrizione degli atti
+    procedimento: PRC-0074
     rischi:
     - codice: C.13.2_R.1
       evento: Riconoscimento o trascrizione con documentazione falsa o incompleta, anche per effetto di intermediari
